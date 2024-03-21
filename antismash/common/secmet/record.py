@@ -13,8 +13,21 @@
 
 import bisect
 from collections import Counter, defaultdict, OrderedDict
+import itertools
 import logging
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, TypeVar, Union, cast
+from typing import (
+    Any,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+    cast,
+)
 from zlib import crc32
 
 from Bio import SeqIO
@@ -471,24 +484,24 @@ class Record:
             raise ValueError(f"Use the appropriate get_* type instead for {label}")
         return tuple(i for i in self.get_generics() if i.type == label)
 
-    def get_all_features(self) -> List[Feature]:
-        """ Returns all features
-            note: This is slow, if only a specific type is required, use
-                  the other get_*() functions
-        """
-        features: list[Feature] = list(self._genes)
-        features.extend(self.get_generics())
-        features.extend(self.get_protoclusters())
-        features.extend(self.get_candidate_clusters())
-        features.extend(self.get_subregions())
-        features.extend(self.get_regions())
-        features.extend(self.get_cds_features())
-        features.extend(self.get_cds_motifs())
-        features.extend(self.get_antismash_domains())
-        features.extend(self.get_pfam_domains())
-        features.extend(self.get_modules())
-        features.extend(self.get_sources())
-        return features
+    @property
+    def all_features(self) -> Iterable[Feature]:
+        """ An iterator over all the features contained by the record """
+        # in order of least references to other features
+        return itertools.chain(
+            self._sources,
+            self._nonspecific_features,
+            self._genes,
+            self._cds_features,
+            self._cds_motifs,
+            self._antismash_domains,
+            self._pfam_domains,
+            self._modules,
+            self._subregions,
+            self._protoclusters,
+            self._candidate_clusters,
+            self._regions,
+        )
 
     def get_cds_features_within_location(self, location: Location,
                                          with_overlapping: bool = False) -> List[CDSFeature]:
@@ -540,9 +553,8 @@ class Record:
 
     def to_biopython(self) -> SeqRecord:
         """Returns a Bio.SeqRecord instance of the record"""
-        features = self.get_all_features()
         bio_features: List[SeqFeature] = []
-        for feature in sorted(features):
+        for feature in sorted(self.all_features):
             bio_features.extend(feature.to_biopython())
         if "molecule_type" not in self._record.annotations:
             self._record.annotations["molecule_type"] = "DNA"

@@ -130,7 +130,7 @@ class TestConversion(unittest.TestCase):
         assert len(rec.features) == 1
         assert rec.features[0].location.parts == [location.parts[0], location.parts[2]]
 
-        features = sec_rec.get_all_features()
+        features = list(sec_rec.all_features)
         assert len(features) == 2
         assert features[0].location.parts == [location.parts[2]]
         assert features[1].location.parts == [location.parts[0]]
@@ -148,7 +148,7 @@ class TestConversion(unittest.TestCase):
                 Record.from_biopython(bio, taxon="bacteria")
             # with the discard flag, the bad antismash-specific feature should just disappear
             rec = Record.from_biopython(bio, taxon="bacteria", discard_antismash_features=True)
-            assert len(rec.get_all_features()) == 1
+            assert len(list(rec.all_features)) == 1
             # and that single feature had better be the CDS
             assert len(rec.get_cds_features()) == 1
 
