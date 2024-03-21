@@ -249,7 +249,15 @@ class Feature:
                 start = min(part.start for part in head) - max(part.end for part in head)
             return (start, len(loc))
 
-        return get_comparator(self.location) < get_comparator(location)
+        left = get_comparator(self.location)
+        right = get_comparator(location)
+
+        # some special handling of cases where coordinates are the same
+        if left == right:
+            # a 'source' feature should always comes first in case of a tie
+            if self.type == "source":
+                return True
+        return left < right
 
     def __str__(self) -> str:
         return repr(self)
