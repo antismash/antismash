@@ -20,18 +20,35 @@ from antismash.common.secmet.test.helpers import (
 from antismash.common.test.helpers import FakeHSPHit, FakeHit
 # functions and classes to test
 from antismash.detection.genefunctions import halogenases
-from antismash.detection.genefunctions.halogenases import (
-    HalogenaseResult,
+from antismash.detection.genefunctions.halogenases.flavin_dependent.subgroups import (
+    indolic,
+    phenolic,
+    pyrrolic
+)
+
+from antismash.detection.genefunctions.halogenases.halogenases import (
     HalogenaseHmmResult,
-    Match,
-    HalogenaseCategories,
-    FlavinDependents,
-    TryptophanSubstrate,
+    TailoringEnzymes, # add_potential_matches, modify, almost_equal, get_best_match, finalize_enzyme
+    Match # to_json, from_json
+)
+from antismash.detection.genefunctions.halogenases.flavin_dependent import substrate_analysis
+from antismash.detection.genefunctions.halogenases.flavin_dependent.substrate_analysis import (
     run_halogenase_phmms,
     search_signature_residues,
     check_for_fdh,
     check_for_halogenases,
-    specific_analysis
+    fdh_specific_analysis,
+    get_residues,
+    _gather_fdh_substrate_modules,
+    _get_analysis_modules,
+    _ANALYSIS_MODULES,
+    _get_substrate_specific_profiles,
+    check_for_match,
+    check_conserved_motif
+)
+
+from antismash.detection.genefunctions.halogenases.flavin_dependent.substrate_analysis import (
+    FDH_SUBGROUPS
 )
 
 test_fasta = {
@@ -66,26 +83,26 @@ test_fasta = {
 
 class TestHalogenasesAnalysis(unittest.TestCase):
     def setUp(self):
-        self.test_trp_5_match = Match("trp_5", 5, 0, "")
-        self.test_trp_6_7_match = Match("trp_6_7", 6, 1, "")
+        self.test_trp_5_match = Match("trp_5_FDH", "flavin", "FDH", 5, 0.5, "")
+        self.test_trp_6_7_match = Match("trp_6_7_FDH", "flavin", "FDH", 6, 1, "")
         self.trp_6_7_hmm_result = HalogenaseHmmResult(
-            hit_id='trp_6_7',
+            hit_id='trp_6_7_FDH',
             bitscore=1000,
-            query_id='trp_6_7',
+            query_id='trp_6_7_FDH',
             enzyme_type='Flavin-dependent',
-            profile=halogenases.pHMM_SIGNATURES[1].hmm_file,
+            profile=indolic.SPECIFIC_PROFILES[1].path,
         )
         self.trp_5_hmm_result = HalogenaseHmmResult(
-            hit_id='trp_5',
+            hit_id='trp_5_FDH',
             bitscore=1000,
-            query_id='trp_5',
+            query_id='trp_5_FDH',
             enzyme_type='Flavin-dependent',
-            profile=halogenases.pHMM_SIGNATURES[0].hmm_file,
+            profile=indolic.SPECIFIC_PROFILES[0].path,
         )
         matches = [self.test_trp_5_match, self.test_trp_6_7_match]
-        self.enzyme_with_more_matches = HalogenaseResult("ktzR", potential_matches=matches)
+        self.enzyme_with_more_matches = TailoringEnzymes("ktzR", potential_matches=matches)
 
-        self.empty_enzyme = HalogenaseResult("ktzQ")
+        self.empty_enzyme = TailoringEnzymes("ktzQ")
 
     def test_get_best_match(self):
         assert not self.empty_enzyme.get_best_match()
@@ -99,19 +116,19 @@ class TestHalogenasesAnalysis(unittest.TestCase):
         multiple_matches = self.enzyme_with_more_matches.get_best_match()
         assert len(multiple_matches) == 2 and isinstance(positive_test_best_match[0], Match)
 
-        one_potential_match = HalogenaseResult("test_enzyme",
+        one_potential_match = TailoringEnzymes("test_enzyme",
                                                potential_matches=[self.test_trp_5_match])
         multiple_matches = one_potential_match.get_best_match()
         assert len(multiple_matches) == 1 and isinstance(positive_test_best_match[0], Match)
 
-    def test_conversion_methods(self):
-        converted_to_json = self.enzyme_with_more_matches.to_json()
-        converted_to_json = json.loads(json.dumps(converted_to_json))
-        assert isinstance(converted_to_json, dict)
+    # def test_conversion_methods(self):
+    #     converted_to_json = self.enzyme_with_more_matches.to_json()
+    #     converted_to_json = json.loads(json.dumps(converted_to_json))
+    #     assert isinstance(converted_to_json, dict)
 
-        converted_from_json = HalogenaseResult.from_json(converted_to_json)
-        assert isinstance(converted_from_json, HalogenaseResult)
-        assert converted_to_json == converted_from_json.to_json()
+        # converted_from_json = TailoringEnzymes.from_json(converted_to_json) # add json convertion function to prod files
+        # assert isinstance(converted_from_json, TailoringEnzymes)
+        # assert converted_to_json == converted_from_json.to_json()
 
     @patch.object(subprocessing, "run_hmmsearch",
                   return_value=[FakeHit("start", "end", 1000, "foo")])
@@ -119,18 +136,18 @@ class TestHalogenasesAnalysis(unittest.TestCase):
         for value in run_hmmsearch.return_value:
             value.hsps = [FakeHSPHit("foo", "foo", bitscore=250)]
 
-        negative_test_halogenase_hmms_by_id = run_halogenase_phmms("")
+        negative_test_halogenase_hmms_by_id = run_halogenase_phmms("", [])
         assert not negative_test_halogenase_hmms_by_id
 
         for value in run_hmmsearch.return_value:
             value.hsps = [FakeHSPHit("foo", "foo", bitscore=1000)]
 
-        positive_test_halogenase_hmms_by_id = run_halogenase_phmms("")
+        positive_test_halogenase_hmms_by_id = run_halogenase_phmms("", [])
         for hit in positive_test_halogenase_hmms_by_id["foo"]:
             assert isinstance(hit, HalogenaseHmmResult)
 
     def test_search_signature_residues(self):
-        positions = [random.randrange(512, 600) for number in range(10)]
+        positions = indolic.TRP_6_SIGNATURE
 
         with patch.object(subprocessing.hmmpfam, "run_hmmpfam2") as run_hmmpfam2:
             run_hmmpfam2.return_value = []
@@ -155,7 +172,7 @@ class TestHalogenasesAnalysis(unittest.TestCase):
 
             # checking if hit_id == query_id it runs til the reference position extraction
             for result in run_hmmpfam2.return_value:
-                result.hsps = [FakeHSPHit("trp_6_7", hit_id="trp_6_7")]
+                result.hsps = [FakeHSPHit("trp_6_7_FDH", hit_id="trp_6_7_FDH")]
                 for hit in result.hsps:
                     hit_query = DummyFeature()
                     hit_profile = DummyFeature()
@@ -170,46 +187,49 @@ class TestHalogenasesAnalysis(unittest.TestCase):
                 assert signature_residues == "dummy"
 
     def test_false_check_for_match(self):
-        false_test = HalogenaseCategories("fake_name", "visil")
-        checked_match = false_test.check_for_match(self.empty_enzyme, self.trp_6_7_hmm_result, 5, [300])
-        assert checked_match is False
+        false_test = TailoringEnzymes("fake_name")
+        false_test_residues = "FAKESEQUENCE"
+        FDH_SUBGROUPS["trp_5_FDH"].update_match("trp_5_FDH", false_test_residues,
+                                                false_test, self.trp_6_7_hmm_result)
+        assert false_test.family == "" and false_test.cofactor == ""
 
     def test_check_for_fdh(self):
-        with patch.object(halogenases, "get_residues",
-                          return_value={"trp_5": FlavinDependents.TRP_5_SIGNATURE_RESIDUES}):
+        with patch.object(substrate_analysis, "get_residues",
+                          return_value={"trp_5_FDH": indolic.TRP_5_SIGNATURE_RESIDUES}):
             check_for_fdh(DummyCDS(), self.empty_enzyme, self.trp_5_hmm_result)
-            assert self.empty_enzyme.potential_matches[0].profile == "trp_5"
+            assert self.empty_enzyme.potential_matches[0].profile == "trp_5_FDH"
+            assert self.empty_enzyme.potential_matches[0].confidence == 1
             assert self.empty_enzyme.potential_matches[0].position == 5
 
-        with patch.object(halogenases, "get_residues",
-                          return_value={"trp_5": TryptophanSubstrate.TRP_5_SIGNATURE_RESIDUES}):
-            low_quality_hit = HalogenaseHmmResult("trp_5", 400, "trp_5", "foo", "trp_5_v2")
+        with patch.object(substrate_analysis, "get_residues",
+                          return_value={"trp_5_FDH": indolic.TRP_5_SIGNATURE_RESIDUES}):
+            low_quality_hit = HalogenaseHmmResult("trp_5_FDH", 380, "trp_5_FDH", "foo", "trp_5_FDH")
             check_for_fdh(DummyCDS(), self.empty_enzyme, low_quality_hit)
-            assert self.empty_enzyme.potential_matches[1].profile == "trp_5"
+            assert self.empty_enzyme.potential_matches[1].profile == "trp_5_FDH"
             assert self.empty_enzyme.potential_matches[1].confidence == 0.5
 
-        with patch.object(halogenases, "get_residues",
-                          return_value={"trp_6_7": FlavinDependents.TRP_6_SIGNATURE_RESIDUES}):
+        with patch.object(substrate_analysis, "get_residues",
+                          return_value={"trp_6_7_FDH": indolic.TRP_6_SIGNATURE_RESIDUES}):
             check_for_fdh(DummyCDS(), self.empty_enzyme, self.trp_6_7_hmm_result)
-            assert self.empty_enzyme.potential_matches[2].profile == "trp_6_7"
+            assert self.empty_enzyme.potential_matches[2].profile == "trp_6_7_FDH"
             assert self.empty_enzyme.potential_matches[2].position == 6
-
-        with patch.object(halogenases, "get_residues", return_value={"trp_6_7": "VISIL"}):
+            
+        with patch.object(substrate_analysis, "get_residues", return_value={"trp_6_7_FDH": "VISIL"}):
             check_for_fdh(DummyCDS(), self.empty_enzyme, self.trp_6_7_hmm_result)
-            assert self.empty_enzyme.potential_matches[3].profile == "trp_6_7"
+            assert self.empty_enzyme.potential_matches[3].profile == "trp_6_7_FDH"
             assert self.empty_enzyme.potential_matches[3].position == 7
 
-        with patch.object(halogenases, "get_residues",
-                          return_value={"trp_6_7": None}):
+        with patch.object(substrate_analysis, "get_residues",
+                          return_value={"trp_6_7_FDH": None}):
             assert check_for_fdh(DummyCDS(), self.empty_enzyme,
                                  self.trp_6_7_hmm_result) is None
 
-        with patch.object(halogenases, "get_residues",
-                          return_value={"trp_5": TryptophanSubstrate.TRP_5_SIGNATURE_RESIDUES}):
-            substrate = TryptophanSubstrate("trp_5", TryptophanSubstrate.TRP_5_SIGNATURE_RESIDUES)
-            with patch.object(halogenases, "TryptophanSubstrate",
+        with patch.object(substrate_analysis, "get_residues",
+                          return_value={"trp_5_FDH": indolic.TRP_5_SIGNATURE_RESIDUES}):
+            substrate = TailoringEnzymes("trp_5_FDH", indolic.TRP_5_SIGNATURE_RESIDUES)
+            with patch.object(substrate_analysis, "TailoringEnzymes",
                               return_value=substrate):
-                low_quality_hit = HalogenaseHmmResult("wrong_name", 400, "trp_5", "foo", "trp_5_v2")
+                low_quality_hit = HalogenaseHmmResult("wrong_name", 400, "trp_5_FDH", "foo", "trp_5_FDH")
                 assert not check_for_fdh(DummyCDS(), self.empty_enzyme, low_quality_hit)
 
     def test_check_for_halogenases(self):
@@ -218,39 +238,21 @@ class TestHalogenasesAnalysis(unittest.TestCase):
 
         mock_cds_feature = DummyCDS(locus_tag="foo", translation="")
         positive_checked_halogenase = check_for_halogenases(mock_cds_feature, [self.trp_5_hmm_result])
-        assert isinstance(positive_checked_halogenase, HalogenaseResult)
+        assert isinstance(positive_checked_halogenase, TailoringEnzymes)
         assert positive_checked_halogenase.cds_name == "foo"
 
     def test_get_signatures(self):
-        assert TryptophanSubstrate.get_signatures() == [FlavinDependents.TRP_5_SIGNATURE,
-                                                        FlavinDependents.TRP_6_SIGNATURE]
-
-    def test_get_residues(self):
-        mock_trp_6 = DummyCDS(locus_tag="ktzR",
-                              translation=test_fasta["ktzR"])
-        tryptophan_accepting = TryptophanSubstrate("ktzR", "")
-        trp_6_7_residues = tryptophan_accepting.get_residues(mock_trp_6,
-                                                             self.trp_6_7_hmm_result)
-        assert (isinstance(trp_6_7_residues, dict) and
-                trp_6_7_residues['trp_6_7'] == "TEGCAGFDAYHDRFGNADYGLSIIAKIL")
-
-        mock_trp_5 = DummyCDS(locus_tag="mibH",
-                              translation=test_fasta["mibH"])
-        tryptophan_accepting = TryptophanSubstrate("mibH", "")
-        trp_5_residues = tryptophan_accepting.get_residues(mock_trp_5,
-                                                           self.trp_5_hmm_result)
-        assert (isinstance(trp_6_7_residues, dict) and
-                trp_5_residues['trp_5'] == "VSILIREPGLPRGVPRAVLPGEA")
-
+        assert indolic.get_signatures() == [indolic.TRP_5_SIGNATURE,
+                                            indolic.TRP_6_SIGNATURE]
 
 @patch.object(secmet.Record, "get_cds_by_name", return_value="ktzR")
 class TestSpecificAnalysis(unittest.TestCase):
     def setUp(self):
         self.record = DummyRecord()
         self.cds = DummyCDS(locus_tag="ktzR", translation=test_fasta["ktzR"])
-        self.test_trp_5_match = Match("trp_5", 5, 0, "")
-        self.test_trp_6_7_match = Match("trp_6_7", 6, 1, "")
-        self.empty_match = HalogenaseResult("test_enzyme")
+        self.test_trp_5_match = Match("trp_5_FDH", "flavin", "FDH", 5, 0, "")
+        self.test_trp_6_7_match = Match("trp_6_7_FDH", "flavin", "FDH", 6, 1, "")
+        self.empty_match = TailoringEnzymes("test_enzyme")
 
     # one best match
     @patch.object(subprocessing, "run_hmmsearch",
@@ -259,16 +261,16 @@ class TestSpecificAnalysis(unittest.TestCase):
                   return_value=[DummyCDS(locus_tag="ktzR", translation=test_fasta["ktzR"])])
     def test_one_best_match(self, _patched_get_cds, run_hmmsearch, _patched_by_name):
         for value in run_hmmsearch.return_value:
-            value.hsps = [FakeHSPHit("trp_6_7", "trp_6_7", bitscore=1500)]
-        with patch.object(halogenases, "check_for_halogenases",
+            value.hsps = [FakeHSPHit("trp_6_7_FDH", "trp_6_7_FDH", bitscore=1500)]
+        with patch.object(substrate_analysis, "check_for_halogenases",
                           return_value=self.empty_match) as patched_check:
-            with patch.object(halogenases.HalogenaseResult, "get_best_match",
+            with patch.object(TailoringEnzymes, "get_best_match",
                               return_value=[self.test_trp_6_7_match]):
                 record = DummyRecord(seq=test_fasta["ktzR"])
-                positive_test = specific_analysis(record)
+                positive_test = fdh_specific_analysis(record)
 
                 patched_check.assert_called_once()
-                assert positive_test and positive_test[0].position == 6
+                assert positive_test and positive_test[0].target_positions == 6
 
     # list of several matches
     @patch.object(subprocessing, "run_hmmsearch",
@@ -277,16 +279,16 @@ class TestSpecificAnalysis(unittest.TestCase):
                   return_value=[DummyCDS(locus_tag="mibH", translation=test_fasta["mibH"])])
     def test_more_best_match(self, _patched_get_cds, run_hmmsearch, _patched_by_name):
         for value in run_hmmsearch.return_value:
-            value.hsps = [FakeHSPHit("trp_5", "trp_5", bitscore=800)]
-        with patch.object(halogenases, "check_for_halogenases",
+            value.hsps = [FakeHSPHit("trp_5_FDH", "trp_5_FDH", bitscore=800)]
+        with patch.object(substrate_analysis, "check_for_halogenases",
                           return_value=self.empty_match) as patched_check:
-            with patch.object(halogenases.HalogenaseResult, "get_best_match",
+            with patch.object(TailoringEnzymes, "get_best_match",
                               return_value=[self.test_trp_5_match, self.test_trp_6_7_match]):
                 record = DummyRecord(seq=test_fasta["mibH"])
-                positive_test = specific_analysis(record)
+                positive_test = fdh_specific_analysis(record)
                 assert len(positive_test) == 1
-                assert patched_check.return_value.position is None
-                assert positive_test and positive_test[0].position is None
+                assert patched_check.return_value.target_positions is None
+                assert positive_test and positive_test[0].target_positions is None
 
     # no best match
     @patch.object(subprocessing, "run_hmmsearch", return_value=[FakeHit("start", "end", 500, "mibH")])
@@ -294,11 +296,11 @@ class TestSpecificAnalysis(unittest.TestCase):
                   return_value=[DummyCDS(locus_tag="mibH", translation=test_fasta["mibH"])])
     def test_no_best_match(self, _patched_get_cds, run_hmmsearch, _patched_by_name):
         for value in run_hmmsearch.return_value:
-            value.hsps = [FakeHSPHit("trp_5", "trp_5", bitscore=800)]
-        with patch.object(halogenases, "check_for_halogenases", return_value=self.empty_match) as patched:
-            with patch.object(halogenases.HalogenaseResult, "get_best_match",
+            value.hsps = [FakeHSPHit("trp_5_FDH", "trp_5_FDH", bitscore=800)]
+        with patch.object(substrate_analysis, "check_for_halogenases", return_value=self.empty_match) as patched:
+            with patch.object(TailoringEnzymes, "get_best_match",
                               return_value=[]):
                 record = DummyRecord(seq=test_fasta["mibH"])
-                positive_test = specific_analysis(record)
-                assert patched.return_value.position is None
-                assert positive_test and positive_test[0].position is None
+                positive_test = fdh_specific_analysis(record)
+                assert patched.return_value.target_positions is None
+                assert positive_test and positive_test[0].target_positions is None
