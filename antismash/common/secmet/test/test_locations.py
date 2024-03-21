@@ -14,7 +14,6 @@ from antismash.common.secmet.locations import (
     _adjust_location_by_offset as adjust,
     convert_protein_position_to_dna,
     build_location_from_others,
-    combine_locations,
     connect_locations,
     ensure_valid_locations,
     get_distance_between_locations as _get_distance_between_locations,
