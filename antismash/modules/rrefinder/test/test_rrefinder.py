@@ -180,9 +180,9 @@ class TestRREResults(unittest.TestCase):
         record = DummyRecord()
         results = self.create_results(record_id=record.id)
 
-        assert not record.get_all_features()
+        assert not list(record.all_features)
         results.add_to_record(record)
-        assert len(record.get_all_features()) == 2
+        assert len(list(record.all_features)) == 2
         assert len(record.get_antismash_domains_by_tool(TOOL)) == 2
 
 
