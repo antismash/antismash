@@ -80,6 +80,10 @@ class TestCDSCollection(unittest.TestCase):
         assert outer not in inner
         assert outer not in middle, middle._children
 
+        # this containment also applies to sort order, without the child always sorting before any higher collection
+        assert outer < middle < inner
+        assert inner > middle > outer
+
     def test_contig_edge_transitivity(self):
         inner = CDSCollection(FeatureLocation(30, 40), feature_type="test")
         mid = CDSCollection(FeatureLocation(20, 50), feature_type="test", child_collections=[inner])

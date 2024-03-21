@@ -167,6 +167,13 @@ class TestFeature(unittest.TestCase):
         later = Feature(CompoundLocation([FeatureLocation(7624, 8000, 1), FeatureLocation(0, 29, 1)]), "test")
         assert sorted([shorter, later, longer]) == [shorter, longer, later]
 
+    def test_ordering_special_cases(self):
+        location = FeatureLocation(20, 40)
+        source = Feature(location, "source")
+        other = Feature(location, "test")
+        assert source < other
+        assert other > source
+
     def test_negative_locations(self):
         loc = FeatureLocation(-2, 500, strand=1)
         with self.assertRaisesRegex(ValueError, "negative coordinate"):
