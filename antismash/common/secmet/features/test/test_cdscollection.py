@@ -64,6 +64,22 @@ class TestCDSCollection(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "not contained by"):
             collection.add_cds(cds)
 
+    def test_containment_transitivity(self):
+        location = FeatureLocation(20, 40)
+        inner = CDSCollection(location, feature_type="test", child_collections=[])
+        middle = CDSCollection(location, feature_type="test", child_collections=[inner])
+        outer = CDSCollection(location, feature_type="test", child_collections=[middle])
+
+        # check containment is transitive
+        assert inner in middle
+        assert middle in outer
+        assert inner in outer
+
+        # check that containment is not bidirectional
+        assert middle not in inner
+        assert outer not in inner
+        assert outer not in middle, middle._children
+
     def test_contig_edge_transitivity(self):
         inner = CDSCollection(FeatureLocation(30, 40), feature_type="test")
         mid = CDSCollection(FeatureLocation(20, 50), feature_type="test", child_collections=[inner])
