@@ -225,7 +225,14 @@ class CDSCollection(Feature):
         if isinstance(other, (CompoundLocation, FeatureLocation)):
             location = other
         else:
+            # shortcut here if the feature is a child of this collection
+            if other in self:
+                return True
             location = other.location
+
+        # if the other location is contained within this feature, a shortcut can be taken
+        if self.location.contains(location) and not location.contains(self.location):
+            return True
 
         def get_comparator(loc: Location) -> tuple[int, int]:
             start = loc.start
