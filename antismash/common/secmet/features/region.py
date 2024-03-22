@@ -192,17 +192,20 @@ class Region(CDSCollection, AbstractRegion):
         # despite it being required for output to the genbank format
         cluster_record.annotations["molecule_type"] = record.annotations["molecule_type"]
 
-        # update the antiSMASH annotation to include some cluster details
-        comment_end_marker = "##antiSMASH-Data-END"
-        cluster_comment = ("NOTE: This is a single region extracted from a larger record!\n"
-                           f"Orig. start  :: {self.location.start}\n"
-                           f"Orig. end    :: {self.location.end}\n"
-                           f"{comment_end_marker}")
-        original = cluster_record.annotations["comment"]
-        cluster_record.annotations["comment"] = original.replace(comment_end_marker, cluster_comment)
+        # update the antiSMASH annotation to include some region details
+        structured = cluster_record.annotations.get("structured_comment", {})
+        # insert if not present
+        if not structured:
+            cluster_record.annotations["structured_comment"] = structured
 
-        # our cut-out clusters are always linear
-        cluster_record.annotations["topology"] = "linear"
+        comment = structured.get("antiSMASH-Data", {})
+        # if it doesn't exist yet, create it
+        structured["antiSMASH-Data"] = comment
+
+        comment["NOTE"] = comment.get("NOTE", "")
+        comment["NOTE"] = " This is a single region extracted from a larger record!"
+        comment["Orig. start"] = str(self.location.start)
+        comment["Orig. end"] = str(self.location.end)
 
         # renumber clusters, candidate_clusters and regions to reflect changes
         # also update positions of RiPP component locations

@@ -398,35 +398,30 @@ def add_antismash_comments(records: List[Tuple[Record, SeqRecord]], options: Con
     """
     if not records:
         return
-    shared = []
+    base_comment = {
+        "Version": str(options.version),
+        "Run date": str(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+    }
     # include start/end details if relevant
     if options.start != -1 or options.end != -1:
         start = 1 if options.start == -1 else options.start
         # start/end is only valid for single records, as per record_processing
         assert len(records) == 1
         end = len(records[0][0].seq) if options.end == -1 else options.end
-        shared.append(
-            "NOTE: This is an extract from the original record!\n"
-            f"Starting at  :: {start}\n"
-            f"Ending at    :: {end}\n"
-        )
-    antismash_comment = (
-        "##antiSMASH-Data-START##\n"
-        f"Version      :: {options.version}\n"
-        f"Run date     :: {str(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))}\n"
-        "%s"
-        "##antiSMASH-Data-END##"
-    )
-    for record, bio_record in records:
-        extras: List[str] = []
-        if record.original_id:
-            extras.append(f"Original ID  :: {record.original_id}\n")
+        base_comment.update({
+            "NOTE": "This is an extract from the original record!",
+            "Starting at": str(start),
+            "Ending at": str(end),
+        })
 
-        comment = antismash_comment % "".join(extras + shared)
-        if 'comment' in bio_record.annotations:
-            bio_record.annotations['comment'] += '\n' + comment
-        else:
-            bio_record.annotations['comment'] = comment
+    for record, bio_record in records:
+        comment = dict(base_comment)
+        if record.original_id:
+            comment["Original ID"] = record.original_id
+
+        if "structured_comment" not in record.annotations:
+            record.annotations["structured_comment"] = {}
+        bio_record.annotations["structured_comment"]["antiSMASH-Data"] = comment
 
 
 def write_outputs(results: serialiser.AntismashResults, options: ConfigType) -> None:
