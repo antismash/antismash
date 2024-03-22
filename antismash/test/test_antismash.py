@@ -69,31 +69,33 @@ class TestAntismash(unittest.TestCase):
         bio = rec.to_biopython()
 
         main.add_antismash_comments([(rec, bio)], options)
-        assert "##antiSMASH-Data-START##" in bio.annotations["comment"]
-        assert "##antiSMASH-Data-END##" in bio.annotations["comment"]
-        assert "Version" in bio.annotations["comment"] and options.version in bio.annotations["comment"]
-        assert "Original ID" not in bio.annotations["comment"]
-        assert "Starting at" not in bio.annotations["comment"]
-        assert "Ending at" not in bio.annotations["comment"]
+        comment = bio.annotations["structured_comment"]["antiSMASH-Data"]
+        assert comment["Version"] == options.version
+        assert "Original ID" not in comment
+        assert "Starting at" not in comment
+        assert "Ending at" not in comment
 
-        bio.annotations["comment"] = ""
+        bio.annotations["structured_comment"].pop("antiSMASH-Data")
         options.start = 7
         main.add_antismash_comments([(rec, bio)], options)
-        assert "Original ID" not in bio.annotations["comment"]
-        assert "Starting at  :: 7\n" in bio.annotations["comment"]
+        comment = bio.annotations["structured_comment"]["antiSMASH-Data"]
+        assert "Original ID" not in comment
+        assert comment["Starting at"] == "7"
 
-        bio.annotations["comment"] = ""
+        bio.annotations["structured_comment"].pop("antiSMASH-Data")
         options.start = -1
         options.end = 1000
         main.add_antismash_comments([(rec, bio)], options)
-        assert "Original ID" not in bio.annotations["comment"]
-        assert "Ending at    :: 1000\n" in bio.annotations["comment"]
+        comment = bio.annotations["structured_comment"]["antiSMASH-Data"]
+        assert "Original ID" not in comment
+        assert comment["Ending at"] == "1000"
 
-        bio.annotations["comment"] = ""
+        bio.annotations["structured_comment"].pop("antiSMASH-Data")
         options.end = -1
         rec.original_id = "something else"
         main.add_antismash_comments([(rec, bio)], options)
-        assert "Original ID" in bio.annotations["comment"] and "something else" in bio.annotations["comment"]
+        comment = bio.annotations["structured_comment"]["antiSMASH-Data"]
+        assert comment["Original ID"] == rec.original_id
 
     def test_canonical_base_filename(self):
         options = build_parser(modules=self.all_modules).parse_args([])
