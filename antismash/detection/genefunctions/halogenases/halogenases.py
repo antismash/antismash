@@ -4,7 +4,7 @@
 # for test files, silence irrelevant and noisy pylint warnings
 # pylint: disable=use-implicit-booleaness-not-comparison,protected-access,missing-docstring
 
-from typing import Any, List, Optional, Iterable, Union
+from typing import Any, List, Optional, Iterable, Union, Dict
 
 from dataclasses import dataclass, field
 
@@ -69,9 +69,6 @@ class TailoringEnzymes:
         """ Adds the features of an enzyme group to list"""
         self.potential_matches.append(match)
 
-    def modify(self) -> None:
-        pass
-
     @staticmethod
     def almost_equal(confidence: float, highest_confidence: float,
                      difference: float) -> bool:
@@ -112,38 +109,39 @@ class TailoringEnzymes:
             self.cofactor = best_match.cofactor
             self.family = best_match.family
             self.target_positions = best_match.position
-            self.confidence = best_match.confidence
             self.consensus_residues = best_match.signature
+            self.confidence = best_match.confidence
+
             if best_match.substrate:
                 self.substrates = best_match.substrate
 
-    # def to_json(self) -> Dict[str, Any]:
-    #     """ Constructs a JSON representation of this instance """
-    #     potential_matches_json = [match.to_json() for match in self.potential_matches]
+    def to_json(self) -> Dict[str, Any]:
+        """ Constructs a JSON representation of this instance """
+        potential_matches_json = [match.to_json() for match in self.potential_matches]
 
-    #     return {
-    #         "family": self.family,
-    #         "gbk_id": self.cds_name,
-    #         "substrate": self.substrate,
-    #         "position": self.position,
-    #         "confidence": self.confidence,
-    #         "signature": self.signature,
-    #         "coenzyme": self.coenzyme,
-    #         "potential_matches": potential_matches_json
-    #     }
+        return {
+            "cds_name": self.cds_name,
+            "family": self.family,
+            "cofactor": self.cofactor,
+            "substrates": self.substrates,
+            "target_positions": self.target_positions,
+            "confidence": self.confidence,
+            "consensus_residues": self.consensus_residues,
+            "potential_matches": potential_matches_json
+        }
 
-    # @classmethod
-    # def from_json(cls, data: Dict[str, Any]) -> "HalogenaseResult":
-    #     """ Constructs the HalogenasesResults from the JSON representation """
+    @classmethod
+    def from_json(cls, data: Dict[str, Any]) -> "HalogenaseResult":
+        """ Constructs the HalogenasesResults from the JSON representation """
 
-    #     family = data["family"]
-    #     gbk_id = data["gbk_id"]
-    #     substrate = data["substrate"]
-    #     position = data["position"]
-    #     confidence = data["confidence"]
-    #     signature = data["signature"]
-    #     coenzyme = data["coenzyme"]
-    #     matches = [Match.from_json(profile) for profile in data["potential_matches"]]
-    #     enzyme = cls(gbk_id, family, substrate, position, confidence,
-    #                  signature, coenzyme, matches)
-    #     return enzyme
+        cds_name = data["cds_name"]
+        family = data["family"]
+        cofactor = data["cofactor"]
+        substrates = data["substrates"]
+        position = data["target_positions"]
+        confidence = data["confidence"]
+        consensus_residues = data["consensus_residues"]
+        potential_matches = [Match.from_json(profile) for profile in data["potential_matches"]]
+        enzyme = cls(cds_name, family, cofactor, substrates, position,
+                     consensus_residues, confidence, potential_matches)
+        return enzyme

@@ -75,6 +75,7 @@ def check_for_match(name, residues, halogenase: TailoringEnzymes, hit: Halogenas
         also have to be a dict"""
 
     found = False
+    print(f'residues: {residues}', f'sig_residues: {sig_residues}')
     if hit.query_id != name:
         return False
     cutoffs.sort(reverse=True)
