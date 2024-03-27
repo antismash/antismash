@@ -1,3 +1,9 @@
+# License: GNU Affero General Public License v3 or later
+# A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
+
+# for test files, silence irrelevant and noisy pylint warnings
+# pylint: disable=use-implicit-booleaness-not-comparison,protected-access,missing-docstring
+
 from pathlib import Path
 from typing import Optional, List
 
@@ -35,7 +41,8 @@ def update_match(name, residues, halogenase: TailoringEnzymes, hit: HalogenaseHm
     elif name == "trp_6_7_FDH":
         if not substrate_analysis.check_for_match(name, residues, halogenase, hit, 6, cutoffs=[770],
                                     sig_residues=TRP_6_SIGNATURE_RESIDUES):
-            substrate_analysis.check_for_match(name, residues, halogenase, hit, 7, [770], check_residues=False)
+            substrate_analysis.check_for_match(name, residues, halogenase,
+                                               hit, 7, [770], check_residues=False)
             halogenase.substrates = "tryptophan"
 
 def get_signatures() -> List[List[int]]:

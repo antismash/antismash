@@ -1,6 +1,10 @@
-import os
+# License: GNU Affero General Public License v3 or later
+# A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
+
+# for test files, silence irrelevant and noisy pylint warnings
+# pylint: disable=use-implicit-booleaness-not-comparison,protected-access,missing-docstring
+
 import pathlib
-from typing import List, Union, Optional
 
 from antismash.common.path import get_full_path
 from antismash.common.signature import HmmSignature
@@ -16,12 +20,12 @@ SHORT_DESCRIPTION = """Categorization of halogenases based on family and functio
                     """
 GENERAL_FDH_PROFILES = [HmmSignature("all_general_FDH",
                                      "Member of the Flavin-dependent halogenase family",
-                            100, get_full_path(pathlib.Path(__file__).parents[1], "data","halogenases",
-                                               "all_general_FDH.hmm")),
+                                     100, get_full_path(pathlib.Path(__file__).parents[1], "data",
+                                                        "halogenases", "all_general_FDH.hmm")),
                         HmmSignature("unconventional_FDH",
-                                     "Unconventional member of the Flavin-dependent halogenase family",
-                            100, get_full_path(pathlib.Path(__file__).parents[1], "data", "halogenases",
-                                               "unconventional_FDH.hmm"))]
+                                     "Unconventional flavin-dependent halogenase",
+                                     100, get_full_path(pathlib.Path(__file__).parents[1], "data",
+                                                        "halogenases", "unconventional_FDH.hmm"))]
 
 GENERAL_FDH_MOTIFS = {"W.W.I.": [206, 207, 208, 209, 210, 211],
                         "F.*P.*S.G": [280, 281, 282, 283, 284, 285, 286,

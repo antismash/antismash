@@ -26,6 +26,7 @@ from antismash.detection.genefunctions.halogenases.flavin_dependent.subgroups im
     pyrrolic
 )
 
+from antismash.detection.genefunctions.halogenases import halogenases_analysis
 from antismash.detection.genefunctions.halogenases.halogenases import (
     HalogenaseHmmResult,
     TailoringEnzymes, # add_potential_matches, modify, almost_equal, get_best_match, finalize_enzyme
@@ -225,7 +226,7 @@ class TestPhenolic(unittest.TestCase):
         cds = DummyCDS(locus_tag="BhaA", translation=test_fasta["BhaA"])
         residues = substrate_analysis.get_residues(cds.translation, self.hpg_hmm_result,
                                                    [phenolic.HPG_SIGNATURE, phenolic.TYROSINE_LIKE_SIGNATURE],
-                                                   substrates=["Tyr", "Hpg"])
+                                                   enzyme_substrates=["Tyr", "Hpg"])
         assert isinstance(residues, dict)
         
 class TestPyrrolic(unittest.TestCase):
@@ -270,7 +271,7 @@ class TestPyrrolic(unittest.TestCase):
         cds = DummyCDS(locus_tag="bmp2", translation=test_fasta["bmp2"])
         residues = substrate_analysis.get_residues(cds.translation, self.pyrrole_hmm_result,
                                                    [pyrrolic.PYRROLE_SIGNATURE],
-                                                   substrates=["mono_di", "tetra", "unconv_mono_di"])
+                                                   enzyme_substrates=["mono_di", "tetra", "unconv_mono_di"])
         assert isinstance(residues, dict)
 
 
@@ -543,3 +544,12 @@ class TestGeneralEnzymes(unittest.TestCase):
             record = DummyRecord(seq=test_fasta["CtoA"])
             positive_test = fdh_specific_analysis(record)
             assert not positive_test[0].consensus_residues
+
+    @patch.object(secmet.Record, "get_cds_by_name",
+                  return_value=DummyCDS(locus_tag="CtoA", translation=test_fasta["CtoA"]))
+    @patch.object(secmet.Record, "get_cds_features_within_regions",
+                  return_value=[DummyCDS(locus_tag="CtoA", translation=test_fasta["CtoA"])])
+    def test_specific_analysis(self, _patched_get_cds, _patched_get_cds_by_name):
+        record = DummyRecord(seq=test_fasta["CtoA"])
+        categorized_halogenase = halogenases_analysis.specific_analysis(record)
+        assert categorized_halogenase is not None

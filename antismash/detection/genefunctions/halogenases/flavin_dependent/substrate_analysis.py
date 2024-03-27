@@ -1,3 +1,9 @@
+# License: GNU Affero General Public License v3 or later
+# A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
+
+# for test files, silence irrelevant and noisy pylint warnings
+# pylint: disable=use-implicit-booleaness-not-comparison,protected-access,missing-docstring
+
 import logging
 import importlib
 import pkgutil
@@ -92,7 +98,8 @@ def check_for_match(name, residues, halogenase: TailoringEnzymes, hit: Halogenas
                 if hit.bitscore >= cutoff and (sig_res == sig_residues[subs] or
                                                 not check_residues):
                     if not targets:
-                        halogenase.add_potential_matches(Match(hit.query_id, "flavin", "FDH", position,
+                        halogenase.add_potential_matches(Match(hit.query_id, "flavin",
+                                                               "FDH", position,
                                                                 confidence * modifier,
                                                                 sig_res, subs))
                     else:
@@ -100,26 +107,25 @@ def check_for_match(name, residues, halogenase: TailoringEnzymes, hit: Halogenas
                                                                 confidence * modifier,
                                                                 sig_res))
                     return True
-            modifier = 0.5
 
         elif isinstance(residues, dict) and not isinstance(sig_residues, dict):
             for subs, sig_res in residues.items():
                 if hit.bitscore >= cutoff and (sig_res == sig_residues or
                                                 not check_residues):
                     if not targets:
-                        halogenase.add_potential_matches(Match(hit.query_id, "flavin", "FDH", position,
-                                                                confidence * modifier,
+                        halogenase.add_potential_matches(Match(hit.query_id, "flavin", "FDH",
+                                                               position, confidence * modifier,
                                                                 sig_res, subs))
                     else:
                         halogenase.add_potential_matches(Match(hit.query_id, "flavin", "FDH", subs,
                                                                 confidence * modifier,
                                                                 sig_res))
                     return True
-            modifier = 0.5
+
     return found
 
 def get_residues(translation: str, hmm_result: HalogenaseHmmResult,
-                 signatures: Union[list[int], list[list[int]]], substrates: list = None)\
+                 signatures: Union[list[int], list[list[int]]], enzyme_substrates: list = None)\
                  -> dict[str, Optional[str]]:
     """ Get signature residues for an enzyme from each pHMM
 
@@ -134,14 +140,14 @@ def get_residues(translation: str, hmm_result: HalogenaseHmmResult,
     """
     signature_residues: dict[str, Optional[str]] = {}
 
-    if not substrates:
+    if not enzyme_substrates:
         residue = search_signature_residues(translation, signatures, hmm_result)
         signature_residues[hmm_result.query_id] = residue
     else:
         if len(signatures) == 1:
-            substrates_signatures = dict(zip(substrates,(3*signatures)))
+            substrates_signatures = dict(zip(enzyme_substrates,(3*signatures)))
         else:
-            substrates_signatures = dict(zip(substrates,signatures))
+            substrates_signatures = dict(zip(enzyme_substrates,signatures))
         for substrate, signature in substrates_signatures.items():
             signature_residues[substrate] = search_signature_residues(translation,
                                                                       signature, hmm_result)
@@ -193,6 +199,7 @@ def search_signature_residues(sequence: str, positions: list[int],
 def check_conserved_motif(cds: CDSFeature, motif_positions: list[int],
                            hmm_result: HalogenaseHmmResult,
                            motif_pattern):
+    """Looks for WxWxIP and Fx.Px.Sx.G"""
 
     categorized = ""
 
@@ -205,8 +212,7 @@ def check_conserved_motif(cds: CDSFeature, motif_positions: list[int],
     motif = re.search(motif_pattern, siganture_residues)
     if not motif:
         return categorized
-    else:
-        categorized = re.search(f"{motif_pattern}", siganture_residues)[0]
+    categorized = re.search(f"{motif_pattern}", siganture_residues)[0]
     return categorized
 
 def run_halogenase_phmms(cluster_fasta: str, profiles: list) \
@@ -317,7 +323,8 @@ def fdh_specific_analysis(record: Record) -> Optional[list[TailoringEnzymes]]:
                     if conserved_motif:
                         conserved_motifs[motif] = conserved_motif
 
-            potential_enzyme = TailoringEnzymes(protein, cofactor="flavin", family="FDH", consensus_residues=conserved_motifs)
+            potential_enzyme = TailoringEnzymes(protein, cofactor="flavin",
+                                                family="FDH", consensus_residues=conserved_motifs)
 
             if potential_enzyme:
                 potential_enzymes.append(potential_enzyme)

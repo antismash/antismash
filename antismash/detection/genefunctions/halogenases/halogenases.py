@@ -59,7 +59,7 @@ class TailoringEnzymes:
     cds_name: str
     cofactor: str = ""
     family: str = ""
-    substrates: List[str] = None
+    substrates: Union[str, List[str]] = None
     target_positions: dict[str, int] = None
     consensus_residues: dict[str, str] = None
     confidence: float = 0

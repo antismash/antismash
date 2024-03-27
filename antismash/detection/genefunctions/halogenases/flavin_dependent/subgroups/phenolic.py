@@ -1,3 +1,9 @@
+# License: GNU Affero General Public License v3 or later
+# A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
+
+# for test files, silence irrelevant and noisy pylint warnings
+# pylint: disable=use-implicit-booleaness-not-comparison,protected-access,missing-docstring
+
 from pathlib import Path
 from typing import Optional, List
 
@@ -10,9 +16,9 @@ from antismash.detection.genefunctions.halogenases.halogenases import (
 from antismash.detection.genefunctions.halogenases.flavin_dependent import substrate_analysis
 
 SPECIFIC_PROFILES = [HmmSignature("cycline_orsellinic_FDH",
-                                     "Orsellinic acid-like or other phenolic substrate halogenase",
-                                     500, get_full_path(Path(__file__).parents[2], "data",
-                                                        "halogenases", "cycline_orsellinic_FDH.hmm")),
+                                  "Orsellinic acid-like or other phenolic substrate halogenase",
+                                  500, get_full_path(Path(__file__).parents[2], "data",
+                                                     "halogenases", "cycline_orsellinic_FDH.hmm")),
                      HmmSignature("tyrosine-like_hpg_FDH",
                                   "Tyrosine-like or Hpg substrate halogenase",
                                   300, get_full_path(Path(__file__).parents[2], "data",
@@ -58,10 +64,10 @@ def get_consensus_signature(cds: CDSFeature, hit: HalogenaseHmmResult,
     if hit.query_id == "tyrosine-like_hpg_FDH":
         residues = substrate_analysis.get_residues(cds.translation, hit, [TYROSINE_LIKE_SIGNATURE,
                                                                           HPG_SIGNATURE],
-                                 substrates=["Tyr", "Hpg"])
+                                 enzyme_substrates=["Tyr", "Hpg"])
         return {"tyrosine-like_hpg_FDH": residues}
 
-    elif hit.query_id == "cycline_orsellinic_FDH":
+    if hit.query_id == "cycline_orsellinic_FDH":
         residues = substrate_analysis.get_residues(cds.translation, hit,
                                                    OTHER_PHENOLIC_SIGNATURE)
     return residues
