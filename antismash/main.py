@@ -164,7 +164,7 @@ def verify_options(options: ConfigType, modules: List[AntismashModule]) -> bool:
     if not errors_found:
         return True
 
-    logging.error("Incompatible options detected:\n  %s", "\n  ".join(errors))
+    logging.error("Incompatible options detected:\n  %s", "\n  ".join(errors_found))
     for error in errors_found:
         print(error)  # still commandline args, so don't use logging
     return False
