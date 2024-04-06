@@ -204,7 +204,6 @@ def fdh_specific_analysis(record: Record) -> Optional[list[TailoringEnzymes]]:
                  then the above mentioned informations are not defined,
                  and the information about the catogries is in the potential_enzymes attribute.
     """
-    profiles = list(set(FDH_SUBGROUPS.values()))
 
     potential_enzymes = []
     enzymes_with_hits = []
