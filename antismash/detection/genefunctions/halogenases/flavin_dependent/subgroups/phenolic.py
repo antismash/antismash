@@ -63,7 +63,7 @@ def search_for_match(name, residues, halogenase: TailoringEnzymes, hit: Halogena
         if hit.bitscore >= cutoff and (residues == sig_residues or not check_residues):
                 halogenase.add_potential_matches(Match(hit.query_id, "flavin", "FDH", position,
                                                     confidence * modifier, residues,""))
-                return True
+        return True
 
 def update_match(name, residues, halogenase: TailoringEnzymes, hit: HalogenaseHmmResult) -> None:
     if name == "tyrosine-like_hpg_FDH":

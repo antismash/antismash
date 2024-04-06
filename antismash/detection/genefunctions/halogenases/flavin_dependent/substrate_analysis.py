@@ -39,6 +39,14 @@ FDH_SUBGROUPS = {"trp_5_FDH":indolic,
                  "tyrosine-like_hpg_FDH":phenolic,
                  "pyrrole_FDH":pyrrolic}
 
+def _get_substrate_specific_profiles():
+    profiles = []
+    submodules = list(set(FDH_SUBGROUPS.values()))
+    for submodule in submodules:
+        for profile in submodule.SPECIFIC_PROFILES:
+            profiles.append(profile)
+    return profiles
+
 
 def retrieve_signature_residues(translation: str, hmm_result: HalogenaseHmmResult,
                  signatures: Union[list[int], list[list[int]]], enzyme_substrates: list = None)\
@@ -154,12 +162,11 @@ def run_halogenase_phmms(cluster_fasta: str, profiles: list) \
 
 
 
-def categorize_fdh(cds: CDSFeature, halogenase: TailoringEnzymes, hmm_results: list[HalogenaseHmmResult]) -> Optional[TailoringEnzymes]:
+def categorize_fdh(cds: CDSFeature, hmm_results: list[HalogenaseHmmResult]) -> Optional[TailoringEnzymes]:
     """ Check if protein could be categorized as a Flavin-dependent enzyme
 
         Arguments:
             cds: gene/CDS and its properties
-            halogenase: enzyme categorized as halogenase
             hit: details of the hit (e.g. bitscore, name of the profile, etc.)
 
         Returns:
@@ -172,16 +179,18 @@ def categorize_fdh(cds: CDSFeature, halogenase: TailoringEnzymes, hmm_results: l
         return None
     
     halogenase_match = TailoringEnzymes(cds.get_name())
-    
-    for hit in hmm_results:
-        signature_residues = FDH_SUBGROUPS[hit.query_id].get_consensus_signature(cds, hit)
-        specific_signature_residues = signature_residues[hit.query_id]
-        if not specific_signature_residues:
-            return
 
-        FDH_SUBGROUPS[hit.query_id].update_match(hit.query_id,
-                                                specific_signature_residues,
-                                                halogenase, hit)
+    for hit in hmm_results:
+        if hit.query_id in FDH_SUBGROUPS.keys():
+            signature_residues = FDH_SUBGROUPS[hit.query_id].get_consensus_signature(cds, hit)
+            specific_signature_residues = signature_residues[hit.query_id]
+            if not specific_signature_residues:
+                return
+            FDH_SUBGROUPS[hit.query_id].update_match(hit.query_id,
+                                                    specific_signature_residues,
+                                                    halogenase_match, hit)
+    if not halogenase_match.potential_matches:
+        return
     return halogenase_match
 
 def fdh_specific_analysis(record: Record) -> Optional[list[TailoringEnzymes]]:
@@ -203,6 +212,7 @@ def fdh_specific_analysis(record: Record) -> Optional[list[TailoringEnzymes]]:
     enzymes_with_hits = []
     features = record.get_cds_features_within_regions()
     hmmsearch_fasta = fasta.get_fasta_from_features(features)
+    
     hits = hmmscan.run_hmmscan(substrates.ALL_FDH_PROFILES,
                                hmmsearch_fasta)
     for query_result in hits:
@@ -210,39 +220,35 @@ def fdh_specific_analysis(record: Record) -> Optional[list[TailoringEnzymes]]:
             enzymes_with_hits.append(re.search(f'>{query_result.id}\n.*\n',
                                                hmmsearch_fasta).group())
             
-    enzymes_with_hits = ("".join(enzymes_with_hits))
-            
     if enzymes_with_hits:
         enzymes_with_hits = "".join(enzymes_with_hits)
         general_hmm_hits = run_halogenase_phmms(enzymes_with_hits,
                                         substrates.GENERAL_FDH_PROFILES)
-        print(general_hmm_hits)
+
+        if general_hmm_hits:
+            specific_profiles = _get_substrate_specific_profiles()
+            specific_hmm_hits = run_halogenase_phmms(enzymes_with_hits,
+                                                     specific_profiles)
         
-    #         if general_hmm_hits:
-    #             hmm_hits = run_halogenase_phmms(hmmsearch_fasta,
-    #                                             profiles)
-    #             for protein, hits in hmm_hits.items():
-    #                 cds = record.get_cds_by_name(protein)
-    #                 potential_enzyme = categorize_fdh(cds, hits)
-    #                 if potential_enzyme:
-    #                     potential_enzymes.append(potential_enzyme)
-    #             for enzyme in potential_enzymes:
-    #                 enzyme.finalize_enzyme()
-    #         if not potential_enzymes and general_hmm_hits:
-    #             conserved_motifs = {}
-    #             for protein, hits in general_hmm_hits.items():
-    #                 cds = record.get_cds_by_name(protein)
-    #                 for hit in hits:
-    #                     for motif, positions in substrates.GENERAL_FDH_MOTIFS.items():
-    #                         conserved_motif = search_conserved_motif(cds, positions,
-    #                                                     hit, motif)
-    #                         if conserved_motif:
-    #                             conserved_motifs[motif] = conserved_motif
+        if specific_hmm_hits:    
+            for protein in general_hmm_hits.keys():
+                cds = record.get_cds_by_name(protein)
+                if protein in specific_hmm_hits.keys():
+                    for hits in specific_hmm_hits.values():
+                        potential_enzyme = categorize_fdh(cds, hits)
+                        if potential_enzyme:
+                            potential_enzymes.append(potential_enzyme)
+                    for enzyme in potential_enzymes:
+                        enzyme.finalize_enzyme()
+                else:
+                    conserved_motifs = {}
+                    for hit in hits:
+                            for motif, positions in substrates.GENERAL_FDH_MOTIFS.items():
+                                conserved_motif = search_conserved_motif(cds, positions,
+                                                            hit, motif)
+                                if conserved_motif:
+                                    conserved_motifs[motif] = conserved_motif
 
-    #                 potential_enzyme = TailoringEnzymes(protein, cofactor="flavin",
-    #                                                     family="FDH", consensus_residues=conserved_motifs)
-
-    #                 if potential_enzyme:
-    #                     potential_enzymes.append(potential_enzyme)
-    # print(potential_enzymes)
+                    potential_enzyme = TailoringEnzymes(protein, cofactor="flavin", family="FDH", consensus_residues=conserved_motifs)
+    print(potential_enzymes)
     return potential_enzymes
