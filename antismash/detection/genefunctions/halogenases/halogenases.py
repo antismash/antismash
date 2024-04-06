@@ -54,14 +54,15 @@ class Match:
     def from_json(cls, data: dict[str, Any]) -> "Match":
         return cls(**data)
 
+
 @dataclass
 class TailoringEnzymes:
     cds_name: str
     cofactor: str = ""
     family: str = ""
-    substrates: Union[str, List[str]] = None
-    target_positions: dict[str, int] = None
-    consensus_residues: dict[str, str] = None
+    substrates: Union[str, List[str], None] = None
+    target_positions: Optional[dict[str, int]] = None
+    consensus_residues: Optional[dict[str, str]] = None
     confidence: float = 0
     potential_matches: list[Match] = field(default_factory=list)
 
@@ -89,7 +90,7 @@ class TailoringEnzymes:
 
             highest_confidence = max(profile.confidence for profile in self.potential_matches)
             for profile in self.potential_matches:
-                if self.almost_equal(profile.confidence, highest_confidence, 0.005):
+                if abs(profile.confidence-highest_confidence) <= 0.005:
                     best_match.append(profile)
 
         return best_match
@@ -131,8 +132,8 @@ class TailoringEnzymes:
         }
 
     @classmethod
-    def from_json(cls, data: Dict[str, Any]) -> "HalogenaseResult":
-        """ Constructs the HalogenasesResults from the JSON representation """
+    def from_json(cls, data: Dict[str, Any]) -> "TailoringEnzymes":
+        """ Constructs the TailoringEnzymes from the JSON representation """
 
         cds_name = data["cds_name"]
         family = data["family"]
@@ -145,3 +146,6 @@ class TailoringEnzymes:
         enzyme = cls(cds_name, family, cofactor, substrates, position,
                      consensus_residues, confidence, potential_matches)
         return enzyme
+
+class FlavinDependentHalogenases(TailoringEnzymes):
+   pass

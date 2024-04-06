@@ -8,7 +8,7 @@ from typing import Optional
 
 from antismash.common.secmet import Record
 from antismash.detection.genefunctions.halogenases.halogenases import TailoringEnzymes
-from antismash.detection.genefunctions.halogenases.flavin_dependent.substrate_analysis import fdh_specific_analysis
+from .flavin_dependent.substrate_analysis import fdh_specific_analysis
 
 def specific_analysis(record: Record)\
     -> Optional[list[TailoringEnzymes]]:
