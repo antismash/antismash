@@ -200,42 +200,49 @@ def fdh_specific_analysis(record: Record) -> Optional[list[TailoringEnzymes]]:
     profiles = list(set(FDH_SUBGROUPS.values()))
 
     potential_enzymes = []
+    enzymes_with_hits = []
     features = record.get_cds_features_within_regions()
     hmmsearch_fasta = fasta.get_fasta_from_features(features)
-
     hits = hmmscan.run_hmmscan(substrates.ALL_FDH_PROFILES,
                                hmmsearch_fasta)
     for query_result in hits:
         if query_result.hits:
+            enzymes_with_hits.append(re.search(f'>{query_result.id}\n.*\n',
+                                               hmmsearch_fasta).group())
+            
+    enzymes_with_hits = ("".join(enzymes_with_hits))
+            
+    if enzymes_with_hits:
+        enzymes_with_hits = "".join(enzymes_with_hits)
+        general_hmm_hits = run_halogenase_phmms(enzymes_with_hits,
+                                        substrates.GENERAL_FDH_PROFILES)
+        print(general_hmm_hits)
+        
+    #         if general_hmm_hits:
+    #             hmm_hits = run_halogenase_phmms(hmmsearch_fasta,
+    #                                             profiles)
+    #             for protein, hits in hmm_hits.items():
+    #                 cds = record.get_cds_by_name(protein)
+    #                 potential_enzyme = categorize_fdh(cds, hits)
+    #                 if potential_enzyme:
+    #                     potential_enzymes.append(potential_enzyme)
+    #             for enzyme in potential_enzymes:
+    #                 enzyme.finalize_enzyme()
+    #         if not potential_enzymes and general_hmm_hits:
+    #             conserved_motifs = {}
+    #             for protein, hits in general_hmm_hits.items():
+    #                 cds = record.get_cds_by_name(protein)
+    #                 for hit in hits:
+    #                     for motif, positions in substrates.GENERAL_FDH_MOTIFS.items():
+    #                         conserved_motif = search_conserved_motif(cds, positions,
+    #                                                     hit, motif)
+    #                         if conserved_motif:
+    #                             conserved_motifs[motif] = conserved_motif
 
-            general_hmm_hits = run_halogenase_phmms(hmmsearch_fasta,
-                                            substrates.GENERAL_FDH_PROFILES)
+    #                 potential_enzyme = TailoringEnzymes(protein, cofactor="flavin",
+    #                                                     family="FDH", consensus_residues=conserved_motifs)
 
-            if general_hmm_hits:
-                hmm_hits = run_halogenase_phmms(hmmsearch_fasta,
-                                                profiles)
-                for protein, hits in hmm_hits.items():
-                    cds = record.get_cds_by_name(protein)
-                    potential_enzyme = categorize_fdh(cds, hits)
-                    if potential_enzyme:
-                        potential_enzymes.append(potential_enzyme)
-                for enzyme in potential_enzymes:
-                    enzyme.finalize_enzyme()
-            if not potential_enzymes and general_hmm_hits:
-                conserved_motifs = {}
-                for protein, hits in general_hmm_hits.items():
-                    cds = record.get_cds_by_name(protein)
-                    for hit in hits:
-                        for motif, positions in substrates.GENERAL_FDH_MOTIFS.items():
-                            conserved_motif = search_conserved_motif(cds, positions,
-                                                        hit, motif)
-                            if conserved_motif:
-                                conserved_motifs[motif] = conserved_motif
-
-                    potential_enzyme = TailoringEnzymes(protein, cofactor="flavin",
-                                                        family="FDH", consensus_residues=conserved_motifs)
-
-                    if potential_enzyme:
-                        potential_enzymes.append(potential_enzyme)
-    print(potential_enzymes)
+    #                 if potential_enzyme:
+    #                     potential_enzymes.append(potential_enzyme)
+    # print(potential_enzymes)
     return potential_enzymes
