@@ -69,7 +69,7 @@ def get_consensus_signature(cds: CDSFeature, hit: HalogenaseHmmResult,
                  ) -> Union[dict, dict[str, str]]:
     residues = {}
     if hit.query_id == "trp_5_FDH":
-        residues = substrate_analysis.retrieve_signature_residues(cds.translation, hit, TRP_5_SIGNATURE)
+        residues = substrate_analysis.retrieve_fdh_signature_residues(cds.translation, hit, TRP_5_SIGNATURE)
     if hit.query_id == "trp_6_7_FDH":
-        residues = substrate_analysis.retrieve_signature_residues(cds.translation, hit, TRP_6_SIGNATURE)
+        residues = substrate_analysis.retrieve_fdh_signature_residues(cds.translation, hit, TRP_6_SIGNATURE)
     return residues

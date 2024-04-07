@@ -5,7 +5,7 @@
 # pylint: disable=use-implicit-booleaness-not-comparison,protected-access,missing-docstring
 
 from pathlib import Path
-from typing import Union, List
+from typing import Union, Optional, List
 
 from antismash.common.secmet import CDSFeature
 from antismash.common.path import get_full_path
@@ -31,25 +31,28 @@ def search_for_match(name, residues, halogenase: TailoringEnzymes, hit: Halogena
                     position: Union[int, List[int]], cutoffs: List[float], *,
                     check_residues: bool = True, sig_residues: Union[str, dict[str,str]] = "",
                     confidence: float = 1, targets: bool = False):
-
+    
     if hit.query_id != name:
         return False
     cutoffs.sort(reverse=True)
     modifier = 1.
     for cutoff in cutoffs:
-        for subs, sig_res in residues.items():
-            if hit.bitscore >= cutoff and (sig_res == sig_residues[subs] or
-                                            not check_residues):
-                if not targets:
-                    halogenase.add_potential_matches(Match(hit.query_id, "flavin",
-                                                            "FDH", position,
-                                                            confidence * modifier,
-                                                            sig_res, subs))
+        if isinstance(residues, dict) and isinstance(sig_residues, dict):
+            for subs, sig_res in residues.items():
+                if hit.bitscore >= cutoff and (sig_res == sig_residues or
+                                                not check_residues):
+                        halogenase.add_potential_matches(Match(hit.query_id, "flavin", "FDH",
+                                                                position, confidence * modifier,
+                                                                sig_res, subs))
                 else:
                     halogenase.add_potential_matches(Match(hit.query_id, "flavin", "FDH", subs,
                                                             confidence * modifier,
                                                             sig_res))
-    return True
+            return True
+        if hit.bitscore >= cutoff and (residues == sig_residues or not check_residues):
+            halogenase.add_potential_matches(Match(hit.query_id, "flavin", "FDH", position,
+                                                    confidence * modifier, residues,""))
+        return True
 
 def update_match(name, residues, halogenase: TailoringEnzymes, hit: HalogenaseHmmResult) -> None:
     if name == "pyrrole_FDH":
@@ -64,11 +67,14 @@ def get_signatures() -> List[List[int]]:
 
 def get_consensus_signature(cds: CDSFeature, hit: HalogenaseHmmResult,
                  ) -> Union[dict, dict[str, str]]:
-    residues = {}
+    
     if hit.query_id == "pyrrole_FDH":
-        residues = substrate_analysis.retrieve_signature_residues(cds.translation, hit,
-                                get_signatures(),
-                                enzyme_substrates=["mono_di", "tetra", "unconv_mono_di"])
-        return {"pyrrole_FDH": residues}
-    return residues
+        signature_residues: dict[str, Optional[str]] = {}
+        substrates_signatures = dict(zip(list(PYRROLE_SIGNATURE_RESIDUES.keys()),(3*PYRROLE_SIGNATURE)))
+        for substrate, signature in substrates_signatures.items():
+            signature_residues[substrate] = substrate_analysis.search_residues(cds.translation,
+                                                                               PYRROLE_SIGNATURE,
+                                                                               hit)
+        return {"pyrrole_FDH": signature_residues}
+    return
 

@@ -37,7 +37,7 @@ from antismash.detection.genefunctions.halogenases.flavin_dependent.substrate_an
     categorize_fdh,
     check_for_halogenases,
     fdh_specific_analysis,
-    retrieve_signature_residues,
+    retrieve_fdh_signature_residues,
     _gather_fdh_substrate_modules,
     _get_analysis_modules,
     _ANALYSIS_MODULES,
@@ -220,7 +220,7 @@ class TestPhenolic(unittest.TestCase):
         
     def test_get_residues(self):
         cds = DummyCDS(locus_tag="BhaA", translation=test_protein_translations["BhaA"])
-        residues = substrate_analysis.retrieve_signature_residues(cds.translation, self.hpg_hmm_result,
+        residues = substrate_analysis.retrieve_fdh_signature_residues(cds.translation, self.hpg_hmm_result,
                                                    [phenolic.HPG_SIGNATURE, phenolic.TYROSINE_LIKE_SIGNATURE],
                                                    enzyme_substrates=["Tyr", "Hpg"])
         assert isinstance(residues, dict)
@@ -265,7 +265,7 @@ class TestPyrrolic(unittest.TestCase):
                 
     def test_get_residues(self):
         cds = DummyCDS(locus_tag="bmp2", translation=test_protein_translations["bmp2"])
-        residues = substrate_analysis.retrieve_signature_residues(cds.translation, self.pyrrole_hmm_result,
+        residues = substrate_analysis.retrieve_fdh_signature_residues(cds.translation, self.pyrrole_hmm_result,
                                                    [pyrrolic.PYRROLE_SIGNATURE],
                                                    enzyme_substrates=["mono_di", "tetra", "unconv_mono_di"])
         assert isinstance(residues, dict)

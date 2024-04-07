@@ -39,31 +39,22 @@ HPG_SIGNATURE_RESIDUES = "SHCGMQ"
 OTHER_PHENOLIC_SIGNATURE_RESIDUES = "LGPRGGRDAGVDAGGYGFDPSG"
 
 def search_for_match(name, residues, halogenase: TailoringEnzymes, hit: HalogenaseHmmResult,
-                    position: Union[int, List[int]], cutoffs: List[float], *,
-                    check_residues: bool = True, sig_residues: Union[str, dict[str,str]] = "",
+                    position: Union[int, List[int]], cutoffs: List[float], *, sig_residues: Union[str, dict[str,str]] = "",
                     confidence: float = 1):
 
     if hit.query_id != name:
         return False
     cutoffs.sort(reverse=True)
     modifier = 1.
+    
     for cutoff in cutoffs:
-        if isinstance(residues, dict) and isinstance(sig_residues, dict):
-            for subs, sig_res in residues.items():
-                if hit.bitscore >= cutoff and (sig_res == sig_residues or
-                                                not check_residues):
-                        halogenase.add_potential_matches(Match(hit.query_id, "flavin", "FDH",
-                                                                position, confidence * modifier,
-                                                                sig_res, subs))
-                else:
-                    halogenase.add_potential_matches(Match(hit.query_id, "flavin", "FDH", subs,
+        for subs, sig_res in residues.items():
+            if hit.bitscore >= cutoff and (sig_res == sig_residues):
+                halogenase.add_potential_matches(Match(hit.query_id, "flavin",
+                                                            "FDH", position,
                                                             confidence * modifier,
-                                                            sig_res))
-            return True
-        if hit.bitscore >= cutoff and (residues == sig_residues or not check_residues):
-                halogenase.add_potential_matches(Match(hit.query_id, "flavin", "FDH", position,
-                                                    confidence * modifier, residues,""))
-        return True
+                                                            sig_res, subs))
+                return True
 
 def update_match(name, residues, halogenase: TailoringEnzymes, hit: HalogenaseHmmResult) -> None:
     if name == "tyrosine-like_hpg_FDH":
@@ -90,13 +81,13 @@ def get_consensus_signature(cds: CDSFeature, hit: HalogenaseHmmResult,
                  ) -> Union[dict, dict[str, str]]:
     residues = {}
     if hit.query_id == "tyrosine-like_hpg_FDH":
-        residues = substrate_analysis.retrieve_signature_residues(cds.translation, hit,
+        residues = substrate_analysis.retrieve_fdh_signature_residues(cds.translation, hit,
                                                    [TYROSINE_LIKE_SIGNATURE,
                                                     HPG_SIGNATURE],
                                                    enzyme_substrates=["Tyr", "Hpg"])
         return {"tyrosine-like_hpg_FDH": residues}
 
     if hit.query_id == "cycline_orsellinic_FDH":
-        residues = substrate_analysis.retrieve_signature_residues(cds.translation, hit,
+        residues = substrate_analysis.retrieve_fdh_signature_residues(cds.translation, hit,
                                                    OTHER_PHENOLIC_SIGNATURE)
     return residues

@@ -48,7 +48,7 @@ def _get_substrate_specific_profiles():
     return profiles
 
 
-def retrieve_signature_residues(translation: str, hmm_result: HalogenaseHmmResult,
+def retrieve_fdh_signature_residues(translation: str, hmm_result: HalogenaseHmmResult,
                  signatures: Union[list[int], list[list[int]]], enzyme_substrates: list = None)\
                  -> dict[str, Optional[str]]:
     """ Get signature residues for an enzyme from each pHMM
@@ -68,13 +68,9 @@ def retrieve_signature_residues(translation: str, hmm_result: HalogenaseHmmResul
         residue = search_residues(translation, signatures, hmm_result)
         signature_residues[hmm_result.query_id] = residue
     else:
-        if len(signatures) == 1:
-            substrates_signatures = dict(zip(enzyme_substrates,(3*signatures)))
-        else:
-            substrates_signatures = dict(zip(enzyme_substrates,signatures))
+        substrates_signatures = dict(zip(enzyme_substrates,signatures))
         for substrate, signature in substrates_signatures.items():
-            signature_residues[substrate] = search_residues(translation,
-                                                                      signature, hmm_result)
+            signature_residues[substrate] = search_residues(translation, signature, hmm_result)
 
     return signature_residues
 
@@ -189,6 +185,7 @@ def categorize_fdh(cds: CDSFeature, halogenase_match: TailoringEnzymes, hmm_resu
                                                     halogenase_match, hit)
     if not halogenase_match.potential_matches:
         return
+
     return halogenase_match
 
 def fdh_specific_analysis(record: Record) -> Optional[list[TailoringEnzymes]]:
@@ -248,5 +245,5 @@ def fdh_specific_analysis(record: Record) -> Optional[list[TailoringEnzymes]]:
                                 conserved_motifs[motif] = conserved_motif
 
                 enzyme.consensus_residues = conserved_motifs
-
+    print(potential_enzymes)
     return potential_enzymes
