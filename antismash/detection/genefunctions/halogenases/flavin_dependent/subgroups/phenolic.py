@@ -35,8 +35,6 @@ OTHER_PHENOLIC_SIGNATURE = [23, 27, 39, 40, 59, 74, 109, 113, 120, 124, 133, 165
 
 TYR_HPG_SIGNATURE_RESIDUES = {"Tyr": "GFQRLGDAGLSGVPSYGADPSGLYW",
                               "Hpg": "SHCGMQ"}
-# TYROSINE_LIKE_SIGNATURE_RESIDUES = "GFQRLGDAGLSGVPSYGADPSGLYW"
-# HPG_SIGNATURE_RESIDUES = "SHCGMQ"
 
 OTHER_PHENOLIC_SIGNATURE_RESIDUES = "LGPRGGRDAGVDAGGYGFDPSG"
 
@@ -62,34 +60,43 @@ def search_for_match(name, residues, halogenase: FlavinDependentHalogenases, hit
     """
     
     # needs some extra thoughts
-    substrate_counter = 0
     
     if hit.query_id != name:
         return False
     cutoffs.sort(reverse=True)
     modifier = 1.
     
-    for subs, sig_res in residues.items():
-        if sig_res == sig_residues[subs]:
-            substrate_counter += 1
-    
-    for cutoff in cutoffs:        
-        if hit.bitscore >= cutoff and (substrate_counter == 2):
-            halogenase.add_potential_matches(Match(hit.query_id, "flavin", "FDH",
-                                                   confidence * modifier, residues["Hpg"],
-                                                   position=position, substrate="Hpg"))        
-            modifier = .5
-            halogenase.add_potential_matches(Match(hit.query_id, "flavin", "FDH",
-                                                    confidence * modifier, residues["Tyr"],
-                                                    position=position, substrate="Tyr"))
-            return True
-        if hit.bitscore >= cutoff:
-            if residues["Tyr"] == sig_residues["Tyr"]:
+    if isinstance(sig_residues, dict):
+        substrate_counter = 0
+        for subs, sig_res in residues.items():
+            if sig_res == sig_residues[subs]:
+                substrate_counter += 1
+        
+        for cutoff in cutoffs:        
+            if hit.bitscore >= cutoff and (substrate_counter == 2):
+                halogenase.add_potential_matches(Match(hit.query_id, "flavin", "FDH",
+                                                    confidence * modifier, residues["Hpg"],
+                                                    position=position, substrate="Hpg"))        
                 modifier = .5
+                halogenase.add_potential_matches(Match(hit.query_id, "flavin", "FDH",
+                                                        confidence * modifier, residues["Tyr"],
+                                                        position=position, substrate="Tyr"))
+                return True
+            if hit.bitscore >= cutoff:
+                if residues["Tyr"] == sig_residues["Tyr"]:
+                    modifier = .5
+                halogenase.add_potential_matches(Match(hit.query_id, "flavin", "FDH",
+                                                    confidence * modifier, residues,
+                                                    position=position, substrate="Tyr"))
+                return True
+
+    for cutoff in cutoffs:
+        if hit.bitscore >= cutoff and (residues == sig_residues):
             halogenase.add_potential_matches(Match(hit.query_id, "flavin", "FDH",
-                                                   confidence * modifier, residues,
-                                                   position=position, substrate="Tyr"))
-            return True            
+                                                    confidence * modifier, residues,
+                                                    position=position))
+            return True
+        modifier = .5
     return
 
 def update_match(name, residues, halogenase: FlavinDependentHalogenases, hit: HalogenaseHmmResult) -> None:
