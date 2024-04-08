@@ -56,10 +56,10 @@ class Match:
 
 
 @dataclass
-class TailoringEnzymes:
+class FlavinDependentHalogenases:
     cds_name: str
-    cofactor: str = ""
-    family: str = ""
+    cofactor: str
+    family: str
     substrates: Union[str, List[str], None] = None
     target_positions: Optional[dict[str, int]] = None
     consensus_residues: Optional[dict[str, str]] = None
@@ -132,7 +132,7 @@ class TailoringEnzymes:
         }
 
     @classmethod
-    def from_json(cls, data: Dict[str, Any]) -> "TailoringEnzymes":
+    def from_json(cls, data: Dict[str, Any]) -> "FlavinDependentHalogenases":
         """ Constructs the TailoringEnzymes from the JSON representation """
 
         cds_name = data["cds_name"]
@@ -147,5 +147,5 @@ class TailoringEnzymes:
                      consensus_residues, confidence, potential_matches)
         return enzyme
 
-class FlavinDependentHalogenases(TailoringEnzymes):
+class TailoringEnzymes():
    pass

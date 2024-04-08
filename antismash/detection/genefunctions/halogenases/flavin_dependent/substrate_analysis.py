@@ -8,6 +8,7 @@ import logging
 import re
 from collections import defaultdict
 from typing import Union, Optional
+import itertools
 
 from antismash.common.secmet import (
     CDSFeature,
@@ -19,8 +20,7 @@ from antismash.common import (
     utils)
 
 from antismash.detection.genefunctions.halogenases.halogenases import (
-    Match,
-    TailoringEnzymes,
+    FlavinDependentHalogenases,
     HalogenaseHmmResult
     )
 
@@ -33,6 +33,7 @@ from antismash.detection.genefunctions.halogenases.flavin_dependent.subgroups im
     pyrrolic
 )
 
+# pHMM ids and the submodules they belong to for use in calling submodule-specific functions
 FDH_SUBGROUPS = {"trp_5_FDH":indolic,
                  "trp_6_7_FDH":indolic,
                  "cycline_orsellinic_FDH":phenolic,
@@ -40,6 +41,7 @@ FDH_SUBGROUPS = {"trp_5_FDH":indolic,
                  "pyrrole_FDH":pyrrolic}
 
 def _get_substrate_specific_profiles():
+    """ Collects the substrate-specific pHMM profiles from the substrate-specific submodules"""
     profiles = []
     submodules = list(set(FDH_SUBGROUPS.values()))
     for submodule in submodules:
@@ -119,13 +121,24 @@ def search_residues(sequence: str, positions: list[int],
 def search_conserved_motif(cds: CDSFeature, motif_positions: list[int],
                            hmm_result: HalogenaseHmmResult,
                            motif_pattern):
-    """Looks for WxWxIP and Fx.Px.Sx.G"""
+    """ Looks for WxWxIP and Fx.Px.Sx.G conserved motifs, characteristic to FDHs
+    
+        Arguments:
+            cds: gene/CDS and its properties
+            motif_positions: positions of the conserved motifs in the pHMM
+            hmm_result: details of the hit (e.g. bitscore, name of the profile, etc.)
+            motif_pattern: pattern of the motif in regex
+            
+        Returns:
+            if the conserved motifs are present, then it returns those,
+            if they are not present it returns an empty string
+    """
 
     categorized = ""
 
     signature_residues = search_residues(cds.translation,
-                                                               motif_positions,
-                                                               hmm_result)
+                                         motif_positions,
+                                         hmm_result)
     if not signature_residues:
         return categorized
 
@@ -158,7 +171,7 @@ def run_halogenase_phmms(cluster_fasta: str, profiles: list) \
 
 
 
-def categorize_fdh(cds: CDSFeature, halogenase_match: TailoringEnzymes, hmm_results: list[HalogenaseHmmResult]) -> Optional[TailoringEnzymes]:
+def categorize_fdh(cds: CDSFeature, halogenase_match: FlavinDependentHalogenases, hmm_results: list[HalogenaseHmmResult]) -> Optional[FlavinDependentHalogenases]:
     """ Check if protein could be categorized as a Flavin-dependent enzyme
 
         Arguments:
@@ -188,11 +201,12 @@ def categorize_fdh(cds: CDSFeature, halogenase_match: TailoringEnzymes, hmm_resu
 
     return halogenase_match
 
-def fdh_specific_analysis(record: Record) -> Optional[list[TailoringEnzymes]]:
+def fdh_specific_analysis(record: Record) -> Optional[list[FlavinDependentHalogenases]]:
     """ Categorization of enzyme, categorizes any halogenase in a cds in regions
 
         Arguments: record instance,
                    which holds information of the identified clusters
+
         Returns: list of HalogenasesResults instances representing halogenase enzymes,
                  if there is a clear best match for a given enzyme, then the information
                  about the position of halogenation, the confidence of the categorization,
@@ -201,7 +215,7 @@ def fdh_specific_analysis(record: Record) -> Optional[list[TailoringEnzymes]]:
                  then the above mentioned informations are not defined,
                  and the information about the catogries is in the potential_enzymes attribute.
     """
-
+    
     potential_enzymes = []
     enzymes_with_hits = []
     features = record.get_cds_features_within_regions()
@@ -213,28 +227,22 @@ def fdh_specific_analysis(record: Record) -> Optional[list[TailoringEnzymes]]:
         if query_result.hits:
             enzymes_with_hits.append(re.search(f'>{query_result.id}\n.*\n',
                                                hmmsearch_fasta).group())
-            
     if enzymes_with_hits:
         enzymes_with_hits = "".join(enzymes_with_hits)
         general_hmm_hits = run_halogenase_phmms(enzymes_with_hits,
                                         substrates.GENERAL_FDH_PROFILES)
-
         if general_hmm_hits:
             specific_profiles = _get_substrate_specific_profiles()
             specific_hmm_hits = run_halogenase_phmms(enzymes_with_hits,
                                                      specific_profiles)
-           
         for protein in general_hmm_hits.keys():
             cds = record.get_cds_by_name(protein)
-            enzyme = TailoringEnzymes(protein, cofactor="flavin", family="FDH")
+            enzyme = FlavinDependentHalogenases(protein, cofactor="flavin", family="FDH")
             
             if protein in specific_hmm_hits.keys():
-                for hits in specific_hmm_hits.values():
-                    potential_enzyme = categorize_fdh(cds, enzyme, hits)
-                    if potential_enzyme:
-                        potential_enzymes.append(potential_enzyme)
-                for enzyme in potential_enzymes:
-                    enzyme.finalize_enzyme()
+                potential_enzyme = categorize_fdh(cds, enzyme, specific_hmm_hits[protein])
+                if potential_enzyme:
+                    potential_enzymes.append(potential_enzyme)
             else:
                 conserved_motifs = {}
                 for hit in hits:
@@ -245,5 +253,9 @@ def fdh_specific_analysis(record: Record) -> Optional[list[TailoringEnzymes]]:
                                 conserved_motifs[motif] = conserved_motif
 
                 enzyme.consensus_residues = conserved_motifs
+
+        for enzyme in potential_enzymes:
+            enzyme.finalize_enzyme()
+            
     print(potential_enzymes)
     return potential_enzymes
