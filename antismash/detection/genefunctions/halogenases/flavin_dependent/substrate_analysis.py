@@ -240,9 +240,7 @@ def fdh_specific_analysis(record: Record) -> Optional[list[FlavinDependentHaloge
             enzyme = FlavinDependentHalogenases(protein, cofactor="flavin", family="FDH")
             
             if protein in specific_hmm_hits.keys():
-                potential_enzyme = categorize_fdh(cds, enzyme, specific_hmm_hits[protein])
-                if potential_enzyme:
-                    potential_enzymes.append(potential_enzyme)
+                enzyme = categorize_fdh(cds, enzyme, specific_hmm_hits[protein])
             else:
                 conserved_motifs = {}
                 for hit in hits:
@@ -254,6 +252,7 @@ def fdh_specific_analysis(record: Record) -> Optional[list[FlavinDependentHaloge
 
                 enzyme.consensus_residues = conserved_motifs
 
+            potential_enzymes.append(enzyme)
         for enzyme in potential_enzymes:
             enzyme.finalize_enzyme()
             
