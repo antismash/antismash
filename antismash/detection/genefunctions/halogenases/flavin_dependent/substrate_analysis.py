@@ -8,7 +8,6 @@ import logging
 import re
 from collections import defaultdict
 from typing import Union, Optional
-import itertools
 
 from antismash.common.secmet import (
     CDSFeature,
@@ -77,8 +76,8 @@ def retrieve_fdh_signature_residues(translation: str, hmm_result: HalogenaseHmmR
     return signature_residues
 
 def search_residues(sequence: str, positions: list[int],
-                              hmm_result: HalogenaseHmmResult,
-                              max_evalue: float = 0.1) -> Optional[str]:
+                    hmm_result: HalogenaseHmmResult,
+                    max_evalue: float = 0.1) -> Optional[str]:
     """ Get the signature residues from the pHMM for the searched protein sequence
 
         Arguments:
@@ -135,7 +134,6 @@ def search_conserved_motif(cds: CDSFeature, motif_positions: list[int],
     """
 
     categorized = ""
-
     signature_residues = search_residues(cds.translation,
                                          motif_positions,
                                          hmm_result)
@@ -171,7 +169,7 @@ def run_halogenase_phmms(cluster_fasta: str, profiles: list) \
 
 
 
-def categorize_fdh(cds: CDSFeature, halogenase_match: FlavinDependentHalogenases, hmm_results: list[HalogenaseHmmResult]) -> Optional[FlavinDependentHalogenases]:
+def categorize_on_substrate_level(cds: CDSFeature, halogenase_match: FlavinDependentHalogenases, hmm_results: list[HalogenaseHmmResult]) -> Optional[FlavinDependentHalogenases]:
     """ Check if protein could be categorized as a Flavin-dependent enzyme
 
         Arguments:
@@ -240,21 +238,23 @@ def fdh_specific_analysis(record: Record) -> Optional[list[FlavinDependentHaloge
             enzyme = FlavinDependentHalogenases(protein, cofactor="flavin", family="FDH")
             
             if protein in specific_hmm_hits.keys():
-                enzyme = categorize_fdh(cds, enzyme, specific_hmm_hits[protein])
-            else:
+                enzyme = categorize_on_substrate_level(cds, enzyme, specific_hmm_hits[protein])
+                
+            # if it's not in the specific hits or couldn't be categorized further
+            elif not enzyme.potential_matches:
                 conserved_motifs = {}
-                for hit in hits:
-                        for motif, positions in substrates.GENERAL_FDH_MOTIFS.items():
-                            conserved_motif = search_conserved_motif(cds, positions,
-                                                        hit, motif)
-                            if conserved_motif:
-                                conserved_motifs[motif] = conserved_motif
+                for hit in general_hmm_hits[protein]:
+                    for motif, positions in substrates.GENERAL_FDH_MOTIFS.items():
+                        conserved_motif = search_conserved_motif(cds, positions,
+                                                                 hit, motif)
+                        if conserved_motif:
+                            conserved_motifs[motif] = conserved_motif
 
                 enzyme.consensus_residues = conserved_motifs
 
             potential_enzymes.append(enzyme)
+
         for enzyme in potential_enzymes:
             enzyme.finalize_enzyme()
-            
     print(potential_enzymes)
     return potential_enzymes

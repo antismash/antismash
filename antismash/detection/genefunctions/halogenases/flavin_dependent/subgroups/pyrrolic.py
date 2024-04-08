@@ -28,8 +28,8 @@ PYRROLE_SIGNATURE_RESIDUES = {"mono_di":"DRSVFW",
                               "tetra":"RRYFFA"}
 
 def search_for_match(name, residues, halogenase: FlavinDependentHalogenases, hit: HalogenaseHmmResult,
-                    position: Union[int, List[int]], cutoffs: List[float], *,
-                    sig_residues: Union[str, dict[str,str]] = "", confidence: float = 1):
+                     cutoffs: List[float], *,
+                     sig_residues: Union[str, dict[str,str]] = "", confidence: float = 1):
     """ Looks whether there are hmm hits that meet the requirement for the categorization
         
         Arguments:
@@ -37,7 +37,6 @@ def search_for_match(name, residues, halogenase: FlavinDependentHalogenases, hit
             residues: 
             halogenase: initiated flavin-dependent halogenase
             hit: details of the hit (e.g. bitscore, name of the profile, etc.)
-            position: positions of signature residues in the substrate-specific pHMM
             cutoffs: threshold(s) for the pHMM
             sig_residues: substrate-specific signature residues
             confidence: reliability of the categorization
@@ -57,8 +56,8 @@ def search_for_match(name, residues, halogenase: FlavinDependentHalogenases, hit
             for subs, sig_res in residues.items():
                 if hit.bitscore >= cutoff and sig_res == sig_residues[subs]:
                         halogenase.add_potential_matches(Match(hit.query_id, "flavin", "FDH",
-                                                                position, confidence * modifier,
-                                                                sig_res, subs))
+                                                               confidence * modifier,
+                                                               sig_res, number_of_decorations=subs))
             return True
         return
 
@@ -78,7 +77,7 @@ def update_match(name, residues, halogenase: FlavinDependentHalogenases, hit: Ha
             otherwise, it doesn't return anything and doesn't instanciate anything
     """
     if name == "pyrrole_FDH":
-        search_for_match(name, residues, halogenase, hit, 0,
+        search_for_match(name, residues, halogenase, hit,
                          cutoffs=[SPECIFIC_PROFILES[0].cutoff],
                          sig_residues=PYRROLE_SIGNATURE_RESIDUES)
         halogenase.substrates = "pyrrole"

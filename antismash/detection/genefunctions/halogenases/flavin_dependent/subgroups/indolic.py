@@ -44,7 +44,7 @@ def search_for_match(name: str, residues, halogenase: FlavinDependentHalogenases
             residues: 
             halogenase: initiated flavin-dependent halogenase
             hit: details of the hit (e.g. bitscore, name of the profile, etc.)
-            position: positions of signature residues in the substrate-specific pHMM
+            position: position of decoration
             cutoffs: threshold(s) for the pHMM
             check_residues: should the signature residues be looked at or not
             sig_residues: substrate-specific signature residues
@@ -61,9 +61,10 @@ def search_for_match(name: str, residues, halogenase: FlavinDependentHalogenases
     modifier = 1.
     for cutoff in cutoffs:
         if hit.bitscore >= cutoff and (residues == sig_residues or not check_residues):
-            halogenase.add_potential_matches(Match(hit.query_id, "flavin", "FDH", position,
-                                                confidence * modifier, residues,""))
+            halogenase.add_potential_matches(Match(hit.query_id, "flavin", "FDH",
+                                                   confidence * modifier, residues, position=position))
             return True
+        modifier = .5
 
 def update_match(name: str, residues, halogenase: FlavinDependentHalogenases, hit: HalogenaseHmmResult) -> None:
     """ Looks whether there are hmm hits that meet the requirement for the categorization as Trp-5, Trp-6,

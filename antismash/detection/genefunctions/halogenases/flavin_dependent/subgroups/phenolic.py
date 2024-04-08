@@ -33,13 +33,15 @@ HPG_SIGNATURE =  [66, 158, 196, 200, 246, 259]
 OTHER_PHENOLIC_SIGNATURE = [23, 27, 39, 40, 59, 74, 109, 113, 120, 124, 133, 165,
                             166, 168, 233, 284, 291, 303, 305, 306, 309, 311]
 
-TYROSINE_LIKE_SIGNATURE_RESIDUES = "GFQRLGDAGLSGVPSYGADPSGLYW"
-HPG_SIGNATURE_RESIDUES = "SHCGMQ"
+TYR_HPG_SIGNATURE_RESIDUES = {"Tyr": "GFQRLGDAGLSGVPSYGADPSGLYW",
+                              "Hpg": "SHCGMQ"}
+# TYROSINE_LIKE_SIGNATURE_RESIDUES = "GFQRLGDAGLSGVPSYGADPSGLYW"
+# HPG_SIGNATURE_RESIDUES = "SHCGMQ"
 
 OTHER_PHENOLIC_SIGNATURE_RESIDUES = "LGPRGGRDAGVDAGGYGFDPSG"
 
 def search_for_match(name, residues, halogenase: FlavinDependentHalogenases, hit: HalogenaseHmmResult,
-                    position: Union[int, List[int]], cutoffs: List[float], *, sig_residues: Union[str, dict[str,str]] = "",
+                    position: Union[int, List[int]], cutoffs: List[float], *, sig_residues,
                     confidence: float = 1):
     """ Looks whether there are hmm hits that meet the requirement for the categorization
         
@@ -48,7 +50,7 @@ def search_for_match(name, residues, halogenase: FlavinDependentHalogenases, hit
             residues: 
             halogenase: initiated flavin-dependent halogenase
             hit: details of the hit (e.g. bitscore, name of the profile, etc.)
-            position: positions of signature residues in the substrate-specific pHMM
+            position: position of decoration
             cutoffs: threshold(s) for the pHMM
             sig_residues: substrate-specific signature residues
             confidence: reliability of the categorization
@@ -58,20 +60,37 @@ def search_for_match(name, residues, halogenase: FlavinDependentHalogenases, hit
             then it adds the match, without returning anything,
             otherwise, it returns False
     """
- 
+    
+    # needs some extra thoughts
+    substrate_counter = 0
+    
     if hit.query_id != name:
         return False
     cutoffs.sort(reverse=True)
     modifier = 1.
     
-    for cutoff in cutoffs:
-        for subs, sig_res in residues.items():
-            if hit.bitscore >= cutoff and (sig_res == sig_residues):
-                halogenase.add_potential_matches(Match(hit.query_id, "flavin",
-                                                            "FDH", position,
-                                                            confidence * modifier,
-                                                            sig_res, subs))
-                return True
+    for subs, sig_res in residues.items():
+        if sig_res == sig_residues[subs]:
+            substrate_counter += 1
+    
+    for cutoff in cutoffs:        
+        if hit.bitscore >= cutoff and (substrate_counter == 2):
+            halogenase.add_potential_matches(Match(hit.query_id, "flavin", "FDH",
+                                                   confidence * modifier, residues["Hpg"],
+                                                   position=position, substrate="Hpg"))        
+            modifier = .5
+            halogenase.add_potential_matches(Match(hit.query_id, "flavin", "FDH",
+                                                    confidence * modifier, residues["Tyr"],
+                                                    position=position, substrate="Tyr"))
+            return True
+        if hit.bitscore >= cutoff:
+            if residues["Tyr"] == sig_residues["Tyr"]:
+                modifier = .5
+            halogenase.add_potential_matches(Match(hit.query_id, "flavin", "FDH",
+                                                   confidence * modifier, residues,
+                                                   position=position, substrate="Tyr"))
+            return True            
+    return
 
 def update_match(name, residues, halogenase: FlavinDependentHalogenases, hit: HalogenaseHmmResult) -> None:
     """ Looks whether there are hmm hits that meet the requirement for the categorization as Tyr, Hpg, or
@@ -90,14 +109,9 @@ def update_match(name, residues, halogenase: FlavinDependentHalogenases, hit: Ha
     """
 
     if name == "tyrosine-like_hpg_FDH":
-        if search_for_match(name, residues, halogenase, hit, [6, 8],
+        search_for_match(name, residues, halogenase, hit, [6, 8],
                             cutoffs=[SPECIFIC_PROFILES[0].cutoff, 500],
-                            sig_residues=TYROSINE_LIKE_SIGNATURE_RESIDUES):
-            halogenase.substrates = "Tyr"
-        if search_for_match(name, residues, halogenase, hit, [6, 8],
-                            cutoffs=[SPECIFIC_PROFILES[0].cutoff, 500],
-                            sig_residues=HPG_SIGNATURE_RESIDUES):
-            halogenase.substrates = "Hpg"
+                            sig_residues=TYR_HPG_SIGNATURE_RESIDUES)
     elif name == "cycline_orsellinic_FDH":
         search_for_match(name, residues, halogenase, hit, [6, 8],
                          cutoffs=[SPECIFIC_PROFILES[1].cutoff],
