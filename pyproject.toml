@@ -1,0 +1,89 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "antismash"
+dynamic = ["version"]
+description = "The antibiotics and Secondary Metabolites Analysis Shell."
+readme = "README.md"
+license = {text = "AGPL-3.0-or-later"}
+requires-python = ">=3.9"
+authors = [
+    { name = "antiSMASH development team", email = "antismash@secondarymetabolites.org" },
+]
+classifiers = [
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "bcbio-gff==0.7.0", # 0.7.1 is incompatible with biopython 1.78
+    "biopython==1.78",
+    "brawn",
+    "helperlibs",
+    "jinja2",
+    "joblib",
+    "jsonschema==4.11.0",
+    "libsass>=0.22",
+    "markupsafe>=2.0",
+    "matplotlib",
+    "MOODS-python",
+    "nrpys>=0.1.1",
+    "numpy",
+    "pysvg-py3",
+    "scikit-learn>=0.19.0",
+    "scipy",
+]
+
+[project.optional-dependencies]
+testing = [
+    "coverage",
+    "mypy==0.982", # for consistent type checking
+    "pylint==3.0.2",
+    "pytest>=7.2.0,<8",
+]
+
+[project.scripts]
+antismash = "antismash.__main__:entrypoint"
+download-antismash-databases = "antismash.download_databases:_main"
+
+[project.urls]
+Homepage = "https://github.com/antismash/antismash"
+
+[tool.hatch.version]
+path = "antismash/main.py"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/antismash",
+]
+exclude = [
+    "*.tests", "*.tests.*", "tests.*", "tests",
+    "*.hmm.h3", "*bgc_seeds.hmm"
+]
+
+[tool.mypy]
+incremental = true
+disallow_untyped_defs = true
+check_untyped_defs = true
+ignore_missing_imports = true
+warn_unused_ignores = true
+exclude = ["test/", "external/"]
+follow_imports = "silent"
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore:.*inspect.getargspec.* is deprecated",
+    "ignore:.*numpy.* size changed",
+]
+
+[tool.coverage.report]
+exclude_also = [
+    "pragma: no cover",
+    "raise NotImplementedError",
+]
