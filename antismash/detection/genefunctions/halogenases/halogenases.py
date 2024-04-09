@@ -43,7 +43,7 @@ class Match:
     cofactor: str
     family: str
     confidence: float
-    signature: Optional[str]
+    signature: Union[str, Dict[str,str]]
     substrate: Optional[Union[int, str]] = None
     position: Optional[Union[int, str, List[int]]] = None
     number_of_decorations: Optional[dict[str, int]] = None
@@ -150,4 +150,4 @@ class FlavinDependentHalogenases:
         return enzyme
 
 class TailoringEnzymes():
-   pass
+    init: str

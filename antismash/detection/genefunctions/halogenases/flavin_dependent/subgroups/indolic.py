@@ -33,15 +33,15 @@ TRP_6_SIGNATURE = [19, 37, 45, 73, 75, 90, 129, 130, 142, 157, 181, 192, 194, 21
 TRP_5_SIGNATURE_RESIDUES = "VSILIREPGLPRGVPRAVLPGEA"
 TRP_6_SIGNATURE_RESIDUES = "TEGCAGFDAYHDRFGNADYGLSIIAKIL"
 
-def search_for_match(name: str, residues, halogenase: FlavinDependentHalogenases, hit: HalogenaseHmmResult,
-                    position: Union[int, List[int]], cutoffs: List[float], *,
-                    check_residues: bool = True, sig_residues: Union[str, dict[str,str]] = "",
-                    confidence: float = 1):
+def search_for_match(name: str, residues, halogenase: FlavinDependentHalogenases,
+                     hit: HalogenaseHmmResult, position: Union[int, List[int]],
+                     cutoffs: List[float], *, check_residues: bool = True,
+                     sig_residues: Union[str, dict[str,str]] = "", confidence: float = 1) -> bool:
     """ Looks whether there are hmm hits that meet the requirement for the categorization
-        
+
         Arguments:
             name: name of the substrate-specific pHMM
-            residues: 
+            residues: residues of the protein sequence in the place of the signature residues
             halogenase: initiated flavin-dependent halogenase
             hit: details of the hit (e.g. bitscore, name of the profile, etc.)
             position: position of decoration
@@ -49,7 +49,7 @@ def search_for_match(name: str, residues, halogenase: FlavinDependentHalogenases
             check_residues: should the signature residues be looked at or not
             sig_residues: substrate-specific signature residues
             confidence: reliability of the categorization
-            
+
         Returns:
             if the hit is one of the tryptophan-specific pHMMs,
             then it adds the match, without returning anything,
@@ -61,24 +61,28 @@ def search_for_match(name: str, residues, halogenase: FlavinDependentHalogenases
     modifier = 1.
     for cutoff in cutoffs:
         if hit.bitscore >= cutoff and (residues == sig_residues or not check_residues):
-            halogenase.add_potential_matches(Match(hit.query_id, "flavin", "FDH",
-                                                   confidence * modifier, residues, position=position))
+            halogenase.add_potential_matches(Match(hit.query_id,"flavin", "FDH",
+                                                   confidence * modifier, residues,
+                                                   position=position))
             return True
         modifier = .5
+    return False
 
-def update_match(name: str, residues, halogenase: FlavinDependentHalogenases, hit: HalogenaseHmmResult) -> None:
-    """ Looks whether there are hmm hits that meet the requirement for the categorization as Trp-5, Trp-6,
-        or Trp-7 halogenase
+def update_match(name: str, residues, halogenase: FlavinDependentHalogenases,
+                 hit: HalogenaseHmmResult) -> None:
+    """ Looks whether there are hmm hits that meet the requirement for the categorization
+        as Trp-5, Trp-6, or Trp-7 halogenase
 
         Arguments:
             name: name of the substrate-specific pHMM
-            residues:
+            residues: residues of the protein sequence in the place of the signature residues
             halogenase: initiated flavin-dependent halogenase
             hit: details of the hit (e.g. bitscore, name of the profile, etc.)
 
         Returns:
             if the categorization as Trp-5/6/7-halogenase could be done it instanciates the match
-            including the profile name, cofactor, family, position, confidence, signature and substrate,
+            including the profile name, cofactor, family, position,
+            confidence, signature and substrate,
             otherwise, it doesn't return anything and doesn't instanciate anything
     """
     if name == "trp_5_FDH":
@@ -109,7 +113,7 @@ def get_consensus_signature(cds: CDSFeature, hit: HalogenaseHmmResult,
             cds: gene/CDS and its properties
             hit: details of the hit (e.g. bitscore, name of the profile, etc.)
 
-        Returns:   
+        Returns:
             if the name of the pHMM doesn't match the substrate-specific one's,
             it returns an empty dictionary,
             otherwise, it returns the residues, that are in the same positions as
@@ -117,7 +121,9 @@ def get_consensus_signature(cds: CDSFeature, hit: HalogenaseHmmResult,
     """
     residues = {}
     if hit.query_id == "trp_5_FDH":
-        residues = substrate_analysis.retrieve_fdh_signature_residues(cds.translation, hit, TRP_5_SIGNATURE)
+        residues = substrate_analysis.retrieve_fdh_signature_residues(cds.translation,
+                                                                      hit, TRP_5_SIGNATURE)
     if hit.query_id == "trp_6_7_FDH":
-        residues = substrate_analysis.retrieve_fdh_signature_residues(cds.translation, hit, TRP_6_SIGNATURE)
+        residues = substrate_analysis.retrieve_fdh_signature_residues(cds.translation,
+                                                                      hit, TRP_6_SIGNATURE)
     return residues

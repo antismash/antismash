@@ -27,20 +27,20 @@ PYRROLE_SIGNATURE_RESIDUES = {"mono_di":"DRSVFW",
                               "unconv_mono_di":"YRRNFN",
                               "tetra":"RRYFFA"}
 
-def search_for_match(name, residues, halogenase: FlavinDependentHalogenases, hit: HalogenaseHmmResult,
-                     cutoffs: List[float], *,
+def search_for_match(name, residues, halogenase: FlavinDependentHalogenases,
+                     hit: HalogenaseHmmResult, cutoffs: List[float], *,
                      sig_residues: Union[str, dict[str,str]] = "", confidence: float = 1):
     """ Looks whether there are hmm hits that meet the requirement for the categorization
-        
+
         Arguments:
             name: name of the substrate-specific pHMM
-            residues: 
+            residues: residues of the protein sequence in the place of the signature residues
             halogenase: initiated flavin-dependent halogenase
             hit: details of the hit (e.g. bitscore, name of the profile, etc.)
             cutoffs: threshold(s) for the pHMM
             sig_residues: substrate-specific signature residues
             confidence: reliability of the categorization
-            
+
         Returns:
             if the hit is one of the tryptophan-specific pHMMs,
             then it adds the match, without returning anything,
@@ -55,25 +55,28 @@ def search_for_match(name, residues, halogenase: FlavinDependentHalogenases, hit
         if isinstance(residues, dict) and isinstance(sig_residues, dict):
             for subs, sig_res in residues.items():
                 if hit.bitscore >= cutoff and sig_res == sig_residues[subs]:
-                        halogenase.add_potential_matches(Match(hit.query_id, "flavin", "FDH",
-                                                               confidence * modifier,
-                                                               sig_res, number_of_decorations=subs))
+                    halogenase.add_potential_matches(Match(hit.query_id, "flavin", "FDH",
+                                                            confidence * modifier,
+                                                            sig_res, number_of_decorations=subs))
             return True
-        return
+        modifier = .5
+    return False
 
-def update_match(name, residues, halogenase: FlavinDependentHalogenases, hit: HalogenaseHmmResult) -> None:
-    """ Looks whether there are hmm hits that meet the requirement for the categorization as Tyr, Hpg, or
-        cycline/orsellinic-like halogenase
+def update_match(name, residues, halogenase: FlavinDependentHalogenases,
+                 hit: HalogenaseHmmResult) -> None:
+    """ Looks whether there are hmm hits that meet the requirement for the categorization
+        as Tyr, Hpg, or cycline/orsellinic-like halogenase
 
         Arguments:
             name: name of the substrate-specific pHMM
-            residues:
+            residues: residues of the protein sequence in the place of the signature residues
             halogenase: initiated flavin-dependent halogenase
             hit: details of the hit (e.g. bitscore, name of the profile, etc.)
 
         Returns:
-            if the categorization as Tyr/Hpg/other-phenolic-halogenase could be done it instanciates the match
-            including the profile name, cofactor, family, position, confidence, signature and substrate,
+            if the categorization as Tyr/Hpg/other-phenolic-halogenase could be done
+            it instanciates the match including the profile name, cofactor, family,
+            position, confidence, signature and substrate,
             otherwise, it doesn't return anything and doesn't instanciate anything
     """
     if name == "pyrrole_FDH":
@@ -86,11 +89,11 @@ def get_signatures() -> List[List[int]]:
     """ Returns the positions in the pHMMs,
         that arespecific to this substrate's signature residues
     """
-    
+
     return [PYRROLE_SIGNATURE]
 
 def get_consensus_signature(cds: CDSFeature, hit: HalogenaseHmmResult,
-                 ) -> Union[dict, dict[str, str]]:
+                 ) -> Optional[dict[str, dict]]:
     """ Retrieves the residues from the substrate-specific,
         pHMMs that are in the positions of the signature residues
 
@@ -98,20 +101,20 @@ def get_consensus_signature(cds: CDSFeature, hit: HalogenaseHmmResult,
             cds: gene/CDS and its properties
             hit: details of the hit (e.g. bitscore, name of the profile, etc.)
 
-        Returns:   
+        Returns:
             if the name of the pHMM doesn't match the substrate-specific one's,
             it returns an empty dictionary,
             otherwise, it returns the residues, that are in the same positions as
             the sugnature residues
     """
-        
+
     if hit.query_id == "pyrrole_FDH":
         signature_residues: dict[str, Optional[str]] = {}
-        substrates_signatures = dict(zip(list(PYRROLE_SIGNATURE_RESIDUES.keys()),(3*PYRROLE_SIGNATURE)))
-        for substrate, signature in substrates_signatures.items():
+        substrates_signatures = dict(zip(list(PYRROLE_SIGNATURE_RESIDUES.keys()),
+                                         (3*PYRROLE_SIGNATURE)))
+        for substrate in substrates_signatures.keys():
             signature_residues[substrate] = substrate_analysis.search_residues(cds.translation,
                                                                                PYRROLE_SIGNATURE,
                                                                                hit)
         return {"pyrrole_FDH": signature_residues}
-    return
-
+    return None

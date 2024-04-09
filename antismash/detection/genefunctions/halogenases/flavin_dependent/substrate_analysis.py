@@ -50,7 +50,7 @@ def _get_substrate_specific_profiles():
 
 
 def retrieve_fdh_signature_residues(translation: str, hmm_result: HalogenaseHmmResult,
-                 signatures: Union[list[int], list[list[int]]], enzyme_substrates: list = None)\
+                 signatures: list[list[int]], enzyme_substrates: list = None)\
                  -> dict[str, Optional[str]]:
     """ Get signature residues for an enzyme from each pHMM
 
@@ -64,7 +64,6 @@ def retrieve_fdh_signature_residues(translation: str, hmm_result: HalogenaseHmmR
             signature residues which were retrieved from a certain pHMM
     """
     signature_residues: dict[str, Optional[str]] = {}
-
     if not enzyme_substrates:
         residue = search_residues(translation, signatures, hmm_result)
         signature_residues[hmm_result.query_id] = residue
@@ -75,7 +74,7 @@ def retrieve_fdh_signature_residues(translation: str, hmm_result: HalogenaseHmmR
 
     return signature_residues
 
-def search_residues(sequence: str, positions: list[int],
+def search_residues(sequence: str, positions: Union[list[int], list[list[int]]],
                     hmm_result: HalogenaseHmmResult,
                     max_evalue: float = 0.1) -> Optional[str]:
     """ Get the signature residues from the pHMM for the searched protein sequence
@@ -121,13 +120,13 @@ def search_conserved_motif(cds: CDSFeature, motif_positions: list[int],
                            hmm_result: HalogenaseHmmResult,
                            motif_pattern):
     """ Looks for WxWxIP and Fx.Px.Sx.G conserved motifs, characteristic to FDHs
-    
+
         Arguments:
             cds: gene/CDS and its properties
             motif_positions: positions of the conserved motifs in the pHMM
             hmm_result: details of the hit (e.g. bitscore, name of the profile, etc.)
             motif_pattern: pattern of the motif in regex
-            
+
         Returns:
             if the conserved motifs are present, then it returns those,
             if they are not present it returns an empty string
@@ -169,7 +168,9 @@ def run_halogenase_phmms(cluster_fasta: str, profiles: list) \
 
 
 
-def categorize_on_substrate_level(cds: CDSFeature, halogenase_match: FlavinDependentHalogenases, hmm_results: list[HalogenaseHmmResult]) -> Optional[FlavinDependentHalogenases]:
+def categorize_on_substrate_level(cds: CDSFeature, halogenase_match: FlavinDependentHalogenases,
+                                  hmm_results: list[HalogenaseHmmResult]
+                                  ) -> Optional[FlavinDependentHalogenases]:
     """ Check if protein could be categorized as a Flavin-dependent enzyme
 
         Arguments:
@@ -186,20 +187,20 @@ def categorize_on_substrate_level(cds: CDSFeature, halogenase_match: FlavinDepen
         return None
 
     for hit in hmm_results:
-        if hit.query_id in FDH_SUBGROUPS.keys():
+        if hit.query_id in FDH_SUBGROUPS:
             signature_residues = FDH_SUBGROUPS[hit.query_id].get_consensus_signature(cds, hit)
             specific_signature_residues = signature_residues[hit.query_id]
             if not specific_signature_residues:
-                return
+                return None
             FDH_SUBGROUPS[hit.query_id].update_match(hit.query_id,
                                                     specific_signature_residues,
                                                     halogenase_match, hit)
     if not halogenase_match.potential_matches:
-        return
+        return None
 
     return halogenase_match
 
-def fdh_specific_analysis(record: Record) -> Optional[list[FlavinDependentHalogenases]]:
+def fdh_specific_analysis(record: Record) -> Union[list, list[FlavinDependentHalogenases]]:
     """ Categorization of enzyme, categorizes any halogenase in a cds in regions
 
         Arguments: record instance,
@@ -213,12 +214,12 @@ def fdh_specific_analysis(record: Record) -> Optional[list[FlavinDependentHaloge
                  then the above mentioned informations are not defined,
                  and the information about the catogries is in the potential_enzymes attribute.
     """
-    
+
     potential_enzymes = []
     enzymes_with_hits = []
     features = record.get_cds_features_within_regions()
     hmmsearch_fasta = fasta.get_fasta_from_features(features)
-    
+
     hits = hmmscan.run_hmmscan(substrates.ALL_FDH_PROFILES,
                                hmmsearch_fasta)
     for query_result in hits:
@@ -236,10 +237,10 @@ def fdh_specific_analysis(record: Record) -> Optional[list[FlavinDependentHaloge
         for protein in general_hmm_hits.keys():
             cds = record.get_cds_by_name(protein)
             enzyme = FlavinDependentHalogenases(protein, cofactor="flavin", family="FDH")
-            
+
             if protein in specific_hmm_hits.keys():
                 enzyme = categorize_on_substrate_level(cds, enzyme, specific_hmm_hits[protein])
-                
+
             # if it's not in the specific hits or couldn't be categorized further
             elif not enzyme.potential_matches:
                 conserved_motifs = {}
@@ -256,5 +257,5 @@ def fdh_specific_analysis(record: Record) -> Optional[list[FlavinDependentHaloge
 
         for enzyme in potential_enzymes:
             enzyme.finalize_enzyme()
-    print(potential_enzymes)
+
     return potential_enzymes
