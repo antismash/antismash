@@ -259,7 +259,7 @@ def ensure_cds_info(genefinding: Callable[[Record, Any], None], sequence: Record
             logging.info("No CDS features found in record %r, running gene finding.", sequence.id)
             genefinding(sequence, options)
         if not sequence.get_cds_features():
-            logging.info("No genes found, skipping record")
+            logging.info("No genes found, skipping record %r", sequence.id)
             sequence.skip = "No genes found"
             return sequence
     return sequence
