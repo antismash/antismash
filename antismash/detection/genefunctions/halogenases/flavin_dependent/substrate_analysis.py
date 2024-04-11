@@ -222,6 +222,7 @@ def fdh_specific_analysis(record: Record) -> Union[list, list[FlavinDependentHal
 
     hits = hmmscan.run_hmmscan(substrates.ALL_FDH_PROFILES,
                                hmmsearch_fasta)
+
     for query_result in hits:
         if query_result.hits:
             enzymes_with_hits.append(re.search(f'>{query_result.id}\n.*\n',
@@ -257,5 +258,5 @@ def fdh_specific_analysis(record: Record) -> Union[list, list[FlavinDependentHal
 
         for enzyme in potential_enzymes:
             enzyme.finalize_enzyme()
-
+    print(potential_enzymes)
     return potential_enzymes

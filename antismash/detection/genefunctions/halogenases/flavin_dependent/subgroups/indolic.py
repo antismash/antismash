@@ -33,7 +33,7 @@ TRP_6_SIGNATURE = [19, 37, 45, 73, 75, 90, 129, 130, 142, 157, 181, 192, 194, 21
 TRP_5_SIGNATURE_RESIDUES = "VSILIREPGLPRGVPRAVLPGEA"
 TRP_6_SIGNATURE_RESIDUES = "TEGCAGFDAYHDRFGNADYGLSIIAKIL"
 
-def search_for_match(name: str, residues, halogenase: FlavinDependentHalogenases,
+def search_for_match(residues, halogenase: FlavinDependentHalogenases,
                      hit: HalogenaseHmmResult, position: Union[int, List[int]],
                      cutoffs: List[float], *, check_residues: bool = True,
                      sig_residues: Union[str, dict[str,str]] = "", confidence: float = 1) -> bool:
@@ -55,15 +55,14 @@ def search_for_match(name: str, residues, halogenase: FlavinDependentHalogenases
             then it adds the match, without returning anything,
             otherwise, it returns False
     """
-    if hit.query_id != name:
-        return False
     cutoffs.sort(reverse=True)
     modifier = 1.
     for cutoff in cutoffs:
         if hit.bitscore >= cutoff and (residues == sig_residues or not check_residues):
             halogenase.add_potential_matches(Match(hit.query_id,"flavin", "FDH",
                                                    confidence * modifier, residues,
-                                                   position=position))
+                                                   position=position,
+                                                   number_of_decorations="mono"))
             return True
         modifier = .5
     return False
@@ -86,23 +85,16 @@ def update_match(name: str, residues, halogenase: FlavinDependentHalogenases,
             otherwise, it doesn't return anything and doesn't instanciate anything
     """
     if name == "trp_5_FDH":
-        search_for_match(name, residues, halogenase, hit, 5,
-                        cutoffs=[SPECIFIC_PROFILES[0].cutoff,
-                                 850],
-                        sig_residues=TRP_5_SIGNATURE_RESIDUES)
-        halogenase.substrates = "tryptophan"
-    elif name == "trp_6_7_FDH":
-        if not search_for_match(name, residues, halogenase, hit, 6, cutoffs=[770],
-                               sig_residues=TRP_6_SIGNATURE_RESIDUES):
-            search_for_match(name, residues, halogenase,
-                            hit, 7, [SPECIFIC_PROFILES[1].cutoff], check_residues=False)
+        if search_for_match(residues, halogenase, hit, 5,
+                            cutoffs=[SPECIFIC_PROFILES[0].cutoff, 850],
+                            sig_residues=TRP_5_SIGNATURE_RESIDUES):
             halogenase.substrates = "tryptophan"
-
-def get_signatures() -> List[List[int]]:
-    """ Returns the positions in the pHMMs,
-        that arespecific to this substrate's signature residues
-    """
-    return [TRP_5_SIGNATURE, TRP_6_SIGNATURE]
+    elif name == "trp_6_7_FDH":
+        if not search_for_match(residues, halogenase, hit, 6, cutoffs=[770],
+                               sig_residues=TRP_6_SIGNATURE_RESIDUES):
+            if search_for_match(residues, halogenase,
+                                hit, 7, [SPECIFIC_PROFILES[1].cutoff], check_residues=False):
+                halogenase.substrates = "tryptophan"
 
 def get_consensus_signature(cds: CDSFeature, hit: HalogenaseHmmResult,
                  ) -> Union[dict, dict[str, str]]:

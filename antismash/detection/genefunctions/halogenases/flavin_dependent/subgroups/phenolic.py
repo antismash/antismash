@@ -38,7 +38,7 @@ TYR_HPG_SIGNATURE_RESIDUES = {"Tyr": "GFQRLGDAGLSGVPSYGADPSGLYW",
 
 OTHER_PHENOLIC_SIGNATURE_RESIDUES = "LGPRGGRDAGVDAGGYGFDPSG"
 
-def search_for_match(name: str, residues: dict[str, str], halogenase: FlavinDependentHalogenases,
+def search_for_match(residues: dict[str, str], halogenase: FlavinDependentHalogenases,
                      hit: HalogenaseHmmResult, position: Union[int, List[int]],
                      cutoffs: List[float], *, sig_residues, confidence: float = 1) -> bool:
     """ Looks whether there are hmm hits that meet the requirement for the categorization
@@ -60,8 +60,6 @@ def search_for_match(name: str, residues: dict[str, str], halogenase: FlavinDepe
     """
 
     # needs some extra thoughts
-    if hit.query_id != name:
-        return False
     cutoffs.sort(reverse=True)
     modifier = 1.
 
@@ -117,23 +115,14 @@ def update_match(name, residues, halogenase: FlavinDependentHalogenases,
     """
 
     if name == "tyrosine-like_hpg_FDH":
-        search_for_match(name, residues, halogenase, hit, [6, 8],
-                            cutoffs=[SPECIFIC_PROFILES[0].cutoff, 500],
-                            sig_residues=TYR_HPG_SIGNATURE_RESIDUES)
+        search_for_match(residues, halogenase, hit, [6, 8],
+                         cutoffs=[SPECIFIC_PROFILES[0].cutoff, 500],
+                         sig_residues=TYR_HPG_SIGNATURE_RESIDUES)
     elif name == "cycline_orsellinic_FDH":
-        search_for_match(name, residues, halogenase, hit, [6, 8],
+        search_for_match(residues, halogenase, hit, [6, 8],
                          cutoffs=[SPECIFIC_PROFILES[1].cutoff],
                          sig_residues=OTHER_PHENOLIC_SIGNATURE_RESIDUES)
         halogenase.substrates = "cycline_orsellinic"
-
-def get_signatures() -> List[List[int]]:
-    """ Returns the positions in the pHMMs,
-        that arespecific to this substrate's signature residues
-    """
-
-    return [TYROSINE_LIKE_SIGNATURE,
-            HPG_SIGNATURE,
-            OTHER_PHENOLIC_SIGNATURE]
 
 def get_consensus_signature(cds: CDSFeature, hit: HalogenaseHmmResult,
                  ) -> Union[dict, dict[str, str]]:

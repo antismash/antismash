@@ -128,8 +128,9 @@ class FlavinDependentHalogenases:
             "cofactor": self.cofactor,
             "substrates": self.substrates,
             "target_positions": self.target_positions,
-            "confidence": self.confidence,
+            "number_of_decorations": self.number_of_decorations,
             "consensus_residues": self.consensus_residues,
+            "confidence": self.confidence,
             "potential_matches": potential_matches_json
         }
 
@@ -141,12 +142,13 @@ class FlavinDependentHalogenases:
         family = data["family"]
         cofactor = data["cofactor"]
         substrates = data["substrates"]
-        position = data["target_positions"]
-        confidence = data["confidence"]
+        target_positions = data["target_positions"]
+        number_of_decorations = data["number_of_decorations"]
         consensus_residues = data["consensus_residues"]
+        confidence = data["confidence"]
         potential_matches = [Match.from_json(profile) for profile in data["potential_matches"]]
-        enzyme = cls(cds_name, family, cofactor, substrates, position,
-                     consensus_residues, confidence, potential_matches)
+        enzyme = cls(cds_name, cofactor, family, substrates, target_positions,
+                     number_of_decorations, consensus_residues, confidence, potential_matches)
         return enzyme
 
 class TailoringEnzymes():
