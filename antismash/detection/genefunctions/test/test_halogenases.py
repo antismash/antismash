@@ -525,4 +525,16 @@ class TestGeneralEnzymes(unittest.TestCase):
     def test_specific_analysis(self, _patched_get_cds, _patched_get_cds_by_name):
         record = DummyRecord(seq=test_protein_translations["CtoA"])
         categorized_halogenase = halogenases_analysis.specific_analysis(record)
-        assert categorized_halogenase is not None
+        assert categorized_halogenase
+
+    @patch.object(secmet.Record, "get_cds_by_name",
+                  return_value=DummyCDS(locus_tag="VatD", translation=test_protein_translations["VatD"]))
+    @patch.object(secmet.Record, "get_cds_features_within_regions",
+                  return_value=[DummyCDS(locus_tag="VatD", translation=test_protein_translations["VatD"])])
+    @patch.object(substrate_analysis, "search_residues",
+                  return_value=None)
+    def test_negative_get_conserved_motifs(self, _patched_search_residues,
+                                           _patched_get_cds, _patched_get_cds_by_name):
+        record = DummyRecord(seq=test_protein_translations["VatD"])
+        categorized_halogenase = halogenases_analysis.specific_analysis(record)
+        assert categorized_halogenase[0].consensus_residues == {}

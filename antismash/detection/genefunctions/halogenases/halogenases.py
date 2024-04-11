@@ -55,7 +55,6 @@ class Match:
     def from_json(cls, data: dict[str, Any]) -> "Match":
         return cls(**data)
 
-
 @dataclass
 class FlavinDependentHalogenases:
     cds_name: str
@@ -71,13 +70,6 @@ class FlavinDependentHalogenases:
     def add_potential_matches(self, match: Match) -> None:
         """ Adds the features of an enzyme group to list"""
         self.potential_matches.append(match)
-
-    @staticmethod
-    def almost_equal(confidence: float, highest_confidence: float,
-                     difference: float) -> bool:
-        """ Helper function for get_best_match. Allows flexibility to
-            handle confidence divergences."""
-        return abs(confidence-highest_confidence) <= difference
 
     def get_best_match(self) -> list[Match]:
         """ If an enzyme meets the requirements for several groups,
