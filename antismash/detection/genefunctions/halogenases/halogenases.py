@@ -106,9 +106,8 @@ class FlavinDependentHalogenases:
             self.target_positions = best_match.target_positions
             self.consensus_residues = best_match.consensus_residues
             self.confidence = best_match.confidence
-
-            if best_match.substrates:
-                self.substrates = best_match.substrates
+            self.number_of_decorations = best_match.number_of_decorations
+            self.substrates = best_match.substrates
 
     def to_json(self) -> Dict[str, Any]:
         """ Constructs a JSON representation of this instance """

@@ -47,14 +47,14 @@ def search_for_match(residues: dict[str, str], halogenase: FlavinDependentHaloge
             then it adds the match, without returning anything,
             otherwise, it returns nothing
     """
-    if (not isinstance(residues, dict) or not isinstance(sig_residues, dict)
-        or hit.bitscore < cutoff):
+    if (not isinstance(sig_residues, dict) or hit.bitscore < cutoff):
         return False
-    for subs, sig_res in residues.items():
-        if sig_res == sig_residues[subs]:
+    for subs, sig_res in sig_residues.items():
+        if residues == sig_residues[subs]:
             halogenase.add_potential_matches(Match(hit.query_id, "flavin", "FDH",
-                                                    confidence,
-                                                    sig_res, number_of_decorations=subs))
+                                                    confidence, sig_res,
+                                                    number_of_decorations=subs,
+                                                    substrates = "pyrrole"))
             return True
     return False
 
@@ -98,10 +98,7 @@ def get_consensus_signature(cds: CDSFeature, hit: HalogenaseHmmResult
 
     signature_residues: dict[str, Optional[str]] = {}
     if hit.query_id == "pyrrole_FDH":
-        substrates_signatures = dict(zip(list(PYRROLE_SIGNATURE_RESIDUES.keys()),
-                                         (3*PYRROLE_SIGNATURE)))
-        for substrate in substrates_signatures.keys():
-            signature_residues[substrate] = substrate_analysis.search_residues(cds.translation,
-                                                                               PYRROLE_SIGNATURE,
-                                                                               hit)
+        signature_residues = substrate_analysis.search_residues(cds.translation,
+                                                                            PYRROLE_SIGNATURE,
+                                                                            hit)
     return {"pyrrole_FDH": signature_residues}

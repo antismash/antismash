@@ -223,8 +223,6 @@ def fdh_specific_analysis(record: Record) -> Union[list, list[FlavinDependentHal
     hits = hmmscan.run_hmmscan(substrates.ALL_FDH_PROFILES,
                                hmmsearch_fasta)
     for query_result in hits:
-        for hit in query_result.hits:
-            print(type(hit), hit)
         if query_result.hits:
             found = re.search(f'>{query_result.id}\n.*\n',
                               hmmsearch_fasta)
