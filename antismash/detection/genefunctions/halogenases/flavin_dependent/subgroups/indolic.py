@@ -65,7 +65,8 @@ def search_for_match(residues: str, halogenase: FlavinDependentHalogenases,
             halogenase.add_potential_matches(Match(hit.query_id,"flavin", "FDH",
                                                    confidence * modifier, residues,
                                                    target_positions=position,
-                                                   number_of_decorations="mono"))
+                                                   number_of_decorations="mono",
+                                                   substrates="tryptophan"))
             return True
     return False
 

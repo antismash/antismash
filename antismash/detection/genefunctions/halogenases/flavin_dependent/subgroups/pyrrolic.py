@@ -81,7 +81,7 @@ def update_match(name: str, residues: dict[str, str], halogenase: FlavinDependen
                          sig_residues=PYRROLE_SIGNATURE_RESIDUES)
 
 def get_consensus_signature(cds: CDSFeature, hit: HalogenaseHmmResult
-                            ) -> Optional[dict[str, dict]]:
+                            ) -> dict[str, Optional[str]]:
     """ Retrieves the residues from the substrate-specific,
         pHMMs that are in the positions of the signature residues
 
@@ -96,9 +96,8 @@ def get_consensus_signature(cds: CDSFeature, hit: HalogenaseHmmResult
             the sugnature residues
     """
 
-    signature_residues: dict[str, Optional[str]] = {}
     if hit.query_id == "pyrrole_FDH":
         signature_residues = substrate_analysis.search_residues(cds.translation,
-                                                                            PYRROLE_SIGNATURE,
-                                                                            hit)
+                                                                PYRROLE_SIGNATURE,
+                                                                hit)
     return {"pyrrole_FDH": signature_residues}

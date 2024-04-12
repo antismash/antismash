@@ -64,7 +64,7 @@ class FlavinDependentHalogenases:
     consensus_residues: Optional[Union[str, Dict[str,str]]] = None
     substrates: Union[str, List[str], None] = None
     target_positions: Optional[Union[int, list[int]]] = None
-    number_of_decorations: Optional[dict[str, int]] = None
+    number_of_decorations: Optional[str] = None
     potential_matches: list[Match] = field(default_factory=list)
 
     def add_potential_matches(self, match: Match) -> None:
