@@ -38,7 +38,7 @@ tests_require = [
     'pytest >= 7.2.0, < 8',
     'coverage',
     'pylint == 3.0.2',
-    'mypy == 0.982',  # for consistent type checking
+    'mypy == 1.9.0',  # for consistent type checking
 ]
 
 
