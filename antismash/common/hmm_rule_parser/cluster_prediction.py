@@ -185,7 +185,8 @@ class Ruleset:
     equivalence_groups: dataclasses.InitVar[GenericSets] = None
     filter_file: dataclasses.InitVar[str] = None
 
-    def __post_init__(self, equivalence_groups: list[set[str]] = None, filter_file: str = None) -> None:
+    def __post_init__(self, equivalence_groups: Iterable[Union[set[str], frozenset[str]]] = None,
+                      filter_file: str = None) -> None:
         # add an additional field to allow fetching rules by name
         self._rules_by_name = {rule.name: rule for rule in self.rules}
         # if there were duplicate names, then report them
