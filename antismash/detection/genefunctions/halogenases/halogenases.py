@@ -43,10 +43,10 @@ class Match:
     cofactor: str
     family: str
     confidence: float
-    signature: Union[str, Dict[str,str]]
-    substrate: Optional[Union[int, str]] = None
-    position: Optional[Union[int, str, List[int]]] = None
-    number_of_decorations: Optional[dict[str, int]] = None
+    consensus_residues: Union[str, Dict[str,str]]
+    substrates: Union[str, List[str], None] = None
+    target_positions: Optional[Union[int, list[int]]] = None
+    number_of_decorations: Optional[str] = None
 
     def to_json(self) -> dict[str, Any]:
         return vars(self)
@@ -60,11 +60,11 @@ class FlavinDependentHalogenases:
     cds_name: str
     cofactor: str
     family: str
-    substrates: Union[str, List[str], None] = None
-    target_positions: Optional[dict[str, int]] = None
-    number_of_decorations: Optional[dict[str, int]] = None
-    consensus_residues: Optional[dict[str, str]] = None
     confidence: float = 0
+    consensus_residues: Optional[Union[str, Dict[str,str]]] = None
+    substrates: Union[str, List[str], None] = None
+    target_positions: Optional[Union[int, list[int]]] = None
+    number_of_decorations: Optional[dict[str, int]] = None
     potential_matches: list[Match] = field(default_factory=list)
 
     def add_potential_matches(self, match: Match) -> None:
@@ -103,12 +103,12 @@ class FlavinDependentHalogenases:
             best_match = best_matches[0]
             self.cofactor = best_match.cofactor
             self.family = best_match.family
-            self.target_positions = best_match.position
-            self.consensus_residues = best_match.signature
+            self.target_positions = best_match.target_positions
+            self.consensus_residues = best_match.consensus_residues
             self.confidence = best_match.confidence
 
-            if best_match.substrate:
-                self.substrates = best_match.substrate
+            if best_match.substrates:
+                self.substrates = best_match.substrates
 
     def to_json(self) -> Dict[str, Any]:
         """ Constructs a JSON representation of this instance """
@@ -139,8 +139,8 @@ class FlavinDependentHalogenases:
         consensus_residues = data["consensus_residues"]
         confidence = data["confidence"]
         potential_matches = [Match.from_json(profile) for profile in data["potential_matches"]]
-        enzyme = cls(cds_name, cofactor, family, substrates, target_positions,
-                     number_of_decorations, consensus_residues, confidence, potential_matches)
+        enzyme = cls(cds_name, cofactor, family, confidence, consensus_residues, substrates, target_positions,
+                     number_of_decorations, potential_matches)
         return enzyme
 
 class TailoringEnzymes():

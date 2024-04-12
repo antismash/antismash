@@ -39,7 +39,7 @@ FDH_SUBGROUPS = {"trp_5_FDH":indolic,
                  "tyrosine-like_hpg_FDH":phenolic,
                  "pyrrole_FDH":pyrrolic}
 
-def _get_substrate_specific_profiles():
+def _get_substrate_specific_profiles() -> list:
     """ Collects the substrate-specific pHMM profiles from the substrate-specific submodules"""
     profiles = []
     submodules = list(set(FDH_SUBGROUPS.values()))
@@ -50,7 +50,7 @@ def _get_substrate_specific_profiles():
 
 
 def retrieve_fdh_signature_residues(translation: str, hmm_result: HalogenaseHmmResult,
-                 signatures: list[list[int]], enzyme_substrates: list = None)\
+                 signatures: Union[list[list[int]], list[int]], enzyme_substrates: list = None)\
                  -> dict[str, Optional[str]]:
     """ Get signature residues for an enzyme from each pHMM
 
@@ -118,7 +118,7 @@ def search_residues(sequence: str, positions: Union[list[int], list[list[int]]],
 
 def search_conserved_motif(cds: CDSFeature, motif_positions: list[int],
                            hmm_result: HalogenaseHmmResult,
-                           motif_pattern):
+                           motif_pattern: str) -> str:
     """ Looks for WxWxIP and Fx.Px.Sx.G conserved motifs, characteristic to FDHs
 
         Arguments:
@@ -142,7 +142,7 @@ def search_conserved_motif(cds: CDSFeature, motif_positions: list[int],
     motif = re.search(motif_pattern, signature_residues)
     if not motif:
         return categorized
-    categorized = re.search(f"{motif_pattern}", signature_residues)[0]
+    categorized = (re.search(f"{motif_pattern}", signature_residues) or [])[0]
     return categorized
 
 def run_halogenase_phmms(cluster_fasta: str, profiles: list) \
@@ -222,25 +222,30 @@ def fdh_specific_analysis(record: Record) -> Union[list, list[FlavinDependentHal
 
     hits = hmmscan.run_hmmscan(substrates.ALL_FDH_PROFILES,
                                hmmsearch_fasta)
-
     for query_result in hits:
+        for hit in query_result.hits:
+            print(type(hit), hit)
         if query_result.hits:
-            enzymes_with_hits.append(re.search(f'>{query_result.id}\n.*\n',
-                                               hmmsearch_fasta).group())
+            found = re.search(f'>{query_result.id}\n.*\n',
+                              hmmsearch_fasta)
+            if not found:
+                continue
+            enzymes_with_hits.append(found.group())
     if enzymes_with_hits:
-        enzymes_with_hits = "".join(enzymes_with_hits)
-        general_hmm_hits = run_halogenase_phmms(enzymes_with_hits,
-                                        substrates.GENERAL_FDH_PROFILES)
+        hit_enzyme_fasta = "".join(enzymes_with_hits)
+        general_hmm_hits = run_halogenase_phmms(hit_enzyme_fasta,
+                                                substrates.GENERAL_FDH_PROFILES)
         if general_hmm_hits:
             specific_profiles = _get_substrate_specific_profiles()
-            specific_hmm_hits = run_halogenase_phmms(enzymes_with_hits,
+            specific_hmm_hits = run_halogenase_phmms(hit_enzyme_fasta,
                                                      specific_profiles)
         for protein in general_hmm_hits.keys():
             cds = record.get_cds_by_name(protein)
             enzyme = FlavinDependentHalogenases(protein, cofactor="flavin", family="FDH")
 
             if protein in specific_hmm_hits.keys():
-                enzyme = categorize_on_substrate_level(cds, enzyme, specific_hmm_hits[protein])
+                enzyme = (categorize_on_substrate_level(cds, enzyme, specific_hmm_hits[protein]) or
+                          enzyme)
 
             # if it's not in the specific hits or couldn't be categorized further
             elif not enzyme.potential_matches:

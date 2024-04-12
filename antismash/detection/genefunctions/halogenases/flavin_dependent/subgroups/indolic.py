@@ -33,7 +33,7 @@ TRP_6_SIGNATURE = [19, 37, 45, 73, 75, 90, 129, 130, 142, 157, 181, 192, 194, 21
 TRP_5_SIGNATURE_RESIDUES = "VSILIREPGLPRGVPRAVLPGEA"
 TRP_6_SIGNATURE_RESIDUES = "TEGCAGFDAYHDRFGNADYGLSIIAKIL"
 
-def search_for_match(residues, halogenase: FlavinDependentHalogenases,
+def search_for_match(residues: str, halogenase: FlavinDependentHalogenases,
                      hit: HalogenaseHmmResult, position: Union[int, List[int]],
                      cutoffs: List[float], *, check_residues: bool = True,
                      sig_residues: Union[str, dict[str,str]] = "", confidence: float = 1) -> bool:
@@ -58,16 +58,18 @@ def search_for_match(residues, halogenase: FlavinDependentHalogenases,
     cutoffs.sort(reverse=True)
     modifier = 1.
     for cutoff in cutoffs:
-        if hit.bitscore >= cutoff and (residues == sig_residues or not check_residues):
+        if hit.bitscore < cutoff:
+            modifier = .5
+            continue
+        if residues == sig_residues or not check_residues:
             halogenase.add_potential_matches(Match(hit.query_id,"flavin", "FDH",
                                                    confidence * modifier, residues,
-                                                   position=position,
+                                                   target_positions=position,
                                                    number_of_decorations="mono"))
             return True
-        modifier = .5
     return False
 
-def update_match(name: str, residues, halogenase: FlavinDependentHalogenases,
+def update_match(name: str, residues: str, halogenase: FlavinDependentHalogenases,
                  hit: HalogenaseHmmResult) -> None:
     """ Looks whether there are hmm hits that meet the requirement for the categorization
         as Trp-5, Trp-6, or Trp-7 halogenase
@@ -96,8 +98,8 @@ def update_match(name: str, residues, halogenase: FlavinDependentHalogenases,
                                 hit, 7, [SPECIFIC_PROFILES[1].cutoff], check_residues=False):
                 halogenase.substrates = "tryptophan"
 
-def get_consensus_signature(cds: CDSFeature, hit: HalogenaseHmmResult,
-                 ) -> Union[dict, dict[str, str]]:
+def get_consensus_signature(cds: CDSFeature, hit: HalogenaseHmmResult
+                            ) -> Union[dict, dict[str, str]]:
     """ Retrieves the residues from the substrate-specific,
         pHMMs that are in the positions of the signature residues
 

@@ -27,9 +27,10 @@ PYRROLE_SIGNATURE_RESIDUES = {"mono_di":"DRSVFW",
                               "unconv_mono_di":"YRRNFN",
                               "tetra":"RRYFFA"}
 
-def search_for_match(residues, halogenase: FlavinDependentHalogenases,
-                     hit: HalogenaseHmmResult, cutoffs: List[float], *,
-                     sig_residues: Union[str, dict[str,str]] = "", confidence: float = 1):
+def search_for_match(residues: dict[str, str], halogenase: FlavinDependentHalogenases,
+                     hit: HalogenaseHmmResult, cutoff: float, *,
+                     sig_residues: Union[str, dict[str,str]] = "", confidence: float = 1
+                     ) -> bool:
     """ Looks whether there are hmm hits that meet the requirement for the categorization
 
         Arguments:
@@ -46,20 +47,18 @@ def search_for_match(residues, halogenase: FlavinDependentHalogenases,
             then it adds the match, without returning anything,
             otherwise, it returns nothing
     """
-    cutoffs.sort(reverse=True)
-    modifier = 1.
-    for cutoff in cutoffs:
-        if isinstance(residues, dict) and isinstance(sig_residues, dict):
-            for subs, sig_res in residues.items():
-                if hit.bitscore >= cutoff and sig_res == sig_residues[subs]:
-                    halogenase.add_potential_matches(Match(hit.query_id, "flavin", "FDH",
-                                                            confidence * modifier,
-                                                            sig_res, number_of_decorations=subs))
-                    return True
-        modifier = .5
+    if (not isinstance(residues, dict) or not isinstance(sig_residues, dict)
+        or hit.bitscore < cutoff):
+        return False
+    for subs, sig_res in residues.items():
+        if sig_res == sig_residues[subs]:
+            halogenase.add_potential_matches(Match(hit.query_id, "flavin", "FDH",
+                                                    confidence,
+                                                    sig_res, number_of_decorations=subs))
+            return True
     return False
 
-def update_match(name, residues, halogenase: FlavinDependentHalogenases,
+def update_match(name: str, residues: dict[str, str], halogenase: FlavinDependentHalogenases,
                  hit: HalogenaseHmmResult) -> None:
     """ Looks whether there are hmm hits that meet the requirement for the categorization
         as Tyr, Hpg, or cycline/orsellinic-like halogenase
@@ -77,13 +76,12 @@ def update_match(name, residues, halogenase: FlavinDependentHalogenases,
             otherwise, it doesn't return anything and doesn't instanciate anything
     """
     if name == "pyrrole_FDH":
-        if search_for_match(residues, halogenase, hit,
-                            cutoffs=[SPECIFIC_PROFILES[0].cutoff],
-                            sig_residues=PYRROLE_SIGNATURE_RESIDUES):
-            halogenase.substrates = "pyrrole"
+        search_for_match(residues, halogenase, hit,
+                         cutoff=SPECIFIC_PROFILES[0].cutoff,
+                         sig_residues=PYRROLE_SIGNATURE_RESIDUES)
 
-def get_consensus_signature(cds: CDSFeature, hit: HalogenaseHmmResult,
-                 ) -> Optional[dict[str, dict]]:
+def get_consensus_signature(cds: CDSFeature, hit: HalogenaseHmmResult
+                            ) -> Optional[dict[str, dict]]:
     """ Retrieves the residues from the substrate-specific,
         pHMMs that are in the positions of the signature residues
 
@@ -98,12 +96,12 @@ def get_consensus_signature(cds: CDSFeature, hit: HalogenaseHmmResult,
             the sugnature residues
     """
 
+    signature_residues: dict[str, Optional[str]] = {}
     if hit.query_id == "pyrrole_FDH":
-        signature_residues: dict[str, Optional[str]] = {}
         substrates_signatures = dict(zip(list(PYRROLE_SIGNATURE_RESIDUES.keys()),
                                          (3*PYRROLE_SIGNATURE)))
         for substrate in substrates_signatures.keys():
             signature_residues[substrate] = substrate_analysis.search_residues(cds.translation,
                                                                                PYRROLE_SIGNATURE,
                                                                                hit)
-        return {"pyrrole_FDH": signature_residues}
+    return {"pyrrole_FDH": signature_residues}
