@@ -18,7 +18,7 @@ long_description = read('README.md')
 install_requires = [
     'brawn',
     'numpy',
-    'biopython == 1.78',
+    'biopython == 1.81',
     'helperlibs',
     'jinja2',
     'joblib',
@@ -26,7 +26,7 @@ install_requires = [
     'markupsafe >= 2.0',
     'nrpys >= 0.1.1',
     'pysvg-py3',
-    'bcbio-gff == 0.7.0',  # 0.7.1 is incompatible with biopython 1.78
+    'bcbio-gff == 0.7.1',
     'libsass >= 0.22',
     'matplotlib',
     'scipy',
@@ -38,7 +38,7 @@ tests_require = [
     'pytest >= 7.2.0, < 8',
     'coverage',
     'pylint == 3.0.2',
-    'mypy == 0.982',  # for consistent type checking
+    'mypy == 1.9.0',  # for consistent type checking
 ]
 
 
@@ -103,7 +103,7 @@ class PyTest(TestCommand):
 
 setup(
     name="antismash",
-    python_requires='>=3.9',
+    python_requires='>=3.11',
     version=read_version(),
     packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
     package_data={

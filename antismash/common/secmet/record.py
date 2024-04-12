@@ -19,8 +19,8 @@ from zlib import crc32
 
 from Bio import SeqIO
 from Bio.Seq import Seq
-from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
-from Bio.SeqRecord import SeqRecord
+from Bio.SeqFeature import SeqFeature
+from Bio.SeqRecord import SeqRecord, UndefinedSequenceError
 
 from .errors import SecmetInvalidInputError
 from .features import (
@@ -42,6 +42,9 @@ from .features import CDSCollection
 from .features.candidate_cluster import create_candidates_from_protoclusters
 
 from .locations import (
+    CompoundLocation,
+    FeatureLocation,
+    Location,
     location_bridges_origin,
     split_origin_bridging_location,
     combine_locations,
@@ -86,6 +89,7 @@ class Record:
         assert not set("./\\").issubset(set(seq)), "Invalid sequence provided"
         if isinstance(seq, str):
             seq = Seq(seq)
+        assert isinstance(seq, Seq)
         self._record = SeqRecord(seq, **kwargs)
         self.record_index: Optional[int] = None
         self.original_id = None
@@ -482,7 +486,7 @@ class Record:
         features.extend(self.get_modules())
         return features
 
-    def get_cds_features_within_location(self, location: FeatureLocation,
+    def get_cds_features_within_location(self, location: Location,
                                          with_overlapping: bool = False) -> List[CDSFeature]:
         """ Returns all CDS features within the given location
 
@@ -494,7 +498,7 @@ class Record:
             Returns:
                 a list of CDSFeatures, ordered by earliest position in feature location
         """
-        def find_start_in_list(location: FeatureLocation, features: List[CDSFeature],
+        def find_start_in_list(location: Location, features: list[CDSFeature],
                                include_overlaps: bool) -> int:
             """ Find the earliest feature that starts before the location
                 (and ends before, if include_overlaps is True)
@@ -768,8 +772,8 @@ class Record:
             raise SecmetInvalidInputError(f"{seq_record.id}: {err}")
 
         for feature in seq_record.features:
-            if feature.ref or feature.ref_db:
-                for ref in [feature.ref, feature.ref_db]:
+            if feature.location.ref or feature.location.ref_db:
+                for ref in [feature.location.ref, feature.location.ref_db]:
                     if ref and ref != seq_record.id:
                         raise SecmetInvalidInputError(f"feature references another sequence: {feature.ref}")
                 # to handle a biopython issue, set the references to None
@@ -912,7 +916,7 @@ class Record:
             raise ValueError("location outside available sequence")
         if transl_table is None:
             transl_table = self._transl_table
-        extracted = location.extract(self.seq).ungap('-')
+        extracted = location.extract(self.seq).replace("-", "")
         if len(extracted) % 3 != 0:
             extracted = extracted[:-(len(extracted) % 3)]
         seq = extracted.translate(to_stop=True, table=transl_table)
@@ -1064,7 +1068,10 @@ class Record:
             Returns:
                 True if more than 80% of characters are nucleotide bases
         """
-        other = str(sequence).lower()
+        try:
+            other = str(sequence).lower()
+        except UndefinedSequenceError:
+            return False
         for char in "acgtn":
             other = other.replace(char, "")
         return len(other) < 0.2 * len(sequence)

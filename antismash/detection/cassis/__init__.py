@@ -417,7 +417,7 @@ def create_subregions(anchor: str, cluster_preds: List[ClusterPrediction],
         else:
             new_feature.qualifiers["note"] = [f"alternative prediction ({i}) for anchor gene {anchor}"]
 
-        new_feature = SubRegion.from_biopython(new_feature)
-        subregions.append(new_feature)
+        subregion = SubRegion.from_biopython(new_feature)
+        subregions.append(subregion)
 
     return subregions
