@@ -33,21 +33,21 @@ TRP_6_SIGNATURE = [19, 37, 45, 73, 75, 90, 129, 130, 142, 157, 181, 192, 194, 21
 TRP_5_SIGNATURE_RESIDUES = "VSILIREPGLPRGVPRAVLPGEA"
 TRP_6_SIGNATURE_RESIDUES = "TEGCAGFDAYHDRFGNADYGLSIIAKIL"
 
-def search_for_match(residues: str, halogenase: FlavinDependentHalogenases,
+def search_for_match(retrieved_residues: str, halogenase: FlavinDependentHalogenases,
                      hit: HalogenaseHmmResult, position: Union[int, List[int]],
                      cutoffs: List[float], *, check_residues: bool = True,
-                     sig_residues: Union[str, dict[str,str]] = "", confidence: float = 1) -> bool:
+                     expected_residues: Union[str, dict[str,str]] = "", confidence: float = 1) -> bool:
     """ Looks whether there are hmm hits that meet the requirement for the categorization
 
         Arguments:
             name: name of the substrate-specific pHMM
-            residues: residues of the protein sequence in the place of the signature residues
+            retrieved_residues: residues of the protein sequence in the place of the signature residues
             halogenase: initiated flavin-dependent halogenase
             hit: details of the hit (e.g. bitscore, name of the profile, etc.)
             position: position of decoration
             cutoffs: threshold(s) for the pHMM
             check_residues: should the signature residues be looked at or not
-            sig_residues: substrate-specific signature residues
+            expected_sig_residues: substrate-specific signature residues
             confidence: reliability of the categorization
 
         Returns:
@@ -61,9 +61,9 @@ def search_for_match(residues: str, halogenase: FlavinDependentHalogenases,
         if hit.bitscore < cutoff:
             modifier = .5
             continue
-        if residues == sig_residues or not check_residues:
+        if retrieved_residues == expected_residues or not check_residues:
             halogenase.add_potential_matches(Match(hit.query_id,"flavin", "FDH",
-                                                   confidence * modifier, residues,
+                                                   confidence * modifier, retrieved_residues,
                                                    target_positions=position,
                                                    number_of_decorations="mono",
                                                    substrates="tryptophan"))
@@ -90,11 +90,11 @@ def update_match(name: str, residues: str, halogenase: FlavinDependentHalogenase
     if name == "trp_5_FDH":
         if search_for_match(residues, halogenase, hit, 5,
                             cutoffs=[SPECIFIC_PROFILES[0].cutoff, 850],
-                            sig_residues=TRP_5_SIGNATURE_RESIDUES):
+                            expected_residues=TRP_5_SIGNATURE_RESIDUES):
             return
     elif name == "trp_6_7_FDH":
         if not search_for_match(residues, halogenase, hit, 6, cutoffs=[770],
-                               sig_residues=TRP_6_SIGNATURE_RESIDUES):
+                               expected_residues=TRP_6_SIGNATURE_RESIDUES):
             if search_for_match(residues, halogenase,
                                 hit, 7, [SPECIFIC_PROFILES[1].cutoff], check_residues=False):
                 return

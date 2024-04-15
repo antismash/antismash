@@ -138,9 +138,10 @@ class FlavinDependentHalogenases:
         consensus_residues = data["consensus_residues"]
         confidence = data["confidence"]
         potential_matches = [Match.from_json(profile) for profile in data["potential_matches"]]
-        enzyme = cls(cds_name, cofactor, family, confidence, consensus_residues, substrates, target_positions,
+        enzyme = cls(cds_name, cofactor, family, confidence,
+                     consensus_residues, substrates, target_positions,
                      number_of_decorations, potential_matches)
         return enzyme
 
 class TailoringEnzymes():
-    init: str
+    pass

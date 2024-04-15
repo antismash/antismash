@@ -5,7 +5,7 @@
 # pylint: disable=use-implicit-booleaness-not-comparison,protected-access,missing-docstring
 
 from pathlib import Path
-from typing import Union, Optional, List
+from typing import Union, Optional
 
 from antismash.common.secmet import CDSFeature
 from antismash.common.path import get_full_path
@@ -27,9 +27,9 @@ PYRROLE_SIGNATURE_RESIDUES = {"mono_di":"DRSVFW",
                               "unconv_mono_di":"YRRNFN",
                               "tetra":"RRYFFA"}
 
-def search_for_match(residues: dict[str, str], halogenase: FlavinDependentHalogenases,
+def search_for_match(retrieved_residues: dict[str, str], halogenase: FlavinDependentHalogenases,
                      hit: HalogenaseHmmResult, cutoff: float, *,
-                     sig_residues: Union[str, dict[str,str]] = "", confidence: float = 1
+                     expected_residues: Union[str, dict[str,str]] = "", confidence: float = 1
                      ) -> bool:
     """ Looks whether there are hmm hits that meet the requirement for the categorization
 
@@ -47,10 +47,10 @@ def search_for_match(residues: dict[str, str], halogenase: FlavinDependentHaloge
             then it adds the match, without returning anything,
             otherwise, it returns nothing
     """
-    if (not isinstance(sig_residues, dict) or hit.bitscore < cutoff):
+    if (not isinstance(expected_residues, dict) or hit.bitscore < cutoff):
         return False
-    for subs, sig_res in sig_residues.items():
-        if residues == sig_residues[subs]:
+    for subs, sig_res in expected_residues.items():
+        if retrieved_residues == expected_residues[subs]:
             halogenase.add_potential_matches(Match(hit.query_id, "flavin", "FDH",
                                                     confidence, sig_res,
                                                     number_of_decorations=subs,
@@ -78,7 +78,7 @@ def update_match(name: str, residues: dict[str, str], halogenase: FlavinDependen
     if name == "pyrrole_FDH":
         search_for_match(residues, halogenase, hit,
                          cutoff=SPECIFIC_PROFILES[0].cutoff,
-                         sig_residues=PYRROLE_SIGNATURE_RESIDUES)
+                         expected_residues=PYRROLE_SIGNATURE_RESIDUES)
 
 def get_consensus_signature(cds: CDSFeature, hit: HalogenaseHmmResult
                             ) -> dict[str, Optional[str]]:
