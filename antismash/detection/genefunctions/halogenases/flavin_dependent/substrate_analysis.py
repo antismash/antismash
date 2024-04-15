@@ -50,8 +50,8 @@ def _get_substrate_specific_profiles() -> list:
 
 
 def retrieve_fdh_signature_residues(translation: str, hmm_result: HalogenaseHmmResult,
-                 signatures: Union[list[list[int]], list[int]], enzyme_substrates: list = None)\
-                 -> dict[str, Optional[str]]:
+                                    signatures: Union[list[list[int]], list[int]], enzyme_substrates: list = None
+                                    ) -> dict[str, Optional[str]]:
     """ Get signature residues for an enzyme from each pHMM
 
         Arguments:
@@ -143,8 +143,8 @@ def search_conserved_motif(cds: CDSFeature, motif_positions: list[int],
     categorized = (re.search(f"{motif_pattern}", signature_residues) or [])[0]
     return categorized
 
-def run_halogenase_phmms(cluster_fasta: str, profiles: list) \
-    -> dict[str, list[HalogenaseHmmResult]]:
+def run_halogenase_phmms(cluster_fasta: str, profiles: list
+                         ) -> dict[str, list[HalogenaseHmmResult]]:
     """ Check if protein sequences hit any pHMM
 
         Arguments:
@@ -259,5 +259,5 @@ def fdh_specific_analysis(record: Record) -> Union[list, list[FlavinDependentHal
 
         for enzyme in potential_enzymes:
             enzyme.finalize_enzyme()
-    print(potential_enzymes)
+
     return potential_enzymes

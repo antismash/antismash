@@ -40,14 +40,13 @@ def search_for_match(retrieved_residues: str, halogenase: FlavinDependentHalogen
     """ Looks whether there are hmm hits that meet the requirement for the categorization
 
         Arguments:
-            name: name of the substrate-specific pHMM
             retrieved_residues: residues of the protein sequence in the place of the signature residues
             halogenase: initiated flavin-dependent halogenase
             hit: details of the hit (e.g. bitscore, name of the profile, etc.)
             position: position of decoration
             cutoffs: threshold(s) for the pHMM
             check_residues: should the signature residues be looked at or not
-            expected_sig_residues: substrate-specific signature residues
+            expected_residues: substrate-specific signature residues
             confidence: reliability of the categorization
 
         Returns:
@@ -70,32 +69,32 @@ def search_for_match(retrieved_residues: str, halogenase: FlavinDependentHalogen
             return True
     return False
 
-def update_match(name: str, residues: str, halogenase: FlavinDependentHalogenases,
+def update_match(name: str, retrieved_residues: str, halogenase: FlavinDependentHalogenases,
                  hit: HalogenaseHmmResult) -> None:
     """ Looks whether there are hmm hits that meet the requirement for the categorization
         as Trp-5, Trp-6, or Trp-7 halogenase
 
         Arguments:
             name: name of the substrate-specific pHMM
-            residues: residues of the protein sequence in the place of the signature residues
+            retrieved_residues: residues of the protein sequence in the place of the signature residues
             halogenase: initiated flavin-dependent halogenase
             hit: details of the hit (e.g. bitscore, name of the profile, etc.)
 
         Returns:
-            if the categorization as Trp-5/6/7-halogenase could be done it instanciates the match
+            if the categorization as Trp-5/6/7-halogenase could be done, it instanciates the match
             including the profile name, cofactor, family, position,
             confidence, signature and substrate,
             otherwise, it doesn't return anything and doesn't instanciate anything
     """
     if name == "trp_5_FDH":
-        if search_for_match(residues, halogenase, hit, 5,
+        if search_for_match(retrieved_residues, halogenase, hit, 5,
                             cutoffs=[SPECIFIC_PROFILES[0].cutoff, 850],
                             expected_residues=TRP_5_SIGNATURE_RESIDUES):
             return
     elif name == "trp_6_7_FDH":
-        if not search_for_match(residues, halogenase, hit, 6, cutoffs=[770],
+        if not search_for_match(retrieved_residues, halogenase, hit, 6, cutoffs=[770],
                                expected_residues=TRP_6_SIGNATURE_RESIDUES):
-            if search_for_match(residues, halogenase,
+            if search_for_match(retrieved_residues, halogenase,
                                 hit, 7, [SPECIFIC_PROFILES[1].cutoff], check_residues=False):
                 return
 
@@ -112,7 +111,7 @@ def get_consensus_signature(cds: CDSFeature, hit: HalogenaseHmmResult
             if the name of the pHMM doesn't match the substrate-specific one's,
             it returns an empty dictionary,
             otherwise, it returns the residues, that are in the same positions as
-            the sugnature residues
+            the signature residues
     """
     residues = {}
     if hit.query_id == "trp_5_FDH":

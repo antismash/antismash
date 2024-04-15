@@ -34,12 +34,11 @@ def search_for_match(retrieved_residues: dict[str, str], halogenase: FlavinDepen
     """ Looks whether there are hmm hits that meet the requirement for the categorization
 
         Arguments:
-            name: name of the substrate-specific pHMM
-            residues: residues of the protein sequence in the place of the signature residues
+            retrieved_residues: residues of the protein sequence in the place of the signature residues
             halogenase: initiated flavin-dependent halogenase
             hit: details of the hit (e.g. bitscore, name of the profile, etc.)
             cutoffs: threshold(s) for the pHMM
-            sig_residues: substrate-specific signature residues
+            expected_residues: substrate-specific signature residues
             confidence: reliability of the categorization
 
         Returns:
@@ -58,14 +57,14 @@ def search_for_match(retrieved_residues: dict[str, str], halogenase: FlavinDepen
             return True
     return False
 
-def update_match(name: str, residues: dict[str, str], halogenase: FlavinDependentHalogenases,
+def update_match(name: str, retrieved_residues: dict[str, str], halogenase: FlavinDependentHalogenases,
                  hit: HalogenaseHmmResult) -> None:
     """ Looks whether there are hmm hits that meet the requirement for the categorization
-        as Tyr, Hpg, or cycline/orsellinic-like halogenase
+        as a pyrrole halogenase doing mono/di- or tetra-halogenation
 
         Arguments:
             name: name of the substrate-specific pHMM
-            residues: residues of the protein sequence in the place of the signature residues
+            retrieved_residues: residues of the protein sequence in the place of the signature residues
             halogenase: initiated flavin-dependent halogenase
             hit: details of the hit (e.g. bitscore, name of the profile, etc.)
 
@@ -76,7 +75,7 @@ def update_match(name: str, residues: dict[str, str], halogenase: FlavinDependen
             otherwise, it doesn't return anything and doesn't instanciate anything
     """
     if name == "pyrrole_FDH":
-        search_for_match(residues, halogenase, hit,
+        search_for_match(retrieved_residues, halogenase, hit,
                          cutoff=SPECIFIC_PROFILES[0].cutoff,
                          expected_residues=PYRROLE_SIGNATURE_RESIDUES)
 

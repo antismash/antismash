@@ -45,17 +45,16 @@ def search_for_match(retrieved_residues: Union[dict[str, str], str], halogenase:
     """ Looks whether there are hmm hits that meet the requirement for the categorization
 
         Arguments:
-            name: name of the substrate-specific pHMM
-            residues: residues of the protein sequence in the place of the signature residues
+            retrieved_residues: residues of the protein sequence in the place of the signature residues
             halogenase: initiated flavin-dependent halogenase
             hit: details of the hit (e.g. bitscore, name of the profile, etc.)
             position: position of decoration
             cutoffs: threshold(s) for the pHMM
-            sig_residues: expected, substrate-specific signature residues
+            expected_residues: expected, substrate-specific signature residues
             confidence: reliability of the categorization
 
         Returns:
-            if the hit is one of the tryptophan-specific pHMMs,
+            if the hit is one of the phenolic-specific pHMMs,
             then it adds the match, without returning anything,
             otherwise, it returns False
     """
@@ -100,14 +99,14 @@ def search_for_match(retrieved_residues: Union[dict[str, str], str], halogenase:
         return True
     return False
 
-def update_match(name: str, residues: dict[str, str], halogenase: FlavinDependentHalogenases,
+def update_match(name: str, retrieved_residues: dict[str, str], halogenase: FlavinDependentHalogenases,
                  hit: HalogenaseHmmResult) -> None:
     """ Looks whether there are hmm hits that meet the requirement for the categorization
         as Tyr, Hpg, or cycline/orsellinic-like halogenase
 
         Arguments:
             name: name of the substrate-specific pHMM
-            residues: residues of the protein sequence in the place of the signature residues
+            retrieved_residues: residues of the protein sequence in the place of the signature residues
             halogenase: initiated flavin-dependent halogenase
             hit: details of the hit (e.g. bitscore, name of the profile, etc.)
 
@@ -119,11 +118,11 @@ def update_match(name: str, residues: dict[str, str], halogenase: FlavinDependen
     """
 
     if name == "tyrosine-like_hpg_FDH":
-        search_for_match(residues, halogenase, hit, [6, 8],
+        search_for_match(retrieved_residues, halogenase, hit, [6, 8],
                          cutoffs=[SPECIFIC_PROFILES[0].cutoff, 500],
                          expected_residues=TYR_HPG_SIGNATURE_RESIDUES)
     elif name == "cycline_orsellinic_FDH":
-        search_for_match(residues, halogenase, hit, [6, 8],
+        search_for_match(retrieved_residues, halogenase, hit, [6, 8],
                          cutoffs=SPECIFIC_PROFILES[1].cutoff,
                          expected_residues=OTHER_PHENOLIC_SIGNATURE_RESIDUES)
 
