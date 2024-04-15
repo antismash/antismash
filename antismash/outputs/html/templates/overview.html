@@ -43,7 +43,11 @@
   <!-- overview page -->
   {% if records %}
   <div class="page" id="overview">
-   {% set intro = "Identified secondary metabolite regions using strictness '{}'".format(options.hmmdetection_strictness) %}
+   {%- if options.hmmdetection_strictness is defined -%}
+       {%- set intro = "Identified secondary metabolite regions using strictness '{}'".format(options.hmmdetection_strictness) -%}
+   {%- else -%}
+       {%- set intro = "" -%}
+   {%- endif -%}
    {% if options.triggered_limit %}
      <h3>{{intro}} (truncated to the first {{options.limit}} record(s)) <span id="truncated"></span></h3>
    {% else %}
