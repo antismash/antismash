@@ -170,12 +170,15 @@ class PhenolicBase(unittest.TestCase):
             profile=phenolic.SPECIFIC_PROFILES[0].path
             )
 
+        # tyrosine
         self.tyr_empty_enzyme = FlavinDependentHalogenases("BhaA", "flavin", "FDH")
         self.tyr_enzyme_with_matches = FlavinDependentHalogenases("BhaA", "flavin", "FDH", potential_matches=self.test_tyrosine_match)
 
+        # Hpg
         self.hpg_empty_enzyme = FlavinDependentHalogenases("End30", "flavin", "FDH")
         self.hpg_enzyme_with_matches = FlavinDependentHalogenases("End30", "flavin", "FDH", potential_matches=self.test_hpg_match)
 
+        # other phenolic-substrate halogenase (orsellinic-like)
         self.orsellinic_empty_enzyme = FlavinDependentHalogenases("ChlB4", "flavin", "FDH")
         self.orsellinic_enzyme_with_matches = FlavinDependentHalogenases("ChlB4", "flavin", "FDH", potential_matches=self.test_cycline_orsellinic)
 
@@ -206,6 +209,7 @@ class PyrrolicBase(unittest.TestCase):
             profile=pyrrolic.SPECIFIC_PROFILES[0].path
         )
 
+        # tetrabrominating halogenase
         self.pyrrole_enzyme_with_matches = FlavinDependentHalogenases("bmp2", "flavin", "FDH",
                                                                       potential_matches=[self.test_pyrrole_match])
 
@@ -236,41 +240,49 @@ class IndolicBase(unittest.TestCase):
         tryptophan_single_matches = [self.test_trp_6_7_match]
         tryptophan_matches = [self.test_trp_5_match, self.test_trp_6_7_match]
 
+        # Trp-6 halogenase
         self.trp_enzyme_with_matches = FlavinDependentHalogenases("ktzR", "flavin", "FDH", potential_matches=tryptophan_single_matches)
+        # Trp-7 halogenase
         self.trp_empty_enzyme = FlavinDependentHalogenases("ktzQ", "flavin", "FDH")
 
 class TestPhenolic(PhenolicBase):
     def test_categorize_on_substrate_level(self):
+        # Other phenolic (orsellinic-like) substrate halogenases
         with patch.object(substrate_analysis, "retrieve_fdh_signature_residues",
                     return_value=""):
-            low_quality_hit = HalogenaseHmmResult("wrong_name", 400, "wrong_name", "foo", "wrong_name")
+            below_cutoff_hit = HalogenaseHmmResult("wrong_name", 400, "wrong_name", "foo", "wrong_name")
             assert not categorize_on_substrate_level(DummyCDS(), FlavinDependentHalogenases("ChlB4", "flavin", "FDH"),
-                                                        [low_quality_hit])
+                                                     [below_cutoff_hit])
 
         with patch.object(substrate_analysis, "retrieve_fdh_signature_residues",
                           return_value={"cycline_orsellinic_FDH": phenolic.OTHER_PHENOLIC_SIGNATURE_RESIDUES}):
             categorize_on_substrate_level(DummyCDS(), self.orsellinic_empty_enzyme, [self.cycline_orsellinic_hmm_result])
             assert self.orsellinic_empty_enzyme.potential_matches[0].profile == "cycline_orsellinic_FDH"
             assert self.orsellinic_empty_enzyme.potential_matches[0].confidence == 1
+            assert self.orsellinic_empty_enzyme.potential_matches[0].substrates == "cycline_orsellinic-like"
+            assert self.orsellinic_empty_enzyme.potential_matches[0].target_positions == [6, 8]
 
         with patch.object(substrate_analysis, "retrieve_fdh_signature_residues",
                         return_value={"cycline_orsellinic_FDH": ""}):
             assert not categorize_on_substrate_level(DummyCDS(), self.orsellinic_empty_enzyme, [self.cycline_orsellinic_hmm_result])
 
+        # Tyr and Hpg halogenases
         with patch.object(substrate_analysis, "retrieve_fdh_signature_residues",
                           return_value=phenolic.TYR_HPG_SIGNATURE_RESIDUES):
             categorize_on_substrate_level(DummyCDS(), self.hpg_empty_enzyme, [self.hpg_hmm_result])
             assert self.hpg_empty_enzyme.potential_matches[0].profile == "tyrosine-like_hpg_FDH"
-
-        with patch.object(substrate_analysis, "retrieve_fdh_signature_residues",
-                          return_value=phenolic.TYR_HPG_SIGNATURE_RESIDUES):
-            categorize_on_substrate_level(DummyCDS(), self.tyr_empty_enzyme, [self.tyrosine_hmm_result])
-            assert self.tyr_empty_enzyme.potential_matches[0].profile == "tyrosine-like_hpg_FDH"
+            assert self.hpg_empty_enzyme.potential_matches[0].confidence == 1
+            assert self.hpg_empty_enzyme.potential_matches[0].substrates == "Hpg"
+            assert self.hpg_empty_enzyme.potential_matches[0].target_positions == [6,8]
 
         with patch.object(substrate_analysis, "retrieve_fdh_signature_residues",
                           return_value=self.tyrosine_match_not_hpg):
             assert categorize_on_substrate_level(DummyCDS(), self.tyr_empty_enzyme,
                                  [self.less_confident_tyrosine_hmm_result])
+            assert self.tyr_empty_enzyme.potential_matches[0].profile == "tyrosine-like_hpg_FDH"
+            assert self.tyr_empty_enzyme.potential_matches[0].confidence == 0.5
+            assert self.tyr_empty_enzyme.potential_matches[0].substrates == "Tyr"
+            assert self.tyr_empty_enzyme.potential_matches[0].target_positions == [6,8]
 
         with patch.object(substrate_analysis, "retrieve_fdh_signature_residues",
                           return_value={None}):
@@ -301,6 +313,8 @@ class TestPhenolic(PhenolicBase):
         residues = substrate_analysis.retrieve_fdh_signature_residues(cds.translation, self.hpg_hmm_result,
                                                    [phenolic.HPG_SIGNATURE, phenolic.TYROSINE_LIKE_SIGNATURE],
                                                    enzyme_substrates=["Tyr", "Hpg"])
+        # returns None for each substrate, but works, when running antismash
+        # assert residues == ""
         assert isinstance(residues, dict)
 
 class TestPyrrolic(PyrrolicBase):
@@ -319,17 +333,35 @@ class TestPyrrolic(PyrrolicBase):
             assert not categorize_on_substrate_level(DummyCDS(), self.pyrrole_empty_enzyme, [self.pyrrole_hmm_result])
             patched.assert_called_once()
 
+        # conventional mono/dihalogenating pyrrole-halogenase
         with patch.object(pyrrolic, "get_consensus_signature",
                     return_value={"pyrrole_FDH": "DRSVFW"}) as patched:
             assert categorize_on_substrate_level(DummyCDS(), self.pyrrole_empty_enzyme, [self.pyrrole_hmm_result])
+            assert self.pyrrole_empty_enzyme.potential_matches[0].profile == "pyrrole_FDH"
+            assert self.pyrrole_empty_enzyme.potential_matches[0].confidence == 1
+            assert self.pyrrole_empty_enzyme.potential_matches[0].substrates == "pyrrole"
+            assert self.pyrrole_empty_enzyme.potential_matches[0].number_of_decorations == "mono_di"
             patched.assert_called_once()
 
-    def test_retrieve_fdh_signature_residues(self):
-        cds = DummyCDS(locus_tag="bmp2", translation=test_protein_translations["bmp2"])
-        residues = substrate_analysis.retrieve_fdh_signature_residues(cds.translation, self.pyrrole_hmm_result,
-                                                   [pyrrolic.PYRROLE_SIGNATURE],
-                                                   enzyme_substrates=["mono_di", "tetra", "unconv_mono_di"])
-        assert isinstance(residues, dict)
+        # unconventional mono/dihalogenating pyrrole-halogenase
+        with patch.object(pyrrolic, "get_consensus_signature",
+                    return_value={"pyrrole_FDH": "YRRNFN"}) as patched:
+            assert categorize_on_substrate_level(DummyCDS(), self.pyrrole_empty_enzyme, [self.pyrrole_hmm_result])
+            assert self.pyrrole_empty_enzyme.potential_matches[1].profile == "pyrrole_FDH"
+            assert self.pyrrole_empty_enzyme.potential_matches[1].confidence == 1
+            assert self.pyrrole_empty_enzyme.potential_matches[1].substrates == "pyrrole"
+            assert self.pyrrole_empty_enzyme.potential_matches[1].number_of_decorations == "unconv_mono_di"
+            patched.assert_called_once()
+
+        # tetrahalogenating pyrrole-halogenase
+        with patch.object(pyrrolic, "get_consensus_signature",
+                    return_value={"pyrrole_FDH": "RRYFFA"}) as patched:
+            assert categorize_on_substrate_level(DummyCDS(), self.pyrrole_empty_enzyme, [self.pyrrole_hmm_result])
+            assert self.pyrrole_empty_enzyme.potential_matches[2].profile == "pyrrole_FDH"
+            assert self.pyrrole_empty_enzyme.potential_matches[2].confidence == 1
+            assert self.pyrrole_empty_enzyme.potential_matches[2].substrates == "pyrrole"
+            assert self.pyrrole_empty_enzyme.potential_matches[2].number_of_decorations == "tetra"
+            patched.assert_called_once()
 
     def test_negative_search_for_match(self):
         assert not pyrrolic.search_for_match(pyrrolic.PYRROLE_SIGNATURE_RESIDUES,
@@ -437,6 +469,8 @@ class TestIndolic(IndolicBase):
             categorize_on_substrate_level(DummyCDS(), self.trp_empty_enzyme, [self.trp_5_hmm_result])
             assert self.trp_empty_enzyme.potential_matches[0].profile == "trp_5_FDH"
             assert self.trp_empty_enzyme.potential_matches[0].confidence == 1
+            assert self.trp_empty_enzyme.potential_matches[0].substrates == "tryptophan"
+            assert self.trp_empty_enzyme.potential_matches[0].number_of_decorations == "mono"
             assert self.trp_empty_enzyme.potential_matches[0].target_positions == 5
 
         with patch.object(indolic, "get_consensus_signature",
@@ -445,17 +479,26 @@ class TestIndolic(IndolicBase):
             categorize_on_substrate_level(DummyCDS(), self.trp_empty_enzyme, [low_quality_hit])
             assert self.trp_empty_enzyme.potential_matches[1].profile == "trp_5_FDH"
             assert self.trp_empty_enzyme.potential_matches[1].confidence == 0.5
+            assert self.trp_empty_enzyme.potential_matches[0].substrates == "tryptophan"
+            assert self.trp_empty_enzyme.potential_matches[0].number_of_decorations == "mono"
+            assert self.trp_empty_enzyme.potential_matches[0].target_positions == 5
 
         with patch.object(indolic, "get_consensus_signature",
                           return_value={"trp_6_7_FDH": indolic.TRP_6_SIGNATURE_RESIDUES}):
             categorize_on_substrate_level(DummyCDS(), self.trp_empty_enzyme, [self.trp_6_7_hmm_result])
             assert self.trp_empty_enzyme.potential_matches[2].profile == "trp_6_7_FDH"
+            assert self.trp_empty_enzyme.potential_matches[2].confidence == 1
             assert self.trp_empty_enzyme.potential_matches[2].target_positions == 6
+            assert self.trp_empty_enzyme.potential_matches[2].substrates == "tryptophan"
+            assert self.trp_empty_enzyme.potential_matches[2].number_of_decorations == "mono"
 
         with patch.object(substrate_analysis, "retrieve_fdh_signature_residues", return_value={"trp_6_7_FDH": "VISIL"}):
             categorize_on_substrate_level(DummyCDS(), self.trp_empty_enzyme, [self.trp_6_7_hmm_result])
             assert self.trp_empty_enzyme.potential_matches[3].profile == "trp_6_7_FDH"
+            assert self.trp_empty_enzyme.potential_matches[3].confidence == 1
             assert self.trp_empty_enzyme.potential_matches[3].target_positions == 7
+            assert self.trp_empty_enzyme.potential_matches[3].substrates == "tryptophan"
+            assert self.trp_empty_enzyme.potential_matches[3].number_of_decorations == "mono"
 
         with patch.object(substrate_analysis, "retrieve_fdh_signature_residues",
                           return_value={"trp_6_7_FDH": None}):
@@ -465,7 +508,8 @@ class TestIndolic(IndolicBase):
         with patch.object(substrate_analysis, "retrieve_fdh_signature_residues",
                           return_value=""):
                 low_quality_hit = HalogenaseHmmResult("wrong_name", 400, "wrong_name", "foo", "wrong_name")
-                assert not categorize_on_substrate_level(DummyCDS(), FlavinDependentHalogenases("mibH", "flavin", "FDH"),
+                assert not categorize_on_substrate_level(DummyCDS(),
+                                                         FlavinDependentHalogenases("mibH", "flavin", "FDH"),
                                                          [low_quality_hit])
 
     def test_categorize_on_substrate_level(self):
@@ -477,6 +521,9 @@ class TestIndolic(IndolicBase):
                                                                     [self.trp_5_hmm_result])
         assert isinstance(positive_checked_halogenase, FlavinDependentHalogenases)
         assert positive_checked_halogenase.cds_name == "mibH"
+        assert positive_checked_halogenase.potential_matches == [Match(profile='trp_5_FDH', cofactor='flavin', family='FDH',
+                                                                       confidence=1.0, consensus_residues='VSILIREPGLPRGVPRAVLPGEA',
+                                                                       substrates='tryptophan', target_positions=5, number_of_decorations='mono')]
 
 @patch.object(secmet.Record, "get_cds_by_name", return_value="ktzR")
 class TestSpecificAnalysis(IndolicBase):

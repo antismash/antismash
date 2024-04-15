@@ -91,13 +91,13 @@ def update_match(name: str, residues: str, halogenase: FlavinDependentHalogenase
         if search_for_match(residues, halogenase, hit, 5,
                             cutoffs=[SPECIFIC_PROFILES[0].cutoff, 850],
                             sig_residues=TRP_5_SIGNATURE_RESIDUES):
-            halogenase.substrates = "tryptophan"
+            return
     elif name == "trp_6_7_FDH":
         if not search_for_match(residues, halogenase, hit, 6, cutoffs=[770],
                                sig_residues=TRP_6_SIGNATURE_RESIDUES):
             if search_for_match(residues, halogenase,
                                 hit, 7, [SPECIFIC_PROFILES[1].cutoff], check_residues=False):
-                halogenase.substrates = "tryptophan"
+                return
 
 def get_consensus_signature(cds: CDSFeature, hit: HalogenaseHmmResult
                             ) -> Union[dict, dict[str, str]]:

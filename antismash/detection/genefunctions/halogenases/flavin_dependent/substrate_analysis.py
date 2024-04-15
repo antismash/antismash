@@ -71,7 +71,6 @@ def retrieve_fdh_signature_residues(translation: str, hmm_result: HalogenaseHmmR
         substrates_signatures = dict(zip(enzyme_substrates,signatures))
         for substrate, signature in substrates_signatures.items():
             signature_residues[substrate] = search_residues(translation, signature, hmm_result)
-
     return signature_residues
 
 def search_residues(sequence: str, positions: Union[list[int], list[list[int]]],
@@ -89,7 +88,6 @@ def search_residues(sequence: str, positions: Union[list[int], list[list[int]]],
             residues that are present in the given positions
     """
     args = ["-E", str(max_evalue)]
-
     results = subprocessing.hmmpfam.run_hmmpfam2(hmm_result.profile,
                                                  f">query\n{sequence}", extra_args=args)
     if not (results and results[0].hsps):
