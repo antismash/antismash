@@ -198,7 +198,7 @@ def categorize_on_substrate_level(cds: CDSFeature, halogenase_match: FlavinDepen
 
     return halogenase_match
 
-def thingy(cds, specific_hmm_hits, general_hmm_hits):
+def categorize_on_consensus_level(cds, specific_hmm_hits, general_hmm_hits):
     enzyme = FlavinDependentHalogenases(cds.get_name(), cofactor="flavin", family="FDH")
 
     if specific_hmm_hits:
@@ -256,9 +256,9 @@ def fdh_specific_analysis(record: Record) -> Union[list, list[FlavinDependentHal
                                                     specific_profiles)
     for protein in general_hmm_hits:
         cds = record.get_cds_by_name(protein)
-        potential_enzymes.append(thingy(cds, specific_hmm_hits.get(protein), general_hmm_hits[protein]))
+        potential_enzymes.append(categorize_on_consensus_level(cds, specific_hmm_hits.get(protein), general_hmm_hits[protein]))
 
     for enzyme in potential_enzymes:
         enzyme.finalize_enzyme()
-
+    print(potential_enzymes)
     return potential_enzymes
