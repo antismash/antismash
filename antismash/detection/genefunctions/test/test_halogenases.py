@@ -127,6 +127,8 @@ test_protein_translations = {
         """
         }
 
+test_protein_translations = {key: "".join(val.split()) for key, val in test_protein_translations.items()}
+
 class PhenolicBase(unittest.TestCase):
     def setUp(self):
         self.test_tyrosine_match = Match("tyrosine-like_hpg_FDH", "flavin", "FHD",
@@ -145,7 +147,7 @@ class PhenolicBase(unittest.TestCase):
             )
         self.less_confident_tyrosine_hmm_result = HalogenaseHmmResult(
             hit_id='tyrosine-like_hpg_FDH',
-            bitscore=400,
+            bitscore=310,
             query_id='tyrosine-like_hpg_FDH',
             enzyme_type="Flavin-dependent",
             profile=phenolic.SPECIFIC_PROFILES[1].path
@@ -312,11 +314,12 @@ class TestPhenolic(PhenolicBase):
 
     def test_retrieve_fdh_signature_residues(self):
         cds = DummyCDS(locus_tag="BhaA", translation=test_protein_translations["BhaA"])
+        assert " " not in cds.translation
         residues = substrate_analysis.retrieve_fdh_signature_residues(cds.translation, self.hpg_hmm_result,
                                                    [phenolic.HPG_SIGNATURE, phenolic.TYROSINE_LIKE_SIGNATURE],
                                                    enzyme_substrates=["Tyr", "Hpg"])
         # returns None for each substrate, but works, when running antismash
-        # assert residues == ""
+        self.fail(residues)
         assert isinstance(residues, dict)
 
 class TestPyrrolic(PyrrolicBase):
@@ -534,47 +537,90 @@ class TestIndolic(IndolicBase):
                                                                        confidence=1.0, consensus_residues='VSILIREPGLPRGVPRAVLPGEA',
                                                                        substrates='tryptophan', target_positions=5, number_of_decorations='mono')]
 
-@patch.object(secmet.Record, "get_cds_by_name", return_value="ktzR")
 class TestSpecificAnalysis(IndolicBase):
+    def setUp(self):
+        super().setUp()
+        self.record = DummyRecord()
+
+    def get_result(self, name):
+        for value in run_hmmsearch.return_value:
+            value.hsps = [FakeHSPHit("trp_6_7_FDH", name, bitscore=1500)]
+        with patch.object(substrate_analysis, "categorize_on_substrate_level",
+                          return_value=self.trp_enzyme_with_matches) as patched_check:
+            with patch.object(FlavinDependentHalogenases, "get_best_match",
+                              return_value=[self.test_trp_6_7_match]):
+                cds = DummyCDS(locus_tag=name,
+                               translation=test_protein_translations[name])
+                record = self.record
+                record.add_cds_feature(cds)
+                with patch.object(secmet.Record, "get_cds_features_within_regions", return_value=[cds]):
+                    return fdh_specific_analysis(record)
+
+    def TEST_TEMP(self):
+        for value in run_hmmsearch.return_value:
+            value.hsps = [FakeHSPHit("trp_6_7_FDH", "ktzR", bitscore=1500)]
+        with patch.object(substrate_analysis, "categorize_on_substrate_level",
+                          return_value=self.trp_enzyme_with_matches) as patched_check:
+            with patch.object(FlavinDependentHalogenases, "get_best_match",
+                              return_value=[self.test_trp_6_7_match]):
+                cds = DummyCDS(locus_tag="ktzR",
+                                         translation=test_protein_translations["ktzR"])
+                record = self.record
+                record.add_cds_feature(cds)
+                with patch.object(secmet.Record, "get_cds_features_within_regions", return_value=[cds]):
+                    positive_test = self.get_result("ktzR")
+            patched_check.assert_called_once()
+        assert positive_test[0].family == "FDH"
+        assert positive_test[0].cds_name == "ktzR"
+        assert positive_test[0].cofactor == "flavin"
+        assert positive_test[0].substrates == "tryptophan"
+        assert positive_test[0].number_of_decorations == "mono"
+        assert positive_test[0].potential_matches
+        assert positive_test and positive_test[0].target_positions == 6
+
     # one best match
     @patch.object(subprocessing, "run_hmmsearch",
                   return_value=[FakeHit("start", "end", 900, "ktzR")])
     @patch.object(secmet.Record, "get_cds_features_within_regions",
                   return_value=[DummyCDS(locus_tag="ktzR",
                                          translation=test_protein_translations["ktzR"])])
-    def test_one_best_match(self, _patched_get_cds, run_hmmsearch, _patched_by_name):
+    def test_one_best_match(self, _patched_get_cds, run_hmmsearch):
         for value in run_hmmsearch.return_value:
-            value.hsps = [FakeHSPHit("trp_6_7_FDH", "trp_6_7_FDH", bitscore=1500)]
+            value.hsps = [FakeHSPHit("trp_6_7_FDH", "ktzR", bitscore=1500)]
         with patch.object(substrate_analysis, "categorize_on_substrate_level",
                           return_value=self.trp_enzyme_with_matches) as patched_check:
             with patch.object(FlavinDependentHalogenases, "get_best_match",
                               return_value=[self.test_trp_6_7_match]):
-                record = DummyRecord(seq=test_protein_translations["ktzR"])
-                positive_test = fdh_specific_analysis(record)
-                patched_check.assert_called_once()
-                assert positive_test[0].family == "FDH"
-                assert positive_test[0].cds_name == "ktzR"
-                assert positive_test[0].cofactor == "flavin"
-                assert positive_test[0].substrates == "tryptophan"
-                assert positive_test[0].number_of_decorations == "mono"
-                assert positive_test[0].potential_matches
-                assert positive_test and positive_test[0].target_positions == 6
+                cds = DummyCDS(locus_tag="ktzR",
+                                         translation=test_protein_translations["ktzR"])
+                record = self.record
+                record.add_cds_feature(cds)
+                with patch.object(secmet.Record, "get_cds_features_within_regions", return_value=[cds]):
+                    positive_test = fdh_specific_analysis(record)
+            patched_check.assert_called_once()
+        assert positive_test[0].family == "FDH"
+        assert positive_test[0].cds_name == "ktzR"
+        assert positive_test[0].cofactor == "flavin"
+        assert positive_test[0].substrates == "tryptophan"
+        assert positive_test[0].number_of_decorations == "mono"
+        assert positive_test[0].potential_matches
+        assert positive_test and positive_test[0].target_positions == 6
 
     # list of several matches, no best match
     @patch.object(subprocessing, "run_hmmsearch",
                   return_value=[FakeHit("start", "end", 500, "mibH")])
     @patch.object(secmet.Record, "get_cds_features_within_regions",
                   return_value=[DummyCDS(locus_tag="mibH", translation=test_protein_translations["mibH"])])
-    def test_more_best_match(self, _patched_get_cds, run_hmmsearch, _patched_by_name):
+    def test_more_best_match(self, _patched_get_cds, run_hmmsearch):
         for value in run_hmmsearch.return_value:
-            value.hsps = [FakeHSPHit("trp_5_FDH", "trp_5_FDH", bitscore=800)]
+            value.hsps = [FakeHSPHit("trp_5_FDH", "mibH", bitscore=800)]
         with patch.object(substrate_analysis, "categorize_on_substrate_level",
                           return_value=self.trp_5_enzyme_with_matches) as patched_check:
             with patch.object(FlavinDependentHalogenases, "get_best_match",
                               return_value=[self.test_trp_5_match, self.test_trp_6_7_match]) as _patched:
-                record = DummyRecord(seq=test_protein_translations["mibH"])
+                record = self.record
                 positive_test = fdh_specific_analysis(record)
-                # assert _patched.assert_called_once()
+                _patched.assert_called_once()
                 assert len(positive_test) == 1
                 assert positive_test[0].potential_matches
                 assert positive_test[0].consensus_residues is None
@@ -601,8 +647,9 @@ class TestGeneralEnzymes(unittest.TestCase):
                   return_value=[DummyCDS(locus_tag="VatD",
                                          translation=test_protein_translations["VatD"])])
     def test_unconventional_fdh_specific_analysis(self, _patched_get_cds, _patched_get_cds_by_name):
-        record = DummyRecord(seq=test_protein_translations["VatD"])
+        record = DummyRecord()
         positive_test = fdh_specific_analysis(record)
+        self.fail(positive_test)
         assert isinstance(positive_test[0], FlavinDependentHalogenases)
         assert positive_test[0].substrates is None
         assert not positive_test[0].consensus_residues

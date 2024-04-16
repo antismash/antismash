@@ -198,6 +198,27 @@ def categorize_on_substrate_level(cds: CDSFeature, halogenase_match: FlavinDepen
 
     return halogenase_match
 
+def thingy(cds, specific_hmm_hits, general_hmm_hits):
+    enzyme = FlavinDependentHalogenases(cds.get_name(), cofactor="flavin", family="FDH")
+
+    if specific_hmm_hits:
+        enzyme = categorize_on_substrate_level(cds, enzyme, specific_hmm_hits) \
+                    or enzyme
+
+    # if it's not in the specific hits or couldn't be categorized further
+    elif not enzyme.potential_matches:
+        conserved_motifs = {}
+        for hit in general_hmm_hits:
+            for motif, positions in substrates.GENERAL_FDH_MOTIFS.items():
+                conserved_motif = search_conserved_motif(cds, positions,
+                                                            hit, motif)
+                if conserved_motif:
+                    conserved_motifs[motif] = conserved_motif
+
+        enzyme.consensus_residues = conserved_motifs
+
+    return enzyme
+
 def fdh_specific_analysis(record: Record) -> Union[list, list[FlavinDependentHalogenases]]:
     """ Categorization of enzyme, categorizes any halogenase in a cds in regions
 
@@ -222,42 +243,22 @@ def fdh_specific_analysis(record: Record) -> Union[list, list[FlavinDependentHal
                                hmmsearch_fasta)
     for query_result in hits:
         if query_result.hits:
-            found = re.search(f'>{query_result.id}\n.*\n',
-                              hmmsearch_fasta)
-            if not found:
-                continue
-            enzymes_with_hits.append(found.group())
-    if enzymes_with_hits:
-        hit_enzyme_fasta = "".join(enzymes_with_hits)
-        general_hmm_hits = run_halogenase_phmms(hit_enzyme_fasta,
-                                                substrates.GENERAL_FDH_PROFILES)
-        if general_hmm_hits:
-            specific_profiles = _get_substrate_specific_profiles()
-            specific_hmm_hits = run_halogenase_phmms(hit_enzyme_fasta,
-                                                     specific_profiles)
-        for protein in general_hmm_hits.keys():
-            cds = record.get_cds_by_name(protein)
-            enzyme = FlavinDependentHalogenases(protein, cofactor="flavin", family="FDH")
+            enzymes_with_hits.append(record.get_cds_by_name(query_result.id))
+    if not enzymes_with_hits:
+        return []
 
-            if protein in specific_hmm_hits.keys():
-                enzyme = (categorize_on_substrate_level(cds, enzyme, specific_hmm_hits[protein]) or
-                          enzyme)
+    hit_enzyme_fasta = fasta.get_fasta_from_features(enzymes_with_hits)
+    general_hmm_hits = run_halogenase_phmms(hit_enzyme_fasta,
+                                            substrates.GENERAL_FDH_PROFILES)
+    if general_hmm_hits:
+        specific_profiles = _get_substrate_specific_profiles()
+        specific_hmm_hits = run_halogenase_phmms(hit_enzyme_fasta,
+                                                    specific_profiles)
+    for protein in general_hmm_hits:
+        cds = record.get_cds_by_name(protein)
+        potential_enzymes.append(thingy(cds, specific_hmm_hits.get(protein), general_hmm_hits[protein]))
 
-            # if it's not in the specific hits or couldn't be categorized further
-            elif not enzyme.potential_matches:
-                conserved_motifs = {}
-                for hit in general_hmm_hits[protein]:
-                    for motif, positions in substrates.GENERAL_FDH_MOTIFS.items():
-                        conserved_motif = search_conserved_motif(cds, positions,
-                                                                 hit, motif)
-                        if conserved_motif:
-                            conserved_motifs[motif] = conserved_motif
-
-                enzyme.consensus_residues = conserved_motifs
-
-            potential_enzymes.append(enzyme)
-
-        for enzyme in potential_enzymes:
-            enzyme.finalize_enzyme()
+    for enzyme in potential_enzymes:
+        enzyme.finalize_enzyme()
 
     return potential_enzymes

@@ -18,7 +18,7 @@ from antismash.detection.genefunctions.halogenases.flavin_dependent import subst
 
 SPECIFIC_PROFILES = [HmmSignature("tyrosine-like_hpg_FDH",
                                   "Tyrosine-like or Hpg substrate halogenase",
-                                  390, get_full_path(str(Path(__file__).parents[1]),
+                                  300, get_full_path(str(Path(__file__).parents[1]),
                                                      "data", "tyrosine-like_hpg_FDH.hmm")),
                      HmmSignature("cycline_orsellinic_FDH",
                                   "Orsellinic acid-like or other phenolic substrate halogenase",
@@ -119,7 +119,7 @@ def update_match(name: str, retrieved_residues: dict[str, str], halogenase: Flav
 
     if name == "tyrosine-like_hpg_FDH":
         search_for_match(retrieved_residues, halogenase, hit, [6, 8],
-                         cutoffs=[SPECIFIC_PROFILES[0].cutoff, 500],
+                         cutoffs=[SPECIFIC_PROFILES[0].cutoff, 390],
                          expected_residues=TYR_HPG_SIGNATURE_RESIDUES)
     elif name == "cycline_orsellinic_FDH":
         search_for_match(retrieved_residues, halogenase, hit, [6, 8],
