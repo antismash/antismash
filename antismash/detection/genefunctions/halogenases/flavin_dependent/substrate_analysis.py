@@ -50,7 +50,8 @@ def _get_substrate_specific_profiles() -> list:
 
 
 def retrieve_fdh_signature_residues(translation: str, hmm_result: HalogenaseHmmResult,
-                                    signatures: Union[list[list[int]], list[int]], enzyme_substrates: list = None
+                                    signatures: Union[list[list[int]], list[int]],
+                                    enzyme_substrates: list = None
                                     ) -> dict[str, Optional[str]]:
     """ Get signature residues for an enzyme from each pHMM
 
@@ -198,7 +199,9 @@ def categorize_on_substrate_level(cds: CDSFeature, halogenase_match: FlavinDepen
 
     return halogenase_match
 
-def categorize_on_consensus_level(cds, specific_hmm_hits, general_hmm_hits):
+def categorize_on_consensus_level(cds: CDSFeature, specific_hmm_hits: list[HalogenaseHmmResult],
+                                  general_hmm_hits: list[HalogenaseHmmResult]
+                                  ) -> FlavinDependentHalogenases:
     enzyme = FlavinDependentHalogenases(cds.get_name(), cofactor="flavin", family="FDH")
 
     if specific_hmm_hits:
@@ -253,10 +256,11 @@ def fdh_specific_analysis(record: Record) -> Union[list, list[FlavinDependentHal
     if general_hmm_hits:
         specific_profiles = _get_substrate_specific_profiles()
         specific_hmm_hits = run_halogenase_phmms(hit_enzyme_fasta,
-                                                    specific_profiles)
+                                                 specific_profiles)
     for protein in general_hmm_hits:
         cds = record.get_cds_by_name(protein)
-        potential_enzymes.append(categorize_on_consensus_level(cds, specific_hmm_hits.get(protein), general_hmm_hits[protein]))
+        potential_enzymes.append(categorize_on_consensus_level(cds, specific_hmm_hits[protein],
+                                                               general_hmm_hits[protein]))
 
     for enzyme in potential_enzymes:
         enzyme.finalize_enzyme()
