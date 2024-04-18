@@ -263,4 +263,5 @@ def fdh_specific_analysis(record: Record) -> Union[list, list[FlavinDependentHal
                                                                general_hmm_hits[protein]))
     for enzyme in potential_enzymes:
         enzyme.finalize_enzyme()
+
     return potential_enzymes
