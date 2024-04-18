@@ -110,7 +110,6 @@ def search_residues(sequence: str, positions: Union[list[int], list[list[int]]],
     profile = hit.aln[1].seq
     query = hit.aln[0].seq
     offset = hit.hit_start
-
     sites = utils.extract_by_reference_positions(query, profile,
                                                  [p - offset for p in positions if offset < p])
     return sites
@@ -203,7 +202,6 @@ def categorize_on_consensus_level(cds: CDSFeature, specific_hmm_hits: list[Halog
                                   general_hmm_hits: list[HalogenaseHmmResult]
                                   ) -> FlavinDependentHalogenases:
     enzyme = FlavinDependentHalogenases(cds.get_name(), cofactor="flavin", family="FDH")
-
     if specific_hmm_hits:
         enzyme = categorize_on_substrate_level(cds, enzyme, specific_hmm_hits) \
                     or enzyme
@@ -214,7 +212,7 @@ def categorize_on_consensus_level(cds: CDSFeature, specific_hmm_hits: list[Halog
         for hit in general_hmm_hits:
             for motif, positions in substrates.GENERAL_FDH_MOTIFS.items():
                 conserved_motif = search_conserved_motif(cds, positions,
-                                                            hit, motif)
+                                                         hit, motif)
                 if conserved_motif:
                     conserved_motifs[motif] = conserved_motif
 
@@ -240,6 +238,7 @@ def fdh_specific_analysis(record: Record) -> Union[list, list[FlavinDependentHal
     potential_enzymes = []
     enzymes_with_hits = []
     features = record.get_cds_features_within_regions()
+    # assert features
     hmmsearch_fasta = fasta.get_fasta_from_features(features)
 
     hits = hmmscan.run_hmmscan(substrates.ALL_FDH_PROFILES,
@@ -257,6 +256,7 @@ def fdh_specific_analysis(record: Record) -> Union[list, list[FlavinDependentHal
         specific_profiles = _get_substrate_specific_profiles()
         specific_hmm_hits = run_halogenase_phmms(hit_enzyme_fasta,
                                                  specific_profiles)
+
     for protein in general_hmm_hits:
         cds = record.get_cds_by_name(protein)
         potential_enzymes.append(categorize_on_consensus_level(cds, specific_hmm_hits[protein],
