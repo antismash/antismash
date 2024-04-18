@@ -38,14 +38,17 @@ TYR_HPG_SIGNATURE_RESIDUES = {"Tyr": "GFQRLGDAGLSGVPSYGADPSGLYW",
 
 OTHER_PHENOLIC_SIGNATURE_RESIDUES = "LGPRGGRDAGVDAGGYGFDPSG"
 
-def search_for_match(retrieved_residues: Union[dict[str, str], str], halogenase: FlavinDependentHalogenases,
+def search_for_match(retrieved_residues: Union[dict[str, str], str],
+                     halogenase: FlavinDependentHalogenases,
                      hit: HalogenaseHmmResult, position: Union[int, List[int]],
-                     cutoffs: Union[List[int], int], *, expected_residues: Union[str, dict[str, str]],
+                     cutoffs: Union[List[int], int], *,
+                     expected_residues: Union[str, dict[str, str]],
                      confidence: float = 1.) -> bool:
     """ Looks whether there are hmm hits that meet the requirement for the categorization
 
         Arguments:
-            retrieved_residues: residues of the protein sequence in the place of the signature residues
+            retrieved_residues: residues of the protein sequence
+                                in the place of the signature residues
             halogenase: initiated flavin-dependent halogenase
             hit: details of the hit (e.g. bitscore, name of the profile, etc.)
             position: position of decoration
@@ -76,10 +79,12 @@ def search_for_match(retrieved_residues: Union[dict[str, str], str], halogenase:
                 continue
             if substrate_counter == 2:
                 halogenase.add_potential_matches(Match(hit.query_id, "flavin", "FDH",
-                                                    confidence * modifier, retrieved_residues["Hpg"],
+                                                    confidence * modifier,
+                                                    retrieved_residues["Hpg"],
                                                     target_positions=position, substrates="Hpg"))
                 halogenase.add_potential_matches(Match(hit.query_id, "flavin", "FDH",
-                                                       (confidence * modifier)-0.2, retrieved_residues["Tyr"],
+                                                       (confidence * modifier)-0.2,
+                                                       retrieved_residues["Tyr"],
                                                        target_positions=position, substrates="Tyr"))
                 return True
 
@@ -99,14 +104,16 @@ def search_for_match(retrieved_residues: Union[dict[str, str], str], halogenase:
         return True
     return False
 
-def update_match(name: str, retrieved_residues: dict[str, str], halogenase: FlavinDependentHalogenases,
+def update_match(name: str, retrieved_residues: dict[str, str],
+                 halogenase: FlavinDependentHalogenases,
                  hit: HalogenaseHmmResult) -> None:
     """ Looks whether there are hmm hits that meet the requirement for the categorization
         as Tyr, Hpg, or cycline/orsellinic-like halogenase
 
         Arguments:
             name: name of the substrate-specific pHMM
-            retrieved_residues: residues of the protein sequence in the place of the signature residues
+            retrieved_residues: residues of the protein sequence
+                                in the place of the signature residues
             halogenase: initiated flavin-dependent halogenase
             hit: details of the hit (e.g. bitscore, name of the profile, etc.)
 
@@ -147,7 +154,8 @@ def get_consensus_signature(cds: CDSFeature, hit: HalogenaseHmmResult
         residues = substrate_analysis.retrieve_fdh_signature_residues(cds.translation, hit,
                                                                       [TYROSINE_LIKE_SIGNATURE,
                                                                        HPG_SIGNATURE],
-                                                                      enzyme_substrates=["Tyr", "Hpg"])
+                                                                      enzyme_substrates=["Tyr",
+                                                                                         "Hpg"])
         return {"tyrosine-like_hpg_FDH": residues}
 
     if hit.query_id == "cycline_orsellinic_FDH":

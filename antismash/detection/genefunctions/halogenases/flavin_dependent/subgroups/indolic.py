@@ -36,11 +36,13 @@ TRP_6_SIGNATURE_RESIDUES = "TEGCAGFDAYHDRFGNADYGLSIIAKIL"
 def search_for_match(retrieved_residues: str, halogenase: FlavinDependentHalogenases,
                      hit: HalogenaseHmmResult, position: Union[int, List[int]],
                      cutoffs: List[float], *, check_residues: bool = True,
-                     expected_residues: Union[str, dict[str,str]] = "", confidence: float = 1) -> bool:
+                     expected_residues: Union[str, dict[str,str]] = "",
+                     confidence: float = 1) -> bool:
     """ Looks whether there are hmm hits that meet the requirement for the categorization
 
         Arguments:
-            retrieved_residues: residues of the protein sequence in the place of the signature residues
+            retrieved_residues: residues of the protein sequence
+            in the place of the signature residues
             halogenase: initiated flavin-dependent halogenase
             hit: details of the hit (e.g. bitscore, name of the profile, etc.)
             position: position of decoration
@@ -76,7 +78,8 @@ def update_match(name: str, retrieved_residues: str, halogenase: FlavinDependent
 
         Arguments:
             name: name of the substrate-specific pHMM
-            retrieved_residues: residues of the protein sequence in the place of the signature residues
+            retrieved_residues: residues of the protein sequence
+                                in the place of the signature residues
             halogenase: initiated flavin-dependent halogenase
             hit: details of the hit (e.g. bitscore, name of the profile, etc.)
 
