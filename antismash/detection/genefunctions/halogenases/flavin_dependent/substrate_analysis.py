@@ -261,8 +261,6 @@ def fdh_specific_analysis(record: Record) -> Union[list, list[FlavinDependentHal
         cds = record.get_cds_by_name(protein)
         potential_enzymes.append(categorize_on_consensus_level(cds, specific_hmm_hits[protein],
                                                                general_hmm_hits[protein]))
-
     for enzyme in potential_enzymes:
         enzyme.finalize_enzyme()
-
     return potential_enzymes

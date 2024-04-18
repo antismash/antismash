@@ -75,7 +75,6 @@ def execute(commands: List[str], stdin: Optional[str] = None, stdout: Union[int,
     """
     options = get_config()
     # if config has been set up and if there is an override, use that instead
-    raise
     if commands[0] in options.get("executables", {}):
         commands[0] = getattr(options.executables, commands[0])
 
