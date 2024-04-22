@@ -94,6 +94,7 @@ def prepare_data(logging_only: bool = False) -> List[str]:
     failures = []
     for database in [
         path.get_full_path(__file__, 'data', 'smcogs.hmm'),
+        path.get_full_path(__file__, 'halogenases', 'data', 'FDH.hmm'),
         os.path.join(get_config().database_dir, 'resfam', 'Resfams.hmm'),
     ]:
         # account for database directories mounted into docker containers
