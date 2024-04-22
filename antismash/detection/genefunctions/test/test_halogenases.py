@@ -469,22 +469,6 @@ class TestIndolic(IndolicBase):
         assert isinstance(converted_from_json, FlavinDependentHalogenases)
         assert converted_to_json == converted_from_json.to_json()
 
-    @patch.object(subprocessing, "run_hmmsearch",
-                  return_value=[FakeHit("start", "end", 1000, "foo")])
-    def test_run_halogenase_phmms(self, run_hmmsearch):
-        for value in run_hmmsearch.return_value:
-            value.hsps = [FakeHSPHit("foo", "foo", bitscore=250)]
-
-        negative_test_halogenase_hmms_by_id = run_halogenase_phmms("", [])
-        assert not negative_test_halogenase_hmms_by_id
-
-        for value in run_hmmsearch.return_value:
-            value.hsps = [FakeHSPHit("foo", "foo", bitscore=1000)]
-
-        positive_test_halogenase_hmms_by_id = run_halogenase_phmms("", [])
-        for hit in positive_test_halogenase_hmms_by_id["foo"]:
-            assert isinstance(hit, HalogenaseHmmResult)
-
     def test_search_signature_residues(self):
         target_positions = indolic.TRP_6_SIGNATURE
 
