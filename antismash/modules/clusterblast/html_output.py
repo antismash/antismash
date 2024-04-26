@@ -41,8 +41,8 @@ def generate_html(region_layer: RegionLayer, results: ClusterBlastResults,
         additional = {
             "version": results.knowncluster.data_version,
         }
-        tooltip = base_tooltip % "clusters from the MiBIG database"
-        tooltip += "<br>Click on an accession to open that entry in the MiBIG database."
+        tooltip = base_tooltip % "clusters from the MIBiG database"
+        tooltip += "<br>Click on an accession to open that entry in the MIBiG database."
         div = generate_div(region_layer, record_layer, options_layer, "knownclusterblast", tooltip,
                            additional)
         html.add_detail_section("KnownClusterBlast", div, "knownclusterblast")
