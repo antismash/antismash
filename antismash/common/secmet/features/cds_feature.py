@@ -273,9 +273,9 @@ class CDSFeature(Feature):
         gene = leftovers.pop("gene", [None])[0]
         if not (gene or protein_id or locus_tag):
             if "pseudo" in leftovers or "pseudogene" in leftovers:
-                gene = "pseudo%s_%s"
+                gene = "pseudo%d_%d"
             else:
-                gene = "cds%s_%s"
+                gene = "cds%d_%d"
             gene = gene % (bio_feature.location.start, bio_feature.location.end)
         name = locus_tag or protein_id or gene
 

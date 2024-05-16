@@ -185,6 +185,19 @@ class TestCDSBiopythonConversion(unittest.TestCase):
                 new = CDSFeature.from_biopython(bio, record=record)
                 assert new.translation == cds.translation
 
+    def test_bad_name_generation(self):
+        # a CDS with no identifiers but with a pseudo(gene) qualifier
+        # used the coordinates, which is very awkward if it's an ambiguous position
+        bio = SeqFeature(FeatureLocation(BeforePosition(6), 9, 1), "CDS")
+        bio.qualifiers["pseudo"] = True
+        bio.qualifiers["translation"] = "M"
+        cds = CDSFeature.from_biopython(bio)
+        assert cds.get_name() == "pseudo6_9"
+
+        bio.qualifiers.pop("pseudo")
+        cds = CDSFeature.from_biopython(bio)
+        assert cds.get_name() == "cds6_9"
+
 
 class TestCDSProteinLocation(unittest.TestCase):
     def setUp(self):
