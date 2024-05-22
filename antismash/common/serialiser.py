@@ -7,7 +7,6 @@
 
 import bz2
 from collections import defaultdict, OrderedDict
-import json
 import logging
 import os
 from typing import Any, Dict, IO, List, Union
@@ -16,6 +15,7 @@ from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature, Reference
 from Bio.SeqRecord import SeqRecord
 
+from antismash.common import json
 from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import Record
 from antismash.common.secmet.locations import location_from_string
@@ -303,7 +303,7 @@ def feature_to_json(feature: SeqFeature) -> Dict[str, Any]:
 def feature_from_json(data: Union[str, Dict]) -> SeqFeature:
     """ Converts a JSON representation of a feature into a SeqFeature """
     if isinstance(data, str):
-        data = json.loads(data, object_pairs_hook=OrderedDict)
+        data = json.loads(data)
     assert isinstance(data, dict)
     return SeqFeature(location=location_from_string(data["location"]),
                       type=data["type"],

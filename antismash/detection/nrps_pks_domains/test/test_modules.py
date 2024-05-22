@@ -4,10 +4,9 @@
 # for test files, silence irrelevant and noisy pylint warnings
 # pylint: disable=use-implicit-booleaness-not-comparison,protected-access,missing-docstring,too-many-public-methods
 
-import json
 import unittest
 
-from antismash.common import path
+from antismash.common import json, path
 from antismash.common.test.helpers import DummyHMMResult
 from antismash.common.secmet.test.helpers import DummyCDS
 from antismash.detection import nrps_pks_domains

@@ -167,8 +167,10 @@ def _parse_domain(record: Record, domain: NRPSPKSQualifier.Domain,
             break
     assert dna_sequence
     css, abbreviation = get_css_class_and_abbreviation(domain.name)
-    return JSONDomain(domain, predictions, napdoslink, blastlink, domainseq, dna_sequence,
-                      abbreviation, css)
+    return JSONDomain.from_domain(
+        domain, predictions, napdoslink, blastlink, domainseq, dna_sequence,
+        abbreviation, css,
+    )
 
 
 def _build_module_js(module: Module, cds: CDSFeature, match_ids: dict[tuple[str, ...], str],
@@ -217,7 +219,7 @@ def generate_js_domains(region: Region, record: Record) -> Dict[str, Union[str, 
     for feature in region.cds_children:
         if not feature.nrps_pks:
             continue
-        js_orf = JSONOrf(feature)
+        js_orf = JSONOrf.from_cds(feature)
         for domain in feature.nrps_pks.domains:
             js_orf.add_domain(_parse_domain(record, domain, feature))
 

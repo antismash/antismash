@@ -5,9 +5,9 @@
 
 import dataclasses
 from enum import Enum, unique
-import json
 from typing import Any, Dict, List, Optional, Tuple
 
+from antismash.common import json
 from antismash.common.secmet import CDSFeature, Record
 from antismash.common.secmet.locations import location_from_string, FeatureLocation, Location
 

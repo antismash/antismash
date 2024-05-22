@@ -6,7 +6,6 @@
 import argparse
 import gzip
 import hashlib
-import json
 import lzma
 import os
 import pathlib
@@ -22,6 +21,7 @@ from antismash.common.html_renderer import (
     get_antismash_js_version,
     get_antismash_js_url,
 )
+from antismash.common import json
 
 PFAM_LATEST_VERSION = "35.0"
 PFAM_LATEST_URL = f"https://ftp.ebi.ac.uk/pub/databases/Pfam/releases/Pfam{PFAM_LATEST_VERSION}/Pfam-A.hmm.gz"

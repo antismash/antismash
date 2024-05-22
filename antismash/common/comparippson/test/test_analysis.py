@@ -6,11 +6,10 @@
 
 import glob
 from io import StringIO
-import json
 import unittest
 from unittest.mock import patch
 
-from antismash.common import comparippson
+from antismash.common import comparippson, json
 from antismash.common.comparippson import analysis, databases
 from antismash.common.comparippson.databases import (
     ComparippsonDatabase as Database,

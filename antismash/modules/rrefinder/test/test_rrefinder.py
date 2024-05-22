@@ -5,12 +5,12 @@
 # pylint: disable=use-implicit-booleaness-not-comparison,protected-access,missing-docstring
 
 from collections import defaultdict
-import json as jsonlib
 import unittest
 from unittest.mock import patch
 
 import antismash
 from antismash.common.hmmer import HmmerResults
+from antismash.common import json as jsonlib
 from antismash.common.secmet.features import FeatureLocation
 from antismash.common.secmet.test.helpers import DummyRegion
 from antismash.common.test.helpers import (

@@ -10,11 +10,10 @@
 
 """
 
-import json
 from typing import Dict, Iterable, List, Tuple, Set
 from collections import defaultdict
 
-from antismash.common import fasta, path, subprocessing
+from antismash.common import fasta, json, path, subprocessing
 from antismash.common.hmmscan_refinement import refine_hmmscan_results, HMMResult
 from antismash.common.utils import get_hmm_lengths, get_fasta_lengths
 from antismash.common.secmet import Protocluster, CDSFeature, Record
