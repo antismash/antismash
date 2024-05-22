@@ -7,10 +7,11 @@
 import argparse
 from dataclasses import dataclass
 import glob
-import json
 import os
 import sys
 from typing import Any, Dict, List
+
+from antismash.common import json
 
 
 @dataclass
@@ -249,14 +250,14 @@ def write_data(entries: List[Entry], metadata: Metadata, version: str,
         handle.write("{\n")
         # write the core DB info as single line per value
         for key, value in vars(metadata).items():
-            handle.write(f' "{key}": {json.dumps(value, ensure_ascii=False)},\n')
+            handle.write(f' "{key}": {json.dumps(value)},\n')
         handle.write(f' "version": "{version}",\n')
         # entries opening
         handle.write(' "entries": {\n')
         # all the individual entries, one per line
         entry_lines = []
         for entry in entries:
-            entry_lines.append(f'  "{entry.counter}": {json.dumps(entry.to_json(), ensure_ascii=False)}')
+            entry_lines.append(f'  "{entry.counter}": {json.dumps(entry.to_json())}')
         handle.write(",\n".join(entry_lines))
         # entries closing
         handle.write('\n }\n')

@@ -6,7 +6,6 @@
 
 from argparse import Namespace
 import glob
-import json
 import importlib
 import os
 import pkgutil
@@ -15,7 +14,7 @@ from unittest.mock import patch
 
 from Bio.Seq import Seq
 
-from antismash.common import path
+from antismash.common import json, path
 from antismash.common.hmm_rule_parser import rule_parser, cluster_prediction as hmm_detection  # TODO: redo tests
 from antismash.common.hmm_rule_parser.test.helpers import check_hmm_signatures, create_ruleset
 from antismash.common.secmet import Record

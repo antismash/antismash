@@ -3,13 +3,12 @@
 
 """ A module for comparing clusters """
 
-import json
 import os
 from typing import Any, Dict, List, Optional
 
 import jsonschema
 
-from antismash.common import path
+from antismash.common import json, path
 from antismash.config import ConfigType, get_config
 from antismash.config.args import ModuleArgs, MultipleFullPathAction
 from antismash.common.secmet import Record

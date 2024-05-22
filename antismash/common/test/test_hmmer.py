@@ -6,7 +6,6 @@
 
 from collections import defaultdict
 from dataclasses import FrozenInstanceError, dataclass
-import json
 import unittest
 
 from antismash.common.hmmer import (
@@ -15,6 +14,7 @@ from antismash.common.hmmer import (
     HmmerResults,
     remove_overlapping,
 )
+from antismash.common import json
 
 from .helpers import DummyRecord
 

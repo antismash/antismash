@@ -5,8 +5,10 @@
 """
 
 from dataclasses import dataclass
-import json
 from typing import Any, IO, Optional, Type, TypeVar, Union
+
+from antismash.common import json
+
 
 TRuleCategory = TypeVar("TRuleCategory", bound="RuleCategory")  # pylint: disable=invalid-name
 

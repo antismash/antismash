@@ -4,9 +4,9 @@
 # for test files, silence irrelevant and noisy pylint warnings
 # pylint: disable=use-implicit-booleaness-not-comparison,protected-access,missing-docstring,too-many-public-methods
 
-import json
 import unittest
 
+from antismash.common import json
 from antismash.common.secmet.features.protocluster import SideloadedProtocluster
 from antismash.common.secmet.features.subregion import SideloadedSubRegion
 from antismash.common.test.helpers import DummyRecord

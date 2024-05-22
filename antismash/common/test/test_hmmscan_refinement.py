@@ -4,12 +4,11 @@
 # for test files, silence irrelevant and noisy pylint warnings
 # pylint: disable=use-implicit-booleaness-not-comparison,protected-access,missing-docstring
 
-import json
 import unittest
 import warnings
 
+from antismash.common import json, path
 import antismash.common.hmmscan_refinement as refinement
-from antismash.common import path
 
 # Don't display the SearchIO experimental warning, we know this.
 with warnings.catch_warnings():

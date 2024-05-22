@@ -17,15 +17,14 @@
 
 from dataclasses import dataclass, field
 import glob
-import json
 import os
 from typing import Any, Dict, List
 
+from antismash.common import json
 from antismash.common.html_renderer import Markup
+from antismash.common.comparippson.data_structures import Hit
 from antismash.common.path import find_latest_database_version
 from antismash.config import ConfigType, get_config
-
-from .data_structures import Hit
 
 
 @dataclass

@@ -4,13 +4,12 @@
 """ Responsible for creating the single web page results """
 
 import importlib
-import json
 import pkgutil
 import string
 import os
 from typing import cast, Any, Dict, List, Tuple, Union, Optional
 
-from antismash.common import path
+from antismash.common import json, path
 from antismash.common.html_renderer import (
     FileTemplate,
     HTMLSections,
@@ -108,7 +107,7 @@ def write_regions_js(records: List[Dict[str, Any]], output_dir: str,
         of code"""
 
     with open(os.path.join(output_dir, "regions.js"), "w", encoding="utf-8") as handle:
-        handle.write(f"var recordData = {json.dumps(records, indent=1)};\n")
+        handle.write(f"var recordData = {json.dumps(records)};\n")
         regions: Dict[str, Any] = {"order": []}
         for record in records:
             for region in record['regions']:

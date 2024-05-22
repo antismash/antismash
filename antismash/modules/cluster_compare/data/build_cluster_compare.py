@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import argparse
 import glob
-import json
 import os
 from typing import (
     Any,
@@ -10,7 +9,7 @@ from typing import (
     List,
 )
 
-from antismash.common import secmet
+from antismash.common import json, secmet
 
 
 class Counter:
@@ -110,7 +109,7 @@ def convert_all(input_dir: str, output_dir: str) -> None:
                     continue
                 result[record.id] = convert_record(record, fasta)
     with open(os.path.join(output_dir, "data.json"), "w") as handle:
-        handle.write(json.dumps(result, indent=1))
+        handle.write(json.dumps(result, indent=True))
 
 
 def convert_all_mibig(input_dir: str, output_dir: str, accessions: List[str]) -> None:
@@ -140,7 +139,7 @@ def convert_all_mibig(input_dir: str, output_dir: str, accessions: List[str]) ->
             except KeyError as err:
                 print(accession, "is invalid:", err)
     with open(os.path.join(output_dir, "data.json"), "w") as handle:
-        json.dump(result, handle, indent=1, sort_keys=True)
+        json.dump(result, handle, indent=True, sort_keys=True)
 
 
 if __name__ == "__main__":

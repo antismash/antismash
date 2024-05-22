@@ -13,12 +13,11 @@ import logging
 from typing import Any, Dict, List, Optional, Tuple
 
 from collections import Counter
-import json as jsonlib
 from Bio.Seq import Seq
 from MOODS import tools, scan
 
 from antismash.config import get_config
-from antismash.common import path
+from antismash.common import json as jsonlib, path
 from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import Record, Region
 from antismash.common.secmet.features import Feature, FeatureLocation

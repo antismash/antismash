@@ -3,12 +3,12 @@
 
 """ Functions to load a JSON file and validate it against a JSON schema """
 
-import json
 import os
 from typing import Any, Dict
 
 import jsonschema
 
+from antismash.common import json
 from antismash.common.errors import AntismashInputError
 
 

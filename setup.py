@@ -29,6 +29,7 @@ install_requires = [
     'bcbio-gff == 0.7.1',
     'libsass >= 0.22',
     'matplotlib',
+    'orjson',
     'scipy',
     'scikit-learn >= 0.19.0',
     'MOODS-python'

@@ -5,7 +5,6 @@
 # pylint: disable=use-implicit-booleaness-not-comparison,protected-access,missing-docstring,consider-using-with
 
 from io import StringIO
-import json
 import unittest
 
 from antismash.common.hmm_rule_parser.categories import (
@@ -13,6 +12,7 @@ from antismash.common.hmm_rule_parser.categories import (
     _parse_categories,
     parse_category_file,
 )
+from antismash.common import json
 
 
 class TestCategoryParsing(unittest.TestCase):

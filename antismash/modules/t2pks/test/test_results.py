@@ -4,9 +4,9 @@
 # for test files, silence irrelevant and noisy pylint warnings
 # pylint: disable=use-implicit-booleaness-not-comparison,protected-access,missing-docstring
 
-import json
 import unittest
 
+from antismash.common import json
 from antismash.modules.t2pks.results import (
     CDSPrediction,
     ProtoclusterPrediction,
