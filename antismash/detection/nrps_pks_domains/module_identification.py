@@ -164,6 +164,10 @@ class Component:
         """ Returns True if the component can function as an acyltransferase domain """
         return self.label in ACYLTRANSFERASES
 
+    def is_cal(self) -> bool:
+        """ Returns True if the component can function as an acyltransferase domain """
+        return self.label == "CAL_domain"
+
     def is_condensation(self) -> bool:
         """ Returns True if the component can function as a condensation domain """
         return self.label in CONDENSATIONS
@@ -180,7 +184,7 @@ class Component:
 
     def is_loader(self) -> bool:
         """ Returns True if the component can function as a loader domain """
-        return self.is_acyltransferase() or self.is_adenylation()
+        return self.is_acyltransferase() or self.is_adenylation() or self.is_cal()
 
     def is_modification(self) -> bool:
         """ Returns True if the component can function as a modification domain """
