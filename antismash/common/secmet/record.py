@@ -826,7 +826,7 @@ class Record:
         try:
             ensure_valid_locations(seq_record.features, can_be_circular, len(seq_record.seq))
         except ValueError as err:
-            raise SecmetInvalidInputError(f"{seq_record.id}: {err}")
+            raise SecmetInvalidInputError(f"{seq_record.id}: {err}") from err
 
         for feature in seq_record.features:
             if feature.location.ref or feature.location.ref_db:
