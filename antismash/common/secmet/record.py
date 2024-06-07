@@ -61,6 +61,7 @@ from .locations import (
     Location,
     connect_locations,
     split_origin_bridging_location,
+    get_distance_between_locations,
     location_bridges_origin,
     locations_overlap,
     ensure_valid_locations,
@@ -516,7 +517,21 @@ class Record:
             Returns:
                 a list of CDSFeatures, ordered by earliest position in feature location
         """
-        def find_start_in_list(location: Location, features: list[CDSFeature],
+        results: list[CDSFeature] = []
+        # shortcut if no CDS features exist
+        if not self._cds_features:
+            return results
+
+        # compound locations need each chunk to be handled separately
+        if len(location.parts) > 1:
+            features: list[CDSFeature] = []
+            # this is not particularly efficient, but it gets very complicated very quickly
+            for part in location.parts:
+                found = self.get_cds_features_within_location(part, with_overlapping=True)
+                features.extend(f for f in found if f not in features)
+            return [f for f in features if f.is_contained_by(location)]
+
+        def find_start_in_list(location: Location, features: List[CDSFeature],
                                include_overlaps: bool) -> int:
             """ Find the earliest feature that starts before the location
                 (and ends before, if include_overlaps is True)
@@ -534,10 +549,6 @@ class Record:
             assert isinstance(location, FeatureLocation)
             location = FeatureLocation(0, max(1, location.end))
 
-        results: List[CDSFeature] = []
-        # shortcut if no CDS features exist
-        if not self._cds_features:
-            return results
         index = find_start_in_list(location, self._cds_features, with_overlapping)
         while index < len(self._cds_features):
             feature = self._cds_features[index]
@@ -983,6 +994,20 @@ class Record:
             features.extend(region.cds_children)
         return features
 
+    def connect_locations(self, locations: list[Location], *, disable_wrapping: bool = False) -> Location:
+        """ Combines the given locations into a single contiguous location, unless the record
+            crosses the origin, in which case the resulting location may be split over the origin/
+
+            Arguments:
+                locations: the locations to combine
+                disable_wrapping: if provided, explicitly disables forming a location over the origin
+
+            Returns:
+                the single location that covers all the input locations
+        """
+        wrap_point = len(self) if self.is_circular() and not disable_wrapping else None
+        return connect_locations(locations, wrap_point=wrap_point)
+
     def create_candidate_clusters(self) -> int:
         """ Takes all Cluster instances and constructs CandidateClusters that cover
             each Cluster. Each combination of overlapping clusters will create
@@ -1106,6 +1131,24 @@ class Record:
         if location.strand == -1:
             parts.reverse()
         return CompoundLocation(parts)
+
+    def get_distance_between_features(self, first: Feature, second: Feature) -> int:
+        """ Returns the shortest distance between the two given features, crossing
+            the origin if the record is circular.
+
+            Overlapping features are considered to have zero distance.
+        """
+        return self.get_distance_between_locations(first.location, second.location)
+
+    def get_distance_between_locations(self, first: Location, second: Location) -> int:
+        """ Returns the shortest distance between the two given locations, crossing
+            the origin if the record is circular.
+
+            Overlapping locations are considered to have zero distance.
+        """
+        if self.is_circular():
+            return get_distance_between_locations(first, second, wrap_point=len(self))
+        return get_distance_between_locations(first, second)
 
     def get_nrps_pks_cds_features(self) -> List[CDSFeature]:
         """ Returns a list of all CDS features within Clusters that contain at least
