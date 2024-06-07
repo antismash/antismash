@@ -449,6 +449,28 @@ class TestRecord(unittest.TestCase):
         # and since it's already set, the getter should return it
         assert rec.get_gc_content() == 0.3
 
+    def test_distance_between_features(self):
+        record = Record("A" * 100)
+        assert not record.is_circular()
+        low = Feature(FeatureLocation(10, 20, 1), "test")
+        high = Feature(FeatureLocation(70, 80, 1), "test")
+
+        with patch.object(record_pkg, "get_distance_between_locations", return_value="dummy") as patched:
+            # make sure what's returned is the location function's result
+            assert record.get_distance_between_features(high, low) == "dummy"
+            # and make sure it's called with the right args
+            patched.assert_called_once_with(high.location, low.location)
+
+        # and check with a circular record
+        record._record.annotations = {"topology": "circular"}
+        assert record.is_circular()
+
+        with patch.object(record_pkg, "get_distance_between_locations", return_value="dummy") as patched:
+            # again, make sure what's returned is the location function's result
+            assert record.get_distance_between_features(high, low) == "dummy"
+            # and make sure that the wrap point is present
+            patched.assert_called_once_with(high.location, low.location, wrap_point=len(record))
+
 
 class TestCDSFetchByLocation(unittest.TestCase):
     def setUp(self):
@@ -982,6 +1004,20 @@ class TestExtension(unittest.TestCase):
         self.record._record.annotations = {"topology": "circular"}
         assert self.record.is_circular()
 
+    def test_extending_outside_both_ends(self):
+        self.set_circular()
+        full_location = FeatureLocation(0, 100, 1)
+        assert len(full_location) == len(self.record)
+
+        new = self.record.extend_location(full_location, 10)
+        assert new.parts is not full_location.parts  # to avoid mutability issues
+        assert new.parts == full_location.parts  # but they ought to be identical
+
+        location = FeatureLocation(2, 97, 1)
+        new = self.record.extend_location(location, 10)
+        assert new.parts is not location.parts
+        assert new.parts == full_location.parts
+
     def test_simple_unbounded(self):
         for strand in [-1, 0, 1]:
             location = FeatureLocation(30, 50, strand)
@@ -1012,7 +1048,7 @@ class TestExtension(unittest.TestCase):
         assert new.end == len(self.record)
         assert new.strand == location.strand
         assert new.parts == [
-            FeatureLocation(90, new.end, 1),
+            FeatureLocation((location.start - distance) % len(self.record), new.end, 1),
             FeatureLocation(0, location.end + distance, 1)
         ]
         # and ensure the original wasn't changed
