@@ -12,7 +12,7 @@ from typing import Any, Dict, Iterator, List, Optional, Set, Tuple, Union
 from .config.args import ModuleArgs
 
 from .common.html_renderer import HTMLSections
-from .common.json import JSONOrf
+from .common.json import JSONCompatible, JSONOrf
 from .common.layers import RecordLayer, RegionLayer
 from .common.module_results import ModuleResults
 from .common.secmet import Region, Record
@@ -74,7 +74,7 @@ class AntismashModule(ModuleType):
 
     @staticmethod
     def generate_javascript_data(record: Record, region: Region,
-                                 results: ModuleResults) -> Dict[str, Any]: ...
+                                 results: ModuleResults) -> JSONCompatible: ...
 
 
 class VisualisationModule(ModuleType):
