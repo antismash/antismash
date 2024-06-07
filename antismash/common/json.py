@@ -6,7 +6,7 @@
 
 from dataclasses import dataclass, field
 from json import JSONDecodeError  # pylint: disable=unused-import  # for compatibility
-from typing import Any, Callable, IO, Optional, Self
+from typing import Any, Callable, IO, Optional, Self, TypeAlias, Union
 
 # pylint doesn't recognise any members of orjson, where mypy and pyflakes do
 # pylint: disable=no-name-in-module
@@ -28,6 +28,19 @@ from antismash.common.secmet.qualifiers import NRPSPKSQualifier
 @dataclass
 class JSONBase:
     """ A base class for JSON-serialisable objects """
+
+
+JSONCompatible: TypeAlias = Union[
+    dict[str, Union["JSONCompatible"]],
+    list["JSONCompatible"],
+    tuple["JSONCompatible"],
+    JSONBase,
+    int,
+    float,
+    str,
+    bool,
+    None
+]
 
 
 def _base_convertor(obj: Any) -> Any:
