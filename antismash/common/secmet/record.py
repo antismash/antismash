@@ -1115,6 +1115,14 @@ class Record:
             other = other.replace(char, "")
         return len(other) < 0.2 * len(sequence)
 
+    def to_genbank(self, filename: str) -> None:
+        """ Writes the record to the given path in GenBank format
+
+            Arguments:
+                filename: the file path to write to
+        """
+        SeqIO.write([self.to_biopython()], filename, "genbank")
+
 
 def _calculate_crc32(string: str) -> str:
     """ Calculates the crc32 checksum of an input string and returns the resulting checksum in hex.
