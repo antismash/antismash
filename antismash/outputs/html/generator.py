@@ -48,7 +48,7 @@ def build_json_data(records: List[Record], results: List[Dict[str, ModuleResults
                     options: ConfigType, all_modules: List[AntismashModule]) -> Tuple[
                         List[Dict[str, Any]],
                         List[Dict[str, Union[str, List[JSONOrf]]]],
-                        Dict[str, Dict[str, Dict[str, Any]]]
+                        dict[str, dict[str, json.JSONCompatible]],
                     ]:
     """ Builds JSON versions of records and domains for use in drawing SVGs with
         javascript.
@@ -67,7 +67,7 @@ def build_json_data(records: List[Record], results: List[Dict[str, ModuleResults
     js_records = js.convert_records(records, results, options)
 
     js_domains: List[Dict[str, Union[str, List[JSONOrf]]]] = []
-    js_results = {}
+    js_results: dict[str, dict[str, json.JSONCompatible]] = {}
 
     for i, record in enumerate(records):
         json_record = js_records[i]
@@ -102,7 +102,7 @@ def build_json_data(records: List[Record], results: List[Dict[str, ModuleResults
 
 def write_regions_js(records: List[Dict[str, Any]], output_dir: str,
                      js_domains: List[Dict[str, Any]],
-                     module_results: Dict[str, Dict[str, Dict[str, Any]]]) -> None:
+                     module_results: dict[str, dict[str, json.JSONCompatible]]) -> None:
     """ Writes out the cluster and domain JSONs to file for the javascript sections
         of code"""
 

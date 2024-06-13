@@ -13,7 +13,7 @@ from markupsafe import Markup
 
 from antismash.config import get_config
 
-_ANTISMASH_JS_VERSION = "0.13"  # major and minor only, always use the latest patch
+_ANTISMASH_JS_VERSION = "0.14"  # major and minor only, always use the latest patch
 # defaults for RiPP sequence classes and substitutions
 RIPP_CLASSES = {
     "S": "dha",
