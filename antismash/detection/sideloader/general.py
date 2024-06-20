@@ -4,6 +4,7 @@
 """ Generic sideloading """
 
 import itertools
+import logging
 from typing import List, Optional
 
 from antismash.common import path
@@ -65,15 +66,19 @@ def load_single_record_annotations(annotation_files: List[str], record: Record,
         subregions.append(subregion)
 
     if cds_markers:
+        missing = set()
         for name in cds_markers:
             try:
                 cds = record.get_cds_by_name(name)
             except KeyError:
+                missing.add(name)
                 continue
             start = max(cds.location.start - cds_marker_padding, 0)
             end = min(cds.location.end + cds_marker_padding, len(record.seq))
             subregion = SubRegionAnnotation(start, end, name, tool, {})
             subregions.append(subregion)
+        if missing:
+            logging.warning("Features named for sideloading are not present in %s: %s", record.id, ", ".join(missing))
 
     for area in itertools.chain(protoclusters, subregions):
         location = FeatureLocation(area.start, area.end)
