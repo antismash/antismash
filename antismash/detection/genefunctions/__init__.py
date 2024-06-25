@@ -13,6 +13,7 @@ from antismash.common.secmet import Record
 from antismash.config import ConfigType, get_config
 from antismash.config.args import ModuleArgs
 from antismash.detection import DetectionStage
+from .halogenases.halogenases_analysis import specific_analysis
 
 from .core import FunctionResults
 from .tools import run_tools
@@ -93,6 +94,7 @@ def prepare_data(logging_only: bool = False) -> List[str]:
     failures = []
     for database in [
         path.get_full_path(__file__, 'data', 'smcogs.hmm'),
+        path.get_full_path(__file__, 'halogenases', 'data', 'FDH.hmm'),
         os.path.join(get_config().database_dir, 'resfam', 'Resfams.hmm'),
     ]:
         # account for database directories mounted into docker containers
@@ -140,4 +142,5 @@ def run_on_record(record: Record, results: AllFunctionResults, options: ConfigTy
     results = AllFunctionResults(record.id)
     for result in run_tools(record, options):
         results.add_tool_results(result)
+    specific_analysis(record)
     return results
