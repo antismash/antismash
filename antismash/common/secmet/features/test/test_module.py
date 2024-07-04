@@ -246,3 +246,20 @@ class TestModule(unittest.TestCase):
             ]
             module = create_module(domains=domains)
             assert module.location.strand == strand
+
+    def test_protein_location(self):
+        domains = (
+            DummyAntismashDomain(locus_tag="A", protein_start=15, protein_end=20, strand=-1),
+            DummyAntismashDomain(locus_tag="A", protein_start=5, protein_end=10, strand=-1),
+        )
+        module = create_module(domains=list(domains))
+        # the domain order, as given, is respected in the feature itself
+        # but ensuring the original argument isn't modified by using two lists
+        assert module._domains == list(domains)
+        # if the ordering doesn't take place here, then the new location will
+        # cause an error to be raised
+        location = module.get_parent_protein_location("A")
+        assert location.start == 5
+        assert location.end == 20
+        # similarly, the single-parent option should succeed
+        assert module.protein_location == location
