@@ -20,6 +20,7 @@ from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
 from antismash.custom_typing import AntismashModule, ConfigType
 
 from .args import build_parser, AntismashParser
+from .executables import get_default_paths
 from .loader import load_config_from_file
 
 _USER_FILE_NAME = os.path.expanduser('~/.antismash7.cfg')
@@ -50,6 +51,12 @@ class Config:  # since it's a glorified namespace, pylint: disable=too-few-publi
         def __getattr__(self, attr: str) -> Any:
             if attr in self.__dict__:
                 return self.__dict__[attr]
+            # for some cases of members which are their own namespace, they
+            # should be created with default values if missing
+            if attr == "executables":
+                executables = Namespace(**get_default_paths())
+                self.__dict__[attr] = executables
+                return executables
             raise AttributeError(f"Config has no attribute: {attr}")
 
         def __setattr__(self, attr: str, value: Any) -> None:

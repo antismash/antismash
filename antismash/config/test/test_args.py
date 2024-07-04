@@ -110,7 +110,8 @@ class TestConfig(unittest.TestCase):
         config = get_config(no_defaults=True)
         assert len(config) == 0
         with self.assertRaises(AttributeError):
-            assert config.executables
+            assert config.verbose
+        assert config.executables  # this namespace must always exist, but the contents may or may not
 
 
 class TestExecutableArg(unittest.TestCase):
