@@ -8,9 +8,10 @@ using position weight matrices (PWMs) in BGCs.
 
 from dataclasses import dataclass
 from enum import IntEnum, auto
+import itertools
 import logging
 
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Iterator, List, Optional, Tuple
 
 from collections import Counter
 from Bio.Seq import Seq
@@ -19,8 +20,13 @@ from MOODS import tools, scan
 from antismash.config import get_config
 from antismash.common import json as jsonlib, path
 from antismash.common.module_results import ModuleResults
-from antismash.common.secmet import Record, Region
-from antismash.common.secmet.features import Feature, FeatureLocation
+from antismash.common.secmet import Record
+from antismash.common.secmet.features import Feature, Region
+from antismash.common.secmet.locations import (
+    CompoundLocation,
+    FeatureLocation,
+    Location,
+)
 
 
 PWM_PATH = path.get_full_path(__file__, 'data', 'PWMs.json')
@@ -152,8 +158,6 @@ class TFBSFinderResults(ModuleResults):
         self.pvalue = pvalue  # the p-value used for threshold setting within MOODS
         self.start_overlap = start_overlap
         self.hits_by_region = hits_by_region
-        self.features: List[Feature] = []
-        self.new_feature_from_hits()
 
     def get_hits_by_region(self, region_number: int, confidence: Confidence = None,
                            allow_better: bool = False) -> List[TFBSHit]:
@@ -191,23 +195,26 @@ class TFBSFinderResults(ModuleResults):
             "hits_by_region": hits_by_region,
         }
 
-    def new_feature_from_hits(self) -> None:
-        """ Constructs features from all detected hits"""
-        for hits in self.hits_by_region.values():
-            for hit in hits:
-                tfbs_feature = Feature(FeatureLocation(hit.start, hit.start + len(hit.consensus), hit.strand),
-                                       feature_type="misc_feature", created_by_antismash=True)
-                tfbs_feature.notes.append(f"TFBS match to {hit.name}, {hit.description}, "
-                                          f"confidence: {hit.confidence}, "
-                                          f"score: {round(hit.score, 2)}")
-                self.features.append(tfbs_feature)
-
     def add_to_record(self, record: Record) -> None:
         """ Adds the analysis results to the record """
         if record.id != self.record_id:
             raise ValueError("Record to store in and record analysed don't match")
-        for feature in self.features:
-            record.add_feature(feature)
+        for hits in self.hits_by_region.values():
+            for hit in hits:
+                end = (hit.start + len(hit.consensus)) % len(record)
+                if hit.start > end:
+                    location = CompoundLocation([
+                        FeatureLocation(hit.start, len(record), hit.strand),
+                        FeatureLocation(0, end, hit.strand),
+                    ])
+                else:
+                    location = FeatureLocation(hit.start, end, hit.strand)
+                tfbs_feature = Feature(location,
+                                       feature_type="misc_feature", created_by_antismash=True)
+                tfbs_feature.notes.append(f"TFBS match to {hit.name}, {hit.description}, "
+                                          f"confidence: {hit.confidence}, "
+                                          f"score: {round(hit.score, 2)}")
+                record.add_feature(tfbs_feature)
 
     @staticmethod
     def from_json(json: Dict[str, Any], record: Record) -> Optional["TFBSFinderResults"]:
@@ -332,19 +339,22 @@ def run_moods(sequence: Seq, background: Tuple[float, float, float, float],
     return results
 
 
-def get_valid_areas(region: Region, start_overlap: int) -> List[Tuple[int, int]]:
-    """ Finds areas within the region where a binding site is considered valid.
-        Generally these are intergenic regions, but some overlaps with genes are possible.
+def get_valid_areas(start: int, end: int, locations: Iterator[Location], start_overlap: int) -> list[tuple[int, int]]:
+    """ Finds areas within the section where a binding site is considered valid.
+        Generally these are intergenic areas, but some overlaps with genes are possible.
 
         Arguments:
-            region: the Region to find areas within
-            start_overlap: the allowable bases of overlap into the start of a gene
+            start: the start coordinate of the section to search in
+            end: the end coordinate of the section to search in
+            locations: the existing locations to excise
+            start_overlap: the allowable overlap when the start of two locations overlap
+                           and are on reverse strands
 
         Returns:
             a list of tuples, each being a start and end coordinate of an area,
                 ordered by increasing start coordinate
     """
-    cdses = region.cds_children
+    original_end = end
     areas: List[Tuple[int, int]] = []
 
     def add_area(start: int, end: int) -> None:
@@ -353,43 +363,49 @@ def get_valid_areas(region: Region, start_overlap: int) -> List[Tuple[int, int]]
             areas.append((int(start), int(end)))
 
     # add initial range
-    initial_cds = cdses[0]
-    end = initial_cds.location.start
-    if initial_cds.location.strand == 1:
+    try:
+        initial = next(locations)
+    except StopIteration:
+        # no locations to excise, so return the whole block
+        return [(start, end)]
+    end = initial.start
+    if initial.strand == 1:
         end += start_overlap
-    if region.location.start != end:
-        add_area(region.location.start, end)
+    if start != end:
+        add_area(start, end)
 
-    for i, cds in enumerate(cdses[1:]):
-        prev_cds = cdses[i]
-        if cds.location.start < prev_cds.location.end:  # overlaps with a previous CDS
+    previous = initial
+    for current in locations:
+        if current.start < previous.end:  # overlaps with a previous CDS
             # overlaps and same strand or of two ends can be ignored
             # but overlaps of two CDS starts are interesting
-            if cds.location.strand == 1 and prev_cds.location.strand == -1:
+            if current.strand == 1 and previous.strand == -1:
                 # adding the allowable overlap into each makes it slightly larger than 2 * overlap
-                add_area(cds.location.start - start_overlap, prev_cds.location.end + start_overlap)
+                add_area(current.start - start_overlap, previous.end + start_overlap)
+            previous = current
             continue
 
         # otherwise, skip gaps between the ends of two genes
-        if cds.location.strand == -1 and prev_cds.location.strand == 1:
+        if current.strand == -1 and previous.strand == 1:
+            previous = current
             continue
 
-        start = prev_cds.location.end
-        if prev_cds.location.strand == -1:
+        start = previous.end
+        if previous.strand == -1:
             start -= start_overlap
 
-        end = cds.location.start
-        if cds.location.strand == 1:
+        end = current.start
+        if current.strand == 1:
             end += start_overlap
 
         add_area(start, end)
+        previous = current
 
-    prev_cds = cdses[-1]
     # add final range
-    start = prev_cds.location.end
-    if prev_cds.location.strand == -1:
+    start = previous.end
+    if previous.strand == -1:
         start -= start_overlap
-    add_area(start, region.location.end)
+    add_area(start, original_end)
     return areas
 
 
@@ -434,6 +450,78 @@ def filter_hits(matrices: List[Matrix], areas: List[Tuple[int, int]],
     return results
 
 
+def get_cross_origin_areas(record: Record, region: Region, start_overlap: int) -> list[tuple[int, int]]:
+    """ Finds areas within the section where a binding site is considered valid.
+        Generally these are intergenic areas, but some overlaps with genes are possible.
+
+        Arguments:
+            start: the start coordinate of the section to search in
+            end: the end coordinate of the section to search in
+            locations: the existing locations to excise
+            start_overlap: the allowable overlap when the start of two locations overlap
+                           and are on reverse strands
+
+        Returns:
+            a list of tuples, each being a start and end coordinate of an area,
+                ordered by increasing start coordinate
+    """
+    pre_origin = region.cds_children.pre_origin
+    cross_origin = region.cds_children.cross_origin
+    post_origin = region.cds_children.post_origin
+
+    areas = []
+    # to match the linear version, ensure all areas are created in order of lowest start coordinate
+
+    # find any areas between genes after crossing the origin
+    # with the lower limit bounded by the closest cross-origin gene, if any
+    if post_origin:
+        start = region.start
+        end = region.end
+        locs = (cds.location for cds in pre_origin)
+        cross: Iterator[Location] = iter([])
+        if cross_origin:
+            # fake a location up to the origin, for simplicity in child functions
+            # and to ensure consistency in start overlap handling
+            post_part = cross_origin[-1].location.parts[-1]
+            if post_part.strand == -1:
+                post_part = cross_origin[-1].location.parts[0]
+            end = post_part.end
+            cross = iter([FeatureLocation(len(record), post_part.end + len(record), post_part.strand)])
+        areas.extend(get_valid_areas(start, end, itertools.chain(locs, cross), start_overlap))
+
+    # find any areas between genes before crossing the origin
+    # with the upper limit bounded by the closest cross-origin gene, if any
+    if pre_origin:
+        start = region.start
+        end = pre_origin[-1].end
+        locs = (cds.location for cds in pre_origin)
+        cross = iter([])
+        if cross_origin:
+            # fake a location leading up to the origin, for simplicity in child functions
+            # and to ensure consistency in start overlap handling
+            pre_part = cross_origin[0].location.parts[0]
+            if pre_part.strand == -1:
+                pre_part = cross_origin[0].location.parts[-1]
+            end = pre_part.start
+            cross = iter([FeatureLocation(pre_part.start, len(record), pre_part.strand)])
+        areas.extend(get_valid_areas(start, end, itertools.chain(locs, cross), start_overlap))
+
+    # multiple genes crossing the origin will never have intergenic gaps, so no areas will exist there
+    # however, if there are no cross-origin genes, then the area between
+    # pre- and post-origin needs to be included
+    if not cross_origin:
+        start = region.start
+        end = region.end + len(record)
+        if pre_origin:
+            start = pre_origin[-1].end
+        if post_origin:
+            end = post_origin[0].start
+        # hit coordinates don't wrap since they just use an extracted sequence and simple offset
+        # so, while stripping ambiguous locations, bump the end coordinate for consistency
+        areas.append((int(start), int(end) + len(record)))
+    return areas
+
+
 def run_tfbs_finder(record: Record, pvalue: float, start_overlap: int, matrix_path: str = PWM_PATH,
                     ) -> TFBSFinderResults:
     """Run TFBS finder on a given record
@@ -452,7 +540,11 @@ def run_tfbs_finder(record: Record, pvalue: float, start_overlap: int, matrix_pa
     for region in record.get_regions():
         sequence = region.extract(record.seq)
         background = get_bg_distribution(sequence)
-        moods_results = run_moods(sequence, background, matrices, pvalue, region.location.start)
-        areas = get_valid_areas(region, start_overlap)
+        moods_results = run_moods(sequence, background, matrices, pvalue, region.start)
+        areas: list[tuple[int, int]] = []
+        if region.crosses_origin():
+            areas = get_cross_origin_areas(record, region, start_overlap)
+        else:
+            areas = get_valid_areas(region.start, region.end, iter(region.cds_children), start_overlap)
         hits_by_region[region.get_region_number()] = filter_hits(matrices, areas, moods_results)
     return TFBSFinderResults(record.id, pvalue, start_overlap, hits_by_region)

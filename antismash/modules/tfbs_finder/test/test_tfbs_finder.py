@@ -10,7 +10,7 @@ from Bio.Seq import Seq
 
 from antismash import get_all_modules
 from antismash.common import json
-from antismash.common.secmet.locations import FeatureLocation
+from antismash.common.secmet.locations import CompoundLocation, FeatureLocation
 from antismash.common.secmet.test.helpers import DummyRegion, DummySubRegion
 from antismash.common.test.helpers import (
     DummyCandidateCluster,
@@ -34,6 +34,7 @@ from antismash.modules.tfbs_finder.tfbs_finder import (
 )
 from antismash.modules.tfbs_finder.html_output import (
     add_neighbouring_genes,
+    find_neighbours,
     generate_javascript_data,
     get_sequence_matches,
 )
@@ -109,10 +110,35 @@ class TestResults(unittest.TestCase):
 
     def test_new_feature_from_hits(self):
         data = self.create_results(hits_by_region=self.hits_by_region)
-        assert len(data.features) == 1
-        feature = data.features[0]
+        assert not list(self.record.all_features)
+        data.add_to_record(self.record)
+        features = list(self.record.all_features)
+        assert len(features) == 1
+        feature = features[0]
         assert feature.strand == 1
         assert feature.location == FeatureLocation(1, 4, 1)
+        assert feature.type == "misc_feature"
+        assert feature.created_by_antismash
+
+    def test_cross_origin_output_features(self):
+        hit = TFBSHit(name="Test1", start=20, description="TestHit", consensus="TGA" * 4,
+                      confidence=Confidence.STRONG, strand=1, score=10, max_score=10)
+        hits_by_region = {1: [hit]}
+        record = DummyRecord(length=25)
+        hit_end = hit.start + len(hit.consensus)
+        assert hit_end > len(record)
+
+        results = self.create_results(record_id=record.id, hits_by_region=hits_by_region)
+        assert not list(record.all_features)
+        results.add_to_record(record)
+        features = list(record.all_features)
+        assert len(features) == 1
+        feature = features[0]
+        assert feature.strand == 1
+        assert feature.location == CompoundLocation([
+            FeatureLocation(hit.start, len(record), 1),
+            FeatureLocation(0, hit_end % len(record), 1),
+        ])
         assert feature.type == "misc_feature"
         assert feature.created_by_antismash
 
@@ -236,69 +262,141 @@ class TestFinder(unittest.TestCase):
 
     def test_contained_gene(self):
         hit = {"start": 5, "end": 15}
-        genes = [DummyCDS(start=0, end=3), DummyCDS(start=8, end=11), DummyCDS(start=13, end=18, strand=-1)]
-        results = add_neighbouring_genes(hit, genes)
+        left = DummyCDS(start=0, end=3)
+        mid = DummyCDS(start=8, end=11)
+        right = DummyCDS(start=13, end=18, strand=-1)
+        results = add_neighbouring_genes(hit, left, mid, right)
         assert results["left"] == {
             "location": 3,
-            "name": genes[0].get_name(),
+            "name": left.get_name(),
             "strand": 1,
         }
         assert results["mid"] == {
             "location": 8,
             "length": 3,
-            "name": genes[1].get_name(),
+            "name": mid.get_name(),
             "strand": 1,
         }
         assert results["right"] == {
             "location": 13,
-            "name": genes[2].get_name(),
+            "name": right.get_name(),
             "strand": -1,
         }
 
 
-class TestAreaFinding(unittest.TestCase):
-    def setUp(self):
-        self.region = DummyRegion(subregions=[DummySubRegion(start=0, end=500)])
+class TestFindingNeighbours(unittest.TestCase):
+    def test_finding_cross_origin_neighbours(self):
+        genes = [DummyCDS(start=13, end=18, strand=-1), DummyCDS(start=0, end=3), DummyCDS(start=8, end=11)]
+        location = CompoundLocation([FeatureLocation(13, 40, 1), FeatureLocation(0, 12, 1)])
+        subregion = DummySubRegion(location=location)
+        region = DummyRegion(subregions=[subregion])
+        region.location = subregion.location
+        for gene in genes:
+            region.add_cds(gene)
+        # for some reason pylint thinks region.cds_children is a list, despite it being a subclass of tuple
+        # pylint: disable=no-member
+        assert region.cds_children.pre_origin == (genes[0],)
+        assert not region.cds_children.cross_origin
+        assert region.cds_children.post_origin == tuple(genes[1:])
+        # pylint: enable=no-member
+        left, mid, right = find_neighbours(5, 15, region)
+        assert left == genes[1]
+        assert mid == genes[2]
+        assert right == genes[0]
 
+    def test_finding_neighbours(self):
+        genes = [DummyCDS(start=0, end=3), DummyCDS(start=8, end=11), DummyCDS(start=13, end=18, strand=-1)]
+        region = DummyRegion(subregions=[DummySubRegion(start=0, end=400)])
+        for gene in genes:
+            region.add_cds(gene)
+        assert find_neighbours(5, 15, region) == tuple(genes)
+
+    def test_cross_origin_site_in_gene(self):
+        genes = [
+            DummyCDS(location=CompoundLocation([FeatureLocation(30, 40, 1), FeatureLocation(0, 5, 1)])),
+            DummyCDS(start=8, end=11),
+            DummyCDS(start=13, end=18, strand=-1),
+        ]
+        location = CompoundLocation([FeatureLocation(28, 40, 1), FeatureLocation(0, 20, 1)])
+        subregion = DummySubRegion(location=location)
+        region = DummyRegion(subregions=[subregion])
+        region.location = subregion.location
+        for gene in genes:
+            region.add_cds(gene)
+        left, mid, right = find_neighbours(30, 3, region)
+        assert left == genes[0]
+        assert mid is None
+        assert right == genes[1]
+
+    def test_cross_origin_site_outside_gene(self):
+        genes = [
+            DummyCDS(start=30, end=40),
+            DummyCDS(start=8, end=11),
+            DummyCDS(start=13, end=18, strand=-1),
+        ]
+        location = CompoundLocation([FeatureLocation(28, 40, 1), FeatureLocation(0, 20, 1)])
+        subregion = DummySubRegion(location=location)
+        region = DummyRegion(subregions=[subregion])
+        region.location = subregion.location
+        for gene in genes:
+            region.add_cds(gene)
+        left, mid, right = find_neighbours(30, 3, region)
+        assert left == genes[0]
+        assert mid is None
+        assert right == genes[1]
+
+
+class TestAreaFinding(unittest.TestCase):
     def test_leading(self):
-        self.region.add_cds(DummyCDS(start=250, end=500))
-        assert get_valid_areas(self.region, 0) == [(0, 250)]
+        assert get_valid_areas(0, 500, iter([FeatureLocation(250, 500, 1)]), 0) == [(0, 250)]
 
     def test_trailing(self):
-        self.region.add_cds(DummyCDS(start=0, end=250))
-        assert get_valid_areas(self.region, 0) == [(250, 500)]
+        assert get_valid_areas(0, 500, iter([FeatureLocation(0, 250, 1)]), 0) == [(250, 500)]
 
     def test_gap(self):
-        self.region.add_cds(DummyCDS(start=0, end=200))
-        self.region.add_cds(DummyCDS(start=300, end=500))
-        assert get_valid_areas(self.region, 0) == [(200, 300)]
+        locations = iter([
+            FeatureLocation(0, 200, 1),
+            FeatureLocation(300, 500, 1),
+        ])
+        assert get_valid_areas(0, 500, locations, 0) == [(200, 300)]
 
     def test_gaps_between_stops(self):
-        self.region.add_cds(DummyCDS(start=0, end=180, strand=1))
-        self.region.add_cds(DummyCDS(start=210, end=500, strand=-1))
-        assert get_valid_areas(self.region, 0) == []
+        locations = iter([
+            FeatureLocation(0, 180, 1),
+            FeatureLocation(210, 500, -1),
+        ])
+        assert get_valid_areas(0, 500, locations, 0) == []
 
     def test_overlapping_ends(self):
-        self.region.add_cds(DummyCDS(start=0, end=210, strand=1))
-        self.region.add_cds(DummyCDS(start=200, end=500, strand=-1))
-        assert get_valid_areas(self.region, 0) == []
+        locations = iter([
+            FeatureLocation(0, 210, 1),
+            FeatureLocation(200, 500, -1),
+        ])
+        assert get_valid_areas(0, 500, locations, 0) == []
 
     def test_overlapping_starts(self):
-        self.region.add_cds(DummyCDS(start=0, end=210, strand=-1))
-        self.region.add_cds(DummyCDS(start=200, end=500, strand=1))
-        assert get_valid_areas(self.region, 50) == [(150, 260)]
+        locations = iter([
+            FeatureLocation(0, 210, -1),
+            FeatureLocation(200, 500, 1),
+        ])
+        assert get_valid_areas(0, 500, locations, 50) == [(150, 260)]
 
     def test_overlapping_same_strand(self):
         for strand in [1, -1]:
-            self.region._cdses.clear()
-            self.region.add_cds(DummyCDS(start=0, end=210, strand=strand))
-            self.region.add_cds(DummyCDS(start=200, end=500, strand=strand))
-            assert get_valid_areas(self.region, 0) == []
+            locations = iter([
+                FeatureLocation(0, 210, strand),
+                FeatureLocation(200, 500, strand),
+            ])
+            assert get_valid_areas(0, 500, locations, 0) == []
 
     def test_overlap_size(self):
         for size in [0, 50, 100]:
-            self.region._cdses.clear()
-            self.region.add_cds(DummyCDS(start=50, end=200, strand=1))
-            self.region.add_cds(DummyCDS(start=250, end=400, strand=-1))
-            assert len(self.region.cds_children) == 2
-            assert get_valid_areas(self.region, size) == [(0, 50 + size), (400 - size, 500)]
+            locations = iter([
+                FeatureLocation(50, 200, 1),
+                FeatureLocation(200, 400, -1),
+            ])
+            assert get_valid_areas(0, 500, locations, size) == [(0, 50 + size), (400 - size, 500)]
+
+    def test_none(self):
+        # ensures StopIterations are never hit
+        assert get_valid_areas(0, 50, iter([]), 50) == [(0, 50)]
