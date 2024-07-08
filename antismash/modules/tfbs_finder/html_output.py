@@ -5,15 +5,19 @@
 """
 
 import bisect
-from typing import Any, Sequence
+from typing import Any, Optional, Sequence
 
 from Bio.Seq import Seq
 
 from antismash.common import path
 from antismash.common.html_renderer import FileTemplate, HTMLSections, Markup, docs_link
 from antismash.common.layers import OptionsLayer, RegionLayer, RecordLayer
-from antismash.common.secmet import CDSFeature, Feature, FeatureLocation, Record, Region
-from antismash.common.secmet.locations import location_contains_other
+from antismash.common.secmet import CDSFeature, Feature, Record, Region
+from antismash.common.secmet.locations import (
+    CompoundLocation,
+    FeatureLocation,
+    location_contains_other,
+)
 
 from .tfbs_finder import Confidence, TFBSFinderResults
 
@@ -92,7 +96,111 @@ def get_sequence_matches(query: str, consensus: str) -> list:
     return matches
 
 
-def add_neighbouring_genes(hit: dict[str, Any], genes: Sequence[CDSFeature]) -> dict[str, Any]:
+def _find_in_contiguous_area(start: int, end: int, genes: Sequence[CDSFeature],
+                             ) -> tuple[Optional[CDSFeature], Optional[CDSFeature], Optional[CDSFeature]]:
+    """ Finds the CDS features immediately next to, within, or containing the site with the
+        given coordinates, if they exist.
+
+        Arguments:
+            start: the start coordinate of the hit
+            end: the end coordinate of the hit
+            region: the Region feature containing the site
+
+        Returns:
+            a tuple of
+                the CDS to the left (which may fully or partially contain the site) or None
+                the last CDS fully contained by the site, if any exist at all
+                the CDS to the right (which may fully or partially contain the site) or None
+    """
+    dummy = Feature(FeatureLocation(start, end), feature_type="dummy")
+    index = bisect.bisect_left(genes, dummy)
+    left = None
+    mid = None
+    right = None
+    if index != 0:
+        left = genes[index - 1]
+    while index < len(genes) and genes[index].is_contained_by(dummy):
+        mid = genes[index]
+        right = genes[index]
+        index += 1
+    if index < len(genes):
+        right = genes[index]
+    return left, mid, right
+
+
+def find_neighbours(start: int, end: int, region: Region,
+                    ) -> tuple[Optional[CDSFeature], Optional[CDSFeature], Optional[CDSFeature]]:
+    """ Finds the CDS features immediately next to, within, or containing the site with the
+        given coordinates, if they exist. If the region crosses the origin, the neighbouring
+        features may include those over the origin from the site.
+
+        Arguments:
+            start: the start coordinate of the hit
+            end: the end coordinate of the hit
+            region: the Region feature containing the site
+
+        Returns:
+            a tuple of
+                the CDS to the left (which may fully or partially contain the site) or None
+                the last CDS fully contained by the site, if any exist at all
+                the CDS to the right (which may fully or partially contain the site) or None
+    """
+    if not region.crosses_origin():
+        return _find_in_contiguous_area(start, end, region.cds_children)
+    pre_origin = region.cds_children.pre_origin
+    cross_origin = region.cds_children.cross_origin
+    post_origin = region.cds_children.post_origin
+
+    left = None
+    mid = None
+    right = None
+    # start with cross-origin sites, which are simpler
+    if start > end:
+        # a dummy cross-origin location, the inner dimensions don't matter here
+        location = CompoundLocation([FeatureLocation(start, start + 1), FeatureLocation(0, end)])
+        # starting with the cross_origin, since those may contain the site,
+        # but they can't be outer limits
+        if cross_origin:
+            for i, cds in enumerate(cross_origin):
+                if location_contains_other(cds.location, location):
+                    left = cds
+                    if i < len(cross_origin) - 1:
+                        right = cross_origin[i]
+                    elif post_origin:
+                        right = post_origin[0]
+                elif cds.is_contained_by(location):
+                    mid = cds
+            return left, mid, right
+        # if between genes on either side, that's easier
+        # then wrapping to pre-origin for left side
+        if pre_origin:
+            left = pre_origin[-1]
+        # or wrapping to post-origin for right side
+        if post_origin:
+            right = post_origin[0]
+        return left, mid, right
+
+    # the site itself doesn't cross the origin, but the region might
+    location = FeatureLocation(start, end)
+    # so use the normal linear/non-crossing function for each half, as initial values
+    left, mid, right = ((a or b) for a, b in zip(_find_in_contiguous_area(start, end, pre_origin),
+                                                 _find_in_contiguous_area(start, end, post_origin)))
+
+    # then look over the origin to fill in a missing value,
+    # depending on which side of the origin the site is closest to
+    max_coord = region.location.end
+    if not left and pre_origin and start < max_coord // 2:
+        left = pre_origin[-1]
+
+    if not right and post_origin and start > max_coord // 2:
+        right = post_origin[0]
+
+    return left, mid, right
+
+
+def add_neighbouring_genes(hit: dict[str, Any], left: Optional[CDSFeature], mid: Optional[CDSFeature],
+                           right: Optional[CDSFeature],
+                           ) -> dict[str, Any]:
     """ Adds neighbouring gene information to a JSON-ready representation of a hit
 
         Arguments:
@@ -104,59 +212,40 @@ def add_neighbouring_genes(hit: dict[str, Any], genes: Sequence[CDSFeature]) -> 
     """
     start = hit["start"]
     end = hit["end"]
-    dummy = Feature(FeatureLocation(start, end), feature_type="dummy")
-    index = bisect.bisect_left(genes, dummy)
-    if index == 0:
-        hit["left"] = None
+    hit["left"] = None
+    hit["right"] = None
+
+    if start > end:  # cross-origin
+        location = CompoundLocation([FeatureLocation(start, start + 3), FeatureLocation(0, 3)])
     else:
-        left = genes[index - 1]
-        assert start > left.location.start
+        location = FeatureLocation(start, end)
+    if left:
         hit["left"] = {
             "name": left.get_name(),
-            "location": left.location.end,
-            "strand": left.location.strand
+            "location": int(left.end),
+            "strand": left.location.strand,
         }
-    contained_by_left = index > 0 and location_contains_other(left.location, dummy.location)
-    hit["contained_by_left"] = contained_by_left
-    if contained_by_left:
+        if location_contains_other(left.location, location):
+            hit["contained_by_left"] = True
+
+    if mid:
+        length = mid.end - mid.start
+        if mid.crosses_origin():
+            length = mid.start + mid.end
+        hit["mid"] = {
+            "name": mid.get_name(),
+            "location": int(mid.start),
+            "length": length,
+            "strand": mid.location.strand
+        }
+
+    if right:
         hit["right"] = {
-            "name": left.get_name(),
-            "location": left.location.end,
-            "strand": left.location.strand
+            "name": right.get_name(),
+            "location": int(right.start),
+            "strand": right.location.strand
         }
-        hit["left"]["location"] = left.location.start
-    else:
-        if index >= len(genes):
-            hit["right"] = None
-        else:
-            right = genes[index]
-            # some gene annotations can be smaller than the hit, in which case
-            # keep it as the "mid" gene and look further for the next gene
-            if right.is_contained_by(dummy):
-                hit["right"] = None  # in case there is no right
-                hit["mid"] = {
-                    "name": right.get_name(),
-                    "location": right.location.start,
-                    "length": right.location.end - right.location.start,
-                    "strand": right.location.strand,
-                }
-                # if the record is poorly annotated enough to have multiple
-                # extremely short genes, only show one and move on to the next
-                # meaningful one
-                while right.is_contained_by(dummy):
-                    index += 1
-                    # stop if there's no more genes
-                    if index >= len(genes):
-                        return hit
-                    right = genes[index]
-            assert end < right.location.end
-            hit["right"] = {
-                "name": right.get_name(),
-                "location": right.location.start,
-                "strand": right.location.strand
-            }
-    if hit["contained_by_left"]:
-        assert hit["right"] and hit["left"]
+
     return hit
 
 
@@ -169,14 +258,17 @@ def generate_javascript_data(record: Record, region: Region, results: TFBSFinder
         return []
 
     converted: list[dict[str, Any]] = []
-    cds_features = region.cds_children
     for hit in hits_in_region:
         end = hit.start + len(hit)
+        core = str(record.seq[hit.start:end])
+        if record.is_circular() and end > len(record):
+            end %= len(record)
+            core = str(record.seq[:end] + record.seq[hit.start:])
+        assert len(record) >= end
         # don't extend context before the start of the record
         prefix_size = min(PRE_SEQUENCE_SIZE, hit.start)
         # neither should the context extend past the end of the record
         suffix_size = min(POST_SEQUENCE_SIZE, len(record.seq) - end)
-        core = str(record.seq[hit.start:end])
         consensus = hit.consensus
         if hit.strand == -1:
             consensus = str(Seq(consensus).reverse_complement())
@@ -194,5 +286,6 @@ def generate_javascript_data(record: Record, region: Region, results: TFBSFinder
             "strand": hit.strand,
             "matches": get_sequence_matches(core, consensus),
         }
-        converted.append(add_neighbouring_genes(data, cds_features))
+        left, mid, right = find_neighbours(hit.start, end, region)
+        converted.append(add_neighbouring_genes(data, left, mid, right))
     return converted
