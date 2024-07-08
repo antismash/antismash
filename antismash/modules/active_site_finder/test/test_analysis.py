@@ -11,7 +11,7 @@ from unittest.mock import patch
 from Bio import SearchIO
 
 from antismash.common import subprocessing
-from antismash.common import fasta, path, secmet
+from antismash.common import fasta, path
 from antismash.common.test.helpers import DummyAntismashDomain, DummyRecord, DummyPFAMDomain
 from antismash.detection.nrps_pks_domains.modular_domain import TOOL
 from antismash.modules import active_site_finder
@@ -48,7 +48,7 @@ class DummyAlignment:
 
 class TestAnalyses(unittest.TestCase):
     def setUp(self):
-        self.record = secmet.Record()
+        self.record = DummyRecord(length=200)
         # except for Thioesterase, all domains were found in BN001301.1
         # TE domains were found in Y16952
         for filename, domain_type in [("PKS_KS.input", "PKS_KS"), ("AT.input", "PKS_AT"),
