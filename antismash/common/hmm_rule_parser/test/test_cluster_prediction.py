@@ -323,12 +323,11 @@ class TestCircularity(unittest.TestCase):
             (3091, 3092), (3105, 3111), (6882, 6885), (6887, 6889)
         ]]
         cdses = [DummyCDS(location.start, location.end) for location in locations]
-        record = DummyRecord(seq="A", features=cdses, circular=True)
+        record = DummyRecord(seq="A", features=cdses, circular=True, length=max(loc.end for loc in locations))
         hits = {"A": set(cds.get_name() for cds in cdses)}
         self.rules["A"].cutoff = 20
         self.rules["A"].neighbourhood = 0
-        with patch.object(DummyRecord, "__len__", return_value=7663):
-            results = self.find_func(record, hits, self.rules, {}, {})
+        results = self.find_func(record, hits, self.rules, {}, {})
         # both first two and last two should have been merged
         assert len(results) == len(cdses) - 2
         assert results[0].location == FeatureLocation(locations[0].start, locations[1].end, 1)
