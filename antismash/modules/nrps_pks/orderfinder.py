@@ -139,7 +139,7 @@ def find_candidate_cluster_modular_enzymes(cds_features: List[CDSFeature]) -> Tu
     """
     def is_pks_module(module: Module) -> bool:
         domain_names = set(domain.domain for domain in module.domains)
-        return bool(domain_names.intersection({"PKS_KS", "PKS_AT"}))
+        return bool(domain_names.intersection({"PKS_KS", "PKS_AT", "CAL_domain"}))
 
     def is_nrps_module(module: Module) -> bool:
         domain_names = set(domain.domain for domain in module.domains)
