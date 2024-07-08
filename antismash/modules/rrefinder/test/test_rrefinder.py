@@ -177,7 +177,7 @@ class TestRREResults(unittest.TestCase):
             results.add_to_record(other)
 
     def test_add_to_record(self):
-        record = DummyRecord()
+        record = DummyRecord(length=1_000)
         results = self.create_results(record_id=record.id)
 
         assert not list(record.all_features)

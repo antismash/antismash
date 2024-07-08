@@ -588,6 +588,7 @@ class Record:
     def add_gene(self, gene: Gene) -> None:
         """ Adds a Gene feature to the record """
         assert isinstance(gene, Gene), type(gene)
+        ensure_valid_locations([gene], self.is_circular(), len(self))
         self._genes.append(gene)
         self._genes_by_name[gene.get_name()].append(gene)
 
@@ -632,6 +633,7 @@ class Record:
     def add_cds_motif(self, motif: Union[CDSMotif, Prepeptide]) -> None:
         """ Add the given CDSMotif to the record """
         assert isinstance(motif, (CDSMotif, Prepeptide)), f"{type(motif)}, {motif.type}"
+        ensure_valid_locations([motif], self.is_circular(), len(self))
         self._cds_motifs.append(motif)
         assert motif.get_name(), f"motif {motif} has no identifiers"
         if motif.get_name() in self._domains_by_name:
@@ -645,6 +647,7 @@ class Record:
     def add_pfam_domain(self, pfam_domain: PFAMDomain) -> None:
         """ Add the given PFAMDomain to the record and links it in the parent CDS """
         assert isinstance(pfam_domain, PFAMDomain)
+        ensure_valid_locations([pfam_domain], self.is_circular(), len(self))
         assert pfam_domain.get_name()
         self._pfam_domains.append(pfam_domain)
         if pfam_domain.get_name() in self._domains_by_name:
@@ -658,6 +661,7 @@ class Record:
     def add_antismash_domain(self, antismash_domain: AntismashDomain) -> None:
         """ Add the given AntismashDomain to the record """
         assert isinstance(antismash_domain, AntismashDomain)
+        ensure_valid_locations([antismash_domain], self.is_circular(), len(self))
         assert antismash_domain.get_name()
         assert antismash_domain.tool
         self._antismash_domains.append(antismash_domain)
@@ -673,6 +677,7 @@ class Record:
     def add_module(self, module: Module) -> None:
         """ Add the given Module to the record """
         assert isinstance(module, Module)
+        ensure_valid_locations([module], self.is_circular(), len(self))
 
         parents = set()
         for domain in module.domains:
@@ -700,6 +705,7 @@ class Record:
     def add_source(self, source: Source) -> None:
         """ Add the given Source to the record """
         assert isinstance(source, Source)
+        ensure_valid_locations([source], self.is_circular(), len(self))
 
         self._sources.append(source)
 
@@ -718,6 +724,7 @@ class Record:
     def add_feature(self, feature: Feature) -> None:
         """ Adds a Feature or any subclass to the relevant list """
         assert isinstance(feature, Feature), type(feature)
+        ensure_valid_locations([feature], self.is_circular(), len(self))
         if isinstance(feature, Protocluster):
             self.add_protocluster(feature)
         elif isinstance(feature, CandidateCluster):
