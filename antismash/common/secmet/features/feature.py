@@ -234,12 +234,12 @@ class Feature:
         assert isinstance(feature.qualifiers, dict)
         return [feature]
 
-    def __lt__(self, other: Union["Feature", FeatureLocation]) -> bool:
+    def __lt__(self, other: Union["Feature", Location]) -> bool:
         """ Allows sorting Features by location without key complication """
-        if isinstance(other, FeatureLocation):
+        if isinstance(other, (CompoundLocation, FeatureLocation)):
             location = other
         else:
-            assert isinstance(other, Feature)
+            assert isinstance(other, Feature), type(other)
             location = other.location
 
         if self.location.start < location.start:
