@@ -183,8 +183,8 @@ class Region(AbstractRegion, CDSCollection):
         assert isinstance(record, SeqRecord)
 
         data = RegionData(
-            start=self.location.start,
-            end=self.location.end,
+            start=self.start,
+            end=self.end,
             candidate_clusters=self.candidate_clusters,
             subregions=self.subregions,
         )
