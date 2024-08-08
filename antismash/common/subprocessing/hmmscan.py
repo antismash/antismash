@@ -26,7 +26,6 @@ def _find_error(output: list[str]) -> str:
     # in the worst case, return a default
     return "unknown error"
 
-
 def run_hmmscan(target_hmmfile: str, query_sequence: str, opts: List[str] = None,
                 results_file: str = None) -> list[SearchIO._model.query.QueryResult]:
     """ Runs hmmscan on the inputs and return a list of QueryResults
