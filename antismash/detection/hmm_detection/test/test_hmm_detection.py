@@ -191,6 +191,8 @@ class HmmDetectionTest(unittest.TestCase):
         rules = hmm_detection.create_rules(rule_files, self.signature_names, self.valid_categories)
         for rule in rules:
             profiles_used = profiles_used.union(rule.conditions.profiles)
+            if rule.extenders:
+                profiles_used.update(rule.extenders.profiles)
             for related in rule.related:
                 profiles_used.add(related)
 
