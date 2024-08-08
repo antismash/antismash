@@ -5,7 +5,7 @@
 RULE NRPS-like
     CATEGORY NRPS
     DESCRIPTION Catches NRPS-like fragments that are not detected by the NRPS rule
-    SUPERIORS NRPS, NAPAA, isocyanide-nrp
+    SUPERIORS NRPS, NAPAA, isocyanide-nrp, mycosporine-like
     CUTOFF 0  # since we're really looking at single CDS fragments
     NEIGHBOURHOOD 20
     CONDITIONS cds((PP-binding or NAD_binding_4) and (AMP-binding or A-OX))
