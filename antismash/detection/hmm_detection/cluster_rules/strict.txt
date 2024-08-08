@@ -165,11 +165,13 @@ RULE NAPAA
 RULE mycosporine-like
     CATEGORY NRPS
     DESCRIPTION mycosporine-like amino acid containing molecules
-    EXAMPLE NCBI MN401680.1 0-5063 mycosporine
-    RELATED Dala_Dala_lig_C, Dala_Dala_lig_N
+    # see DOI: 10.1128/AEM.00727-14
+    EXAMPLE NCBI MN401680.1 0-5063 mycosporine with ligase
+    EXAMPLE NCBI CP000117.1 4798900-4805360 mycosporine with NRPS-like
     CUTOFF 10
     NEIGHBOURHOOD 20
     CONDITIONS DHQ_synthase and Methyltransf_3 and ATP-grasp_3
+    EXTENDERS cds(Dala_Dala_lig_C or Dala_Dala_lig_N or AMP-binding)
 
 RULE terpene
     CATEGORY terpene
