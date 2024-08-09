@@ -2,12 +2,12 @@
     <div class="main-link">
      <div>
         <a href="{{options.base_url}}">
-          <img src="images/{{options.taxon}}_antismash_logo.svg" alt="antiSMASH logo" style="width:40px;height:unset;">
+          <img src="images/{{options.taxon}}_{{options.branding.lower()}}_logo.svg" alt="{{options.branding}} logo" style="width:40px;height:unset;">
         </a>
        </div>
        <div>
         <a href="{{options.base_url}}">
-          antiSMASH version {{options.version}}
+          {{ options.branding }} version {{options.version}}
         </a>
       </div>
     </div>
