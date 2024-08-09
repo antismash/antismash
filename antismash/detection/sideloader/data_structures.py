@@ -7,9 +7,14 @@
 import dataclasses
 from typing import Any, Dict, List, Union
 
-from antismash.common.secmet import Protocluster, Record, SubRegion, FeatureLocation
+from antismash.common.secmet import Protocluster, Record, SubRegion
 from antismash.common.secmet.features.protocluster import SideloadedProtocluster
 from antismash.common.secmet.features.subregion import SideloadedSubRegion
+from antismash.common.secmet.locations import (
+    CompoundLocation,
+    FeatureLocation,
+    Location,
+)
 from antismash.common.module_results import DetectionResults
 
 
@@ -67,9 +72,17 @@ class SubRegionAnnotation:
     """ A class for containing arbitrary data about a sideloaded subregion annotation """
     kind = "subregion"
 
-    def __init__(self, start: int, end: int, label: str, tool: Tool, details: Dict[str, List[str]]) -> None:
-        if end <= start:
+    def __init__(self, start: int, end: int, label: str, tool: Tool, details: dict[str, list[str]],
+                 *, circular_origin: int = None,
+                 ) -> None:
+        if not circular_origin and end <= start:
             raise ValueError(f"{label}: area end ({end:,}) must be greater than area start ({start:,})")
+        if circular_origin:
+            if circular_origin < 0:
+                raise ValueError("circular origin cannot be negative")
+            if start > circular_origin:
+                raise ValueError("start cannot be later than the circular origin")
+        self.circular_origin = circular_origin
         self.start = start
         self.end = end
         self.label = label
@@ -78,12 +91,23 @@ class SubRegionAnnotation:
         self.tool = tool
 
     def __len__(self) -> int:
+        if self.circular_origin and self.start > self.end:
+            return self.circular_origin - self.start + self.end
         return self.end - self.start
+
+    def build_location(self) -> Location:
+        """ Constructs a location object from the sideloaded details """
+        if self.circular_origin and self.start > self.end:
+            return CompoundLocation([
+                FeatureLocation(self.start, self.circular_origin, 1),
+                FeatureLocation(0, self.end, 1),
+            ])
+        return FeatureLocation(self.start, self.end)
 
     def to_secmet(self) -> SideloadedSubRegion:
         """ Constructs a SideloadedSubRegion instance from the annotation """
-        location = FeatureLocation(self.start, self.end)
-        return SideloadedSubRegion(location, self.tool.name, label=self.label, extra_qualifiers=self.details)
+        return SideloadedSubRegion(self.build_location(), self.tool.name, label=self.label,
+                                   extra_qualifiers=self.details)
 
     def to_json(self) -> Dict[str, Any]:
         """ Converts the annotation to JSON (separate from the JSON schema)"""
@@ -92,7 +116,7 @@ class SubRegionAnnotation:
         return result
 
     @classmethod
-    def from_json(cls, raw: Dict[str, Any]) -> "SubRegionAnnotation":
+    def from_json(cls, raw: dict[str, Any], circular_origin: int = None) -> "SubRegionAnnotation":
         """ Reconstructs an annotation from JSON (separate from the JSON schema)"""
         return cls(
             int(raw["start"]),
@@ -100,13 +124,15 @@ class SubRegionAnnotation:
             str(raw["label"]),
             Tool.from_json(raw["tool"]),
             _qualifier_mapping(raw.get("details", {})),
+            circular_origin=circular_origin,
         )
 
     @classmethod
-    def from_schema_json(cls, raw: Dict[str, Any], tool: Tool) -> "SubRegionAnnotation":
+    def from_schema_json(cls, raw: dict[str, Any], tool: Tool, *, circular_origin: int = None,
+                         ) -> "SubRegionAnnotation":
         """ Builds an instance from JSON matching the protocluster schema, along with a tool """
         raw["tool"] = tool.to_json()
-        return cls.from_json(raw)
+        return cls.from_json(raw, circular_origin=circular_origin)
 
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, SubRegionAnnotation):
@@ -122,13 +148,21 @@ class ProtoclusterAnnotation:
     kind = "protocluster"
 
     def __init__(self, core_start: int, core_end: int, product: str, tool: Tool, details: Dict[str, List[str]],
-                 neighbourhood_left: int = 0, neighbourhood_right: int = 0) -> None:
-        if core_end <= core_start:
-            raise ValueError(f"{product}: area end ({core_end:,}) must be greater than area start ({core_start:,})")
-        if neighbourhood_left < 0 or neighbourhood_right < 0:
-            raise ValueError("neighbourhoods must be annotated as absolute distances, not relative")
-        if core_start - neighbourhood_left < 0:
-            raise ValueError("neighbourhoods cannot extend out of a record")
+                 neighbourhood_left: int = 0, neighbourhood_right: int = 0,
+                 *, circular_origin: int = None,
+                 ) -> None:
+        self.circular_origin = circular_origin
+        if not circular_origin:
+            if core_end <= core_start:
+                raise ValueError(f"{product}: area end ({core_end:,}) must be greater than area start ({core_start:,})")
+            if neighbourhood_left < 0 or neighbourhood_right < 0:
+                raise ValueError("neighbourhoods must be annotated as absolute distances, not relative")
+            if core_start - neighbourhood_left < 0:
+                raise ValueError("neighbourhoods cannot extend out of a record")
+        elif circular_origin < 0:
+            raise ValueError("circular origin cannot be negative")
+        elif core_start > circular_origin:
+            raise ValueError("start cannot be later than the circular origin")
         self.core_start = core_start
         self.core_end = core_end
         self.product = product
@@ -141,11 +175,15 @@ class ProtoclusterAnnotation:
     @property
     def start(self) -> int:
         """ The start of the protocluster, including neighbourhood """
+        if self.circular_origin:
+            return (self.core_start + self.circular_origin - self.neighbourhood_left) % self.circular_origin
         return self.core_start - self.neighbourhood_left
 
     @property
     def end(self) -> int:
         """ The end of the protocluster, including neighbourhood """
+        if self.circular_origin:
+            return (self.core_end + self.circular_origin + self.neighbourhood_right) % self.circular_origin
         return self.core_end + self.neighbourhood_right
 
     @property
@@ -154,7 +192,9 @@ class ProtoclusterAnnotation:
         return self.product
 
     def __len__(self) -> int:
-        return self.core_end + self.neighbourhood_right - self.start
+        if self.circular_origin and self.end < self.start:
+            return self.circular_origin - self.start + self.end
+        return self.end - self.start
 
     def to_json(self) -> Dict[str, Any]:
         """ Converts the annotation to JSON (separate from the JSON schema)"""
@@ -162,18 +202,38 @@ class ProtoclusterAnnotation:
         res["tool"] = self.tool.to_json()
         return res
 
+    def build_core_location(self) -> Location:
+        """ Constructs a location object from the sideloaded details for the protocluster's core """
+        if self.circular_origin and self.core_start > self.core_end:
+            return CompoundLocation([
+                FeatureLocation(self.core_start, self.circular_origin, 1),
+                FeatureLocation(0, self.core_end, 1),
+            ])
+        return FeatureLocation(self.core_start, self.core_end)
+
+    def build_location(self) -> Location:
+        """ Constructs a location object from the sideloaded details for the
+            protocluster's neighbourhood
+        """
+        if self.circular_origin and self.start > self.end:
+            return CompoundLocation([
+                FeatureLocation(self.start, self.circular_origin, 1),
+                FeatureLocation(0, self.end, 1),
+            ])
+        return FeatureLocation(self.start, self.end)
+
     def to_secmet(self) -> SideloadedProtocluster:
         """ Constructs a SideloadedProtocluster instance from the annotation """
         return SideloadedProtocluster(
-            FeatureLocation(self.core_start, self.core_end),
-            FeatureLocation(self.start, self.end),
+            self.build_core_location(),
+            self.build_location(),
             self.tool.name,
             self.product,
             neighbourhood_range=max(self.neighbourhood_left, self.neighbourhood_right),
         )
 
     @classmethod
-    def from_json(cls, raw: Dict[str, Any]) -> "ProtoclusterAnnotation":
+    def from_json(cls, raw: dict[str, Any], *, circular_origin: int = None) -> "ProtoclusterAnnotation":
         """ Reconstructs an annotation from JSON (separate from the JSON schema)"""
         return cls(
             int(raw["core_start"]),
@@ -183,13 +243,16 @@ class ProtoclusterAnnotation:
             _qualifier_mapping(raw.get("details", {})),
             int(raw.get("neighbourhood_left", 0)),
             int(raw.get("neighbourhood_right", 0)),
+            circular_origin=circular_origin,
         )
 
     @classmethod
-    def from_schema_json(cls, raw: Dict[str, Any], tool: Tool) -> "ProtoclusterAnnotation":
+    def from_schema_json(cls, raw: Dict[str, Any], tool: Tool,
+                         *, circular_origin: int = None,
+                         ) -> "ProtoclusterAnnotation":
         """ Builds an instance from JSON matching the protocluster schema, along with a tool """
         raw["tool"] = tool.to_json()
-        return cls.from_json(raw)
+        return cls.from_json(raw, circular_origin=circular_origin)
 
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, ProtoclusterAnnotation):
@@ -224,8 +287,9 @@ class SideloadedResults(DetectionResults):
             raise ValueError("Detection results have changed. No results can be reused.")
 
         assert json["record_id"] == record.id
-        subs = [SubRegionAnnotation.from_json(sub) for sub in json["subregions"]]
-        protos = [ProtoclusterAnnotation.from_json(proto) for proto in json["protoclusters"]]
+        origin = len(record) if record.is_circular() else None
+        subs = [SubRegionAnnotation.from_json(sub, circular_origin=origin) for sub in json["subregions"]]
+        protos = [ProtoclusterAnnotation.from_json(proto, circular_origin=origin) for proto in json["protoclusters"]]
         return SideloadedResults(json["record_id"], subs, protos)
 
     def get_areas(self) -> List[Union[ProtoclusterAnnotation, SubRegionAnnotation]]:

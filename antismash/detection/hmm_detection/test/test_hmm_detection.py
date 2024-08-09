@@ -148,7 +148,22 @@ class HmmDetectionTest(unittest.TestCase):
         for cluster in hmm_detection.find_protoclusters(self.record, cds_features_by_type, rules,
                                                         self.results_by_id, dummy_extender_domains):
             self.record.add_protocluster(cluster)
-        assert len(self.record.get_protoclusters()) == 7
+
+        expected = {  # locations modified by neighbourhoods
+            ("MetaboliteA", 0, 30_000 + 5000),  # genes: 1
+            ("MetaboliteA", 125_000 - 5000, 150_000),  # genes: 4, 5
+            ("MetaboliteB", 0, 30_000 + 5000),  # genes: 1
+            ("MetaboliteC", 0, 50_000 + 5000),  # genes: 1, 2
+            ("MetaboliteD", 0, 50_000 + 5000),  # genes: 1, 2
+            ("Metabolite0", 70_000 - 3000, 90_000 + 3000),  # genes: 3
+            ("Metabolite1", 130_000 - 3000, 150_000),  # genes: 5
+        }
+        assert not self.record.is_circular()
+        found = self.record.get_protoclusters()
+        found_summary = {(proto.product, int(proto.location.start), int(proto.location.end)) for proto in found}
+
+        assert expected == found_summary
+        assert len(expected) == len(found)
         cluster_products = sorted([cluster.product for cluster in self.record.get_protoclusters()])
         assert cluster_products == sorted([f"Metabolite{i}" for i in "01AABCD"])
         self.record.create_candidate_clusters()
@@ -322,11 +337,11 @@ class HmmDetectionTest(unittest.TestCase):
 
 class TestRuleExtenders(unittest.TestCase):
     def setUp(self):
-        self.rule_name = "MetaboliteA"
         cutoff = 2000
         self.extender_name = "B"
+        self.sig_names = ["A", self.extender_name, "X"]
         self.rule_text = "\n".join([
-            f"RULE {self.rule_name}",
+            "RULE MetaboliteA",
             "CATEGORY Cat",
             f"CUTOFF {cutoff//1000}",
             "NEIGHBOURHOOD 0",
@@ -347,6 +362,7 @@ class TestRuleExtenders(unittest.TestCase):
         assert set("12345") == {cds.get_name() for cds in self.potential_cores}
 
         self.record = DummyRecord(features=self.cdses)
+        assert not self.record.is_circular()
         assert all(self.record.get_cds_by_name(cds.get_name()) for cds in self.cdses)
         self.results_by_id = {}
         self.add_hit("3", "A")
@@ -354,19 +370,20 @@ class TestRuleExtenders(unittest.TestCase):
         self.add_hit("X1", self.extender_name)
 
     def detect(self, add_extenders):
+        pkg = hmm_detection  # to avoid quite a bit of repetition below
+        # create the signatures before parsing, otherwise there'll be problems with missing identifiers
+        sigs = {name: pkg.HmmSignature(name, "", 0, "") for name in self.sig_names}
         # the X signature/requirement is present just to make a valid CDS condition
         rule_text = self.rule_text
         if add_extenders:
             rule_text += f" EXTENDERS cds({self.extender_name} and not X)"
-        rules = rule_parser.Parser(rule_text, {"A", self.extender_name}, {"Cat"}).rules
+        rules = rule_parser.Parser(rule_text, set(sigs), {"Cat"}).rules
         assert len(rules) == 1
         if not add_extenders:
             assert not rules[0].extenders
         else:
             assert rules[0].extenders
 
-        pkg = hmm_detection  # to avoid quite a bit of repetition below
-        sigs = {name: pkg.HmmSignature(name, "", 0, "") for name in ["A", self.extender_name, "X"]}
         ruleset = create_ruleset(rules, hmm_profiles=sigs)
         with patch.object(pkg, "find_hmmer_hits", return_value=self.results_by_id):
             return pkg.detect_protoclusters_and_signatures(
@@ -404,10 +421,63 @@ class TestRuleExtenders(unittest.TestCase):
         results = self.detect(add_extenders=True)
         self.check_results(expected, results)
 
-    def check_results(self, expected, results):
-        # the two outsider CDSes should never be in the expected set
-        assert self.cdses[0] not in expected
-        assert self.cdses[-1] not in expected
+    def test_left_over_origin(self):
+        self.record = DummyRecord(seq="A" * 16000, features=self.cdses, circular=True)
+        assert self.record.is_circular()
+        # change the rule text to use some different hits
+        self.extender_name = "D"
+        self.rule_text = "\n".join([
+            "RULE MetaboliteA",
+            "CATEGORY Cat",
+            "CUTOFF 2",
+            "NEIGHBOURHOOD 0",
+            f"CONDITIONS C and {self.extender_name}",
+            ])
+        self.sig_names.extend(["C", "D"])
+        self.potential_cores = [self.cdses[0], self.cdses[-1]]
+
+        # the first CDS needs enough to create a core by itself
+        self.add_hit(self.cdses[0].get_name(), "C")
+        self.add_hit(self.cdses[0].get_name(), "D")
+        # the last CDS needs just the extender
+        self.add_hit(self.cdses[-1].get_name(), "D")
+        # and one out of range of either
+        self.add_hit("3", "D")
+
+        results = self.detect(add_extenders=False)
+        self.check_results(self.potential_cores, results, allow_ends=True)
+
+    def test_right_over_origin(self):
+        self.record = DummyRecord(seq="A" * 16000, features=self.cdses, circular=True)
+        assert self.record.is_circular()
+        # change the rule text to use some different hits
+        self.extender_name = "D"
+        self.rule_text = "\n".join([
+            "RULE MetaboliteA",
+            "CATEGORY Cat",
+            "CUTOFF 2",
+            "NEIGHBOURHOOD 0",
+            f"CONDITIONS C and {self.extender_name}",
+            ])
+        self.sig_names.extend(["C", "D"])
+        self.potential_cores = [self.cdses[0], self.cdses[-1]]
+
+        # the last CDS needs enough to create a core by itself
+        self.add_hit(self.cdses[-1].get_name(), "C")
+        self.add_hit(self.cdses[-1].get_name(), "D")
+        # the first CDS needs just the extender
+        self.add_hit(self.cdses[0].get_name(), "D")
+        # and one out of range of either
+        self.add_hit("3", "D")
+
+        results = self.detect(add_extenders=False)
+        self.check_results(self.potential_cores, results, allow_ends=True)
+
+    def check_results(self, expected, results, allow_ends=False):
+        if not allow_ends:
+            # the two outsider CDSes should never be in the expected set
+            assert self.cdses[0] not in expected
+            assert self.cdses[-1] not in expected
         expected = sorted(expected)
         # there should be one protocluster covering all cdses of interest
         assert len(results.protoclusters) == 1

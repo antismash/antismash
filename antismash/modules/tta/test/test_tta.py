@@ -8,9 +8,10 @@ from argparse import Namespace
 import unittest
 
 from Bio.Seq import Seq
-from Bio.SeqFeature import SeqFeature, FeatureLocation
+from Bio.SeqFeature import SeqFeature
 
 from antismash.common.secmet.record import Record
+from antismash.common.secmet.locations import FeatureLocation
 from antismash.common.test.helpers import DummyCDS, DummyProtocluster, get_simple_options
 from antismash.modules import tta
 
