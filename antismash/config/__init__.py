@@ -25,6 +25,39 @@ from .loader import load_config_from_file
 
 _USER_FILE_NAME = os.path.expanduser('~/.antismash8.cfg')
 _INSTANCE_FILE_NAME = os.path.abspath(os.path.join(os.path.dirname(__file__), 'instance.cfg'))
+_ALTERNATE_DEFAULTS_PATH = ""
+
+
+def set_alternate_defaults_file(filename: str) -> None:
+    """ Overrides the default path to a file containing default config values.
+
+        Arguments:
+            filename: the path of the file
+    """
+    global _ALTERNATE_DEFAULTS_PATH  # pylint: disable=global-statement
+    _ALTERNATE_DEFAULTS_PATH = filename
+
+
+def set_instance_config_file(filename: str) -> None:
+    """ Overrides the default path to an installation-specific file
+        containing default config values.
+
+        Arguments:
+            filename: the path of the file
+    """
+    global _INSTANCE_FILE_NAME  # pylint: disable=global-statement
+    _INSTANCE_FILE_NAME = filename
+
+
+def set_user_config_file(filename: str) -> None:
+    """ Overrides the default path to a user-specific file
+        containing default config values.
+
+        Arguments:
+            filename: the path of the file
+    """
+    global _USER_FILE_NAME  # pylint: disable=global-statement
+    _USER_FILE_NAME = os.path.expanduser(filename)
 
 
 class Config:  # since it's a glorified namespace, pylint: disable=too-few-public-methods
@@ -143,7 +176,7 @@ def build_config(args: List[str], parser: Optional[AntismashParser] = None, isol
         line. The number of CPUs/threads to use is also important and is also kept.
     """
     # load default for static information, e.g. URLs
-    default = load_config_from_file()
+    default = load_config_from_file(_ALTERNATE_DEFAULTS_PATH)
 
     if not parser:
         parser = build_parser(from_config_file=True, modules=modules)
