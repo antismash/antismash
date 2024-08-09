@@ -109,6 +109,19 @@ def replace_detection_modules(modules: list[AntismashModule]) -> None:
                 values.append(module)
 
 
+def replace_html_module(module: AntismashModule) -> None:
+    """ Replaces default antiSMASH HTML output module with the provided module.
+
+        Arguments:
+            module: the replacement module
+
+        Returns:
+            None
+    """
+    global html
+    html = module
+
+
 def get_all_modules() -> List[AntismashModule]:
     """ Return a list of default modules
 
