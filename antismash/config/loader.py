@@ -44,6 +44,12 @@ def load_config_from_file(default_file: str = "") -> Namespace:
                 except ValueError:
                     pass
                 namespace.__dict__[section].__dict__[key] = value
+    if "top" in namespace:
+        top_level = namespace.__dict__.pop("top")
+        for key, value in top_level.__dict__.items():
+            namespace.__dict__[key] = value
+    else:
+        namespace.__dict__["branding"] = "antiSMASH"
 
     # settings from the [DEFAULT] section go to the global namespace
     for key, value in config.items('DEFAULT'):
