@@ -468,7 +468,7 @@ def add_antismash_comments(records: List[Tuple[Record, SeqRecord]], options: Con
         if "structured_comment" not in bio_record.annotations:
             bio_record.annotations["structured_comment"] = {}
 
-        bio_record.annotations["structured_comment"]["antiSMASH-Data"] = comment
+        bio_record.annotations["structured_comment"][f"{options.branding}-Data"] = comment
 
 
 def write_outputs(results: serialiser.AntismashResults, options: ConfigType) -> None:
@@ -739,7 +739,7 @@ def _get_all_enabled_modules(modules: list[AntismashModule], options: ConfigType
 
 def _run_antismash(sequence_file: Optional[str], options: ConfigType) -> int:
     """ The real run_antismash, assumes logging is set up around it """
-    logging.info("antiSMASH version: %s", options.version)
+    logging.info("%s version: %s", options.branding, options.version)
     _log_found_executables(options)
 
     if options.list_plugins:
@@ -823,10 +823,10 @@ def _run_antismash(sequence_file: Optional[str], options: ConfigType) -> int:
     if options.debug:
         log_module_runtimes(results.timings_by_record)
 
-    logging.debug("antiSMASH calculation finished at %s; runtime: %s",
+    logging.debug("%s calculation finished at %s; runtime: %s", options.branding,
                   datetime.now().strftime("%Y-%m-%d %H:%M:%S"), str(running_time))
 
-    logging.info("antiSMASH status: SUCCESS")
+    logging.info("%s status: SUCCESS", options.branding)
     return 0
 
 
