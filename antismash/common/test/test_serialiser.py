@@ -74,6 +74,11 @@ class TestResultsJSON(unittest.TestCase):
         self.assertRaisesRegex(ValueError, "Cannot load results to reuse",
                                serialiser.AntismashResults.from_file, filename)
 
+    def test_schema_updated(self):
+        max_compat = max(serialiser.AntismashResults.COMPATIBLE_SCHEMAS)
+        current = serialiser.AntismashResults.SCHEMA_VERSION
+        assert current >= max_compat, "schema version lower than that given in compatibility lookup"
+
 
 class TestFeatureSerialiser(unittest.TestCase):
     def test_simple_feature(self):
