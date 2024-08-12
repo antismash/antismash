@@ -9,7 +9,7 @@ from Bio.SeqFeature import SeqFeature
 
 from .cds_feature import CDSFeature
 from .cdscollection import CDSCollection, CollectionSection, CoredCollectionMixin
-from .feature import Feature, FeatureLocation
+from .feature import Feature
 from ..locations import Location, location_from_string
 from ..qualifiers.t2pks import T2PKSQualifier
 from ..qualifiers.gene_functions import GeneFunction
@@ -179,7 +179,7 @@ class SideloadedProtocluster(Protocluster):
     """
     __slots__ = ["extra_qualifiers"]
 
-    def __init__(self, core_location: FeatureLocation, surrounding_location: FeatureLocation,
+    def __init__(self, core_location: Location, surrounding_location: Location,
                  tool: str, product: str, neighbourhood_range: int = 0,
                  extra_qualifiers: Dict[str, List[str]] = None) -> None:
         if not neighbourhood_range:
