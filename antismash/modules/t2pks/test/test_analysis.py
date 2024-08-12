@@ -9,7 +9,8 @@ from unittest.mock import patch
 
 from antismash.common import path, record_processing
 from antismash.common.hmmscan_refinement import HMMResult
-from antismash.common.secmet.features.protocluster import Protocluster, FeatureLocation
+from antismash.common.secmet.features.protocluster import Protocluster
+from antismash.common.secmet.locations import FeatureLocation
 from antismash.modules.t2pks import t2pks_analysis
 from antismash.modules.t2pks.results import CDSPrediction, ProtoclusterPrediction, Prediction
 
