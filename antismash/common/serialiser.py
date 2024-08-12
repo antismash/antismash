@@ -31,7 +31,7 @@ class AntismashResults:
     """ A single repository of all results of an antismash run, including input
         filename, records and individual module results
     """
-    SCHEMA_VERSION = 3
+    SCHEMA_VERSION = 4
 
     # the key must accept all the schemas in values as valid
     # this will typically only be useful for backwards compatibility
