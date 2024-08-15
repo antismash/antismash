@@ -22,7 +22,6 @@ from antismash.common.secmet.features import (
 )
 from antismash.common.secmet.locations import FeatureLocation
 from antismash.config import get_config
-from antismash.detection.nrps_pks_domains.modular_domain import ModularDomain
 
 from .module_identification import (
     build_modules_for_cds,
@@ -142,6 +141,8 @@ class NRPSPKSDomains(module_results.DetectionResults):
                     mod_type = ModuleFeature.types.NRPS
                 elif module.is_pks():
                     mod_type = ModuleFeature.types.PKS
+                elif module.is_coa_ligase():
+                    mod_type = ModuleFeature.types.CAL
                 feature = ModuleFeature(domains, mod_type, complete=module.is_complete(),
                                         starter=module.is_starter_module(),
                                         final=module.is_termination_module(),

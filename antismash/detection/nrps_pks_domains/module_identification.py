@@ -273,6 +273,10 @@ class Module:
         return bool(self._starter and self._starter.is_nrps_specific()
                     or self._loader and self._loader.is_nrps_specific())
 
+    def is_coa_ligase(self) -> bool:
+        """ Returns True if the module uses a CAL domain """
+        return bool(self._starter and self._starter.is_coa_ligase())
+
     def is_trans_at(self) -> bool:
         """ Returns True if the module is Trans-AT variant of a PKS module """
         # since there's some alternatives, start by checking the bare minimum
