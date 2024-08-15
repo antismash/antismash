@@ -20,6 +20,7 @@ class ModuleType(Enum):
     UNKNOWN = 0
     NRPS = 1
     PKS = 2
+    CAL = 3  # this is very specific to CAL domains, but they're common enough to justify this
 
     def __str__(self) -> str:
         return str(self.name).lower()
