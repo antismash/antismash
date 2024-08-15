@@ -59,6 +59,7 @@ def compare(ref: Components, query: Components, mode: Mode) -> float:
     # compare all the component subsections
     nrps = compare_combos(ref.nrps, query.nrps, mode)
     pks = compare_combos(ref.pks, query.pks, mode)
+    generic_modules = compare_combos(ref.generic_modules, query.generic_modules, mode)
     secmet = compare_combos(ref.secmet, query.secmet, mode)
     functions = compare_combos(ref.functions, query.functions, mode)
 
@@ -67,27 +68,30 @@ def compare(ref: Components, query: Components, mode: Mode) -> float:
 
     # for modules, set the expected maxmium values and weightings based on mode
     if mode == Mode.REFERENCE_IN_QUERY:
-        max_modules = sum(ref.pks.values()) + sum(ref.nrps.values())
-        nrps_weighting = sum(ref.nrps.values()) / (max_modules or 1)
+        max_modules = ref.module_count
+        weightings = ref.get_module_weightings()
     elif mode == Mode.QUERY_IN_REFERENCE:
-        max_modules = sum(query.pks.values()) + sum(query.nrps.values())
-        nrps_weighting = sum(query.nrps.values()) / (max_modules or 1)
+        max_modules = query.module_count
+        weightings = query.get_module_weightings()
     else:
         # best of both, so take the minimum of each (will tend to poor results)
-        max_modules = min(sum(query.pks.values()) + sum(query.nrps.values()),
-                          sum(ref.pks.values()) + sum(ref.nrps.values()))
-        nrps_weighting = min(sum(query.nrps.values()), sum(ref.nrps.values())) / (max_modules or 1)
+        max_modules = min(query.module_count, ref.module_count)
+        weightings = {
+            "nrps": min(sum(query.nrps.values()), sum(ref.nrps.values())) / (max_modules or 1),
+            "pks": min(sum(query.pks.values()), sum(ref.pks.values())) / (max_modules or 1),
+            "generic": min(sum(query.generic_modules.values()), sum(ref.generic_modules.values())
+                           ) / (max_modules or 1),
+        }
 
     # if there's no modules, ignore them for the calculation
     if not max_modules:
         return (secmet + functions) / 2
 
-    if 0.001 <= nrps_weighting <= 0.999:
-        modules = nrps * nrps_weighting + pks * (1-nrps_weighting)
-    elif nrps_weighting >= 0.999:
-        modules = nrps
-    else:  # some modules but no NRPS modules means PKS modules
-        modules = pks
+    modules = (
+        nrps * weightings["nrps"]
+        + pks * weightings["pks"]
+        + generic_modules * weightings["generic"]
+    )
     assert 0 <= modules <= 1, modules
     return sum([modules, secmet, functions]) / 3
 
@@ -168,6 +172,8 @@ def gather_reference_components(reference: ReferenceArea) -> Components:
     nrps: SubComponents = defaultdict(int)
     # PKS modules
     pks: SubComponents = defaultdict(int)
+    # other, very specific, modules that don't need a category to themselves
+    generic_modules: SubComponents = defaultdict(int)
     # domains as per hmm_detection's findings
     secmet: SubComponents = defaultdict(int)
     # gene functions as per hmm_detection and genefunctions detection modules
@@ -193,12 +199,14 @@ def gather_reference_components(reference: ReferenceArea) -> Components:
                 target = pks
             elif module["type"] == "nrps":
                 target = nrps
+            elif module["type"] == "cal":
+                target = generic_modules
             else:
                 raise ValueError(f"unknown module type: {module['type']}")
             # modules are exact full matches, so no modifications needed
             target[tuple(module["domains"])] += 1
 
-    results = Components(nrps, pks, secmet, functions)
+    results = Components(nrps, pks, generic_modules, secmet, functions)
     # save the results to avoid future calculations for the same reference
     reference.set_component_data(results)
     return results
@@ -217,6 +225,8 @@ def gather_query_components(area_features: Sequence[CDSFeature]) -> Components:
     nrps: SubComponents = defaultdict(int)
     # PKS modules
     pks: SubComponents = defaultdict(int)
+    # other modules
+    generic_modules: SubComponents = defaultdict(int)
     # domains as per hmm_detection's findings
     secmet: SubComponents = defaultdict(int)
     # gene functions as per hmm_detection and genefunctions detection modules
@@ -238,8 +248,10 @@ def gather_query_components(area_features: Sequence[CDSFeature]) -> Components:
                 target = pks
             elif module.module_type == ModuleType.NRPS:
                 target = nrps
+            elif module.module_type in [ModuleType.CAL]:
+                target = generic_modules
             else:
-                raise ValueError(f"unknown module type: {module.module_type}")
+                raise ValueError(f"unhandled module type: {module.module_type}")
             domains = []
             # tweak the domain list of a module
             # NOTE: it's important to do these same steps in the database generation
@@ -253,4 +265,4 @@ def gather_query_components(area_features: Sequence[CDSFeature]) -> Components:
                 domains.append(domain_name)
             target[tuple(domains)] += 1
 
-    return Components(nrps, pks, secmet, functions)
+    return Components(nrps, pks, generic_modules, secmet, functions)

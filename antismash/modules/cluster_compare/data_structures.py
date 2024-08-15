@@ -78,8 +78,33 @@ class Components:
     """
     nrps: SubComponents
     pks: SubComponents
+    generic_modules: SubComponents
     secmet: SubComponents
     functions: SubComponents
+
+    @property
+    def module_count(self) -> int:
+        """ The number of modules within the area """
+        return sum(sum(sub.values()) for sub in [self.nrps, self.pks, self.generic_modules])
+
+    def get_module_weightings(self, normalisation: int = None) -> dict[str, float]:
+        """ Gathers the proportion of module components for each type.
+
+            Arguments:
+                normalisation: an override for the number of modules
+
+            Returns:
+                a dictionary mapping module type to proportion
+        """
+        if normalisation is None:
+            normalisation = max(1, self.module_count)
+        if not normalisation:  # prevent division by zero
+            normalisation = 1
+        return {
+            "nrps": sum(self.nrps.values()) / normalisation,
+            "pks": sum(self.pks.values()) / normalisation,
+            "generic": sum(self.generic_modules.values()) / normalisation,
+        }
 
 
 @dataclasses.dataclass(frozen=True)
