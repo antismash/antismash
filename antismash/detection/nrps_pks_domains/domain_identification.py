@@ -123,31 +123,36 @@ class NRPSPKSDomains(module_results.DetectionResults):
     def add_to_record(self, record: Record) -> None:
         # track multi-CDS modules to avoid duplication
         added_modules = set()
-        for cds, result in self.cds_results.items():
-            for module in result.modules:
-                if module in added_modules:
+        for region in record.get_regions():
+            for cds in region.cds_children:
+                result = self.cds_results.get(cds)
+                if not result:
                     continue
-                added_modules.add(module)
-                domains: List[AntismashDomain] = []
-                for component in module:
-                    if component.locus == cds.get_name():
-                        domain = result.domain_features[component.domain]
-                    else:
-                        other_cds_results = self.cds_results[record.get_cds_by_name(component.locus)]
-                        domain = other_cds_results.domain_features[component.domain]
-                    domains.append(domain)
-                mod_type = ModuleFeature.types.UNKNOWN
-                if module.is_nrps():
-                    mod_type = ModuleFeature.types.NRPS
-                elif module.is_pks():
-                    mod_type = ModuleFeature.types.PKS
-                elif module.is_coa_ligase():
-                    mod_type = ModuleFeature.types.CAL
-                feature = ModuleFeature(domains, mod_type, complete=module.is_complete(),
-                                        starter=module.is_starter_module(),
-                                        final=module.is_termination_module(),
-                                        iterative=module.is_iterative())
-                record.add_module(feature)
+                for module in result.modules:
+                    if module in added_modules:
+                        continue
+                    added_modules.add(module)
+                    domains: List[AntismashDomain] = []
+                    for component in module:
+                        if component.locus == cds.get_name():
+                            domain = result.domain_features[component.domain]
+                        else:
+                            other_cds_results = self.cds_results[record.get_cds_by_name(component.locus)]
+                            domain = other_cds_results.domain_features[component.domain]
+                        domains.append(domain)
+                    mod_type = ModuleFeature.types.UNKNOWN
+                    if module.is_nrps():
+                        mod_type = ModuleFeature.types.NRPS
+                    elif module.is_pks():
+                        mod_type = ModuleFeature.types.PKS
+                    elif module.is_coa_ligase():
+                        mod_type = ModuleFeature.types.CAL
+                    feature = ModuleFeature(domains, module_type=mod_type,
+                                            complete=module.is_complete(),
+                                            starter=module.is_starter_module(),
+                                            final=module.is_termination_module(),
+                                            iterative=module.is_iterative(),)
+                    record.add_module(feature)
 
     @staticmethod
     def from_json(json: Dict[str, Any], record: Record) -> Optional["NRPSPKSDomains"]:
@@ -239,20 +244,25 @@ def generate_domains(record: Record) -> NRPSPKSDomains:
     cds_motifs = find_ab_motifs(fasta)
 
     prev: Optional[CDSModuleInfo] = None
-    for cds in cds_within_regions:
-        domains = cds_domains.get(cds.get_name(), [])
-        motifs = cds_motifs.get(cds.get_name(), [])
-        if not (domains or motifs):
-            prev = None
-            continue
-        modules = build_modules_for_cds(domains, cds.get_name())
-        results.cds_results[cds] = CDSResult(domains, motifs, modules)
+    for region in record.get_regions():
+        for cds in region.cds_children:
+            domains = cds_domains.get(cds.get_name(), [])
+            motifs = cds_motifs.get(cds.get_name(), [])
+            if not (domains or motifs):
+                prev = None
+                continue
+            modules = build_modules_for_cds(domains, cds.get_name())
+            results.cds_results[cds] = CDSResult(domains, motifs, modules)
 
-        # combine modules that cross CDS boundaries, if possible and relevant
-        info = CDSModuleInfo(cds, modules)
-        if prev and prev.modules and info.modules and prev.cds.region == cds.region:
-            combine_modules(info, prev)  # modifies the lists of modules linked in each CDSResult
-        prev = info
+            # combine modules that cross CDS boundaries, if possible and relevant
+            info = CDSModuleInfo(cds, modules)
+            if prev and prev.modules and info.modules and prev.cds.region == cds.region:
+                # modifies in place the lists of modules in each CDSResult
+                if cds.strand == -1:
+                    combine_modules(prev, info)
+                else:
+                    combine_modules(info, prev)
+            prev = info
 
     for cds, cds_result in results.cds_results.items():
         # filter out modules with only a single component, they're just noise at this stage

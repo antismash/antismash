@@ -417,6 +417,9 @@ class Module:
         core = ",".join(str(component) for component in self._components)
         return f"[{core}]"
 
+    def __repr__(self) -> str:
+        return f"Module({self})"
+
     def __iter__(self) -> Iterator[Component]:
         for component in self._components:
             yield component
@@ -560,8 +563,8 @@ def combine_modules(current: CDSModuleInfo, previous: CDSModuleInfo) -> Optional
         This function modifies the given objects lists of modules.
 
         Arguments:
-            current: the CDSModuleInfo instance of the earlier CDS on the sequence
-            previous: the CDSModuleInfo instance of the later CDS on the sequence
+            current: the CDSModuleInfo instance of the main CDS
+            previous: the CDSModuleInfo instance of the CDS that current follows
 
         Returns:
             the newly merged Module or None
@@ -572,9 +575,6 @@ def combine_modules(current: CDSModuleInfo, previous: CDSModuleInfo) -> Optional
     # and both must have modules
     if not current.modules or not previous.modules:
         return None
-    # ensure the two args are ordered as expected
-    previous, current = sorted([current, previous], key=lambda info: info.cds,
-                               reverse=current.cds.location.strand == -1)
     head = previous.modules[-1]
     tail = current.modules[0]
     # modules without a starter can be complete, so if the head is just the starter, that's valid
