@@ -452,23 +452,16 @@ class TestMerging(unittest.TestCase):
 
     def build(self, early, late, strand=1, tail_strand_multiplier=1):
         if strand == -1:
-            head = late
-            tail = early
-            second = CDSModuleInfo(DummyCDS(start=50, end=110, strand=strand), [tail])
-            first = CDSModuleInfo(DummyCDS(start=500, end=560, strand=strand * tail_strand_multiplier), [head])
+            second = CDSModuleInfo(DummyCDS(start=500, end=560, strand=strand * tail_strand_multiplier), [early])
+            first = CDSModuleInfo(DummyCDS(start=50, end=110, strand=strand), [late])
         else:
-            head = early
-            tail = late
-            first = CDSModuleInfo(DummyCDS(start=50, end=110, strand=strand), [head])
-            second = CDSModuleInfo(DummyCDS(start=500, end=560, strand=strand * tail_strand_multiplier), [tail])
+            first = CDSModuleInfo(DummyCDS(start=50, end=110, strand=strand), [early])
+            second = CDSModuleInfo(DummyCDS(start=500, end=560, strand=strand * tail_strand_multiplier), [late])
 
         first_modules = list(first.modules)
         second_modules = list(second.modules)
 
-        if strand == -1:
-            module = combine_modules(second, first)
-        else:
-            module = combine_modules(first, second)
+        module = combine_modules(second, first)
 
         if not module:
             # nothing should be changed
@@ -476,11 +469,11 @@ class TestMerging(unittest.TestCase):
             assert second_modules == second.modules
         else:
             # head is replaced
-            assert head not in first.modules
+            assert early not in first.modules
             assert len(first_modules) == len(first.modules), (first, second)
             assert module in first.modules
             # tail removed
-            assert tail not in second.modules
+            assert late not in second.modules
             # and not replaced
             assert len(second_modules) - 1 == len(second.modules)
 
@@ -533,7 +526,7 @@ class TestMerging(unittest.TestCase):
     def test_merge_trailing_kr(self):  # kirromycin/AF484556.1
         head = CDSModuleInfo(DummyCDS(start=50, end=110), [self.trans_at_head])
         tail = CDSModuleInfo(DummyCDS(start=150, end=210), [self.generic_tail, build_module(["PKS_KR"])])
-        new = combine_modules(head, tail)
+        new = combine_modules(tail, head)
         assert len(tail.modules) == 0
         assert len(head.modules) == 1
         assert head.modules[0] is new
@@ -550,7 +543,7 @@ class TestMerging(unittest.TestCase):
             head = CDSModuleInfo(DummyCDS(start=50, end=110), [self.trans_at_head])
             tail = CDSModuleInfo(DummyCDS(start=150, end=210), modules)
             last = [comp.domain.hit_id for comp in modules[-1].components]
-            new = combine_modules(head, tail)
+            new = combine_modules(tail, head)
             assert len(tail.modules) == 1
             assert len(head.modules) == 1
             # the module after the merged split should be unchanged
@@ -559,7 +552,7 @@ class TestMerging(unittest.TestCase):
     def test_merge_leading_ks(self):
         head = CDSModuleInfo(DummyCDS(start=50, end=100), [build_module(["PKS_KS"])])
         tail = CDSModuleInfo(DummyCDS(start=150, end=200), [build_module([PKS_LOAD, CP])])
-        combined = combine_modules(head, tail)
+        combined = combine_modules(tail, head)
         print(head.modules, tail.modules)
         assert len(tail.modules) == 0
         assert len(head.modules) == 1
