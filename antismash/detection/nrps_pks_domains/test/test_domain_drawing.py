@@ -35,21 +35,18 @@ class TestModuleJSON(unittest.TestCase):
         assert str(head_modules[0]) == "[C,A]"
         tail_info = CDSModuleInfo(self.tail, tail_modules)
         head_info = CDSModuleInfo(self.head, head_modules)
-        if self.head.location.strand == -1:
-            combine_modules(tail_info, head_info)
-        else:
-            combine_modules(head_info, tail_info)
-        assert not tail_modules
+        combine_modules(tail_info, head_info)
+        assert not tail_modules, f"{head_modules}, {tail_modules}"
         assert str(head_modules[0]) == "[C,A,CP]"
 
         CDSResult(self.head_hits, [], head_modules).annotate_domains(self.record, self.head)
         CDSResult(self.tail_hits, [], []).annotate_domains(self.record, self.tail)
 
         domains = []
-        for cds in [self.tail, self.head][::self.head.location.strand]:  # keep strand in mind
+        for cds in [self.head, self.tail]:
             domains.extend(self.record.get_antismash_domains_in_cds(cds))
 
-        module = Module(domains, Module.types.NRPS, complete=True)
+        module = Module(domains, module_type=Module.types.NRPS, complete=True)
         self.record.add_module(module)
 
         # ensure it's constructed as expected
