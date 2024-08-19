@@ -117,6 +117,8 @@ def parse_input_sequence(filename: str, taxon: str = "bacteria", minimum_length:
     if start > -1 or end > -1:
         if len(records) > 1:
             raise ValueError("--start and --end options cannot be used with multiple records")
+        if start != -1 and end != -1 and start > end and records[0].annotations.get("topology") == "circular":
+            raise ValueError("--start and --end cannot be used for a cross-origin section of a circular record")
         records[0] = trim_sequence(records[0], max(start, 0), min(len(records[0]), end))
 
     # add GFF features before conversion, if relevant
