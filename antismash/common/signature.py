@@ -11,6 +11,8 @@ from .path import get_full_path
 class Signature:
     """Secondary metabolite signature"""
     def __init__(self, name: str, _type: str, description: str, cutoff: int, path: str, seed_count: int = 0) -> None:
+        if name.strip() != name:
+            raise ValueError(f"Signature identifiers cannot have leading or trailing whitespace: {name!r}")
         self.name = name
         self.type = _type
         self.description = description
