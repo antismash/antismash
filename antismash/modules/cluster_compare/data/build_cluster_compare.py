@@ -55,6 +55,8 @@ def convert_cds(cds: secmet.CDSFeature) -> Dict[str, Any]:
             "secmet": [] if not cds.sec_met else cds.sec_met.domain_ids,
             "modules": [convert_module(module) for module in cds.modules],
         },
+        "draw_start": cds.start,
+        "draw_end": cds.end,
     }
     return result
 
@@ -68,14 +70,36 @@ def convert_protocluster(protocluster: secmet.Protocluster) -> Dict[str, Any]:
     return result
 
 
-def convert_region(region: secmet.Region, cds_mapping: Dict[int, str], cds_index: Counter, fasta: IO) -> Dict[str, Any]:
+def convert_region(region: secmet.Region, cds_mapping: Dict[int, str], cds_index: Counter, fasta: IO,
+                   *, record_length: int = 0) -> dict[str, Any]:
+    # trim leading/trailing intergenic areas, accounting for possible cross-origin regions
+    if region.crosses_origin():
+        start = min(cds.start for cds in region.cds_children.pre_origin + region.cds_children.cross_origin)
+        end = max(cds.end for cds in region.cds_children.post_origin + region.cds_children.cross_origin)
+    else:
+        start = min(cds.start for cds in region.cds_children)
+        end = max(cds.end for cds in region.cds_children)
+
+    def _convert_cds(feature: secmet.CDSFeature) -> dict[str, Any]:
+        converted = convert_cds(feature)
+        if region.crosses_origin():
+            if feature.crosses_origin() or feature.end < feature.start:
+                converted["draw_end"] = feature.end + record_length
+            if feature in region.cds_children.post_origin:
+                converted["draw_start"] = feature.start + record_length
+                converted["draw_end"] = feature.end + record_length
+        assert converted["draw_start"] < converted["draw_end"]
+        return converted
+
     result = {
         "products": region.products,
         "protoclusters": [convert_protocluster(pc) for pc in region.get_unique_protoclusters()],
-        "cdses": {cds.get_name(): convert_cds(cds) for cds in region.cds_children},
-        "start": min(cds.location.start for cds in region.cds_children),  # trim any intergenic areas
-        "end": max(cds.location.end for cds in region.cds_children),
+        "cdses": {cds.get_name(): _convert_cds(cds) for cds in region.cds_children},
+        "start": start,
+        "end": end,
     }
+    if start > end:
+        result["draw_end"] = end + record_length
     for cds in region.cds_children:
         index = cds_index.next()
         fasta.write(">%s|%d\n%s\n" % (region.parent_record.id, index, cds.translation))
@@ -92,7 +116,7 @@ def convert_record(record: secmet.Record, fasta: IO, skip_contig_edge: bool = Tr
     for region in record.get_regions():
         if skip_contig_edge and region.contig_edge:
             continue
-        result["regions"].append(convert_region(region, result["cds_mapping"], cds_index, fasta))
+        result["regions"].append(convert_region(region, result["cds_mapping"], cds_index, fasta, record_length=len(record)))
     return result
 
 
