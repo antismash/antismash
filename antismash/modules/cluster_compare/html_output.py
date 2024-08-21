@@ -134,7 +134,7 @@ def generate_javascript_data(record: Record, region: Region, results: ClusterCom
             for reference, _ in scores:
                 ref_entry: Dict[str, Any] = {
                     "start": reference.start,
-                    "end": reference.end,
+                    "end": reference.draw_end,  # cross-origin regions are pseudo-linearised
                     "links": [],  # added to afterwards
                     "reverse": False,  # potentially changed later
                 }
@@ -154,7 +154,7 @@ def generate_javascript_data(record: Record, region: Region, results: ClusterCom
                     if region.crosses_origin() and query_cds.is_contained_by(region.location.parts[1]):
                         query_point += len(record)
                     ref_cds = reference.cdses[ref_cds_id]
-                    subject_point = ref_cds.location.start + (ref_cds.location.end - ref_cds.location.start) // 2
+                    subject_point = ref_cds.get_midpoint()
                     if query_cds.location.strand != ref_cds.location.strand:
                         mismatching_strands += 1
                     genes[ref_cds.name]["linked"][region.get_region_number()] = query_cds.get_name()
