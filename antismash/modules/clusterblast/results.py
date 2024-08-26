@@ -278,7 +278,6 @@ class ClusterBlastResults(ModuleResults):
         self.general: Optional[GeneralResults] = None
         self.subcluster: Optional[GeneralResults] = None
         self.knowncluster: Optional[GeneralResults] = None
-        self.internal_homology_groups: Dict[int, List[List[str]]] = {}
 
     def to_json(self) -> Dict[str, Any]:
         assert self.general or self.subcluster or self.knowncluster
