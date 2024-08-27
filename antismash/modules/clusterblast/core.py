@@ -31,9 +31,9 @@ def get_core_gene_ids(record: secmet.Record) -> Set[str]:  # TODO: consider movi
             a set containing all core gene names
     """
     cores = set()
-    for gene in record.get_cds_features_within_regions():
-        if gene.gene_function == secmet.GeneFunction.CORE:
-            cores.add(gene.get_name())
+    for protocluster in record.get_protoclusters():
+        for cds in protocluster.definition_cdses:
+            cores.add(cds.get_name())
     return cores
 
 
@@ -419,7 +419,7 @@ def get_cds_lengths(record: secmet.Record) -> Dict[str, int]:
             a dictionary mapping CDS accession to length of the CDS
     """
     lengths = {}
-    for cds in record.get_cds_features():
+    for cds in record.get_cds_features_within_regions():
         lengths[cds.get_name()] = len(cds.translation)
     return lengths
 
