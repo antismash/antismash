@@ -12,7 +12,7 @@ from unittest.mock import patch
 from helperlibs.wrappers.io import TemporaryDirectory
 
 from antismash import main
-from antismash.common import path, secmet
+from antismash.common import json, path, secmet
 from antismash.common.module_results import ModuleResults
 from antismash.common.test import helpers
 from antismash.common.subprocessing.diamond import run_diamond_version
@@ -111,7 +111,7 @@ class GeneralIntegrationTest(Base):
         ranking = results.region_results[0].ranking
 
         # check the JSON round trip
-        raw = results.to_json()
+        raw = json.loads(json.dumps(results.to_json()))
         # check some values
         for _, score in raw["results"][0]["ranking"]:
             assert score["similarity"] > 0
@@ -119,7 +119,7 @@ class GeneralIntegrationTest(Base):
         rebuilt = results.from_json(deepcopy(raw), record)
         assert results.region_results[0].ranking[0][1].hits == 11
         assert isinstance(rebuilt, type(results))
-        new_json = rebuilt.to_json()
+        new_json = json.loads(json.dumps(rebuilt.to_json()))
         assert new_json["results"][0]["ranking"]
         for _, score in new_json["results"][0]["ranking"]:
             assert score["similarity"] > 0
