@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple, Type, TypeVar
 
 from Bio.SeqFeature import SeqFeature
 
-from ..cdscollection import CDSCollection
+from ..cdscollection import CDSCollection, CoredCollectionMixin
 from ..protocluster import Protocluster, SideloadedProtocluster
 from ..feature import Feature
 from ...locations import (
@@ -44,7 +44,7 @@ class CandidateClusterKind(Enum):
         raise ValueError(f"unknown candidate cluster kind: {label}")
 
 
-class CandidateCluster(CDSCollection):
+class CandidateCluster(CDSCollection, CoredCollectionMixin):
     """ A class representing a collection of overlapping Cluster features.
         The location of a CandidateCluster is defined as the minimum area that would
         contain all of the child Protolusters.

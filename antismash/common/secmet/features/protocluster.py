@@ -8,9 +8,9 @@ from typing import Any, Dict, List, Optional, Set, Type, TypeVar
 from Bio.SeqFeature import SeqFeature
 
 from .cds_feature import CDSFeature
-from .cdscollection import CDSCollection
+from .cdscollection import CDSCollection, CoredCollectionMixin
 from .feature import Feature, FeatureLocation
-from ..locations import location_from_string
+from ..locations import Location, location_from_string
 from ..qualifiers.t2pks import T2PKSQualifier
 from ..qualifiers.gene_functions import GeneFunction
 
@@ -18,7 +18,7 @@ T = TypeVar("T", bound="Protocluster")
 S = TypeVar("S", bound="SideloadedProtocluster")
 
 
-class Protocluster(CDSCollection):
+class Protocluster(CDSCollection, CoredCollectionMixin):
     """ A feature which marks a specific region of a record as interesting.
         Protoclusters are only those determined by a rule-based method of detection
         and with a defined product.
@@ -27,7 +27,7 @@ class Protocluster(CDSCollection):
         protocluster to be formed, while the surrounding location includes the context.
     """
     core_seqfeature_type = "proto_core"
-    __slots__ = ["core_location", "detection_rule", "product", "product_category",
+    __slots__ = ["_core_location", "detection_rule", "product", "product_category",
                  "tool", "cutoff",
                  "_definition_cdses", "neighbourhood_range", "t2pks",]
     FEATURE_TYPE = "protocluster"  # primary type only
@@ -45,7 +45,7 @@ class Protocluster(CDSCollection):
         self.tool = tool
 
         # core specific
-        self.core_location = core_location
+        self._core_location = core_location
         self.cutoff = cutoff
         self._definition_cdses: Set[CDSFeature] = set()
 
@@ -77,6 +77,10 @@ class Protocluster(CDSCollection):
         contig_edge = start < 0 or end >= len(self.parent_record.seq)
         self._contig_edge = contig_edge
         return contig_edge
+
+    @property
+    def core_location(self) -> Location:
+        return self._core_location
 
     @property
     def definition_cdses(self) -> Set[CDSFeature]:
