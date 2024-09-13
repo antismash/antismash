@@ -6,7 +6,18 @@
 """
 
 from collections import OrderedDict
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, TypeVar, Union
+from typing import (
+    Any,
+    Dict,
+    List,
+    Optional,
+    Protocol,
+    Sequence,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
 
 from Bio.SeqFeature import SeqFeature
 
@@ -16,6 +27,7 @@ from ..locations import (
     CompoundLocation,
     FeatureLocation,
     Location,
+    Position,
     location_bridges_origin,
     split_origin_bridging_location,
 )
@@ -192,3 +204,36 @@ class CDSCollection(Feature):
         if self.parent_record:
             qualifiers["contig_edge"] = [str(self.contig_edge)]
         return super().to_biopython(qualifiers)
+
+
+# this usage of Protocol allows subclasses to define the core location arbitrarily
+# rather than just as an attribute
+class _CoreProtocol(Protocol):
+    @property
+    def core_location(self) -> Location:
+        """ The location covering the collection's core genes """
+
+
+class CoredCollectionMixin(_CoreProtocol):
+    """ Helpers for working with core locations in those collections that define or require them
+    """
+
+    @property
+    def core_end(self) -> Position:
+        """ The end coordinate of the core location.
+
+            NOTE: differs from the location.end, as that is the maximum coordinate
+        """
+        if self.core_location.strand != -1:
+            return self.core_location.parts[-1].end
+        return self.core_location.parts[0].end
+
+    @property
+    def core_start(self) -> Position:
+        """ The start coordinate of the core location.
+
+            NOTE: differs from location.start, as that is the minimum coordinate
+        """
+        if self.core_location.strand != -1:
+            return self.core_location.parts[0].start
+        return self.core_location.parts[-1].start
