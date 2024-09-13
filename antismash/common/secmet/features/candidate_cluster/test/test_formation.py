@@ -298,15 +298,15 @@ class TestCreation(unittest.TestCase):
         #        |   -UN-
         neighbour_over = create_cluster(0, 1, 2, 3, "neighbour_over")
         neighbour_over.location = create_compound_loc([(59, 100), (0, 6)])
-        neighbour_over.core_location = FeatureLocation(79, 80, 1)
+        neighbour_over._core_location = FeatureLocation(79, 80, 1)
 
         short_core_over = create_cluster(0, 1, 2, 3, "short_core_over")
         short_core_over.location = create_compound_loc([(70, 100), (0, 28)])
-        short_core_over.core_location = create_compound_loc([(90, 100), (0, 8)])
+        short_core_over._core_location = create_compound_loc([(90, 100), (0, 8)])
 
         long_core_over = create_cluster(0, 1, 2, 3, "long_core_over")
         long_core_over.location = create_compound_loc([(70, 100), (0, 39)])
-        long_core_over.core_location = create_compound_loc([(90, 100), (0, 19)])
+        long_core_over._core_location = create_compound_loc([(90, 100), (0, 19)])
 
         unbroken = create_cluster(16, 26, 28, 38, "unbroken")
 

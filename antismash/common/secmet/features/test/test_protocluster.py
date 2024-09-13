@@ -112,7 +112,7 @@ class TestSideloaded(unittest.TestCase):
 class TestDefinitionCDS(unittest.TestCase):
     def setUp(self):
         self.cluster = create_cluster()
-        self.cluster.core_location = FeatureLocation(30, 50)
+        self.cluster._core_location = FeatureLocation(30, 50)
         self.inside_cds = DummyCDS(40, 45)
         self.neighbour_cds = DummyCDS(20, 25)
         self.outside_cds = DummyCDS(120, 125)

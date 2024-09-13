@@ -6,8 +6,11 @@
 
 import unittest
 
-from antismash.common.secmet.features import CDSCollection, FeatureLocation
-from antismash.common.secmet.locations import CompoundLocation
+from antismash.common.secmet.features.cdscollection import (
+    CDSCollection,
+    CoredCollectionMixin,
+)
+from antismash.common.secmet.locations import CompoundLocation, FeatureLocation
 from antismash.common.secmet.test.helpers import DummyCDS, DummyRecord
 
 
@@ -123,3 +126,38 @@ class TestCDSCollection(unittest.TestCase):
         outer = CDSCollection(FeatureLocation(0, 200), feature_type="test", child_collections=[inner])
         assert not outer.crosses_origin()
         assert inner.crosses_origin()
+
+
+class DummyCored(CDSCollection, CoredCollectionMixin):
+    offset = 10
+
+    @property
+    def core_location(self):
+        if isinstance(self.location, CompoundLocation):
+            return CompoundLocation([
+                FeatureLocation(self.location.parts[0].start + self.offset,
+                                self.location.parts[0].end, self.location.strand),
+                FeatureLocation(self.location.parts[-1].start,
+                                self.location.parts[-1].end - self.offset, self.location.strand),
+            ])
+        return FeatureLocation(self.location.start + 10, self.location.end - 10, self.location.strand)
+
+
+class TestCoredMixin(unittest.TestCase):
+    def test_simple(self):
+        collection = DummyCored(FeatureLocation(20, 70, 1), feature_type="dummy")
+        assert collection.start == 20
+        assert collection.core_start == 30
+        assert collection.core_end == 60
+        assert collection.end == 70
+
+    def test_circular_forward(self):
+        location = CompoundLocation([
+            FeatureLocation(80, 100, 1),
+            FeatureLocation(0, 20, 1),
+        ])
+        collection = DummyCored(location, feature_type="dummy")
+        assert collection.start == 80
+        assert collection.core_start == 90
+        assert collection.core_end == 10
+        assert collection.end == 20
