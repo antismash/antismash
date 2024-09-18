@@ -10,7 +10,7 @@ import dataclasses
 import logging
 from typing import Any, Dict, FrozenSet, Iterable, Iterator, List, Optional, Set, Tuple, Union
 
-from antismash.common import fasta, serialiser
+from antismash.common import fasta, path, serialiser
 from antismash.common.hmmscan_refinement import HSP
 from antismash.common.secmet import Record, Protocluster, CDSFeature, FeatureLocation
 from antismash.common.secmet.locations import (
