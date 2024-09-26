@@ -28,6 +28,44 @@ class DummyConditions(rule_parser.Conditions):
 # NOTE: the rest of the cluster_prediction tests are still in hmm_detection tests
 
 
+class TestAncillary(unittest.TestCase):
+    def test_ancillary_on_cutoff_boundary(self):
+        features_by_id = {
+            "a": DummyCDS(3082, 6555, locus_tag="a"),
+            "b": DummyCDS(7650, 9989, locus_tag="b"),
+            "c": DummyCDS(10000, 12618, locus_tag="c"),
+            "d": DummyCDS(13840, 15411, locus_tag="d"),
+            "e": DummyCDS(15596, 17275, locus_tag="e"),
+        }
+        features = list(features_by_id.values())
+        record = DummyRecord(features)
+
+        results_by_id = {
+            name: [FakeHSPHit(name.upper(), name, 0, 10, 50, 0)] for name in features_by_id
+        }
+        signature_names = set(name.upper() for name in features_by_id)
+        rule_text = "\n".join([
+            "RULE rule_name",
+            "CATEGORY category",
+            "CUTOFF 5",
+            "NEIGHBOURHOOD 10",
+            "CONDITIONS A and B and C and D and E",
+        ])
+        rules = rule_parser.Parser(rule_text, signature_names, {"category"}).rules
+
+        cds_to_rules, rules_to_cds = cluster_prediction.apply_cluster_rules(record, results_by_id, rules)
+
+        # with a cutoff of 5, only 'c' is in range of everything else, and if
+        # the other genes that help satisfy the conditions aren't included in 
+        # the ancillary hits, then the resulting protocluster will not be long
+        # enough to cover all the genes that were required to satisfy the conditions
+        assert len(rules_to_cds) == 1  # only one rule exists
+        # all genes should be core genes for the rule
+        assert rules_to_cds[rules[0].name] == set(features_by_id)
+        # inversely, all genes should have links back to that rule
+        assert sorted(cds_to_rules) == sorted(features_by_id)
+
+
 class TestRedundancy(unittest.TestCase):
     def setUp(self):
         self.record = DummyRecord()

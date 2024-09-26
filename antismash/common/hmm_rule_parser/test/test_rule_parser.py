@@ -124,8 +124,19 @@ class DetectionTest(unittest.TestCase):
         self.expect(results, [])
 
     def test_chained_and_c(self):
+        # This test is complicated, since it depends on a (currently) ambiguous
+        # definition of "not" in the rules.
+
+        # The interpretation originally used here is that "not" means the cluster
+        # cannot *contain* the relevant condition, but the negative condition
+        # can be *next* to the detected cluster.
+
+        # If the interpretation of "not" changes to "cannot be near", then this
+        # particular scenario would find no cluster at all.
+
         results = self.run_test("A", 21, 20, "a and b and not cds(a and b)")
-        self.expect(results, ["GENE_3"])  # 3 has b, 2 has a, 1 reaches 2 with a,b
+
+        self.expect(results, ["GENE_2", "GENE_3"])
 
     def test_simple_minimum(self):
         results = self.run_test("A", 10, 20, "minimum(2, [a, b])")

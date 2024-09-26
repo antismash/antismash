@@ -691,6 +691,7 @@ class SingleCondition(Conditions):
 
         cds_feature = details.features_by_id[details.cds]
         # look at neighbours in range
+        ancillary = {}
         for other, other_hits in details.results_by_id.items():
             if other == details.cds:
                 continue
@@ -699,8 +700,9 @@ class SingleCondition(Conditions):
                 continue
             other_possibilities = [res.query_id for res in other_hits]
             if self.name in other_possibilities:
-                # a positive match, so we can exit early
-                return ConditionMet(not self.negated)
+                ancillary[other] = {self.name}
+        if ancillary:
+            return ConditionMet(not self.negated, ancillary_hits=ancillary)
 
         # if negated and we failed to find anything, that's a good thing
         return ConditionMet(self.negated)
