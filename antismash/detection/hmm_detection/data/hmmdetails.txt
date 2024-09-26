@@ -109,7 +109,6 @@ indsynth	StaD-like chromopyrrolic acid synthase domain	100	indsynth.hmm
 LipM	LipM-like nucleotidyltransferase	50	LipM.hmm
 LipU	LipU-like protein	30	LipU.hmm
 LipV	LipV-like dehydrogenase	375	LipV.hmm
-ToyB	ToyB-like synthase	175	ToyB.hmm
 TunD	TunD-like putative N-acetylglucosamine transferase	200	TunD.hmm
 pur6	Pur6-like synthetase	200	pur6.hmm
 pur10	Pur10-like oxidoreductase	600	pur10.hmm
@@ -366,3 +365,9 @@ AesB	Pyridoxal-dependent decarboxylase involved in APCA biosynthesis	400	AesB.hm
 AesC	N-(2-amino-2-carboxyethyl)-L-glutamate synthase involved in APCA biosynthesis	420	AesC.hmm
 4HBT_2	Hotdog fold Thioesterase-like superfamily	25	PF13279.hmm
 CDPS_fung	Fungal cyclodipeptide synthase	100	CDPS_fung.hmm
+GTP_cyclohydroI	GTP cyclohydrolase I	27	PF01227.hmm
+PTPS	6-carboxy-5,6,7,8-tetrahydropterin synthase	22	PF01242.hmm
+QueE	7-carboxy-7-deazaguanine synthase	22	QueE.hmm
+QueC	7-cyano-7-deazaguanine synthase	22	PF06508.hmm
+dpdA1	family of paralogs of tRNA guanosine transglycosylase genes	20	dpdA1.hmm
+bTGT	homodimeric bacterial tRNA-guanine transglycosylases	22	bTGT.hmm
