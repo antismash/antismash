@@ -556,7 +556,7 @@ RULE nucleoside
     DESCRIPTION Nucleoside
     CUTOFF 20
     NEIGHBOURHOOD 10
-    CONDITIONS LipM or LipV or LipU or ToyB or TunD or pur6 or pur10 or nikJ or nikO or truD
+    CONDITIONS LipM or LipV or LipU or TunD or pur6 or pur10 or nikJ or nikO or truD
 
 RULE phosphoglycolipid
     CATEGORY other
@@ -772,3 +772,15 @@ RULE hydroxytropolone
     CONDITIONS 4HBT_2 and AMP-binding and
                cds(Acyl-CoA_dh_N and Acyl-CoA_dh_M and Acyl-CoA_dh_1) and
                cds(TPP_enzyme_N and TPP_enzyme_C)
+	       
+RULE deazapurine
+    CATEGORY other
+    DESCRIPTION deazapurine containing secondary metabolites
+    # see DOIs: 10.1016/j.bioorg.2012.01.001 and 10.3390/biom10071074 and
+    # 10.1016/j.chembiol.2008.07.012 and 10.1128/mmbr.00199-23
+    EXAMPLE NCBI KY022432.1 1-10381 toyocamycin # BGC0001808
+    EXAMPLE NCBI CP007155.1 4592550-4600486 huimycin # BGC0002354
+    CUTOFF 20
+    NEIGHBOURHOOD 10
+    CONDITIONS GTP_cyclohydroI and PTPS and QueE and QueC and
+    	       not(dpdA1 or bTGT) # avoid detecting deazapurine modifications in tRNA or DNA
