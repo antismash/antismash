@@ -167,12 +167,12 @@
     @include secmet(black, peachpuff, black);
 }
 
-.nucleoside {
+@mixin nucleoside {
     @include secmet(black, antiquewhite, black);
 }
 
 .deazapurine {
-    @include secmet(black, antiquewhite, black);
+    @include nucleoside;
 }
 
 .phosphoglycolipid {
