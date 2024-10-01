@@ -109,7 +109,6 @@ indsynth	StaD-like chromopyrrolic acid synthase domain	100	indsynth.hmm
 LipM	LipM-like nucleotidyltransferase	50	LipM.hmm
 LipU	LipU-like protein	30	LipU.hmm
 LipV	LipV-like dehydrogenase	375	LipV.hmm
-ToyB	ToyB-like synthase	175	ToyB.hmm
 TunD	TunD-like putative N-acetylglucosamine transferase	200	TunD.hmm
 pur6	Pur6-like synthetase	200	pur6.hmm
 pur10	Pur10-like oxidoreductase	600	pur10.hmm
