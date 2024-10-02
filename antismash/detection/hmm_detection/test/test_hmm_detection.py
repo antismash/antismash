@@ -585,7 +585,7 @@ class TestMultipliers(unittest.TestCase):
             with patch.object(core, "get_rule_categories", return_value=[]):
                 with self.assertRaisesRegex(RuntimeError, "stop here"):
                     core.run_on_record(self.record, None, options)
-            assert patched.called_once
+            patched.assert_called_once()
             # find the ruleset arg used, and if it doesn't exist, failing here is fine
             ruleset = [arg for arg in patched.call_args[0] if isinstance(arg, hmm_detection.Ruleset)][0]
         return ruleset
