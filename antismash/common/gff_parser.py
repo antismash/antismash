@@ -15,7 +15,7 @@ from BCBio import GFF
 from antismash.common.errors import AntismashInputError
 
 # whether to use phase (codon start) to modify reported locations
-# Augustus, NCBI, and glimmerhmm report phase but have already adjusted the
+# Augustus and NCBI report phase but have already adjusted the
 # locations and since they're the bulk of inputs, disable further modification
 MODIFY_LOCATIONS_BY_PHASE = False
 

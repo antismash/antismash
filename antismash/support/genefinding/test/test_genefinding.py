@@ -4,10 +4,13 @@
 # for test files, silence irrelevant and noisy pylint warnings
 # pylint: disable=use-implicit-booleaness-not-comparison,protected-access,missing-docstring
 
-import unittest
 from argparse import Namespace
+import unittest
+from unittest.mock import patch
 
-from antismash.support.genefinding import check_options, is_enabled
+from antismash.common.errors import AntismashInputError
+from antismash.support import genefinding
+from antismash.support.genefinding import check_options, is_enabled, run_on_record
 
 
 class TestCore(unittest.TestCase):
@@ -16,9 +19,6 @@ class TestCore(unittest.TestCase):
         options.taxon = 'bacteria'
         options.genefinding_tool = "none"
         assert not check_options(options)
-
-        options.genefinding_tool = "glimmerhmm"
-        assert check_options(options)
 
         options.taxon = 'fungi'
         assert not check_options(options)
@@ -41,3 +41,31 @@ class TestCore(unittest.TestCase):
 
         options.genefinding_tool = 'none'
         assert not is_enabled(options)
+
+    def test_run_on_record_error_cases(self):
+        class FakeRecord:
+            id = "fake"
+        record = FakeRecord()
+        options = Namespace()
+        options.genefinding_tool = "none"
+
+        for taxon in ("fungi", "bacteria"):
+            options.taxon = taxon
+            assert run_on_record(record, options) is None
+
+        options.genefinding_tool = "error"
+        for taxon in ("fungi", "bacteria"):
+            options.taxon = taxon
+            with self.assertRaisesRegex(AntismashInputError, "contains no genes and"):
+                run_on_record(record, options)
+
+        with patch.object(genefinding, "run_prodigal") as patched:
+            options.taxon = "bacteria"
+            options.genefinding_tool = "prodigal"
+            run_on_record(record, options)
+            patched.assert_called_once()
+
+        with self.assertRaisesRegex(ValueError, "Unknown genefinding tool"):
+            options.taxon = "bacteria"
+            options.genefinding_tool = "bob"
+            run_on_record(record, options)
