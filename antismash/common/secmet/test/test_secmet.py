@@ -454,7 +454,7 @@ class TestRecord(unittest.TestCase):
         location_middle = FeatureLocation(50, 70, 1)
         upstream_sequence_location_begin = record.get_sequence_upstream_of_location(location_begin, length=15)
         upstream_sequence_location_end = record.get_sequence_upstream_of_location(location_end)
-        upstream_sequence_location_middle = record.get_sequence_upstream_of_location(location_middle)
+        upstream_sequence_location_middle = record.get_sequence_upstream_of_location(location_middle, length=15)
         assert upstream_sequence_location_begin == "TCTGA"
         assert upstream_sequence_location_middle == "GACTCGATCGTCTGA"
         assert len(upstream_sequence_location_middle) == 15
