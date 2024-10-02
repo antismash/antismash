@@ -15,6 +15,7 @@ from antismash.common.all_orfs import (
     find_intergenic_areas,
     get_trimmed_orf,
     scan_orfs,
+    has_rbs
 )
 from antismash.common.secmet.test.helpers import DummySubRegion
 
@@ -257,3 +258,13 @@ def test_minimum_passthrough():
             # all calls must pass through the minimum length
             for args in patched.call_args_list:
                 assert args[-1]["minimum_length"] == min_length
+                
+def test_has_rbs():
+    test_rbs_sequences = ['TCTTTCCGATCTCTCCTGAATTCTC', 'TCTTTCTTGGAGTCTCTCTC', 'GGAG', 'GAGG', 'TCTGGAGGTCT', 'GGTTCTTTCTTTCGGAAG', 'GTTCTTTCTTCGAGAGTAGACG', 'GTGTGTGTGGGAGAGAGAG']
+    true_result_without_flexible_site = [False, False, False, False, True, True, False, False]
+    true_result_with_flexible_site = [False, False, False, False, True, True, True, True]
+    result_without_flexible_site = [has_rbs(sequence, flexible=False) for sequence in test_rbs_sequences]
+    results_with_flexible_site = [has_rbs(sequence, flexible=True) for sequence in test_rbs_sequences]
+    assert results_with_flexible_site == true_result_with_flexible_site
+    assert result_without_flexible_site == true_result_without_flexible_site
+    
