@@ -166,15 +166,16 @@ def has_rbs(sequence: str, flexible: bool = False) -> bool:
     """ Determines if ribosomal binding site in sequence.
 
         Arguments:
-            sequence: the DNA sequence in upstream of the ORF to check for the RBS
-            flexible: if true, searches for a flexible binding site (80% GA content within 8 bp), usefull for instnce in streptoycetes that oftentimes do not use a canonical rbs
+            sequence: the DNA sequence upstream of the ORF to check for the RBS
+            flexible: if true, searches for a flexible binding site (80% GA content within 8 bp),
+            usefull for instance in streptomycetes that oftentimes do not use a canonical rbs
 
         Returns:
             a boolean if the sequence contains a RBS
     """
     if RIBOSOMAL_BINDING_SITE.search(sequence) is not None:
         return True
-    
+
     if flexible:
         if FLEXIBLE_RIBOSOMAL_BINDING_SITE.search(sequence) is not None:
             return True
@@ -215,7 +216,8 @@ def find_intergenic_areas(start: int, end: int, cds_features: Iterable[CDSFeatur
 
 
 def find_all_orfs(record: Record, area: Optional[CDSCollection] = None,
-                  min_length: int = 60, max_overlap: int = 10, include_rbs: bool = False, flexible_rbs: bool = False) -> List[CDSFeature]:
+                  min_length: int = 60, max_overlap: int = 10,
+                  include_rbs: bool = False, flexible_rbs: bool = False) -> List[CDSFeature]:
     """ Find ORFs within intergenic areas of the given record or subset of the record.
 
         Can (and should) be limited to just within a specific section of the record.
