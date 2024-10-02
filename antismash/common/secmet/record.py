@@ -978,7 +978,7 @@ class Record:
         
         if location.end > len(self.seq):
             raise ValueError("location outside available sequence")
-        upstream_location = ""
+        upstream_location = None
         if location.strand == 1:
             upstream_location = FeatureLocation(max(location.start - length, 0), location.start, location.strand)
         else:

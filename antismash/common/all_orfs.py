@@ -255,6 +255,6 @@ def find_all_orfs(record: Record, area: Optional[CDSCollection] = None,
         if include_rbs:
             sequence = record.get_sequence_upstream_of_location(location, length=15)
             rbs = has_rbs(sequence, flexible=flexible_rbs)
-        new_features.append(create_feature_from_location(record, location, rbs))
+        new_features.append(create_feature_from_location(record, location, rbs=rbs))
 
     return sorted(new_features)
