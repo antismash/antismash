@@ -19,7 +19,7 @@ from antismash.common.secmet.features import CDSCollection
 START_CODONS = ('ATG', 'GTG', 'TTG')
 STOP_CODONS = ('TAA', 'TAG', 'TGA')
 RIBOSOMAL_BINDING_SITE = re.compile('?:GGA[AG]G')
-FLEXIBLE_RIBOSOMAL_BINDING_SITE = re.compile('(?=(?:[GA][^GA]{0,2}){6})')
+FLEXIBLE_RIBOSOMAL_BINDING_SITE = re.compile('(?=(?:[^GA]*[GA]){6})[GACT]{8}')
 
 
 def get_trimmed_orf(orf: CDSFeature, record: Record, include: int = None,
@@ -215,7 +215,7 @@ def find_intergenic_areas(start: int, end: int, cds_features: Iterable[CDSFeatur
 
 
 def find_all_orfs(record: Record, area: Optional[CDSCollection] = None,
-                  min_length: int = 60, max_overlap: int = 10, include_rbs: bool = False, flexible_rbs: bool = False) -> List[CDSFeature]:
+                  min_length: int = 60, max_overlap: int = 10, include_rbs: bool = False, flexible_rbs: bool = F) -> List[CDSFeature]:
     """ Find ORFs within intergenic areas of the given record or subset of the record.
 
         Can (and should) be limited to just within a specific section of the record.
