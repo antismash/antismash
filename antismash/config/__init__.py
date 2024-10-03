@@ -135,13 +135,12 @@ def destroy_config() -> None:
 def build_config(args: List[str], parser: Optional[AntismashParser] = None, isolated: bool = False,
                  modules: List[AntismashModule] = None) -> ConfigType:
     """ Builds up a Config. Uses, in order of lowest priority, a users config
-        file (~/.antismash5.cfg), an instance config file
+        file (e.g ~/.antismash5.cfg), an instance config file
         (antismash/config/instance.cfg), and the provided command line options.
 
-        If in isolated mode, only database directory
-    even if isolated, the database directory is vital, so load the files
+        Even if isolated, the database directory is vital, so load the files
         and keep the database value, unless it will be overridden on the command
-        line
+        line. The number of CPUs/threads to use is also important and is also kept.
     """
     # load default for static information, e.g. URLs
     default = load_config_from_file()
@@ -163,11 +162,13 @@ def build_config(args: List[str], parser: Optional[AntismashParser] = None, isol
     with_files.extend(args)
     result = parser.parse_args(with_files)
 
-    # if isolated, keep databases value
+    # if isolated, keep databases value and number of CPUs
     if isolated:
         databases = result.database_dir
+        cpus = result.cpus
         result = parser.parse_args(args)
         result.database_dir = databases
+        result.cpus = cpus
 
     # set a base value for the record count limit
     default.__dict__.update({"triggered_limit": False})
