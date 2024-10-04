@@ -18,9 +18,7 @@ from typing import Dict, List, Set, Tuple
 import joblib
 
 from antismash.common import path, subprocessing, secmet, utils
-from antismash.config import get_config as get_global_config
-
-from .config import get_config as get_lanthi_config
+from antismash.config import get_config
 
 
 def run_rodeo(record: secmet.Record, query: secmet.CDSFeature, leader: str,
@@ -34,7 +32,7 @@ def run_rodeo(record: secmet.Record, query: secmet.CDSFeature, leader: str,
 
     fimo_scores: Dict[int, float] = {}
 
-    if not get_global_config().without_fimo and get_lanthi_config().fimo_present:
+    if get_config().fimo:
         # Find motifs
         fimo_scores = identify_lanthi_motifs(leader, core)
 
