@@ -153,6 +153,9 @@ def check_prereqs(options: ConfigType) -> List[str]:
     """Check for prerequisites"""
     failure_messages = []
 
+    if not options.cassis:
+        return failure_messages
+
     expected_memesuite_version = (4, 11, 2)
     expected = ".".join(map(str, expected_memesuite_version))
     missing_message = "Failed to locate executable for %r"
