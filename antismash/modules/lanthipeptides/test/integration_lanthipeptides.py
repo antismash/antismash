@@ -20,13 +20,13 @@ class IntegrationLanthipeptides(unittest.TestCase):
     def setUp(self):
         self.options = build_config(["--minimal", "--enable-html", "--enable-lanthipeptides"],
                                     isolated=True, modules=antismash.get_all_modules())
-        self.set_fimo_enabled(True)
+        self.set_fimo_enabled(False)
 
     def tearDown(self):
         destroy_config()
 
     def set_fimo_enabled(self, val):
-        update_config({"without_fimo": not val})
+        update_config({"with_fimo": val})
         lanthi_config.get_config().fimo_present = val
 
     def gather_all_motifs(self, result):
@@ -170,9 +170,9 @@ class IntegrationLanthipeptides(unittest.TestCase):
         pass
 
 
-class IntegrationLanthipeptidesWithoutFimo(IntegrationLanthipeptides):
+class IntegrationLanthipeptidesWithFimo(IntegrationLanthipeptides):
     def setUp(self):
         self.options = build_config(["--minimal", "--enable-html", "--enable-lanthipeptides"],
                                     isolated=True, modules=antismash.get_all_modules())
-        self.set_fimo_enabled(False)
-        assert lanthi_config.get_config().fimo_present is False
+        self.set_fimo_enabled(True)
+        assert lanthi_config.get_config().fimo_present is True
