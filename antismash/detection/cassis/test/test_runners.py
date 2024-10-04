@@ -9,11 +9,13 @@ from shutil import copy
 
 from antismash.common import path
 from antismash.common.subprocessing.memesuite import read_fimo_output
+from antismash.config.test.helpers import skip_without_fimo
 from antismash.detection.cassis import runners
 
 from .test_cassis import create_fake_record, CassisTestCore
 
 
+@skip_without_fimo
 class TestCassisRunners(CassisTestCore):
     def test_run_fimo(self):
         seq_record = create_fake_record()

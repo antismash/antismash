@@ -10,11 +10,13 @@ import unittest
 
 from antismash.common import path
 from antismash.config import destroy_config, build_config
+from antismash.config.test.helpers import skip_without_fimo_and_meme
 from antismash.detection import cassis
 
 from .test_cassis import create_fake_record
 
 
+@skip_without_fimo_and_meme
 class TestCassisMainMethod(unittest.TestCase):
     def setUp(self):
         # because the fake record has a very repetitive sequence, bump the max percentage to 100
