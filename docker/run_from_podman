@@ -24,13 +24,12 @@ if [ ! -d ${OUTPUT_DIR} ]; then
     mkdir -p ${OUTPUT_DIR}
 fi
 
-docker run \
+podman run \
     --volume ${INPUT_DIR}:${CONTAINER_SRC_DIR}:ro \
     --volume ${OUTPUT_DIR}:${CONTAINER_DST_DIR}:rw \
     --volume ${DATABASE_DIR}:${CONTAINER_DB_DIR}:ro \
     --detach=false \
     --rm \
-    --user=$(id -u):$(id -g) \
     docker.io/antismash/antismash-dev:latest \
     ${INPUT_FILE} \
     $@
