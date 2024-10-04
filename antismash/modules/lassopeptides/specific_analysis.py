@@ -27,9 +27,8 @@ from antismash.common import (
 from antismash.common.secmet import Record, CDSFeature, Protocluster, Prepeptide, GeneFunction
 from antismash.common.secmet.locations import location_from_string
 from antismash.common.secmet.qualifiers.prepeptide_qualifiers import LassoQualifier
-from antismash.config import get_config as get_global_config
+from antismash.config import get_config
 
-from .config import get_config as get_lasso_config
 
 # the size limits, in aminos, of a precursor CDS
 MIN_PRECURSOR_LENGTH = 20
@@ -583,7 +582,7 @@ def run_rodeo(record: Record, cluster: Protocluster, query: CDSFeature, leader: 
     fimo_scores: Dict[int, float] = {}
     motif_score = 0
 
-    if not get_global_config().without_fimo and get_lasso_config().fimo_present:
+    if get_config().fimo:
         # Incorporate motif scores
         fimo_motifs, motif_score, fimo_scores = identify_lasso_motifs(leader, core)
     rodeo_score += motif_score
@@ -726,7 +725,7 @@ def specific_analysis(record: Record) -> LassoResults:
     for motifs in results.motifs_by_locus.values():
         for motif in motifs:
             cores[motif.get_name().rsplit("_", 1)[0]] = motif.core
-    results.comparippson_results = comparippson.compare_precursor_cores(cores, get_global_config())
+    results.comparippson_results = comparippson.compare_precursor_cores(cores, get_config())
 
     logging.debug("Lassopeptide module marked %d motifs", motif_count)
     return results

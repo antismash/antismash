@@ -15,7 +15,6 @@ from antismash.common.secmet import Record
 from antismash.config import ConfigType
 from antismash.config.args import ModuleArgs
 
-from .config import get_config  # local config for fimo presence
 from .specific_analysis import run_specific_analysis, LanthiResults
 from .html_output import generate_html, will_handle
 
@@ -89,16 +88,14 @@ def check_prereqs(options: ConfigType) -> List[str]:
         subsection
     """
     failure_messages = []
-    for binary_name, optional in [('hmmpfam2', False), ('fimo', True)]:
-        present = True
+
+    binaries = ['hmmpfam2']
+    if options.fimo:
+        binaries.append('fimo')
+
+    for binary_name in binaries:
         if binary_name not in options.executables:
-            present = False
-            if not optional:
-                failure_messages.append(f"Failed to locate executable for {binary_name!r}")
-        slot = f"{binary_name}_present"
-        conf = get_config()
-        if hasattr(conf, slot):
-            setattr(conf, slot, present)
+            failure_messages.append(f"Failed to locate executable for {binary_name!r}")
 
     failure_messages.extend(prepare_data(logging_only=True))
     failure_messages.extend(comparippson.check_prereqs(options))

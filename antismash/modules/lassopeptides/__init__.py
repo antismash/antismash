@@ -14,7 +14,6 @@ from antismash.common.secmet import Record
 from antismash.config import ConfigType
 from antismash.config.args import ModuleArgs
 
-from .config import get_config as local_config
 from .specific_analysis import specific_analysis as run_analysis, LassoResults
 from .html_output import generate_html, will_handle
 
@@ -50,14 +49,14 @@ def prepare_data(logging_only: bool = False) -> List[str]:
 def check_prereqs(options: ConfigType) -> List[str]:
     """ Checks if the required external programs are available """
     failure_messages = []
-    for binary_name, optional in [('hmmpfam2', False), ('fimo', True)]:
-        present = True
+
+    binaries = ['hmmpfam2']
+    if options.fimo:
+        binaries.append('fimo')
+
+    for binary_name in binaries:
         if binary_name not in options.executables:
-            present = False
-            if not optional:
-                failure_messages.append(f"Failed to locate executable for {binary_name}")
-        if binary_name == "fimo":
-            local_config().fimo_present = present
+            failure_messages.append(f"Failed to locate executable for {binary_name}")
 
     failure_messages.extend(prepare_data(logging_only=True))
     failure_messages.extend(comparippson.check_prereqs(options))
