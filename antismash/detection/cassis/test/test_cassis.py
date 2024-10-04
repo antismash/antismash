@@ -54,7 +54,7 @@ def create_fake_record():
 class CassisTestCore(unittest.TestCase):
     def setUp(self):
         self.tempdir = TemporaryDirectory(prefix="as_cassis")
-        self.options = build_config(["--cpus", "2", "--output-dir", self.tempdir.name],
+        self.options = build_config(["--cpus", "2", "--output-dir", self.tempdir.name, "--cassis"],
                                     isolated=True, modules=[cassis])
 
     def tearDown(self):
@@ -390,6 +390,7 @@ class TestVersioning(unittest.TestCase):
     def setUp(self):
         self.config = Namespace()
         self.config.executables = Namespace()
+        self.config.cassis = True
 
     def check_with_version(self, fimo_version, meme_version):
         self.config.executables.meme = "meme"
