@@ -34,7 +34,7 @@ def run_rodeo(record: secmet.Record, query: secmet.CDSFeature, leader: str,
 
     fimo_scores: Dict[int, float] = {}
 
-    if not get_global_config().without_fimo and get_lanthi_config().fimo_present:
+    if get_global_config().with_fimo and get_lanthi_config().fimo_present:
         # Find motifs
         fimo_scores = identify_lanthi_motifs(leader, core)
 

@@ -586,7 +586,7 @@ def run_rodeo(record: Record, cluster: Protocluster, query: CDSFeature, leader: 
     fimo_scores: Dict[int, float] = {}
     motif_score = 0
 
-    if not get_global_config().without_fimo and get_lasso_config().fimo_present:
+    if get_global_config().with_fimo and get_lasso_config().fimo_present:
         # Incorporate motif scores
         fimo_motifs, motif_score, fimo_scores = identify_lasso_motifs(leader, core)
     rodeo_score += motif_score
