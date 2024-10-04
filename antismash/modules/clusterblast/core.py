@@ -9,13 +9,10 @@ import os
 from tempfile import NamedTemporaryFile
 from typing import Dict, Iterable, List, Set, Sequence, Tuple
 
-from helperlibs.wrappers.io import TemporaryDirectory
-
 from antismash.common import path, subprocessing, fasta, secmet
 from antismash.common.subprocessing.diamond import \
     check_diamond_files as check_clusterblast_files  # used by other components # pylint: disable=unused-import
 
-from antismash.common.subprocessing.blast import run_makeblastdb as make_blastdb
 from antismash.config import get_config
 
 from .data_structures import Subject, Query, Protein, ReferenceCluster, Score
@@ -216,23 +213,6 @@ def create_blast_inputs(region: secmet.Region) -> Tuple[List[str], List[str]]:
         seqs.append(cds.translation)
 
     return names, seqs
-
-
-def run_internal_blastsearch(query_filename: str) -> str:
-    """ Constructs a blast database from the query and runs blastp on it to
-        find internal matches
-
-        Arguments:
-            query_filename: the path of the query fasta file
-
-        Returns:
-            a string containing all blastp output
-    """
-    make_blastdb(query_filename, "internal_input.fasta")
-    run_blast("internal_input.fasta", "internal_input.fasta")
-    with open("internal_input.out", "r", encoding="utf-8") as handle:
-        blastoutput = handle.read()
-    return blastoutput
 
 
 def remove_duplicate_hits(blast_lines: List[List[str]]) -> List[List[str]]:
@@ -476,41 +456,6 @@ def find_internal_orthologous_groups(queries: Dict[str, Query], cluster_names: L
 
         groups.append(new_group)
     return [sorted(list(i)) for i in groups]
-
-
-def internal_homology_blast(record: secmet.Record) -> Dict[int, List[List[str]]]:
-    """ Run BLAST on gene cluster proteins of each cluster on itself to find
-        internal homologs
-        store groups of homologs - including singles - in a dictionary
-        as a list of lists accordingly
-
-        Arguments:
-            record: the Record to generate groups from
-
-        Returns:
-            a dictionary mapping cluster_number to
-                a list containing distinct groups represented by
-                    lists of query ids
-    """
-    with TemporaryDirectory(change=True):
-        logging.info("Finding internal homologs in each gene cluster...")
-        internalhomologygroups: Dict[int, List[List[str]]] = {}
-        for region in record.get_regions():
-            region_number = region.get_region_number()
-            if not region.cds_children:
-                internalhomologygroups[region_number] = []
-                continue
-            iquerycluster_names, iqueryclusterseqs = create_blast_inputs(region)
-            query_filename = "internal_input.fasta"
-            assert all(seq.strip() == seq for seq in iqueryclusterseqs)
-            fasta.write_fasta(list(map(str, range(len(iquerycluster_names)))), iqueryclusterseqs, query_filename)
-            blastoutput = run_internal_blastsearch(query_filename)
-            mapping = {str(i): name for i, name in enumerate(iquerycluster_names)}
-            queries, _ = blastparse(blastoutput, record, min_seq_coverage=25,
-                                    min_perc_identity=30, mapping=mapping)
-            groups = find_internal_orthologous_groups(queries, iquerycluster_names)
-            internalhomologygroups[region_number] = groups
-    return internalhomologygroups
 
 
 def parse_clusterblast_dict(queries: List[Query], clusters: Dict[str, ReferenceCluster],
