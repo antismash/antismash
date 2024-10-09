@@ -220,6 +220,13 @@ class DummyCandidateCluster(CandidateCluster):
             kwargs["circular_wrap_point"] = max(cluster.location.parts[0].end for cluster in clusters)
         super().__init__(kind, clusters, **kwargs)
 
+    def get_candidate_cluster_number(self):
+        # prevent failures when testing candidates in isolation from records
+        try:
+            return super().get_candidate_cluster_number()
+        except ValueError:
+            return -1
+
 
 def rotate(record: Record, cut_point: int, padding: int = 0) -> None:
     if len(record) < cut_point:
