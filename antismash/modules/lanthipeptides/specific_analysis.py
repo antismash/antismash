@@ -658,29 +658,21 @@ def result_vec_to_feature(orig_feature: CDSFeature, res_vec: Lanthipeptide) -> P
     return feature
 
 
-def find_neighbours_in_range(center: CDSFeature,
-                             candidates: Iterable[CDSFeature]) -> List[CDSFeature]:
+def find_neighbours_in_range(center: CDSFeature, candidates: Iterable[CDSFeature],
+                             record: Record) -> list[CDSFeature]:
     """ Restrict a set of genes to those within precursor range of a central
         gene.
 
         Arguments:
             center: the gene to find the neighbours of
             candidates: the genes to filter by range
+            record: the parent record
 
         Returns:
             a list of genes within range, with the same ordering as the input
     """
-    neighbours = []
-    for candidate in candidates:
-        if candidate < center:
-            if center.location.start - candidate.location.start <= MAX_PRECURSOR_DISTANCE:
-                neighbours.append(candidate)
-        else:
-            if candidate.location.end - center.location.end <= MAX_PRECURSOR_DISTANCE:
-                neighbours.append(candidate)
-            else:
-                # skip looking further to the right if the previous one was too far away
-                break
+    location = record.extend_location(center.location, MAX_PRECURSOR_DISTANCE)
+    neighbours = list(filter(lambda cds: cds.overlaps_with(location), candidates))
     return neighbours
 
 
@@ -703,7 +695,7 @@ def run_lanthi_on_genes(record: Record, focus: CDSFeature, cluster: Protocluster
     if not genes:
         return
     domains = get_detected_domains(cluster.cds_children)
-    non_candidate_neighbours = find_neighbours_in_range(focus, cluster.cds_children)
+    non_candidate_neighbours = find_neighbours_in_range(focus, cluster.cds_children, record)
     flavoprotein_found = contains_feature_with_domain(non_candidate_neighbours, {"Flavoprotein"})
     halogenase_found = contains_feature_with_domain(non_candidate_neighbours, {"Trp_halogenase"})
     oxygenase_found = contains_feature_with_domain(non_candidate_neighbours, {"p450"})
@@ -763,7 +755,7 @@ def run_specific_analysis(record: Record) -> LanthiResults:
                 precursor_candidates.append(orf)
 
         for gene in core_genes:
-            neighbours = find_neighbours_in_range(gene, precursor_candidates)
+            neighbours = find_neighbours_in_range(gene, precursor_candidates, record)
             if not neighbours:
                 continue
             run_lanthi_on_genes(record, gene, cluster, neighbours, results)

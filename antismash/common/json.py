@@ -25,7 +25,7 @@ from antismash.common.secmet.features import CDSFeature
 from antismash.common.secmet.qualifiers import NRPSPKSQualifier
 
 
-@dataclass
+@dataclass(slots=True)
 class JSONBase:
     """ A base class for JSON-serialisable objects """
 

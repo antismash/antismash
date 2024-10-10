@@ -35,21 +35,18 @@ class TestModuleJSON(unittest.TestCase):
         assert str(head_modules[0]) == "[C,A]"
         tail_info = CDSModuleInfo(self.tail, tail_modules)
         head_info = CDSModuleInfo(self.head, head_modules)
-        if self.head.location.strand == -1:
-            combine_modules(tail_info, head_info)
-        else:
-            combine_modules(head_info, tail_info)
-        assert not tail_modules
+        combine_modules(tail_info, head_info)
+        assert not tail_modules, f"{head_modules}, {tail_modules}"
         assert str(head_modules[0]) == "[C,A,CP]"
 
         CDSResult(self.head_hits, [], head_modules).annotate_domains(self.record, self.head)
         CDSResult(self.tail_hits, [], []).annotate_domains(self.record, self.tail)
 
         domains = []
-        for cds in [self.tail, self.head][::self.head.location.strand]:  # keep strand in mind
+        for cds in [self.head, self.tail]:
             domains.extend(self.record.get_antismash_domains_in_cds(cds))
-
-        module = Module(domains, Module.types.NRPS, complete=True)
+        location = self.record.connect_locations([cds.location for cds in self.record.get_cds_features()])
+        module = Module(location, domains, module_type=Module.types.NRPS, complete=True)
         self.record.add_module(module)
 
         # ensure it's constructed as expected
@@ -83,6 +80,7 @@ class TestModuleJSON(unittest.TestCase):
         assert tail_json.multi_cds == "tail"
 
     def test_full_path_reverse_strand(self):
+        self.record = DummyRecord(length=23_000)
         self.tail = DummyCDS(locus_tag="tail", start=19_580, end=19_997, strand=-1)
         self.tail_hits = [DummyHMMResult("PCP", start=45, end=114)]
 
@@ -99,6 +97,7 @@ class TestModuleJSON(unittest.TestCase):
         self.check_conversion(module)
 
     def test_full_path_forward_strand(self):
+        self.record = DummyRecord(length=23_000)
         self.head = DummyCDS(locus_tag="head", start=20_000, end=22_547, strand=1)
         self.head_hits = [
             DummyHMMResult("Condensation_DCL", start=31, end=170),

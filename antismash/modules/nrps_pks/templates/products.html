@@ -8,7 +8,7 @@
       {% if candidate.smiles or candidate.polymer %}
         <div>
           <div class="prediction-text">
-            For candidate cluster {{candidate.number}}, location {{candidate.location.start}} - {{candidate.location.end}}:
+            For candidate cluster {{candidate.number}}, location {{candidate.start}} - {{candidate.end}}:
           {{collapser_start("CC%s" % candidate.number, level="candidate")}}
           {% if candidate.smiles %}
             <canvas id="smiles-canvas-{{region.anchor_id}}-{{candidate.number}}" class="smiles-canvas" data-smiles="{{candidate.smiles}}"></canvas>

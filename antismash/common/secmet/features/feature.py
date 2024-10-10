@@ -7,22 +7,23 @@ from collections import OrderedDict
 import logging
 from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar, Union
 
-from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
+from Bio.SeqFeature import SeqFeature
 from Bio.Seq import Seq
 
 from antismash.common.secmet.locations import (
     convert_protein_position_to_dna,
-    location_bridges_origin,
     location_contains_other,
+    location_from_biopython,
     locations_overlap,
+    split_origin_bridging_location,
 )
 
 from ..locations import (
     AfterPosition,
     BeforePosition,
-    frameshift_location_by_qualifier,
+    CompoundLocation,
+    FeatureLocation,
     Location,
-    location_contains_overlapping_exons,
 )
 
 T = TypeVar("T", bound="Feature")
@@ -40,9 +41,7 @@ class Feature:
     def __init__(self, location: Location, feature_type: str,
                  created_by_antismash: bool = False) -> None:
         assert isinstance(location, (FeatureLocation, CompoundLocation)), type(location)
-        if location_bridges_origin(location):
-            raise ValueError(f"Features that bridge the record origin cannot be directly created: {location}")
-        if location_contains_overlapping_exons(location):
+        if location.contains_overlapping_exons():
             raise ValueError(f"location contains overlapping exons: {location}")
         assert location.start <= location.end, f"Feature location invalid: {location}"
         if location.start < 0:
@@ -55,6 +54,22 @@ class Feature:
         self._qualifiers: Dict[str, Optional[List[str]]] = OrderedDict()
         self.created_by_antismash = bool(created_by_antismash)
         self._original_codon_start: Optional[int] = None
+
+    @property
+    def start(self) -> int:
+        """ The coordinate of the start of the feature.
+
+            NOTE: differs from the location.start, as that is the minimum coordinate
+        """
+        return self.location.parts[0].start if self.location.strand != -1 else self.location.parts[-1].start
+
+    @property
+    def end(self) -> int:
+        """ The coordinate of the end of the feature.
+
+            NOTE: differs from the location.end, as that is the maximum coordinate
+        """
+        return self.location.parts[-1].end if self.location.strand != -1 else self.location.parts[0].end
 
     @property
     def strand(self) -> int:
@@ -185,6 +200,10 @@ class Feature:
             return location_contains_other(other, self.location)
         raise TypeError(f"Container must be a Feature, CompoundLocation or FeatureLocation, not {type(other)}")
 
+    def crosses_origin(self) -> bool:
+        """ Returns True if the feature crosses the origin """
+        return self.location.crosses_origin()
+
     def to_biopython(self, qualifiers: Dict[str, Any] = None) -> List[SeqFeature]:
         """ Converts this feature into one or more SeqFeature instances.
 
@@ -208,26 +227,37 @@ class Feature:
         if self._original_codon_start is not None:
             start = self._original_codon_start + 1
             quals["codon_start"] = [str(start)]
-            feature.location = frameshift_location_by_qualifier(feature.location, start, undo=True)
+            feature.location = self.location.clone_with_frameshift(start, undo=True)
         # sorted here to match the behaviour of biopython
         for key, val in sorted(quals.items()):
             feature.qualifiers[key] = val
         assert isinstance(feature.qualifiers, dict)
         return [feature]
 
-    def __lt__(self, other: Union["Feature", FeatureLocation]) -> bool:
+    def __lt__(self, other: Union["Feature", Location]) -> bool:
         """ Allows sorting Features by location without key complication """
-        if isinstance(other, FeatureLocation):
+        if isinstance(other, (CompoundLocation, FeatureLocation)):
             location = other
         else:
-            assert isinstance(other, Feature)
+            assert isinstance(other, Feature), type(other)
             location = other.location
 
-        if self.location.start < location.start:
-            return True
-        if self.location.start == location.start:
-            return self.location.end < location.end
-        return False
+        def get_comparator(loc: Location) -> tuple[int, int]:
+            start = loc.start
+            if loc.crosses_origin():
+                _, head = split_origin_bridging_location(loc)
+                start = min(part.start for part in head) - max(part.end for part in head)
+            return (start, len(loc))
+
+        left = get_comparator(self.location)
+        right = get_comparator(location)
+
+        # some special handling of cases where coordinates are the same
+        if left == right:
+            # a 'source' feature should always comes first in case of a tie
+            if self.type == "source":
+                return True
+        return left < right
 
     def __str__(self) -> str:
         return repr(self)
@@ -255,7 +285,7 @@ class Feature:
         """
         assert issubclass(cls, Feature)
         if feature is None:
-            feature = cls(bio_feature.location, bio_feature.type)
+            feature = cls(location_from_biopython(bio_feature.location), bio_feature.type)
             if not leftovers:
                 assert isinstance(bio_feature.qualifiers, dict)
                 leftovers = bio_feature.qualifiers.copy()
@@ -266,7 +296,7 @@ class Feature:
             if "codon_start" in leftovers:
                 start = leftovers.pop("codon_start")[0]
                 # adjust the location for now until converting back to biopython if required
-                feature.location = frameshift_location_by_qualifier(feature.location, start)
+                feature.location = feature.location.clone_with_frameshift(start)
                 feature._original_codon_start = int(start) - 1
 
             feature._qualifiers.update(leftovers)  # shouldn't be a public thing, so pylint: disable=protected-access

@@ -10,22 +10,27 @@ import unittest
 from unittest.mock import patch
 
 from antismash.common import secmet
+from antismash.common.secmet import locations as module
 from antismash.common.secmet.locations import (
     _adjust_location_by_offset as adjust,
     convert_protein_position_to_dna,
     build_location_from_others,
+    connect_locations,
     ensure_valid_locations,
-    get_distance_between_locations,
-    location_bridges_origin as is_bridged,
+    get_distance_between_locations as _get_distance_between_locations,
+    location_bridges_origin,
     split_origin_bridging_location as splitter,
-    location_contains_other,
-    location_contains_overlapping_exons as overlapping_exons,
+    _split_sections_around_origin as split_around_origin,
+    location_contains_other as _location_contains_other,
+    location_contains_overlapping_exons,
     location_from_string,
     locations_overlap,
-    combine_locations,
-    offset_location,
+    make_forwards,
+    offset_location as _offset_location,
     remove_redundant_exons,
     FeatureLocation,
+    _SimpleLocation as BioSimple,
+    _CompoundLocation as BioCompound,
     CompoundLocation,
     AfterPosition,
     BeforePosition,
@@ -35,9 +40,146 @@ from antismash.common.secmet.locations import (
 )
 
 
-class TestProteinPositionConversion(unittest.TestCase):
+class TestConnectLocations(unittest.TestCase):
     def setUp(self):
-        self.func = convert_protein_position_to_dna
+        self.func = connect_locations
+
+    def test_finding_shortest_path(self):
+        locations = [FeatureLocation(5, 10, 1), FeatureLocation(90, 95, 1)]
+        # with the origin not set, the record isn't circular and the joined location
+        # will be the long way around, covering most of the record
+        expected_simple = FeatureLocation(5, 95, 1)
+        result = self.func(locations)
+        assert result == expected_simple
+        # but when the origin is set, and would provide a shorter path, the joined
+        # location will cross the origin
+        result = self.func(locations, wrap_point=100)
+        assert result == CompoundLocation([FeatureLocation(90, 100, 1), FeatureLocation(0, 10, 1)])
+        # and to check that the distance calculation actually chooses the shortest path
+        result = self.func(locations, wrap_point=200)
+        assert result == expected_simple
+
+    def test_cross_origin_inputs(self):
+        # when two locations cross the origin, they should still end up with just two parts
+        expected = CompoundLocation([FeatureLocation(7644228, 7663439, 1), FeatureLocation(0, 9008, 1)])
+        result = self.func([
+            CompoundLocation([FeatureLocation(7644228, 7663439, 1), FeatureLocation(0, 19, 1)]),
+            CompoundLocation([FeatureLocation(7663426, 7663439, 1), FeatureLocation(0, 9008, 1)]),
+        ], wrap_point=7663439)
+        assert result == expected
+
+    def test_cross_origin_inputs_reverse(self):
+        # when two locations cross the origin, they should still end up with just two parts
+        expected = CompoundLocation([FeatureLocation(7644228, 7663439, 1), FeatureLocation(0, 9008, 1)])
+        result = self.func([
+            CompoundLocation([FeatureLocation(0, 19, -1), FeatureLocation(7644228, 7663439, -1)]),
+            CompoundLocation([FeatureLocation(0, 9008, -1), FeatureLocation(7663426, 7663439, -1)]),
+        ], wrap_point=7663439)
+        assert result == expected
+
+    def test_cross_origin_in_linear(self):
+        location = CompoundLocation([FeatureLocation(760, 766, 1), FeatureLocation(0, 90, 1)])
+        with self.assertRaisesRegex(ValueError, "origin-bridging .* requires the record length"):
+            self.func([location])
+
+    def test_contained(self):
+        # if one of the ocations is contained by a cross-origin location, it shouldn't break
+        expected = CompoundLocation([FeatureLocation(760, 766, 1), FeatureLocation(0, 90, 1)])
+        result = self.func([expected, expected.parts[1]], wrap_point=766)
+        assert result == expected
+
+    def test_most_of_area(self):
+        record_length = 98206
+        locations = [
+            CompoundLocation([
+                FeatureLocation(65398, record_length, 1),
+                FeatureLocation(0, 52159, 1),
+            ]),
+            CompoundLocation([
+                FeatureLocation(93497, record_length, 1),
+                FeatureLocation(0, 52159, 1),
+            ]),
+            FeatureLocation(7053, 52159, 1),  # more than half of the record
+        ]
+        result = self.func(locations, wrap_point=record_length)
+        assert result.crosses_origin()
+        assert result == CompoundLocation([
+            FeatureLocation(65398, record_length, 1),
+            FeatureLocation(0, 52159, 1),
+        ])
+
+    def test_overlap(self):
+        locations = [FeatureLocation(0, 60, 1), FeatureLocation(50, 100, 1)]
+        # both with and without circularity, the end result should be a non-compound location
+        # covering the full record
+        expected = FeatureLocation(0, 100, 1)
+        for record_length in [10, 100]:
+            result = self.func(locations, wrap_point=record_length)
+            assert result == expected
+        assert self.func(locations) == expected
+        with self.assertRaises(AssertionError):
+            self.func(locations, wrap_point=0)
+
+    def test_overlaps(self):
+        locations = [
+            CompoundLocation([
+                FeatureLocation(85_241, 172_542, strand=1),
+                FeatureLocation(0, 85_240, strand=1)
+            ], 'join'),
+            CompoundLocation([
+                FeatureLocation(89_576, 172_542, strand=1),
+                FeatureLocation(0, 89_575, strand=1)
+            ], 'join'),
+            FeatureLocation(47_775, 96_472, strand=1),
+            FeatureLocation(57_556, 100_658, strand=1),
+            FeatureLocation(78_493, 125_885, strand=1)
+        ]
+        wrap_point = 172_542
+        result = self.func(locations, wrap_point=wrap_point)
+        assert result == FeatureLocation(0, 172_542, strand=1)
+
+    def test_odd(self):
+        locations = [
+            FeatureLocation(331_108, 332_344, strand=1),
+            FeatureLocation(24, 831, strand=1),
+            FeatureLocation(975, 1137, strand=1),
+            FeatureLocation(1764, 2247, strand=1),
+        ]
+        wrap_point = 340_000
+        result = self.func(locations, wrap_point=wrap_point)
+        assert len(result.parts) == 2
+        assert result.parts[0] == FeatureLocation(331_108, 340_000, 1)
+        assert result.parts[1] == FeatureLocation(0, 2247, 1)
+
+    def test_short_circularity(self):
+        locations = [
+            FeatureLocation(28415, 31286, 1),
+            FeatureLocation(33590, 36737, 1),
+        ]
+        wrap_point = 66521
+        # check without the internal splitting around origin, in case that's at fault
+        for pairing in [([], list(locations)), (list(locations), [])]:
+            with patch.object(module, "_split_sections_around_origin", return_value=pairing):
+                result = self.func(locations, wrap_point=wrap_point)
+                assert len(result.parts) == 1, str(result)
+                assert result == FeatureLocation(28415, 36737, 1)
+
+    def test_splitting_around_origin(self):
+        locations = [
+            FeatureLocation(28415, 31286, 1),
+            FeatureLocation(33590, 36737, 1),
+        ]
+        wrap_point = 66521
+        result = split_around_origin(list(locations), wrap_point)
+        assert result == (locations, [])
+
+
+class TestProteinPositionConversion(unittest.TestCase):
+    def func(self, start, end, location):
+        static = convert_protein_position_to_dna(start, end, location)
+        dynamic = location.convert_protein_position_to_dna(start, end)
+        assert static == dynamic
+        return static
 
     def test_position_conversion_simple_forward(self):
         location = FeatureLocation(0, 15, strand=1)
@@ -170,6 +312,13 @@ def build_compound(pairs, strand, operator="join"):
     return CompoundLocation(parts, operator=operator)
 
 
+def is_bridged(location, **kwargs):
+    static = location_bridges_origin(location, **kwargs)
+    dynamic = location.crosses_origin(**kwargs)
+    assert static == dynamic
+    return static
+
+
 class TestBridgeDetection(unittest.TestCase):
     def test_forward(self):
         assert is_bridged(build_compound([(9, 12), (0, 3)], 1))
@@ -200,7 +349,8 @@ class TestBridgeDetection(unittest.TestCase):
     def test_bad_strand(self):
         pairs = [(9, 12), (0, 3)]
         assert is_bridged(build_compound(pairs, 1))
-        assert not is_bridged(build_compound(pairs, None))
+        assert is_bridged(build_compound(pairs, None))
+        assert not is_bridged(build_compound(pairs, -1))
 
     def test_not_bridged(self):
         assert not is_bridged(build_compound([(1, 6), (5, 10)], 1))
@@ -365,39 +515,6 @@ class TestLocationSerialiser(unittest.TestCase):
             assert new_location.strand == strand
 
 
-class TestCombiner(unittest.TestCase):
-    def make(self, start, end):
-        return FeatureLocation(start, end)
-
-    def test_individual(self):
-        loc = combine_locations(self.make(3, 7), self.make(5, 9))
-        assert loc.start == 3 and loc.end == 9
-        loc = combine_locations(self.make(3, 5), self.make(7, 9))
-        assert loc.start == 3 and loc.end == 9
-        loc = combine_locations(self.make(7, 9), self.make(3, 5))
-        assert loc.start == 3 and loc.end == 9
-
-        # it's silly, but since it theoretically is useful for CompoundLocation condensing
-        loc = combine_locations(self.make(0, 5))
-        assert loc.start == 0 and loc.end == 5
-        loc = combine_locations(CompoundLocation([self.make(0, 3), self.make(6, 9)]))
-        assert loc.start == 0 and loc.end == 9 and len(loc.parts) == 1
-
-    def test_list(self):
-        loc = combine_locations([self.make(i, i+1) for i in range(10, 20)])
-        assert loc.start == 10 and loc.end == 20
-
-    def test_generator(self):
-        loc = combine_locations(i for i in [self.make(i, i+1) for i in range(10, 20)])
-        assert loc.start == 10 and loc.end == 20
-
-    def test_invalid(self):
-        with self.assertRaisesRegex(TypeError, "object is not iterable"):
-            combine_locations(0)
-        with self.assertRaisesRegex(AttributeError, "has no attribute 'start'"):
-            combine_locations(0, 1)
-
-
 class TestOverlaps(unittest.TestCase):
     def test_simple_simple(self):
         assert not locations_overlap(FeatureLocation(1, 5, strand=1), FeatureLocation(10, 15, strand=1))
@@ -434,6 +551,16 @@ class TestOverlaps(unittest.TestCase):
         second = build_compound([(12, 18), (32, 38), (42, 58)], strand=-1)
         assert locations_overlap(first, second)
         assert locations_overlap(second, first)
+
+
+def location_contains_other(outer, inner):
+    static = _location_contains_other(outer, inner)
+    dynamic = outer.contains(inner)
+    assert isinstance(outer, (CompoundLocation, FeatureLocation))
+    assert isinstance(inner, (CompoundLocation, FeatureLocation))
+    builtin = inner in outer
+    assert static == dynamic == builtin
+    return static
 
 
 class TestContainsOther(unittest.TestCase):
@@ -476,6 +603,13 @@ class TestContainsOther(unittest.TestCase):
 
         compound = build_compound([(10, 20), (20, 40), (50, 60)], strand=1)
         assert not location_contains_other(simple, compound)
+
+
+def overlapping_exons(location):
+    static = location_contains_overlapping_exons(location)
+    dynamic = location.contains_overlapping_exons()
+    assert static == dynamic
+    return static
 
 
 class TestOverlappingExons(unittest.TestCase):
@@ -526,14 +660,6 @@ class TestEnsureValid(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "contains overlapping exons"):
             self.check(features)
 
-    @patch.object(secmet.locations, "location_bridges_origin", return_value=True)
-    def test_too_many_in_circular(self, _patched_bridge):
-        features = [SeqFeature(build_compound([(10, 30), (0, 9)], -1), type="CDS"),
-                    SeqFeature(build_compound([(10, 30), (0, 9)], -1), type="gene"),
-                    SeqFeature(build_compound([(10, 30), (0, 9)], -1), type="CDS")]
-        with self.assertRaisesRegex(ValueError, "inconsistent exon ordering"):
-            self.check(features, circular=True)
-
 
 class TestLocationAdjustment(unittest.TestCase):
     def setUp(self):
@@ -583,6 +709,13 @@ class TestLocationAdjustment(unittest.TestCase):
                     assert old_part is new_part
 
 
+def offset_location(location, offset, **kwargs):
+    static = _offset_location(location, offset, **kwargs)
+    dynamic = location.clone_with_offset(offset, **kwargs)
+    assert static == dynamic
+    return static
+
+
 class TestOffset(unittest.TestCase):
     def test_simple(self):
         for strand in [-1, None, 1]:
@@ -610,6 +743,72 @@ class TestOffset(unittest.TestCase):
                     assert new.end == old.end + offset
                     assert new.strand == old.strand
                     assert new.operator == old.operator
+
+    def test_wrapping_starting_compound(self):
+        loc = CompoundLocation([FeatureLocation(54616, 55016, 1), FeatureLocation(0, 1403, 1)])
+        new = offset_location(loc, -41624, wrap_point=55016)
+        assert new == FeatureLocation(12992, 14795, 1)
+
+        # offsets in either direction that land on the wrapping point need to be equivalent
+        expected = FeatureLocation(0, 200, 1)
+        loc = CompoundLocation([FeatureLocation(400, 500, 1), FeatureLocation(0, 100, 1)])
+        for offset in [-400, 100]:
+            new = offset_location(loc, offset, wrap_point=500)
+            assert new == expected
+
+    def test_wrapping_full_width(self):
+        full_len = 55016
+        loc = FeatureLocation(0, full_len, 1)
+        new = offset_location(loc, - full_len // 2, wrap_point=full_len)
+        assert new == loc
+
+    def test_wrapping_simple(self):
+        loc = FeatureLocation(5, 15, 1)
+        assert offset_location(loc, 5, wrap_point=30) == FeatureLocation(10, 20, 1)
+        loc = FeatureLocation(5, 15, 1)
+        assert offset_location(loc, -20, wrap_point=30) == FeatureLocation(15, 25, 1)
+
+    def test_newly_wrapped(self):
+        loc = FeatureLocation(5, 15, 1)
+        new = offset_location(loc, 20, wrap_point=30)
+        expected = CompoundLocation([
+            FeatureLocation(25, 30, 1),
+            FeatureLocation(0, 5, 1),
+        ])
+        assert new == expected
+
+        # and with negative offset
+        new = offset_location(loc, -10, wrap_point=20)
+        expected = CompoundLocation([
+            FeatureLocation(15, 20, 1),
+            FeatureLocation(0, 5, 1),
+        ])
+        assert new == expected
+
+    def test_wrap_point(self):
+        loc = FeatureLocation(5, 10, 1)
+        for bad in [-5]:
+            with self.assertRaisesRegex(ValueError, "must be positive"):
+                offset_location(loc, 10, wrap_point=bad)
+
+    def test_offset_also_cross_origin(self):
+        # where a location already crosses the origin but the offset doesn't change that
+        old = CompoundLocation([
+            FeatureLocation(95, 100, 1),
+            FeatureLocation(0, 5, 1)
+        ])
+        new = offset_location(old, 2, wrap_point=old.end)
+        assert new.crosses_origin()
+        assert new.parts[0].start == 97
+        assert new.parts[1].end == 7
+
+    def test_zero_offset(self):
+        old = CompoundLocation([
+            FeatureLocation(95, 100, 1),
+            FeatureLocation(0, 5, 1)
+        ])
+        new = offset_location(old, 0, wrap_point=old.end)
+        assert old == new
 
 
 class TestRemoveRedundant(unittest.TestCase):
@@ -656,6 +855,34 @@ class TestRemoveRedundant(unittest.TestCase):
                 self.check_ordering(strand=strand, operator=operator)
 
 
+class TestConversion(unittest.TestCase):
+    def test_convert_compound(self):
+        parts = [
+            BioSimple(1, 6, strand=1),
+            BioSimple(10, 12, strand=1),
+        ]
+        bio = BioCompound(parts)
+        location = CompoundLocation.from_biopython(bio)
+        assert isinstance(location, CompoundLocation)
+        assert not isinstance(bio, CompoundLocation)
+        assert bio == location
+
+    def test_convert_simple(self):
+        for strand in [1, -1]:
+            bio = BioSimple(1, 6, strand=strand)
+            location = FeatureLocation.from_biopython(bio)
+            assert isinstance(location, FeatureLocation)
+            assert not isinstance(bio, FeatureLocation)
+            assert bio == location
+
+
+def get_distance_between_locations(first, second, **kwargs):
+    static = _get_distance_between_locations(first, second, **kwargs)
+    dynamic = first.get_distance_to(second, **kwargs)
+    assert static == dynamic
+    return static
+
+
 class TestDistance(unittest.TestCase):
     def setUp(self):
         self.low = FeatureLocation(10, 20, 1)
@@ -683,3 +910,36 @@ class TestDistance(unittest.TestCase):
         assert locations_overlap(self.high, self.low)
         distance = get_distance_between_locations(self.low, self.high)
         assert distance == 0 == get_distance_between_locations(self.high, self.low)
+
+
+class TestMakingStrandForwards(unittest.TestCase):
+    def setUp(self):
+        self.func = make_forwards
+
+    def test_forward_simple(self):
+        location = FeatureLocation(0, 50, 1)
+        assert self.func(location) == FeatureLocation(0, 50, 1)
+
+    def test_reverse_simple(self):
+        location = FeatureLocation(0, 50, -1)
+        assert self.func(location) == FeatureLocation(0, 50, 1)
+
+    def test_forward_compound(self):
+        parts = [FeatureLocation(0, 50, 1), FeatureLocation(60, 70, 1)]
+        location = CompoundLocation(parts)
+        assert self.func(location) == CompoundLocation([FeatureLocation(f.start, f.end, 1) for f in parts])
+
+    def test_reverse_compound(self):
+        parts = [FeatureLocation(60, 70, -1), FeatureLocation(0, 50, -1)]
+        location = CompoundLocation(parts)
+        assert self.func(location) == CompoundLocation([FeatureLocation(f.start, f.end, 1) for f in parts[::-1]])
+
+    def test_forward_cross_origin(self):
+        parts = [FeatureLocation(60, 70, 1), FeatureLocation(0, 50, 1)]
+        location = CompoundLocation(parts)
+        assert self.func(location) == CompoundLocation([FeatureLocation(f.start, f.end, 1) for f in parts])
+
+    def test_reverse_cross_origin(self):
+        parts = [FeatureLocation(0, 50, -1), FeatureLocation(60, 70, -1)]
+        location = CompoundLocation(parts)
+        assert self.func(location) == CompoundLocation([FeatureLocation(f.start, f.end, 1) for f in parts[::-1]])

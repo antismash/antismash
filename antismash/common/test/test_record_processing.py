@@ -38,6 +38,13 @@ class TestParseRecords(unittest.TestCase):
         assert len(records[0].get_cds_features()) == 2
         assert len(records[0].seq) == 4990
 
+    def test_cross_origin_trim(self):
+        record = DummyRecord(length=20, circular=True)
+        bio_record = record.to_biopython()
+        with self.assertRaisesRegex(ValueError, "cannot be used for a cross-origin"):
+            with mock.patch.object(record_processing, "_strict_parse", return_value=[bio_record]):
+                record_processing.parse_input_sequence("dummy_filename", start=15, end=5)
+
     def test_minimum_length(self):
         nisin_path = helpers.get_path_to_nisin_genbank()
         records = record_processing.parse_input_sequence(nisin_path,

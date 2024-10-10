@@ -18,8 +18,8 @@
  {%- if ec_numbers -%}
   EC-Number(s): {{ec_numbers}}<br>
  {%- endif -%}
- Location: {{ "{:,d}".format(feature.location.start + 1) }} - {{ "{:,d}".format(feature.location.end) }},
- (total: {{feature.location | length}} nt{%- if (feature.location.parts | length) > 1 -%} , excluding introns{%- endif -%} )<br>
+ Location: {{ "{:,d}".format(feature.start + 1) }} - {{ "{:,d}".format(feature.end) }},
+ (total: {{feature.location | length}} nt{%- if (feature.location.parts | length) > 1 -%}, excluding introns{%- endif -%})<br>
  <br>
  {%- for gene_function in feature.gene_functions -%}
   {{ gene_function }}<br>
@@ -72,7 +72,7 @@
 <div class="focus-urls">
  {{build_blastp_link(feature.get_name(), "NCBI BlastP on this gene")}}<br>
  <span class="asdb-linkout link-like wildcard-container" data-locus="{{feature.get_name()}}" data-wildcard-attrs="data-seq" data-seq="{{replace_with('translation')}}">Blast against antiSMASH-database</span><br>
- {%- if add_ncbi_context -%}
+ {%- if add_ncbi_context and not feature.crosses_origin() -%}
  <a href="{{urls['context']}}" target="_new">View genomic context</a><br>
  {%- endif -%}
  {%- if urls['mibig'] -%}
