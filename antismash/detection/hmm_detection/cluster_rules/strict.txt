@@ -130,7 +130,7 @@ RULE CDPS
     RELATED Flavoprotein, 2OG-FeII_Oxy, p450
     CUTOFF 5
     NEIGHBOURHOOD 10
-    CONDITIONS CDPS or cycdipepsynth
+    CONDITIONS CDPS
 
 RULE CDPS_fung
     CATEGORY NRPS
