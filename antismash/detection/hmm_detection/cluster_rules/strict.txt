@@ -132,6 +132,15 @@ RULE CDPS
     NEIGHBOURHOOD 10
     CONDITIONS CDPS or cycdipepsynth
 
+RULE CDPS_fung
+    CATEGORY NRPS
+    DESCRIPTION Fungal cyclodipeptide synthases
+    EXAMPLE NCBI NC_006039.1 1709494-1717470 pulcherrimin
+    RELATED p450
+    CUTOFF 5
+    NEIGHBOURHOOD 10
+    CONDITIONS CDPS_fung
+
 RULE RCDPS
     CATEGORY NRPS
     DESCRIPTION fungal tRNA-dependent arginine-containing cyclodipeptide synthases
