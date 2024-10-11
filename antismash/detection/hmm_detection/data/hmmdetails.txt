@@ -129,7 +129,6 @@ TIGR03604	Bacteriocin biosynthesis docking scaffold	219	TIGR03604.hmm
 TIGR03605	SagB-type dehydrogenase	200	TIGR03605.hmm
 Neocarzinostat	Neocarzinostatin-like protein	28	Neocarzinostat.hmm
 cyanobactin_synth	Cyanobactin protease	80	cyanobactin_synth.hmm
-cycdipepsynth	Cyclodipeptide synthase	110	cycdipepsynth.hmm
 bcpB	BcpB-like phosphomutase	400	bcpB.hmm
 frbD	FrbD-like phosphomutase	350	frbD.hmm
 mitE	MitE-like CoA-ligase	400	mitE.hmm
