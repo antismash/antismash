@@ -4,10 +4,9 @@
 # for test files, silence irrelevant and noisy pylint warnings
 # pylint: disable=use-implicit-booleaness-not-comparison,protected-access,missing-docstring,too-many-public-methods
 
-import json
 import unittest
 
-from antismash.common import path
+from antismash.common import json, path
 from antismash.common.test.helpers import DummyHMMResult
 from antismash.common.secmet.test.helpers import DummyCDS
 from antismash.detection import nrps_pks_domains
@@ -144,6 +143,15 @@ class TestModule(unittest.TestCase):
         assert new._starter.label == PKS_START
         assert not new._end
 
+    def test_cal_complete(self):
+        module = build_module(["CAL_domain", CP])
+        assert module.is_complete()
+        assert module.get_monomer("AHBA") == "AHBA"
+
+    def test_cal_modifications(self):
+        module = build_module(["CAL_domain", "PKS_KR", CP])
+        assert module.get_monomer("AHBA") == "ohAHBA"
+
     def test_methylations(self):
         pks = build_module([PKS_START, PKS_LOAD])
         # mmal is a methylated malonyl-CoA, so it should look the same
@@ -255,6 +263,16 @@ class TestModule(unittest.TestCase):
         module = build_module([PKS_START, CP], [TRANS_AT_SUBTYPE])
         assert module.is_trans_at()
         assert module.is_complete()
+
+        # without matching subtype is fine if the matching docking domain is present
+        module = build_module([PKS_START, "Trans-AT_docking", CP])
+        assert module.is_trans_at()
+        assert module.is_complete()
+
+        # but the loader must still be missing
+        module = build_module([PKS_START, PKS_LOAD, "Trans-AT_docking", CP])
+        assert not module.is_trans_at()
+        assert module.is_complete()  # still complete, just a little strange
 
     def test_trailing_modifiers(self):
         error = "modification domain after carrier protein"
@@ -537,3 +555,13 @@ class TestMerging(unittest.TestCase):
             assert len(head.modules) == 1
             # the module after the merged split should be unchanged
             assert [comp.domain.hit_id for comp in tail.modules[0].components] == last
+
+    def test_merge_leading_ks(self):
+        head = CDSModuleInfo(DummyCDS(start=50, end=100), [build_module(["PKS_KS"])])
+        tail = CDSModuleInfo(DummyCDS(start=150, end=200), [build_module([PKS_LOAD, CP])])
+        combined = combine_modules(head, tail)
+        print(head.modules, tail.modules)
+        assert len(tail.modules) == 0
+        assert len(head.modules) == 1
+        assert head.modules[0] is combined
+        assert len(combined.components) == 3

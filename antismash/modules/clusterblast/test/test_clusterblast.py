@@ -17,9 +17,7 @@ from antismash.common.secmet import Record
 from antismash.common.secmet.test.helpers import (
     DummyCDS,
     DummyRegion,
-    DummySubRegion,
 )
-from antismash.common.test.helpers import DummyRecord
 from antismash.modules import clusterblast
 from antismash.modules.clusterblast import core
 
@@ -32,10 +30,11 @@ class TestBlastParsing(unittest.TestCase):
     def parse_subject_wrapper(self, subject_line):
         seq_record = Record("dummy")
         seqlengths = {}
+        mapping = {}
         # used by core.parse_subject, but only if locus tag not in self.seqlengths
         with patch.object(core, 'get_cds_lengths', return_value={}):
             with patch.object(Record, 'get_cds_by_name', return_value=DummyCDS(1, 101)):
-                return core.parse_subject(subject_line, seqlengths, seq_record)
+                return core.parse_subject(subject_line, seqlengths, seq_record, mapping)
 
     def read_sample_data(self, filename="data/diamond_output_sample.txt"):
         with open(path.get_full_path(__file__, filename), "r", encoding="utf-8") as handle:
@@ -294,10 +293,11 @@ class TestSubjectParsing(unittest.TestCase):
         }
 
     def parse_subject_wrapper(self, subject_line):
+        mapping = {}
         # used by core.parse_subject, but only if locus tag not in self.seqlengths
         with patch.object(core, 'get_cds_lengths', returns=self.seqlengths):
             with patch.object(Record, 'get_cds_by_name', returns=DummyCDS(1, 301)):
-                return core.parse_subject(subject_line, self.seqlengths, self.seq_record)
+                return core.parse_subject(subject_line, self.seqlengths, self.seq_record, mapping)
 
     def test_all_parsing(self):
         # test known good input
@@ -607,18 +607,3 @@ class TestDataPreparation(unittest.TestCase):
         with patch.object(clusterblast, "check_clusterblast_files", returns=[]) as check:
             clusterblast.check_prereqs(options)
             check.assert_called_once()
-
-
-class TestInternalBlast(unittest.TestCase):
-    def setUp(self):
-        self.record = DummyRecord(seq="A"*100)
-        self.run = clusterblast.core.internal_homology_blast
-
-    @patch.object(clusterblast.core.fasta, "write_fasta",
-                  side_effect=RuntimeError("function should not have been called"))
-    def test_empty_regions(self, mocked_fasta):
-        region = DummyRegion(subregions=[DummySubRegion()])
-        self.record.add_region(region)
-        assert not region.cds_children
-        assert self.run(self.record) == {region.get_region_number(): []}
-        assert not mocked_fasta.called

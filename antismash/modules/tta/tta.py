@@ -16,7 +16,7 @@ from antismash.common.secmet.features import Feature, FeatureLocation
 from antismash.common.module_results import ModuleResults
 from antismash.config import ConfigType, get_config
 
-Codon = Tuple[int, int]  # keeping as a type style, so # pylint: disable=invalid-name
+Codon = Tuple[int, int]
 
 
 class TTAResults(ModuleResults):
@@ -45,12 +45,12 @@ class TTAResults(ModuleResults):
 
     def new_feature_from_other(self, feature: Feature, offset: int) -> Feature:
         """Create a misc_feature entry for a TTA codon on a given feature"""
-        if feature.strand == 1:
+        if feature.location.strand == 1:
             start = feature.location.start + offset
         else:
             start = feature.location.end - offset - 3
 
-        return self.new_feature_from_basics(start, feature.strand)
+        return self.new_feature_from_basics(start, feature.location.strand)
 
     def to_json(self) -> Dict[str, Any]:
         """ Construct a JSON representation of this instance """

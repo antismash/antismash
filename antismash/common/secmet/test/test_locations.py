@@ -15,6 +15,7 @@ from antismash.common.secmet.locations import (
     convert_protein_position_to_dna,
     build_location_from_others,
     ensure_valid_locations,
+    get_distance_between_locations,
     location_bridges_origin as is_bridged,
     split_origin_bridging_location as splitter,
     location_contains_other,
@@ -653,3 +654,32 @@ class TestRemoveRedundant(unittest.TestCase):
         for operator in ["order", "join"]:
             for strand in [1, -1]:
                 self.check_ordering(strand=strand, operator=operator)
+
+
+class TestDistance(unittest.TestCase):
+    def setUp(self):
+        self.low = FeatureLocation(10, 20, 1)
+        self.high = FeatureLocation(70, 80, 1)
+
+    def test_no_wrapping(self):
+        distance = get_distance_between_locations(self.low, self.high)
+        assert distance == 50 == get_distance_between_locations(self.high, self.low)
+
+    def test_wrapping(self):
+        distance = get_distance_between_locations(self.low, self.high, wrap_point=100)
+        assert distance == 30 == get_distance_between_locations(self.high, self.low, wrap_point=100)
+
+    def test_closer_than_wrap(self):
+        low = FeatureLocation(103, 3085, 1)
+        high = FeatureLocation(3095, 4898, 1)
+        wrap = 45016
+        low_high = get_distance_between_locations(low, high, wrap_point=wrap)
+        high_low = get_distance_between_locations(high, low, wrap_point=wrap)
+        assert low_high == high_low
+        assert low_high == 10
+
+    def test_overlapping(self):
+        self.high = FeatureLocation(15, 30, 1)
+        assert locations_overlap(self.high, self.low)
+        distance = get_distance_between_locations(self.low, self.high)
+        assert distance == 0 == get_distance_between_locations(self.high, self.low)

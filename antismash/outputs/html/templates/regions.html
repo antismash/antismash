@@ -2,12 +2,13 @@
 
 {% for record in records %}
 {% set results = results_by_record_id[record.id] %}
+{% set show_tta = tta_name in results and record.get_gc_content() >= options.tta_threshold %}
 {% for region in record.regions %}
 <div class="page" id='{{region.anchor_id}}' style="display: none;">
  <div class="region-grid">
   <div class = "content">
     <div class ="description-container">
-      <div class="heading"> {{record.seq_record.name}} - Region {{region.get_region_number()}} - {{region.get_product_string()}} {{help_tooltip(svg_tooltip, "region_svg")}}</div>
+      <div class="heading"> {{record.id}} - Region {{region.get_region_number()}} - {{region.get_product_string()}} {{help_tooltip(svg_tooltip, "region_svg")}}</div>
       <div class="region-download">
         <a href = {{ '%s.region%03d.gbk' % (record.id, region.get_region_number()) }}>Download region GenBank file</a>
       </div>
@@ -47,7 +48,7 @@
                 <rect x=0 y=2 height=4 width=8 class="svgene-resistance"></rect>
             </svg>
         {% endcall %}
-        {% if tta_name in results and record.get_gc_content() >= options.tta_threshold %}
+        {% if show_tta %}
             {% call le.symbol_legend('legend-tta-codon', 'TTA codons') %}
                 <svg viewbox="0 0 6 6">
                     <polyline class="svgene-tta-codon" points="3,0 0,6 6,6 3,0">

@@ -23,7 +23,9 @@ class CDSCollection(Feature):
         A location is required and may extend beyond any CDSFeatures contained
         by the CDSCollection, but cannot be smaller than any CDS added.
     """
-    __slots__ = ["_parent_record", "_contig_edge", "_cdses", "_children", "_parent"]
+    __slots__ = ["_parent_record", "_contig_edge", "_cdses", "_children", "_parent",
+                 "_cds_cache", "_cds_cache_dirty",
+                 ]
 
     def __init__(self, location: FeatureLocation, feature_type: str,
                  child_collections: Sequence["CDSCollection"] = None) -> None:
@@ -31,6 +33,8 @@ class CDSCollection(Feature):
         self._parent_record: Any = None  # should be Record but will cause circular dependencies
         self._contig_edge = False
         self._cdses: Dict[CDSFeature, None] = OrderedDict()
+        self._cds_cache: tuple[CDSFeature, ...]
+        self._cds_cache_dirty: bool = True
         self._children = child_collections
         self._parent: Optional["CDSCollection"] = None
         if self._children:
@@ -61,7 +65,7 @@ class CDSCollection(Feature):
         if isinstance(other, CDSFeature):
             return other in self._cdses
         if isinstance(other, CDSCollection) and self._children:
-            return other in self._children
+            return any(other is child or other in child for child in self._children)
         return False
 
     @property
@@ -122,6 +126,7 @@ class CDSCollection(Feature):
         if not cds.is_contained_by(self):
             raise ValueError("CDS added is not contained by collection")
         self._cdses[cds] = None
+        self._cds_cache_dirty = True
         if not self._children:
             return
         for child in self._children:
@@ -132,7 +137,10 @@ class CDSCollection(Feature):
     def cds_children(self) -> Tuple[CDSFeature, ...]:
         """ Returns the CDSFeatures that have been added to this collection,
             in the order they were added """
-        return tuple(self._cdses)
+        if self._cds_cache_dirty:
+            self._cds_cache = tuple(self._cdses)
+            self._cds_cache_dirty = False
+        return self._cds_cache
 
     @classmethod
     def from_biopython(cls: Type[T], bio_feature: SeqFeature, feature: T = None,
@@ -144,7 +152,7 @@ class CDSCollection(Feature):
         contig_edge = leftovers.pop("contig_edge", [""])[0] == "True"
         if not feature:
             feature = cls(bio_feature.location, bio_feature.type)
-            feature._contig_edge = contig_edge  # pylint: disable=protected-access
+            feature._contig_edge = contig_edge
 
         # grab parent optional qualifiers
         super().from_biopython(bio_feature, feature=feature, leftovers=leftovers, record=record)

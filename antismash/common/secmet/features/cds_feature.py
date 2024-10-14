@@ -10,7 +10,6 @@ from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar
 from Bio.Data import CodonTable, IUPACData
 from Bio.SeqFeature import SeqFeature
 
-from antismash.common.secmet import features
 from antismash.common.secmet.qualifiers import (
     GeneFunction,
     GeneFunctionAnnotations,
@@ -18,6 +17,7 @@ from antismash.common.secmet.qualifiers import (
     SecMetQualifier,
 )
 
+from .cds_motif import CDSMotif
 from ..errors import SecmetInvalidInputError
 from ..locations import (
     AfterPosition,
@@ -27,6 +27,7 @@ from ..locations import (
 )
 from .feature import Feature, pop_locus_qualifier
 from .module import Module
+from .abstract import AbstractRegion  # not the concrete class, because that's a circular dependency
 
 _VALID_TRANSLATION_CHARS = set(IUPACData.extended_protein_letters)
 T = TypeVar("T", bound="CDSFeature")
@@ -166,10 +167,10 @@ class CDSFeature(Feature):
         self._nrps_pks = NRPSPKSQualifier(self.location.strand)
 
         self._modules: List[Module] = []
-        self.motifs: List[features.CDSMotif] = []
+        self.motifs: List[CDSMotif] = []
 
         # runtime-only data
-        self.region: Optional[features.Region] = None
+        self.region: Optional[AbstractRegion] = None
         self.unique_id: Optional[str] = None  # set only when added to a record
 
     @property
@@ -225,7 +226,10 @@ class CDSFeature(Feature):
             raise ValueError(f"invalid translation characters: {invalid}")
         if not _is_valid_translation_length(translation, self.location):
             raise ValueError(f"translation longer than location allows: {len(translation) * 3} > {len(self.location)}")
-        self._translation = translation  # pylint: disable=attribute-defined-outside-init
+        # finally, any alternate start codon should be changed to methionine
+        if translation[0] != "M":
+            translation = "M" + translation[1:]
+        self._translation = translation
 
     @property
     def modules(self) -> Tuple[Module, ...]:
@@ -269,9 +273,9 @@ class CDSFeature(Feature):
         gene = leftovers.pop("gene", [None])[0]
         if not (gene or protein_id or locus_tag):
             if "pseudo" in leftovers or "pseudogene" in leftovers:
-                gene = "pseudo%s_%s"
+                gene = "pseudo%d_%d"
             else:
-                gene = "cds%s_%s"
+                gene = "cds%d_%d"
             gene = gene % (bio_feature.location.start, bio_feature.location.end)
         name = locus_tag or protein_id or gene
 

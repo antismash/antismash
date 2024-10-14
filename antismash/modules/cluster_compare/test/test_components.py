@@ -21,7 +21,7 @@ class TestGatherRef(unittest.TestCase):
         result = components.gather_reference_components(self.ref)
         assert result is self.ref._components is self.ref.get_component_data()
         assert components.gather_reference_components(self.ref) is result
-        assert result == components.Components({}, {}, {}, {})
+        assert result == components.Components({}, {}, {}, {}, {})
 
     def test_secmet(self):
         self.ref.cdses["A"].components["secmet"] = ["name1", "name2"]
@@ -105,22 +105,51 @@ class TestComplete(unittest.TestCase):
         cds = DummyReferenceCDS()
         cds.components["function"] = "test"
         ref = DummyReferenceArea({"1": "A"}, {"A": cds})
-        query = Components({}, {}, {}, {"test": 1})
+        query = Components({}, {}, {}, {}, {"test": 1})
         result = components.calculate_component_score(query, ref, Mode.REFERENCE_IN_QUERY)
         assert result is None
         result = components.calculate_component_score(query, ref, Mode.QUERY_IN_REFERENCE)
         assert result == 0.
 
-    def test_mixed(self):
+    def test_nrps_and_pks(self):
         ref = Components(nrps={("A", "B"): 1, ("B", "C"): 1},
                          pks={("E", "F"): 1, ("F",): 1},
+                         generic_modules={},
                          secmet={"X": 1},
                          functions={"biosynthetic": 3, "regulatory": 1})
         query = Components(nrps={("A", "B"): 1},
                            pks={("E", "F"): 1, ("F",): 1},
+                           generic_modules={},
                            secmet={"X": 1, "Y": 1},
                            functions={"biosynthetic": 2, "regulatory": 1, "transport": 2})
         result = components.compare(ref, query, Mode.REFERENCE_IN_QUERY)
         self.assertAlmostEqual(result, 0.833, places=3)
         result = components.compare(ref, query, Mode.QUERY_IN_REFERENCE)
         self.assertAlmostEqual(result, 0.700, places=3)
+
+    def test_all_module_types(self):
+        ref = Components(nrps={("A", "B"): 1, ("B", "C"): 1},
+                         pks={("E", "F"): 1, ("F",): 1},
+                         generic_modules={("G",): 1},
+                         secmet={"X": 1},
+                         functions={"biosynthetic": 3, "regulatory": 1})
+        # first as identical but without a generic module, testing that it's needed
+        kwargs = {
+            "nrps": {("A", "B"): 1, ("B", "C"): 1},
+            "pks": {("E", "F"): 1, ("F",): 1},
+            "generic_modules": {},
+            "secmet": {"X": 1},
+            "functions": {"biosynthetic": 3, "regulatory": 1},
+        }
+
+        query = Components(**kwargs)
+        result = components.compare(ref, query, Mode.REFERENCE_IN_QUERY)
+        self.assertAlmostEqual(result, 0.933, places=3)
+        result = components.compare(ref, query, Mode.QUERY_IN_REFERENCE)
+        self.assertAlmostEqual(result, 1.0, places=3)
+
+        # then with a generic module, testing that it's used
+        kwargs["generic_modules"] = {("G",): 1}
+        query = Components(**kwargs)
+        result = components.compare(ref, query, Mode.REFERENCE_IN_QUERY)
+        self.assertAlmostEqual(result, 1.0, places=3)

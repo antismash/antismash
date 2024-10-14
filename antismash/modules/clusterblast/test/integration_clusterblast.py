@@ -4,7 +4,7 @@
 # for test files, silence irrelevant and noisy pylint warnings
 # pylint: disable=use-implicit-booleaness-not-comparison,protected-access,missing-docstring
 
-import glob
+from copy import deepcopy
 import os
 import unittest
 from unittest.mock import patch
@@ -12,7 +12,7 @@ from unittest.mock import patch
 from helperlibs.wrappers.io import TemporaryDirectory
 
 from antismash import main
-from antismash.common import path
+from antismash.common import path, secmet
 from antismash.common.module_results import ModuleResults
 from antismash.common.test import helpers
 from antismash.common.subprocessing.diamond import run_diamond_version
@@ -34,6 +34,7 @@ class Base(unittest.TestCase):
         self.diamond_ver_major = _major
         self.diamond_ver_minor = _minor
         self.diamond_ver_patch = _patch
+        self.diamond_version = (_major, _minor, _patch)
         self.old_config = get_config().__dict__
         update_config({"genefinding_gff3": ""})
         self.options = update_config(options)
@@ -60,27 +61,26 @@ class Base(unittest.TestCase):
         """
         raise NotImplementedError("get_results not overridden")
 
-    def check_svgs(self, results, expected, svg_dir):
-        # make sure no svgs created yet
-        assert not glob.glob(os.path.join(svg_dir, "*.svg"))
-        results.write_svg_files(svg_dir)
-        # check there's an svg for each result (up to the limit) + 1 combined
-        num_svgs = len(glob.glob(os.path.join(svg_dir, "*.svg")))
-        assert num_svgs == min(self.options.cb_nclusters, expected) + 1
-
     def run_antismash(self, filename, expected):
+        annotated_records = []
+
+        def callback(tempdir):
+            output_gbk = os.path.join(tempdir, os.path.basename(filename))
+            annotated_records.extend(secmet.Record.from_genbank(output_gbk))
+
         with TemporaryDirectory() as output_dir:
             update_config({"output_dir": output_dir})
             with patch.object(main, "get_all_modules", return_value=[hmm_detection, clusterblast, html]):
                 with patch.object(main, "_get_all_enabled_modules", return_value=[hmm_detection, clusterblast, html]):
-                    results = helpers.run_and_regenerate_results_for_module(filename, clusterblast, self.options)
+                    run_and_regen = helpers.run_and_regenerate_results_for_module
+                    results = run_and_regen(filename, clusterblast, self.options, callback=callback)
+            assert annotated_records
             update_config({"output_dir": ""})
-            results, global_results = self.get_results(results)
+            results, _ = self.get_results(results)
             assert len(results.region_results) == 1
             cluster = results.region_results[0]
             assert len(cluster.ranking) == expected  # will change if database does
-            self.check_svgs(global_results, expected, output_dir)
-        return results
+        return annotated_records, results
 
     def check_nisin(self, expected):
         return self.run_antismash(helpers.get_path_to_nisin_genbank(), expected)
@@ -104,9 +104,27 @@ class GeneralIntegrationTest(Base):
         return results.general, results
 
     def test_nisin(self, _patched_known):
-        expected_hits = 3 if (self.diamond_ver_major == 2 and self.diamond_ver_patch < 15) else 2
-        results = self.check_nisin(expected_hits)
+        expected_hits = 3 if self.diamond_version < (2, 0, 15) else 2
+        records, results = self.check_nisin(expected_hits)
+        assert len(records) == 1
+        record = records[0]
         ranking = results.region_results[0].ranking
+
+        # check the JSON round trip
+        raw = results.to_json()
+        # check some values
+        for _, score in raw["results"][0]["ranking"]:
+            assert score["similarity"] > 0
+        # and check it parses back correctly
+        rebuilt = results.from_json(deepcopy(raw), record)
+        assert results.region_results[0].ranking[0][1].hits == 11
+        assert isinstance(rebuilt, type(results))
+        new_json = rebuilt.to_json()
+        assert new_json["results"][0]["ranking"]
+        for _, score in new_json["results"][0]["ranking"]:
+            assert score["similarity"] > 0
+        assert new_json == raw
+
         assert len(ranking) == expected_hits
         match, score = ranking[0]
         assert match.accession == "NC_017486"
@@ -152,7 +170,7 @@ class KnownIntegrationTest(Base):
 
     def test_nisin(self, _patched_dir):
         # blast scores not checked due to diamond versions having different results
-        results = self.check_nisin(2)
+        _, results = self.check_nisin(2)
         ranking = results.region_results[0].ranking
         assert len(ranking) == 2
         match, score = ranking[0]
@@ -183,7 +201,7 @@ class KnownIntegrationTest(Base):
 
     def test_balhymicin(self, _patched_dir):
         # blast scores and derivative values not checked due to diamond versions having different results
-        results = self.check_balhymicin(2)
+        _, results = self.check_balhymicin(2)
         ranking = results.region_results[0].ranking
         assert len(ranking) == 2
         match, score = ranking[0]
@@ -213,7 +231,7 @@ class KnownIntegrationTest(Base):
         # against other single CDS clusters, before this test they were all
         # discarded
         genbank = path.get_full_path(__file__, "data", "Z18755.3.gbk")
-        results = self.run_antismash(genbank, 2)
+        _, results = self.run_antismash(genbank, 2)
         assert list(results.mibig_entries) == [1]  # only one region in record
         assert list(results.mibig_entries[1]) == ["esyn1"]  # and only one CDS
         # 2 hits against single-CDS MiBIG clusters, only those are reported

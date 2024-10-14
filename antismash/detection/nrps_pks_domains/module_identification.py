@@ -164,6 +164,10 @@ class Component:
         """ Returns True if the component can function as an acyltransferase domain """
         return self.label in ACYLTRANSFERASES
 
+    def is_coa_ligase(self) -> bool:
+        """ Returns True if the component can function as a CoA-ligase"""
+        return self.label == "CAL_domain"
+
     def is_condensation(self) -> bool:
         """ Returns True if the component can function as a condensation domain """
         return self.label in CONDENSATIONS
@@ -176,11 +180,11 @@ class Component:
             ADENYLATIONS,
             ACYLTRANSFERASES,
             ALTERNATE_STARTERS
-        ))
+        )) or self.is_coa_ligase()
 
     def is_loader(self) -> bool:
         """ Returns True if the component can function as a loader domain """
-        return self.is_acyltransferase() or self.is_adenylation()
+        return self.is_acyltransferase() or self.is_adenylation() or self.is_coa_ligase()
 
     def is_modification(self) -> bool:
         """ Returns True if the component can function as a modification domain """
@@ -269,9 +273,20 @@ class Module:
         return bool(self._starter and self._starter.is_nrps_specific()
                     or self._loader and self._loader.is_nrps_specific())
 
+    def is_coa_ligase(self) -> bool:
+        """ Returns True if the module uses a CAL domain """
+        return bool(self._starter and self._starter.is_coa_ligase())
+
     def is_trans_at(self) -> bool:
         """ Returns True if the module is Trans-AT variant of a PKS module """
-        return bool(self._starter and self._starter.subtype == "Trans-AT-KS" and not self._loader)
+        # since there's some alternatives, start by checking the bare minimum
+        if not (self.is_pks() and self._starter and not self._loader):
+            return False
+        # if the KS is specifically Trans-AT, that's good enough
+        if self._starter.subtype == "Trans-AT-KS":
+            return True
+        # otherwise, since the KS subtype may not be accurate enough, look for an ATd
+        return any(comp.domain.hit_id == "Trans-AT_docking" for comp in self._others)
 
     def is_iterative(self) -> bool:
         """ Returns True if the module is an iterative variant of a PKS module """
@@ -373,8 +388,8 @@ class Module:
         # otherwise, if it has the three vital parts
         if self._starter and self._loader and self._carrier_protein:
             return True
-        # lastly, if it's both transAT has no loader, then it's ok
-        return bool(not self._loader and self._starter and self._carrier_protein and self.is_trans_at())
+        # lastly, if it's transAT and has a carrier protein, it's ok
+        return bool(self.is_trans_at() and self._carrier_protein)
 
     def is_terminated(self) -> bool:
         """ Returns True if the module has a finalising domain (e.g. an epimerase) """
@@ -447,6 +462,11 @@ class Module:
 
             if any(mod.label == "PKS_ER" for mod in self._modifications):
                 conversions = {"ccmal": "redmal", "ccmmal": "redmmal", "ccmxmal": "redmxmal", "ccemal": "redemal"}
+                base = conversions.get(base, base)
+
+        if self._starter and self._starter.is_coa_ligase():
+            if any(mod.label == "PKS_KR" for mod in self._modifications):
+                conversions = {"AHBA": "ohAHBA"}
                 base = conversions.get(base, base)
 
         for mod in self._modifications:
@@ -557,8 +577,10 @@ def combine_modules(current: CDSModuleInfo, previous: CDSModuleInfo) -> Optional
                                reverse=current.cds.location.strand == -1)
     head = previous.modules[-1]
     tail = current.modules[0]
-    # both modules must be incomplete
-    if head.is_complete() or tail.is_complete():
+    # modules without a starter can be complete, so if the head is just the starter, that's valid
+    # otherwise both modules must be incomplete, or still compatible
+    invalid_tail = tail.is_complete() and not tail.is_starter_module()
+    if head.is_complete() or invalid_tail:
         return None
     # and avoid creating hybrid modules
     if head.is_pks() and tail.is_nrps() or head.is_nrps() and tail.is_pks():

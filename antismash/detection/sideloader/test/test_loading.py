@@ -4,10 +4,9 @@
 # for test files, silence irrelevant and noisy pylint warnings
 # pylint: disable=use-implicit-booleaness-not-comparison,protected-access,missing-docstring,too-many-public-methods
 
-import json
 import unittest
 
-from antismash.common import errors, path
+from antismash.common import errors, json, path
 from antismash.detection.sideloader import general, loader
 
 GOOD_FILE = path.get_full_path(__file__, "data", "good.json")
@@ -22,7 +21,7 @@ class TestValidation(unittest.TestCase):
 
     def test_bad_json(self):
         test_file = path.get_full_path(__file__, "data", "bad.json")
-        with self.assertRaisesRegex(errors.AntismashInputError, "Expecting ',' delimiter"):
+        with self.assertRaisesRegex(errors.AntismashInputError, "not valid JSON"):
             loader.load_validated_json(test_file, general._SCHEMA_FILE)
 
 

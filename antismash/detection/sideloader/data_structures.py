@@ -69,7 +69,7 @@ class SubRegionAnnotation:
 
     def __init__(self, start: int, end: int, label: str, tool: Tool, details: Dict[str, List[str]]) -> None:
         if end <= start:
-            raise ValueError("area end must be greater than area start")
+            raise ValueError(f"{label}: area end ({end:,}) must be greater than area start ({start:,})")
         self.start = start
         self.end = end
         self.label = label
@@ -124,7 +124,7 @@ class ProtoclusterAnnotation:
     def __init__(self, core_start: int, core_end: int, product: str, tool: Tool, details: Dict[str, List[str]],
                  neighbourhood_left: int = 0, neighbourhood_right: int = 0) -> None:
         if core_end <= core_start:
-            raise ValueError("area end must be greater than area start")
+            raise ValueError(f"{product}: area end ({core_end:,}) must be greater than area start ({core_start:,})")
         if neighbourhood_left < 0 or neighbourhood_right < 0:
             raise ValueError("neighbourhoods must be annotated as absolute distances, not relative")
         if core_start - neighbourhood_left < 0:
@@ -241,3 +241,9 @@ class SideloadedResults(DetectionResults):
 
     def get_predicted_protoclusters(self) -> List[Protocluster]:
         return [proto.to_secmet() for proto in self.protoclusters]
+
+    def add_to_record(self, record: Record) -> None:
+        for subregion in self.subregions:
+            record.add_subregion(subregion.to_secmet())
+        for protocluster in self.protoclusters:
+            record.add_protocluster(protocluster.to_secmet())

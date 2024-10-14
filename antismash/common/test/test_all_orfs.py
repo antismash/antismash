@@ -5,9 +5,11 @@
 # pylint: disable=use-implicit-booleaness-not-comparison,protected-access,missing-docstring
 
 import unittest
+from unittest.mock import patch
 
 from Bio.SeqFeature import ExactPosition, FeatureLocation
 
+from antismash.common import all_orfs
 from antismash.common.all_orfs import (
     find_all_orfs,
     find_intergenic_areas,
@@ -244,3 +246,14 @@ class TestOrfTrimming(unittest.TestCase):
 
         # max length falls before the include coordinate
         assert get_trimmed_orf(self.cds, self.record, include=0, max_length=6) is None
+
+
+def test_minimum_passthrough():
+    record = DummyRecord(seq=f"ATG{'N' * 30}TGA{'N' * 30}")
+    for min_length in (5, 10, 60):
+        with patch.object(all_orfs, "scan_orfs", return_value=[]) as patched:
+            find_all_orfs(record, min_length=min_length)
+            assert patched.call_count == 2  # forward and reverse strands
+            # all calls must pass through the minimum length
+            for args in patched.call_args_list:
+                assert args[-1]["minimum_length"] == min_length

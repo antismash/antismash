@@ -51,7 +51,7 @@ class ModuleResults:
         raise NotImplementedError()
 
 
-class DetectionResults(ModuleResults):  # keeping abstract is deliberate, pylint: disable=abstract-method
+class DetectionResults(ModuleResults):
     """ Stores results for detection modules.
 
         get_predicted_protoclusters() should be overridden if the module predicts clusters

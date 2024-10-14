@@ -6,7 +6,6 @@
 import argparse
 import gzip
 import hashlib
-import json
 import lzma
 import os
 import pathlib
@@ -22,15 +21,16 @@ from antismash.common.html_renderer import (
     get_antismash_js_version,
     get_antismash_js_url,
 )
+from antismash.common import json
 
-PFAM_LATEST_VERSION = "34.0"
+PFAM_LATEST_VERSION = "35.0"
 PFAM_LATEST_URL = f"https://ftp.ebi.ac.uk/pub/databases/Pfam/releases/Pfam{PFAM_LATEST_VERSION}/Pfam-A.hmm.gz"
-PFAM_LATEST_ARCHIVE_CHECKSUM = "b18a98bb1f92b9afb7533fda43baac98d9c69e5b97e68592a43fc00d671ea3f6"
-PFAM_LATEST_CHECKSUM = "bfc669e58fdafad0950a52bb9020d6e23c87aa174f4f5bc4ebdac8bb9c30b634"
+PFAM_LATEST_ARCHIVE_CHECKSUM = "48ec2d1123c84046b00279eae1fb3d5be1b578e6221453f329d16954c89d0d35"
+PFAM_LATEST_CHECKSUM = "8d3e2ffa785f91ee0e24a3994d2dcfff6f382e3cf663784a47688e7d95297fee"
 
-CLUSTERBLAST_URL = "https://dl.secondarymetabolites.org/releases/clusterblast/clusterblast_20201113.tar.xz"
-CLUSTERBLAST_ARCHIVE_CHECKSUM = "bf45276f034615b0827627d16426fec2aca0464391bc41c76ccfae81049ba95a"
-CLUSTERBLAST_FASTA_CHECKSUM = "ea43624407ae399cd6e78bf2e6868e9ff0b9581f333645063212d0ef239c7f5b"
+CLUSTERBLAST_URL = "https://dl.secondarymetabolites.org/releases/clusterblast/clusterblast_4.0.tar.xz"
+CLUSTERBLAST_ARCHIVE_CHECKSUM = "dc90a171751472d88088e12f52446c49fe0efff437d92110072151f523eb3ee3"
+CLUSTERBLAST_FASTA_CHECKSUM = "55ea9e62dcc0c083b42f8209a48889f710e888db72d5433f4429d4a6ec1b946b"
 
 KCB_URL = "https://dl.secondarymetabolites.org/releases/knownclusterblast/kcb_3.1.tar.xz"
 KCB_ARCHIVE_CHECKSUM = "7149d5742280be3bb39a2abfbccab353a980289f8563bb03544df8899d31e7b4"
@@ -46,11 +46,11 @@ CLUSTERCOMPARE_DBS = {
 
 COMPARIPPSON_DBS = {
     "asdb": {
-        "archive_hash": "8cc339bd0d34e4c0589767ce973ba25d44ad32e7ce695f2b8be594a8fb9662e8",
-        "fasta_hash": "80bc3d570222596f67bed749479f28dff1e75a00f53ae8b07f650eb254630a9b",
-        "metadata_hash": "0e549c9dff56edf5c024dbb197638c9022254408d56f795d3ab5eb00b82ab204",
-        "url": "https://dl.secondarymetabolites.org/releases/comparippson/asdb_3.0.tar.xz",
-        "version": "3.0",
+        "archive_hash": "87796c22f5d13946222f94240e1d5896a42a7039907abce2ad858e9f83c8ac73",
+        "fasta_hash": "af2a94ec525d75ff1dc31a9d3e74ec1653a05047546ac0961eac1d350e407fbe",
+        "metadata_hash": "0235bfde62b6060d1cd790cba478228a268fea8e8fb36d582a20534cf785cd88",
+        "url": "https://dl.secondarymetabolites.org/releases/comparippson/asdb_4.0.tar.xz",
+        "version": "4.0",
     },
     "mibig": {
         "archive_hash": "ac027be0b41af074f1c08ee99ddbb936f3caa47671cf147d7e4ae925c9273265",

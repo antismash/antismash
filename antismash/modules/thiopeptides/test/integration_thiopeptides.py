@@ -132,7 +132,7 @@ class TestIntegration(unittest.TestCase):
         self.assertAlmostEqual(1934.6, prepeptide.monoisotopic_mass, places=1)
         self.assertAlmostEqual(1936.0, prepeptide.molecular_weight, places=1)
         assert prepeptide.leader == "MVKSIIKARESGRFYETKYLKGGEEMKEQKELKNEEFELDVEFLDLDEVSAIPETTA"
-        assert other.leader == "LDVEFLDLDEVSAIPETTA"
+        assert other.leader == "MDVEFLDLDEVSAIPETTA"
         assert prepeptide.core == "SSGTSSCSASSTCGSSSCCGSC"
         assert other.core == prepeptide.core
         assert not prepeptide.detailed_information.macrocycle
@@ -162,5 +162,5 @@ class TestIntegration(unittest.TestCase):
         prepeptide = results.motifs[0]
         self.assertAlmostEqual(1408.6, prepeptide.monoisotopic_mass, places=1)
         self.assertAlmostEqual(1409.5, prepeptide.molecular_weight, places=1)
-        assert prepeptide.leader == "LPDITQYTAAGTSTLSTESSVLSASCP"
+        assert prepeptide.leader == "MPDITQYTAAGTSTLSTESSVLSASCP"
         assert prepeptide.core == "TSTASTYTSMSSVS"

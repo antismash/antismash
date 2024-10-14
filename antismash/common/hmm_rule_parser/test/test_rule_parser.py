@@ -434,6 +434,10 @@ class RuleParserTest(unittest.TestCase):
         with self.assertRaises(rule_parser.RuleSyntaxError):
             self.parse("RULE name CATEGORY category RELATED")
 
+    def test_empty_conditions(self):
+        with self.assertRaisesRegex(rule_parser.RuleSyntaxError, "expected conditions"):
+            self.parse(format_as_rule("A", 10, 10, ""))
+
     def test_missing_group_close(self):
         with self.assertRaises(rule_parser.RuleSyntaxError):
             self.parse(format_as_rule("A", 10, 10, "(a or b"))
@@ -627,6 +631,17 @@ class RuleParserTest(unittest.TestCase):
         text = "DEFINE a AS b"
         with self.assertRaisesRegex(ValueError, "duplicates a signature"):
             self.parse(text)
+
+    def test_extenders(self):
+        text = format_as_rule("A", 10, 10, "other")
+        # extenders must be an explicit CDS condition
+        # not is fine if within a cds condition, otherwise it's no good
+        for extenders in ["a and b", "a or b", "a and not b"]:
+            rule = self.parse(f"{text} EXTENDERS cds({extenders})").rules[0]
+            assert str(rule.extenders) == f"cds({extenders})"
+
+            with self.assertRaisesRegex(rule_parser.RuleSyntaxError, "expected 'cds' after 'extenders'"):
+                _ = self.parse(f"{text} EXTENDERS {extenders}").rules[0]
 
 
 class TokenTest(unittest.TestCase):

@@ -29,7 +29,7 @@ def generate_html(region_layer: RegionLayer, results: ClusterCompareResults,
     """
 
     html = HTMLSections("cluster-compare")
-    base_tooltip = ("Shows careas that are similar to the current region to a reference database.<br>"
+    base_tooltip = ("Shows areas that are similar to the current region to a reference database.<br>"
                     "Mouseover a score cell in the table to get a breakdown of how "
                     "the score was calculated.")
 
@@ -41,7 +41,14 @@ def generate_html(region_layer: RegionLayer, results: ClusterCompareResults,
             tooltip += f"<br>Click on an accession to open that entry in the {db_results.name} database."
         variant_results = db_results.by_region.get(region_layer.get_region_number(), {})
         divs: List[Tuple[str, str, Markup]] = []
-        for variant, result in sorted(variant_results.items()):
+
+        # for the MIBiG DB specifically, always show region to region by default
+        if label == "MIBiG":
+            pairs = sorted(variant_results.items(), key=lambda name: (1 if name == "RegionToRegion" else 0, name))
+        else:
+            pairs = sorted(variant_results.items())
+
+        for variant, result in pairs:
             scores = result.scores_by_region[:DISPLAY_LIMIT]
             if not scores:
                 continue

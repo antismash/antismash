@@ -233,7 +233,7 @@ class TestOrdering(unittest.TestCase):
         best = self.run_ranking_as_genes(n_terms, c_terms, possible_orders)
         assert best == "BAC"
 
-    def test_order_C002271_c19(self):  # pylint: disable=invalid-name
+    def test_order_CP002271_c19(self):  # pylint: disable=invalid-name
         cdss = {}
         for i, name in enumerate(["STAUR_3972", "STAUR_3982", "STAUR_3983",
                                   "STAUR_3984", "STAUR_3985"]):
@@ -304,6 +304,19 @@ class TestOrdering(unittest.TestCase):
         # again, regardless of where the block is, the order within the block must be fixed
         assert all(check(order, "BCDE") for order in chained)
 
+    def test_chained_end(self):
+        # catches an edge case where order finding generated duplicates of genes
+        # specifically where a single gene contained a termination domain and was
+        # provided as the "end" cds, where it was also the tail end of a chain of
+        # cross-CDS modules
+        cdses = [DummyCDS(1, 2, locus_tag="A"), DummyCDS(3, 4, locus_tag="B")]
+        orders = orderfinder.find_possible_orders(cdses, start_cds=None, end_cds=cdses[-1],
+                                                  chains={cdses[0]: cdses[1]})
+        assert len(orders) == 1
+        order = orders[0]
+        assert len(order) == len(set(order))
+        assert order == cdses
+
 
 class TestEnzymeCounter(unittest.TestCase):
     def run_finder(self, names, modules_by_cds):
@@ -314,7 +327,7 @@ class TestEnzymeCounter(unittest.TestCase):
         results = orderfinder.find_candidate_cluster_modular_enzymes(genes)
         return ([cds.get_name() for cds in results[0]], results[1], results[2])
 
-    def test_C002271_c19(self):  # pylint: disable=invalid-name
+    def test_CP002271_c19(self):  # pylint: disable=invalid-name
         gene_names = ['STAUR_3972', 'STAUR_3982', 'STAUR_3983', 'STAUR_3984', 'STAUR_3985']
         gene_domains = {'STAUR_3985': [('ACP',), ('PKS_KS', 'PKS_AT', 'PKS_DH', 'PKS_KR', 'ACP')],
                         'STAUR_3984': [('PKS_KS', 'PKS_AT', 'PKS_DH', 'PKS_KR', 'ACP')],

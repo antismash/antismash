@@ -9,20 +9,21 @@ import importlib
 import logging
 import os
 import pkgutil
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Iterable, Optional
 
 from antismash.common import hmmer, path
 from antismash.common.hmm_rule_parser import rule_parser
 from antismash.common.hmm_rule_parser.cluster_prediction import (
     detect_protoclusters_and_signatures,
     RuleDetectionResults,
+    Ruleset,
 )
 from antismash.common.hmm_rule_parser.structures import DynamicProfile, Multipliers
 from antismash.common.module_results import DetectionResults
 from antismash.common.secmet.record import Record
 from antismash.common.secmet.features import Protocluster
 from antismash.config import ConfigType
-from antismash.config.args import ModuleArgs
+from antismash.config.args import ModuleArgs, SplitCommaAction
 from antismash.detection import DetectionStage
 from antismash.detection.hmm_detection.signatures import get_signature_profiles
 from antismash.detection.hmm_detection.categories import get_rule_categories
@@ -31,7 +32,14 @@ NAME = "hmmdetection"
 SHORT_DESCRIPTION = "HMM signature detection"
 DETECTION_STAGE = DetectionStage.AREA_FORMATION
 
+SIGNATURE_FILE = path.get_full_path(__file__, "data", "hmmdetails.txt")
+HMM_FILE = path.get_full_path(__file__, "data", "bgc_seeds.hmm")
+CATEGORIES = {cat.name for cat in get_rule_categories()}
+EQUIVALENCE_GROUPS = path.get_full_path(__file__, "filterhmmdetails.txt")
+
 _STRICTNESS_LEVELS = ["strict", "relaxed", "loose"]
+
+_RULESETS: dict[tuple[str, tuple[str, ...], tuple[str, ...], Multipliers], Ruleset] = {}
 
 
 def _get_dynamic_profiles() -> Dict[str, DynamicProfile]:
@@ -62,6 +70,52 @@ def _get_rule_files_for_strictness(strictness: str) -> List[str]:
     for level in _STRICTNESS_LEVELS[:_STRICTNESS_LEVELS.index(strictness) + 1]:
         files.append(path.get_full_path(__file__, "cluster_rules", f"{level}.txt"))
     return files
+
+
+def get_ruleset(options: ConfigType) -> Ruleset:
+    """ Builds a Ruleset instance configured to match the provided options
+
+        Arguments:
+            options: the antiSMASH config object
+
+        Returns:
+            a Ruleset instance
+    """
+    strictness = options.hmmdetection_strictness
+    name_subset = set(options.hmmdetection_limit_to_rules)
+    category_subset = set(options.hmmdetection_limit_to_categories)
+    multipliers = Multipliers()
+    if options.taxon == "fungi":
+        multipliers = Multipliers(
+            options.hmmdetection_fungal_cutoff_multiplier,
+            options.hmmdetection_fungal_neighbourhood_multiplier,
+        )
+    # the cache key needs to be immutable
+    key = (strictness, tuple(name_subset), tuple(category_subset), multipliers)
+
+    # return any existing ruleset
+    ruleset = _RULESETS.get(key)
+    if ruleset:
+        return ruleset
+
+    # otherwise make a default ruleset for the strictness
+    ruleset = Ruleset.from_files(SIGNATURE_FILE, HMM_FILE, _get_rule_files_for_strictness(strictness),
+                                 CATEGORIES, EQUIVALENCE_GROUPS, "rule-based-clusters",
+                                 dynamic_profiles=DYNAMIC_PROFILES)
+
+    # limit the rules used, if relevant
+    rules: Iterable[rule_parser.DetectionRule] = ruleset.rules
+    if name_subset:
+        rules = filter(lambda rule: rule.name in name_subset, rules)
+    if category_subset:
+        rules = filter(lambda rule: rule.category in category_subset, rules)
+
+    ruleset = ruleset.copy_with_replacements(rules=list(rules), multipliers=multipliers)
+
+    # update the cache
+    _RULESETS[key] = ruleset
+
+    return ruleset
 
 
 class HMMDetectionResults(DetectionResults):
@@ -101,7 +155,7 @@ class HMMDetectionResults(DetectionResults):
         return self.rule_results.protoclusters
 
 
-def _get_rules(strictness: str, category: Optional[str] = None) -> List[rule_parser.DetectionRule]:
+def _get_rules(strictness: str) -> list[rule_parser.DetectionRule]:
     signature_names = {sig.name for sig in get_signature_profiles()}
     signature_names.update(set(DYNAMIC_PROFILES))
     category_names = {cat.name for cat in get_rule_categories()}
@@ -111,21 +165,13 @@ def _get_rules(strictness: str, category: Optional[str] = None) -> List[rule_par
         with open(rule_file, encoding="utf-8") as rulefile:
             rules = rule_parser.Parser("".join(rulefile.readlines()), signature_names,
                                        category_names, rules, aliases).rules
-    if category is not None:
-        rules = list(filter(lambda rule: rule.category == category, rules))
     return rules
-
-
-def get_supported_cluster_types(strictness: str, category: Optional[str] = None) -> List[str]:
-    """ Returns a list of all cluster types for which there are rules
-    """
-    return [rule.name for rule in _get_rules(strictness, category=category)]
 
 
 def get_arguments() -> ModuleArgs:
     """ Constructs commandline arguments and options for this module
     """
-    args = ModuleArgs('Advanced options', 'hmmdetection')
+    args = ModuleArgs('HMM detection options', 'hmmdetection')
     args.add_option('strictness',
                     dest='strictness',
                     type=str,
@@ -145,6 +191,19 @@ def get_arguments() -> ModuleArgs:
                     default=1.5,
                     help=("Sets the multiplier for rule neighbourhoods in fungal "
                           "inputs (default: %(default)s)."))
+    args.add_option("limit-to-rule-names",
+                    dest="limit_to_rules",
+                    metavar="RULE1[,RULE2,...]",
+                    action=SplitCommaAction,
+                    default=[],
+                    help="Restrict detection to the named rules (default: no limits).")
+    args.add_option("limit-to-rule-categories",
+                    dest="limit_to_categories",
+                    metavar="CATEGORY1[,CATEGORY2,...]",
+                    action=SplitCommaAction,
+                    default=[],
+                    help="Restrict detection to the given rules (default: no limits).")
+
     return args
 
 
@@ -161,6 +220,30 @@ def check_options(options: ConfigType) -> List[str]:
     neighbourhood = options.hmmdetection_fungal_neighbourhood_multiplier
     if neighbourhood <= 0:
         issues.append(f"Invalid fungal neighbourhood multiplier: {neighbourhood}")
+
+    all_rule_names = set(rule.name for rule in _get_rules(options.hmmdetection_strictness))
+
+    name_subset = set(options.hmmdetection_limit_to_rules)
+    if name_subset:
+        unknown = name_subset - all_rule_names
+        if unknown:
+            issues.append(f"Unknown rules in requested rule subset: {unknown}")
+    category_subset = set(options.hmmdetection_limit_to_categories)
+    if category_subset:
+        unknown = category_subset - CATEGORIES
+        if unknown:
+            issues.append(f"Unknown rules in requested rule category subset: {unknown}")
+
+    # invalid multipliers will cause ruleset creation to fail for the same reasons
+    # so don't continue into testing ruleset creation
+    if issues:
+        return issues
+
+    try:
+        get_ruleset(options)
+    except ValueError as err:
+        issues.append(str(err))
+
     return issues
 
 
@@ -180,7 +263,7 @@ def regenerate_previous_results(results: Dict[str, Any], record: Record,
     if regenerated.strictness != options.hmmdetection_strictness:
         logging.warning("Ignoring hmmdetection strictness option %r, reusing %r from results",
                         options.hmmdetection_strictness, regenerated.strictness)
-    if set(regenerated.enabled_types) != set(get_supported_cluster_types(regenerated.strictness)):
+    if set(regenerated.enabled_types) != get_ruleset(options).get_rule_names():
         raise RuntimeError("Protocluster types supported by HMM detection have changed, all results invalid")
     if options.taxon == "fungi":
         if regenerated.rule_results.multipliers.cutoff != options.hmmdetection_fungal_cutoff_multiplier:
@@ -201,24 +284,14 @@ def run_on_record(record: Record, previous_results: Optional[HMMDetectionResults
     strictness = options.hmmdetection_strictness
     logging.info("HMM detection using strictness: %s", strictness)
 
-    signatures = path.get_full_path(__file__, "data", "hmmdetails.txt")
-    seeds = path.get_full_path(__file__, "data", "bgc_seeds.hmm")
-    rules = _get_rule_files_for_strictness(strictness)
-    valid_categories = {cat.name for cat in get_rule_categories()}
-    equivalences = path.get_full_path(__file__, "filterhmmdetails.txt")
+    ruleset = get_ruleset(options)
+    cluster_types = list(ruleset.get_rule_names())
+    if options.hmmdetection_limit_to_rules or options.hmmdetection_limit_to_categories:
+        logging.info("HMM detection restricted to these rules: %s", cluster_types)
 
-    multipliers = Multipliers()
-    if options.taxon == "fungi":
-        multipliers.cutoff = options.hmmdetection_fungal_cutoff_multiplier
-        multipliers.neighbourhood = options.hmmdetection_fungal_neighbourhood_multiplier
-
-    results = detect_protoclusters_and_signatures(record, signatures, seeds, rules, valid_categories,
-                                                  equivalences, "rule-based-clusters",
-                                                  dynamic_profiles=DYNAMIC_PROFILES,
-                                                  multipliers=multipliers,
-                                                  )
+    results = detect_protoclusters_and_signatures(record, ruleset)
     results.annotate_cds_features()
-    return HMMDetectionResults(record.id, results, get_supported_cluster_types(strictness), strictness)
+    return HMMDetectionResults(record.id, results, cluster_types, strictness)
 
 
 def prepare_data(logging_only: bool = False) -> List[str]:
@@ -243,13 +316,15 @@ def prepare_data(logging_only: bool = False) -> List[str]:
     # the path to the markov model
     seeds_hmm = path.get_full_path(__file__, 'data', 'bgc_seeds.hmm')
     hmm_files = [os.path.join("data", sig.hmm_file) for sig in profiles]
+    # include the listing, since tools like wget will keep modified timestamps on the HMMs
+    description_file = path.get_full_path(__file__, 'data', 'hmmdetails.txt')
     outdated = False
     if not path.locate_file(seeds_hmm):
         logging.debug("%s: %s doesn't exist, regenerating", NAME, seeds_hmm)
         outdated = True
     else:
         seeds_timestamp = os.path.getmtime(seeds_hmm)
-        for component in hmm_files:
+        for component in hmm_files + [description_file]:
             if os.path.getmtime(component) > seeds_timestamp:
                 logging.debug("%s out of date, regenerating", seeds_hmm)
                 outdated = True

@@ -4,9 +4,9 @@
 # for test files, silence irrelevant and noisy pylint warnings
 # pylint: disable=use-implicit-booleaness-not-comparison,protected-access,missing-docstring,too-many-public-methods
 
-import json
 import unittest
 
+from antismash.common import json
 from antismash.common.secmet.features.protocluster import SideloadedProtocluster
 from antismash.common.secmet.features.subregion import SideloadedSubRegion
 from antismash.common.test.helpers import DummyRecord
@@ -19,8 +19,8 @@ def dummy_tool():
 
 class TestSub(unittest.TestCase):
     def test_bad_location(self):
-        with self.assertRaisesRegex(ValueError, "end must be greater"):
-            structures.SubRegionAnnotation(10, 5, "label", dummy_tool(), {})
+        with self.assertRaisesRegex(ValueError, r"area end \(5\) must be greater than area start \(1,000\)"):
+            structures.SubRegionAnnotation(1000, 5, "label", dummy_tool(), {})
 
     def test_attributes(self):
         sub = structures.SubRegionAnnotation(5, 50, "label", dummy_tool(),
@@ -61,8 +61,8 @@ class TestSub(unittest.TestCase):
 
 class TestCluster(unittest.TestCase):
     def test_bad_location(self):
-        with self.assertRaisesRegex(ValueError, "end must be greater"):
-            structures.ProtoclusterAnnotation(10, 5, "product", dummy_tool(), {})
+        with self.assertRaisesRegex(ValueError, r"area end \(5\) must be greater than area start \(1,000\)"):
+            structures.ProtoclusterAnnotation(1000, 5, "product", dummy_tool(), {})
 
         with self.assertRaisesRegex(ValueError, "absolute distance"):
             structures.ProtoclusterAnnotation(5, 10, "product", dummy_tool(), {}, neighbourhood_left=-1)

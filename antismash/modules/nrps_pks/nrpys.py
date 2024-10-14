@@ -373,6 +373,8 @@ class PredictorSVMResult(Prediction):
         """ Generates a PredictorSVMResult from an nrpys.ADomain """
         aa34 = a_domain.aa34
         aa10 = a_domain.aa10
+        assert len(aa10) == 10, aa10
+        assert len(aa34) > 10, aa34
 
         stachelhaus_matches: list[StachelhausMatch] = []
         seen: set[str] = set()

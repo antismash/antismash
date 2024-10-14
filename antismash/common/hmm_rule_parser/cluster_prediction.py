@@ -4,20 +4,28 @@
 """ Detects specific domains and defines clusters based on domains detected
 """
 
+import bisect
 from collections import defaultdict
 import dataclasses
 import logging
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, FrozenSet, Iterable, Iterator, List, Optional, Set, Tuple, Union
 
-from antismash.common import fasta, path, serialiser
+from antismash.common import fasta, serialiser
 from antismash.common.hmmscan_refinement import HSP
 from antismash.common.secmet import Record, Protocluster, CDSFeature, FeatureLocation
+from antismash.common.secmet.locations import (
+    location_contains_other,
+    get_distance_between_locations,
+)
 from antismash.common.secmet.qualifiers import GeneFunction, SecMetQualifier
 from antismash.common.subprocessing import run_hmmsearch
 from antismash.common.hmm_rule_parser import rule_parser
 from antismash.common.signature import get_signature_profiles, HmmSignature, Signature
 
 from .structures import DynamicHit, DynamicProfile, HMMerHit, Multipliers, ProfileHit
+
+
+GenericSets = Union[Iterable[set[str]], Iterable[FrozenSet[str]]]
 
 
 class CDSResults:
@@ -140,6 +148,159 @@ class RuleDetectionResults:
         return RuleDetectionResults(cds_by_cluster, json["tool"], cdses_outside, multipliers)
 
 
+def get_equivalence_groups_from_file(filename: str, signature_names: set[str]) -> list[set[str]]:
+    """ Reads a file of equivalence groups.
+
+        Arguments:
+            filename: the path to the file containing the equivalence sets
+            signature_names: the set of known signature names that the file will be
+                             referring to
+
+        Returns:
+            a list of sets, one for each equivalence group.
+    """
+    groups = []
+    with open(filename, "r", encoding="utf-8") as handle:
+        for line in handle.readlines():
+            line = line.strip()
+            equivalence_group = set(line.split(","))
+            unknown = equivalence_group - signature_names
+            if unknown:
+                raise ValueError(f"Equivalence group contains unknown identifiers: {unknown}")
+            groups.append(equivalence_group)
+    return groups
+
+
+@dataclasses.dataclass
+class Ruleset:
+    """ A container for all information related to a particular set of rules """
+    _rules: tuple[rule_parser.DetectionRule, ...]
+    hmm_profiles: dict[str, HmmSignature]
+    database_file: str
+    valid_categories: set[str]
+    tool: str
+    multipliers: Multipliers = dataclasses.field(default_factory=Multipliers)
+    dynamic_profiles: dict[str, DynamicProfile] = dataclasses.field(default_factory=dict)
+    # the following should really be keyword only, but that needs 3.10+
+    equivalence_groups: dataclasses.InitVar[GenericSets] = None
+    filter_file: dataclasses.InitVar[str] = None
+
+    def __post_init__(self, equivalence_groups: Iterable[Union[set[str], frozenset[str]]] = None,
+                      filter_file: str = None) -> None:
+        # add an additional field to allow fetching rules by name
+        self._rules_by_name = {rule.name: rule for rule in self.rules}
+        # if there were duplicate names, then report them
+        if len(self._rules_by_name) != len(self.rules):
+            counts: dict[str, int] = defaultdict(int)
+            for rule in self.rules:
+                counts[rule.name] += 1
+            duplicated = {name for name, count in counts.items() if count > 1}
+            raise ValueError(f"rule names must be unique: {duplicated}")
+
+        # and another additional field that is a combination of both HMM and dynamic profiles
+        if not self.hmm_profiles and not self.dynamic_profiles:
+            raise ValueError("at least one HMM or dynamic profile is required")
+        self.all_profiles: dict[str, Signature] = dict(self.hmm_profiles)
+        self.all_profiles.update(self.dynamic_profiles)
+        # again, find and report and duplicate names
+        overlaps = set(self.hmm_profiles).intersection(set(self.dynamic_profiles))
+        if overlaps:
+            raise ValueError(f"HMM profiles and dynamic profiles overlap: {overlaps}")
+
+        # build the equivalence groups from file if necessary
+        if filter_file is not None:
+            if equivalence_groups is not None:
+                raise ValueError("Only one of 'filter_file' and 'equivalence_groups' can be provided")
+            equivalence_groups = get_equivalence_groups_from_file(filter_file, set(self.all_profiles))
+        if equivalence_groups is None:
+            raise ValueError("One of 'filter_file' or 'equivalence_groups' must be provided")
+        self._equivalence_groups = tuple(frozenset(group) for group in equivalence_groups)
+
+        # update ranges by provided multipliers
+        for rule in self._rules_by_name.values():
+            rule.cutoff = int(rule.cutoff * self.multipliers.cutoff)
+            rule.neighbourhood = int(rule.neighbourhood * self.multipliers.neighbourhood)
+
+    @property
+    def rules(self) -> tuple[rule_parser.DetectionRule, ...]:
+        """ Returns the rules available within the ruleset """
+        return self._rules
+
+    def get_equivalence_groups(self) -> tuple[FrozenSet[str], ...]:
+        """ Returns the profile equivalence groups use to filter out similar profiles
+        """
+        return self._equivalence_groups
+
+    def get_rule_by_name(self, name: str) -> rule_parser.DetectionRule:
+        """ Returns the rule with the given name.
+        """
+        rule = self._rules_by_name.get(name)
+        if not rule:
+            raise ValueError(f"Unknown rule: {name}")
+        return rule
+
+    def get_rule_names(self) -> set[str]:
+        """ Returns a set of all rule names within the ruleset
+        """
+        return set(self._rules_by_name)
+
+    def copy_with_replacements(self, **kwargs: Any) -> "Ruleset":
+        """ Copies this instance, with those values supplied replacing the existing values.
+        """
+        # dataclasses.replace handles everything but InitVar members, which need to be explicitly provided
+        # some original init-only members have to be grabbed from elsewhere in the instance,
+        # so set what they would be here
+        defaults = {
+            "equivalence_groups": list(self._equivalence_groups),
+        }
+        if "rules" in kwargs:
+            kwargs["_rules"] = kwargs.pop("rules")
+        # then find all the relevant fields and use either the specific default above
+        # or the default the field defines
+        for name, field in self.__dataclass_fields__.items():  # pylint: disable=no-member # at least for 2.15
+            if isinstance(field.type, dataclasses.InitVar):
+                if name not in kwargs:
+                    kwargs[name] = defaults.get(name, field.default)
+
+        return dataclasses.replace(self, **kwargs)
+
+    @classmethod
+    def from_files(cls, signature_file: str, seeds: str, rule_files: list[str],
+                   categories: set[str], filter_file: str, tool: str,
+                   *,
+                   dynamic_profiles: dict[str, DynamicProfile] = None,
+                   multipliers: Multipliers = None,
+                   ) -> "Ruleset":
+        """ Generates an instance directly from files of signatures, equivalance groups,
+            and rules
+
+            Arguments:
+                signature_file: the path to a file containing signature information
+                seeds: the path to an HMM file containing all profiles mentioned in signatures
+                rule_files: one or more files containing rules, ordered so that those with
+                            no dependency on the others come first
+                categories: a set of categories referenced by the rules
+                filter_file: a path to a file containing equivalence groups
+                tool: the name of the tool that will be using the ruleset
+
+                *Optional arguments*
+                dynamic_profiles: any dynamic profiles used, as a mapping of profile
+                                  name to profile instance
+                multipliers: rule distance multipliers
+        """
+        multipliers = multipliers or Multipliers()
+        dynamic_profiles = dynamic_profiles or {}
+        signatures = {sig.name: sig for sig in get_signature_profiles(signature_file)}
+        all_signatures = set(dynamic_profiles).union(signatures)
+        rules = create_rules(rule_files, all_signatures, categories, multipliers)
+
+        return cls(tuple(rules), signatures, seeds, categories, tool,
+                   dynamic_profiles=dynamic_profiles,
+                   multipliers=multipliers,
+                   filter_file=filter_file,
+                   )
+
+
 def remove_redundant_protoclusters(clusters: List[Protocluster],
                                    rules_by_name: Dict[str, rule_parser.DetectionRule],
                                    record: Record,
@@ -175,9 +336,93 @@ def remove_redundant_protoclusters(clusters: List[Protocluster],
     return trimmed_clusters
 
 
+def apply_extenders(clusters: list[Protocluster],
+                    rules_by_name: dict[str, rule_parser.DetectionRule],
+                    record: Record, results_by_id: dict[str, list[ProfileHit]],
+                    cds_domains_by_cluster: dict[str, dict[str, set[str]]],
+                    ) -> list[Protocluster]:
+    """ Extends the given protoclusters using the defining rule's extension
+        information, if present and possible.
+
+        Arguments:
+            clusters: the protoclusters to try extending
+            rules_by_name: a mapping of rule name to DetectionRule instance
+            record: the record the clusters belong to
+            results_by_id: a mapping of CDS name to profile hits for the full record
+            cds_domains_by_cluster: a mapping of CDS ID to
+                    a mapping of cluster type string to
+                        a set of domains used to determine the cluster
+
+        Returns:
+            a new list of extended clusters
+    """
+
+    def mark_extendable(cdses: Iterable[CDSFeature], previous: CDSFeature,
+                        rule: rule_parser.DetectionRule, core: FeatureLocation,
+                        ) -> Iterator[CDSFeature]:
+        for cds in cdses:
+            # skip over any existing cores
+            if cds.is_contained_by(core):
+                continue
+            # stop if last match is too far away from the current CDS
+            if get_distance_between_locations(cds.location, previous.location) > rule.cutoff:
+                break
+            extendable = rule.can_extend_to(cds, results_by_id.get(cds.get_name(), []))
+            if extendable:
+                previous = cds  # update the previous match for distance checking
+                cds_domains_by_cluster[cds.get_name()][rule.name].update(extendable.matches)
+                yield cds  # let the caller do what it wants with the CDS
+
+    results = []
+    cdses = record.get_cds_features()
+    for cluster in clusters:
+        core = cluster.core_location
+        rule = rules_by_name[cluster.product]
+        index = bisect.bisect_left(cdses, core)
+
+        core_cdses = record.get_cds_features_within_location(cluster.core_location)
+
+        # for each direction, the domain/result updates will be handled by the marker
+        # but since the core location updates are direction dependent, they still must be handled
+
+        for cds in mark_extendable(reversed(cdses[:index]), core_cdses[0], rule, core):
+            core = FeatureLocation(cds.location.start, core.end)
+
+        for cds in mark_extendable(cdses[index:], core_cdses[-1], rule, core):
+            core = FeatureLocation(core.start, cds.location.end)
+
+        # the new core should be at least as large as the old core
+        assert location_contains_other(core, cluster.core_location), f"{cluster.core_location} not in {core}"
+        # update locations
+        surrounds = FeatureLocation(max(0, core.start - rule.neighbourhood),
+                                    min(core.end + rule.neighbourhood, len(record)))
+        results.append(Protocluster(core, surrounding_location=surrounds,
+                                    tool="rule-based-clusters", cutoff=rule.cutoff,
+                                    neighbourhood_range=rule.neighbourhood, product=rule.name,
+                                    detection_rule=str(rule.conditions), product_category=rule.category))
+    return results
+
+
 def find_protoclusters(record: Record, cds_by_cluster_type: Dict[str, Set[str]],
-                       rules_by_name: Dict[str, rule_parser.DetectionRule]) -> List[Protocluster]:
-    """ Detects gene clusters based on the identified core genes """
+                       rules_by_name: dict[str, rule_parser.DetectionRule],
+                       results_by_id: dict[str, list[ProfileHit]],
+                       cds_domains_by_cluster: dict[str, dict[str, set[str]]],
+                       ) -> list[Protocluster]:
+    """ Detects gene clusters based on the identified core genes
+
+        Arguments:
+            record: the record to find protoclusters within
+            cds_by_cluster_type: a dictionary mapping rule name to
+                                 a set of CDS names that matched that rule
+            rules_by_name: a dictionary mapping rule names to DetectionRule instances
+            results_by_id: a dictinoary mapping CDS name to a list of profile hits for that CDS
+            cds_domains_by_cluster: a mapping of CDS ID to
+                    a mapping of cluster type string to
+                        a set of domains used to determine the cluster
+
+        Returns:
+            a list of Protocluster instances that were found
+    """
     clusters: List[Protocluster] = []
     cds_feature_by_name = record.get_cds_name_mapping()
 
@@ -221,6 +466,8 @@ def find_protoclusters(record: Record, cds_by_cluster_type: Dict[str, Set[str]],
         if contained != cluster.location:
             cluster.location = contained
 
+    clusters = apply_extenders(clusters, rules_by_name, record, results_by_id, cds_domains_by_cluster)
+
     clusters = remove_redundant_protoclusters(clusters, rules_by_name, record)
 
     logging.debug("%d rule-based cluster(s) found in record", len(clusters))
@@ -244,17 +491,11 @@ def hsp_overlap_size(first: HSP, second: HSP) -> int:
     return max(0, segment_end - segment_start)
 
 
-def filter_results(results: List[HSP], results_by_id: Dict[str, List[HSP]], filter_file: str,
-                   signature_names: Set[str]) -> Tuple[List[HSP], Dict[str, List[HSP]]]:
+def filter_results(results: list[HSP], results_by_id: Dict[str, list[HSP]],
+                   equivalence_groups: GenericSets,
+                   ) -> tuple[list[HSP], dict[str, list[HSP]]]:
     """ Filter results by comparing scores of different models """
-    with open(filter_file, "r", encoding="utf-8") as handle:
-        lines = handle.readlines()
-    for line in lines:
-        line = line.strip()
-        equivalence_group = set(line.split(","))
-        unknown = equivalence_group - signature_names
-        if unknown:
-            raise ValueError("Equivalence group contains unknown identifiers: {unknown}")
+    for equivalence_group in equivalence_groups:
         removed_ids: Set[int] = set()
         for cds, cdsresults in results_by_id.items():
             # Check if multiple competing HMM hits are present
@@ -310,39 +551,36 @@ def filter_result_multiple(results: List[HSP], results_by_id: Dict[str, HSP]) ->
     return results, results_by_id
 
 
-def create_rules(rule_file: str, signature_names: Set[str],
+def create_rules(rule_files: list[str], signature_names: Set[str],
                  valid_categories: Set[str],
-                 existing_aliases: Dict[str, List[rule_parser.Token]],
-                 existing_rules: List[rule_parser.DetectionRule] = None,
                  multipliers: Multipliers = None,
                  ) -> List[rule_parser.DetectionRule]:
     """ Creates DetectionRule instances from the default rules file
 
-        Updates existing_aliases with any aliases found.
-
         Args:
-            rule_file: A path to a file containing cluster rules to use.
+            rule_files: a list of paths to files containing cluster rules
             signature_names: the set of all known profile/signature names
             valid_categories: the set of all valid rule categories
-            existing_aliases: a dict of alias name to resulting tokens, updated with new values
-            existing_rules: a list of existing rules, if any
             multipliers: distance multipliers to apply to rules
 
         Returns:
             A list of DetectionRules.
     """
-    rules = existing_rules or []
+    aliases: dict[str, list[rule_parser.Token]] = {}
+    rules: list[rule_parser.DetectionRule] = []
     multipliers = multipliers or Multipliers()
-    with open(rule_file, "r", encoding="utf-8") as ruledata:
-        parser = rule_parser.Parser("".join(ruledata.readlines()), signature_names,
-                                    valid_categories, rules, existing_aliases=existing_aliases,
-                                    multipliers=multipliers)
-    existing_aliases.update(parser.aliases)
-    return parser.rules
+    for rule_file in rule_files:
+        with open(rule_file, "r", encoding="utf-8") as ruledata:
+            parser = rule_parser.Parser("".join(ruledata.readlines()), signature_names,
+                                        valid_categories, rules, existing_aliases=aliases,
+                                        multipliers=multipliers)
+        aliases.update(parser.aliases)
+        rules = parser.rules  # since they include all previous files, replace and don't extend
+    return rules
 
 
 def apply_cluster_rules(record: Record, results_by_id: Dict[str, List[ProfileHit]],
-                        rules: List[rule_parser.DetectionRule]
+                        rules: Iterable[rule_parser.DetectionRule]
                         ) -> Tuple[Dict[str, Dict[str, Set[str]]],
                                    Dict[str, Set[str]]]:
     """
@@ -398,18 +636,17 @@ def apply_cluster_rules(record: Record, results_by_id: Dict[str, List[ProfileHit
     return cds_domains_by_cluster_type, cluster_type_hits
 
 
-def find_hmmer_hits(record: Record, sig_by_name: Dict[str, Signature],
-                    seeds_by_name: Dict[str, int], hmmer_db: str,
-                    filter_file: str) -> Dict[str, List[ProfileHit]]:
+def find_hmmer_hits(record: Record, sig_by_name: Dict[str, HmmSignature],
+                    hmmer_db: str,
+                    equivalence_groups: GenericSets,
+                    ) -> dict[str, list[ProfileHit]]:
     """ Finds hits for HMMer profiles in the given record
 
         Arguments:
             record: the record to analyse
             sig_by_name: a dictionary mapping profile name to Signature instance
-            seeds_by_name: a dictionary mapping profile name to number of seeds
-                    used to generate that profile
             hmmer_db: the path to the HMMer database to find hits with
-            filter_file: a file containing equivalence sets of HMMs
+            equivalence_groups: a list of equivalence sets of HMMs
 
         Returns:
             a dictionary mapping CDS name to a list of ProfileHit instances found
@@ -436,14 +673,14 @@ def find_hmmer_hits(record: Record, sig_by_name: Dict[str, Signature],
                     results_by_id[hsp.hit_id].append(hsp)
 
     # Filter results by comparing scores of different models (for PKS systems)
-    results, results_by_id = filter_results(results, results_by_id, filter_file, set(sig_by_name))
+    results, results_by_id = filter_results(results, results_by_id, equivalence_groups)
 
     # Filter multiple results of the same model in one gene
     results, results_by_id = filter_result_multiple(results, results_by_id)
 
     by_id: Dict[str, List[ProfileHit]] = defaultdict(list)
     for hsp in results:
-        by_id[hsp.hit_id].append(HMMerHit.from_hsp(hsp, seeds_by_name[hsp.query_id]))
+        by_id[hsp.hit_id].append(HMMerHit.from_hsp(hsp, sig_by_name[hsp.query_id].seed_count))
 
     return by_id
 
@@ -514,12 +751,8 @@ def build_results(clusters: list[Protocluster], record: Record, tool: str,
                                 multipliers)
 
 
-def detect_protoclusters_and_signatures(record: Record, signature_file: str, seeds_file: str,
-                                        rule_files: List[str], valid_categories: Set[str],
-                                        filter_file: str, tool: str,
+def detect_protoclusters_and_signatures(record: Record, ruleset: Ruleset,
                                         annotate_existing_subregions: bool = True,
-                                        dynamic_profiles: Dict[str, DynamicProfile] = None,
-                                        multipliers: Multipliers = None,
                                         ) -> RuleDetectionResults:
     """ Compares all CDS features in a record with HMM signatures and generates
         Protocluster features based on those hits and the current protocluster detection
@@ -527,73 +760,42 @@ def detect_protoclusters_and_signatures(record: Record, signature_file: str, see
 
         Arguments:
             record: the record to analyse
-            signature_file: a tab separated file; each row being a single HMM reference
-                        with columns: label, description, minimum score cutoff, hmm path
-            seeds_file: the file containing all HMM profiles
-            rule_files: the files containing the rules to use for cluster definition
-            valid_categories: a set containing valid rule category strings
-            filter_file: a file containing equivalence sets of HMMs
-            tool: the name of the tool providing the HMMs (e.g. rule_based_clusters)
+            ruleset: the Ruleset instance defining what profiles exist
             annotate_existing_subregions: if True, subregions already present in the record
                     will have domains annotated even if no protocluster is found
-            dynamic_profiles: a dictionary of dynamic profiles, mapping profile name
-                    to profile
-            multipliers: distance multipliers to apply to rules
 
         Returns:
             an instance of RuleDetectionResults
     """
-    if not rule_files:
-        raise ValueError("rules must be provided")
-    if not dynamic_profiles:
-        dynamic_profiles = {}
-    if multipliers is None:
-        multipliers = Multipliers()
     # if there's no CDS features, don't try to do anything
     if not record.get_cds_features():
-        return RuleDetectionResults({}, tool, [], multipliers)
+        return RuleDetectionResults({}, ruleset.tool, [], ruleset.multipliers)
 
     # defaults in case of no HMMer profiles
     results_by_id: Dict[str, List[ProfileHit]] = {}
-    num_seeds_per_hmm: Dict[str, int] = defaultdict(int)
 
-    # get the HMMer profile info
-    sig_by_name: Dict[str, Signature] = {sig.name: sig for sig in get_signature_profiles(signature_file)}
-    # handle things relevant only when HMMer profiles are being used
-    if sig_by_name:
-        overlaps = set(sig_by_name).intersection(set(dynamic_profiles))
-        if overlaps:
-            raise ValueError(f"HMM profiles and dynamic profiles overlap: {overlaps}")
-        # find number of sequences on which each pHMM is based
-        num_seeds_per_hmm = get_sequence_counts(signature_file)
-        # get the HMMer profile results
-        results_by_id.update(find_hmmer_hits(record, sig_by_name, num_seeds_per_hmm, seeds_file, filter_file))
-    sig_by_name.update(dynamic_profiles)
-
-    rules: List[rule_parser.DetectionRule] = []
-    aliases: Dict[str, List[rule_parser.Token]] = {}
-    for rule_file in rule_files:
-        rules = create_rules(rule_file, set(sig_by_name), valid_categories, aliases, rules,
-                             multipliers=multipliers,
-                             )
+    # get the HMMer profile results, if relevant
+    if ruleset.hmm_profiles:
+        results_by_id.update(find_hmmer_hits(record, ruleset.hmm_profiles, ruleset.database_file,
+                                             ruleset.get_equivalence_groups()))
 
     # gather dynamic hits and merge them with HMMer results
-    dynamic_results = find_dynamic_hits(record, list(dynamic_profiles.values()))
+    dynamic_results = find_dynamic_hits(record, list(ruleset.dynamic_profiles.values()))
     for name, dynamic_hits in dynamic_results.items():
         if name not in results_by_id:
             results_by_id[name] = []
         results_by_id[name].extend(dynamic_hits)
 
     # Use rules to determine gene clusters
-    cds_domains_by_cluster, cluster_type_hits = apply_cluster_rules(record, results_by_id, rules)
+    cds_domains_by_cluster, cluster_type_hits = apply_cluster_rules(record, results_by_id, ruleset.rules)
 
     # annotate everything in detected protoclusters
-    rules_by_name = {rule.name: rule for rule in rules}
-    clusters = find_protoclusters(record, cluster_type_hits, rules_by_name)
+    rules_by_name = {rule.name: rule for rule in ruleset.rules}
+    clusters = find_protoclusters(record, cluster_type_hits, rules_by_name, results_by_id, cds_domains_by_cluster)
     strip_inferior_domains(cds_domains_by_cluster, rules_by_name)
 
-    return build_results(clusters, record, tool, results_by_id, cds_domains_by_cluster,
-                         annotate_existing_subregions, multipliers)
+    return build_results(clusters, record, ruleset.tool, results_by_id, cds_domains_by_cluster,
+                         annotate_existing_subregions, ruleset.multipliers)
 
 
 def strip_inferior_domains(cds_domains_by_cluster: Dict[str, Dict[str, Set[str]]],
@@ -609,31 +811,6 @@ def strip_inferior_domains(cds_domains_by_cluster: Dict[str, Dict[str, Set[str]]
             rule = rules_by_name[product]
             if set(rule.superiors).intersection(all_satisfied):
                 domains_by_cluster.pop(product)
-
-
-def get_sequence_counts(details_file: str) -> Dict[str, int]:
-    """ Gets the number of sequences/seeds used to generate each HMM signature
-
-        Arguments:
-            detail_file: a file containing all HMMs
-
-        Returns:
-            a dictionary mapping HMM name to the number of sequences used to
-                generate it
-    """
-    result = {}
-    for hmm in get_signature_profiles(details_file):
-        assert isinstance(hmm, HmmSignature)
-        with open(path.get_full_path(details_file, hmm.hmm_file), "r", encoding="utf-8") as handle:
-            lines = handle.readlines()
-        for line in lines:
-            if line.startswith('NSEQ '):
-                result[hmm.name] = int(line[6:].strip())
-                break
-        if hmm.name not in result:
-            raise ValueError(f"Unknown number of seeds for hmm file: {details_file}")
-
-    return result
 
 
 def find_dynamic_hits(record: Record, dynamic_profiles: List[DynamicProfile]) -> Dict[str, List[DynamicHit]]:

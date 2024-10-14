@@ -5,6 +5,7 @@
 
 """
 
+import argparse
 import glob
 import logging
 import os
@@ -13,10 +14,7 @@ import shutil
 from typing import Dict, List, Optional
 import warnings
 
-# silence warnings about nested sets (relevant for pyScss <= 1.3.7 and python >= 3.5)
-with warnings.catch_warnings():
-    warnings.simplefilter("ignore")
-    import scss
+import sass
 
 from antismash.common import html_renderer, path
 from antismash.common.module_results import ModuleResults
@@ -49,6 +47,11 @@ def get_arguments() -> ModuleArgs:
                     action='store_true',
                     default=False,
                     help="Use compact view by default for overview page.")
+    args.add_option("--html-ncbi-context",
+                    dest="html_ncbi_context",
+                    action=argparse.BooleanOptionalAction,
+                    default=False,
+                    help="Show NCBI genomic context links for genes (default: %(default)s).")
     return args
 
 
@@ -66,8 +69,7 @@ def prepare_data(_logging_only: bool = False) -> List[str]:
                 target = f"{flavour}.css"
                 source = f"{flavour}.scss"
                 assert os.path.exists(source), flavour
-                result = scss.Compiler(output_style="expanded").compile(source)
-                assert result
+                result = sass.compile(filename=source, output_style="compact")
                 with open(target, "w", encoding="utf-8") as out:
                     out.write(result)
     return []

@@ -4,13 +4,12 @@
 # for test files, silence irrelevant and noisy pylint warnings
 # pylint: disable=use-implicit-booleaness-not-comparison,protected-access,missing-docstring
 
-import json
 import unittest
 
 from helperlibs.bio import seqio
 
 import antismash
-from antismash.common import secmet
+from antismash.common import json, secmet
 from antismash.common.secmet.qualifiers import GeneFunction
 from antismash.common.test import helpers
 from antismash.config import build_config, destroy_config, get_config, update_config

@@ -20,6 +20,7 @@ class ModuleType(Enum):
     UNKNOWN = 0
     NRPS = 1
     PKS = 2
+    CAL = 3  # this is very specific to CAL domains, but they're common enough to justify this
 
     def __str__(self) -> str:
         return str(self.name).lower()
@@ -117,13 +118,14 @@ class Module(Feature):
         """
         if self.is_multigene_module():
             raise ValueError("cannot generate protein location for multi-CDS module")
-        return FeatureLocation(self._domains[0].protein_location.start, self._domains[-1].protein_location.end)
+        return self.get_parent_protein_location(self._parent_cds_names[0])
 
     def get_parent_protein_location(self, parent: str) -> FeatureLocation:
         """ Returns the location within the specified parent for multi-CDS modules """
         if parent not in self._parent_cds_names:
             raise ValueError(f"module {self} has no parent named {parent}")
-        domains = [domain for domain in self._domains if domain.locus_tag == parent]
+        domains = sorted((domain for domain in self._domains if domain.locus_tag == parent),
+                         key=lambda dom: dom.protein_location.start)
         return FeatureLocation(domains[0].protein_location.start, domains[-1].protein_location.end)
 
     def add_monomer(self, substrate: str, monomer: str) -> None:
@@ -248,4 +250,4 @@ class Module(Feature):
         return module
 
     def __repr__(self) -> str:
-        return f"Module(self.location, {self.module_type}: {[dom.domain for dom in self.domains]}"
+        return f"Module({self.location}, {self.module_type}: {[dom.domain for dom in self.domains]}"

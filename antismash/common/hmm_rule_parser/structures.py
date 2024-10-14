@@ -61,7 +61,7 @@ class DynamicProfile(Signature):
         return self._callable(record)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class Multipliers:
     """ Multipliers for use in scaling appropriate values within rules. """
     cutoff: float = 1.0

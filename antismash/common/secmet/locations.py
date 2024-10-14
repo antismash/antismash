@@ -7,7 +7,7 @@ import logging
 from typing import Iterable, List, Optional, Sequence, Tuple, Union
 
 from Bio.SeqFeature import (
-    AbstractPosition,
+    Position,
     AfterPosition,
     BeforePosition,
     CompoundLocation,
@@ -19,7 +19,7 @@ from Bio.SeqFeature import (
 
 from .errors import SecmetInvalidInputError
 
-Location = Union[CompoundLocation, FeatureLocation]  # pylint: disable=invalid-name
+Location = Union[CompoundLocation, FeatureLocation]
 
 
 def convert_protein_position_to_dna(start: int, end: int, location: Location) -> Tuple[int, int]:
@@ -105,6 +105,39 @@ def build_location_from_others(locations: Sequence[Location]) -> FeatureLocation
         else:
             location = CompoundLocation(location.parts + loc.parts)
     return location
+
+
+def get_distance_between_locations(first: Location, second: Location, wrap_point: int = None) -> int:
+    """ Returns the shortest distance between the two given features, crossing
+        the origin if provided.
+
+        Overlapping features are considered to have zero distance.
+
+        Arguments:
+            first: the first location
+            second: the second location
+            wrap_point: the point at which locations can wrap, if given
+
+        Returns:
+            the distance between the two locations
+    """
+    if locations_overlap(first, second):
+        return 0
+    offset = 0
+    if wrap_point:
+        offset = wrap_point
+    variants = [
+        abs(first.start - second.end + offset),
+        abs(first.end - second.start + offset),
+        abs(second.start - first.end + offset),
+        abs(second.end - first.start + offset)
+    ]
+    distance = min(variants)
+    if wrap_point:
+        distance %= wrap_point
+        distance = min(distance, get_distance_between_locations(first, second))
+    assert distance >= 0
+    return distance
 
 
 def location_bridges_origin(location: Location, allow_reversing: bool = False) -> bool:
@@ -247,13 +280,13 @@ def location_contains_other(outer: Location, inner: Location) -> bool:
         return all(location_contains_other(outer, part) for part in inner.parts)
     if isinstance(outer, CompoundLocation):
         return any(location_contains_other(part, inner) for part in outer.parts)
-    return inner.start in outer and inner.end - 1 in outer
+    return outer.start <= inner.start <= inner.end <= outer.end
 
 
 def location_from_string(data: str) -> Location:
     """ Converts a string, e.g. [<1:6](-), to a FeatureLocation or CompoundLocation
     """
-    def parse_position(string: str) -> AbstractPosition:
+    def parse_position(string: str) -> Position:
         """ Converts a positiong from a string into a Position subclass """
         if string[0] == '<':
             return BeforePosition(int(string[1:]))
@@ -369,7 +402,7 @@ def ensure_valid_locations(features: List[SeqFeature], can_be_circular: bool, se
             raise ValueError("one or more features with missing or invalid locations")
         # features outside the sequence cause problems with motifs and translations
         if feature.location.end > sequence_length:
-            raise ValueError("feature outside record sequence: {feature.location}")
+            raise ValueError(f"feature outside record sequence: {feature.location}")
         # features with overlapping exons cause translation problems
         if location_contains_overlapping_exons(feature.location):
             raise ValueError(f"location contains overlapping exons: {feature.location}")

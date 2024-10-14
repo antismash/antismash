@@ -14,7 +14,7 @@ _THREADING_SUPPORT = True
 
 
 def run_hmmpfam2(query_hmmfile: str, target_sequence: str, extra_args: List[str] = None
-                 ) -> List[SearchIO._model.query.QueryResult]:  # pylint: disable=protected-access
+                 ) -> list[SearchIO._model.query.QueryResult]:
     """ Run hmmpfam2 over the provided HMM file and fasta input
 
         Arguments:

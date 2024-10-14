@@ -8,15 +8,15 @@
 """
 
 from collections import defaultdict
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 from antismash.common import secmet
 
 from .common import ActiveSiteAnalysis
 
 # these are type aliases, not constants
-SinglePairing = Tuple[secmet.features.Domain, str]  # pylint: disable=invalid-name
-MultiplePairing = Tuple[secmet.features.Domain, List[str]]  # pylint: disable=invalid-name
+SinglePairing = tuple[secmet.features.Domain, str]
+MultiplePairing = tuple[secmet.features.Domain, list[str]]
 
 
 def run_all_analyses(record: secmet.Record) -> List[MultiplePairing]:

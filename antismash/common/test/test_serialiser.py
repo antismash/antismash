@@ -80,19 +80,14 @@ class TestFeatureSerialiser(unittest.TestCase):
         location = FeatureLocation(1, 6, strand=1)
         f_type = "test type"
         qualifiers = {"a": ["1", "2"], "b": ["3", "4"]}
-        f_id = "dummy id"
         # skipping biopython deprecated members: ref, ref_db, strand, location_operator
 
         feature = SeqFeature(location=location, type=f_type,
-                             qualifiers=qualifiers, id=f_id)
-        print(str(feature))
-
+                             qualifiers=qualifiers)
         json = serialiser.feature_to_json(feature)
         print(json)  # for debugging failures
         new_feature = serialiser.feature_from_json(json)
-        print(str(new_feature))
         assert new_feature.qualifiers == feature.qualifiers
-        assert new_feature.id == feature.id
         assert new_feature.type == feature.type
         assert str(new_feature.location) == str(new_feature.location)
 
@@ -105,7 +100,8 @@ class TestAreas(unittest.TestCase):
 
     def test_complex(self):
         protos = [
-            helpers.DummyProtocluster(core_start=3, core_end=22, neighbourhood_range=1, product='a'),
+            helpers.DummyProtocluster(core_start=3, core_end=22, neighbourhood_range=1,
+                                      product='a', product_category="cat"),
             helpers.DummyProtocluster(core_start=33, core_end=48, neighbourhood_range=2, product='b'),
         ]
         candidates = [
@@ -128,6 +124,8 @@ class TestAreas(unittest.TestCase):
         assert res["products"] == [p.product for p in protos]
         assert res["subregions"] == []
         assert len(res["protoclusters"]) == 2
+        for real, converted in zip(protos, list(res["protoclusters"].values())):
+            assert converted["category"] == real.product_category
         assert list(res["protoclusters"]) == [0, 1]
         assert res["protoclusters"][1]["product"] == protos[1].product
         assert len(res["candidates"]) == 2
@@ -143,8 +141,7 @@ class TestAreas(unittest.TestCase):
         assert not res["protoclusters"]
 
         # lastly, check all this is properly embedded in the final JSON
-        bio = record.to_biopython()
-        full = serialiser.dump_records([bio], [{}], [record])
+        full = serialiser.dump_records([{}], [record])
         assert full[0]["areas"] == results
 
 

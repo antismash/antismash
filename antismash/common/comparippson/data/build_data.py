@@ -7,10 +7,11 @@
 import argparse
 from dataclasses import dataclass
 import glob
-import json
 import os
 import sys
 from typing import Any, Dict, List
+
+from antismash.common import json
 
 
 @dataclass
@@ -36,7 +37,7 @@ ASDB_METADATA = Metadata(
     fields=["accession", "type", "locus", "start", "end"],
     id_format="@accession@",
     name="antiSMASH-DB",
-    url="https://antismash-db.secondarymetabolites.org/area.html?record=@accession@&start=@start@&end=@end@",
+    url="https://antismash-db.secondarymetabolites.org/area?record=@accession@&start=@start@&end=@end@",
 )
 
 
@@ -126,7 +127,7 @@ def gather_entries(files: List[str]) -> List[Entry]:
                 # some RiPP modules keep motifs in different layouts
                 if name == "thiopeptides":
                     motifs = results["motifs"]
-                elif name in ["lanthipeptides", "sactipeptides", "thiopeptides"]:
+                elif name in ["lanthipeptides", "lassopeptides", "sactipeptides", "thiopeptides"]:
                     motifs = []
                     for _locus, motifs_for_locus in results["motifs"].items():
                         motifs.extend(motifs_for_locus)
@@ -249,14 +250,14 @@ def write_data(entries: List[Entry], metadata: Metadata, version: str,
         handle.write("{\n")
         # write the core DB info as single line per value
         for key, value in vars(metadata).items():
-            handle.write(f' "{key}": {json.dumps(value, ensure_ascii=False)},\n')
+            handle.write(f' "{key}": {json.dumps(value)},\n')
         handle.write(f' "version": "{version}",\n')
         # entries opening
         handle.write(' "entries": {\n')
         # all the individual entries, one per line
         entry_lines = []
         for entry in entries:
-            entry_lines.append(f'  "{entry.counter}": {json.dumps(entry.to_json(), ensure_ascii=False)}')
+            entry_lines.append(f'  "{entry.counter}": {json.dumps(entry.to_json())}')
         handle.write(",\n".join(entry_lines))
         # entries closing
         handle.write('\n }\n')
@@ -333,13 +334,19 @@ if __name__ == "__main__":
 
     if args.asdb:
         # having this import here avoids needing it at all for mibig mode
-        import antismash
+        # the "from" method of importing is required to work around a mypy issue
+        from antismash.modules import (
+            lanthipeptides,
+            lassopeptides,
+            sactipeptides,
+            thiopeptides,
+        )
         from antismash.common.secmet.locations import location_from_string
         RIPP_MODULES = [
-            antismash.modules.lanthipeptides,
-            antismash.modules.lassopeptides,
-            antismash.modules.sactipeptides,
-            antismash.modules.thiopeptides,
+            lanthipeptides,
+            lassopeptides,
+            sactipeptides,
+            thiopeptides,
         ]
 
     try:

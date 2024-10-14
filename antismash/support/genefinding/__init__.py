@@ -12,11 +12,10 @@ from antismash.config import ConfigType
 from antismash.config.args import ModuleArgs, ReadableFullPathAction
 
 from .run_prodigal import run_prodigal
-from .run_glimmerhmm import run_glimmerhmm
 
 
 NAME = "genefinding"
-SHORT_DESCRIPTION = "Genefinding with GlimmerHMM or Prodigal"
+SHORT_DESCRIPTION = "Genefinding with Prodigal for prokaryotes"
 
 
 def get_arguments() -> ModuleArgs:
@@ -27,9 +26,9 @@ def get_arguments() -> ModuleArgs:
     args.add_option('tool',
                     dest='tool',
                     default='error',
-                    choices=['glimmerhmm', 'prodigal', 'prodigal-m', 'none', 'error'],
+                    choices=['prodigal', 'prodigal-m', 'none', 'error'],
                     type=str,
-                    help="Specify algorithm used for gene finding: GlimmerHMM, "
+                    help="Specify algorithm used for gene finding: "
                          "Prodigal, Prodigal Metagenomic/Anonymous mode, or none."
                          " The 'error' option will raise an error if genefinding is attempted."
                          " The 'none' option will not run genefinding."
@@ -51,11 +50,9 @@ def check_prereqs(options: ConfigType) -> List[str]:
         return failure_messages
     binaries: List[str] = []
     if options.check_prereqs_only:
-        binaries = ["prodigal", "glimmerhmm"]
+        binaries = ["prodigal"]
     elif options.genefinding_tool in ['prodigal', 'prodigal-m']:
         binaries = ['prodigal']
-    elif options.taxon == 'fungi':
-        binaries = ['glimmerhmm']
     for binary_name in binaries:
         if binary_name not in options.executables:
             failure_messages.append(f"Failed to locate executable for {binary_name}")
@@ -68,10 +65,8 @@ def check_options(options: ConfigType) -> List[str]:
         and vice versa.
     """
     errors = []
-    if options.taxon == "fungi" and options.genefinding_tool not in ["glimmerhmm", "none", "error"]:
-        errors.append("Fungi taxon must use glimmerhmm for genefinding if using genefinding")
-    if options.taxon == "bacteria" and options.genefinding_tool == "glimmerhmm":
-        errors.append("Bacteria taxon cannot use glimmerhmm for genefinding")
+    if options.taxon == "fungi" and options.genefinding_tool not in ["none", "error"]:
+        errors.append("Fungi taxon must provide gene annotations in GenBank or GFF3 format.")
     return errors
 
 
@@ -83,21 +78,23 @@ def is_enabled(options: ConfigType) -> bool:
 
 
 def run_on_record(record: Record, options: ConfigType) -> None:
-    """ Find genes in a Record using glimmerhmm or prodigal.
+    """ Find genes in a Record using prodigal.
         Genes will be added to the record as they are found.
     """
-    if options.genefinding_tool == 'error':
-        raise AntismashInputError(f"Record {record.id} contains no genes and no genefinding tool specified")
+    if options.genefinding_tool in ["none"]:
+        return None
 
-    if options.taxon == 'fungi':
-        if options.genefinding_tool == ["none"]:
-            return None
-        assert options.genefinding_tool == "glimmerhmm"
-        logging.debug("Running glimmerhmm genefinding")
-        return run_glimmerhmm(record)
+    if options.taxon == "fungi":
+        raise AntismashInputError(
+            f"Fungal record {record.id} contains no genes and "
+            "antiSMASH does not provide a fungal gene finder."
+        )
+
+    if options.genefinding_tool == "error":
+        raise AntismashInputError(f"Record {record.id} contains no genes and no genefinding tool specified")
 
     if options.genefinding_tool in ["prodigal", "prodigal-m"]:
         logging.debug("Running prodigal based genefinding")
-        return run_prodigal(record, options)
+        return run_prodigal(record)
 
     raise ValueError(f"Unknown genefinding tool: {options.genefinding_tool}")

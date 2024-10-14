@@ -42,7 +42,7 @@ class GeneFunction(Enum):
         raise ValueError(f"Unknown gene function label: {label}")
 
 
-class _GeneFunctionAnnotation:  # pylint: disable=too-few-public-methods
+class _GeneFunctionAnnotation:
     """ A single instance of an annotation. """
     slots = ["function", "tool", "description", "product"]
 

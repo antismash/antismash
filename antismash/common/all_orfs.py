@@ -149,7 +149,11 @@ def create_feature_from_location(record: Record, location: FeatureLocation,
         label = 'allorf_{start:0{digits}}_{end:0{digits}}'.format(
             digits=digits, start=(location.start + 1), end=location.end
         )
-    feature = CDSFeature(location, str(record.get_aa_translation_from_location(location)),
+    translation = str(record.get_aa_translation_from_location(location))
+    # always start with methionine for CDS features, even if it had an alternate start codon
+    if translation[0] != "M":
+        translation = "M" + translation[1:]
+    feature = CDSFeature(location, translation,
                          locus_tag=label, protein_id=label, gene=label)
     feature.created_by_antismash = True
     return feature
@@ -219,9 +223,8 @@ def find_all_orfs(record: Record, area: Optional[CDSCollection] = None,
     locations = []
     for start, end in intergenic_areas:
         chunk = seq[start:end]
-        locations.extend(scan_orfs(chunk, 1, start))
-        locations.extend(scan_orfs(chunk.reverse_complement(), -1, start))
-
+        locations.extend(scan_orfs(chunk, 1, start, minimum_length=min_length))
+        locations.extend(scan_orfs(chunk.reverse_complement(), -1, start, minimum_length=min_length))
     new_features = []
     for location in locations:
         new_features.append(create_feature_from_location(record, location))

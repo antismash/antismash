@@ -4,6 +4,7 @@
 """ Annotations for NRPS/PKS domains """
 
 import bisect
+from dataclasses import dataclass, field
 from typing import Any, Dict, Iterator, List, Tuple
 
 from .secmet import _parse_format
@@ -31,29 +32,27 @@ class NRPSPKSQualifier:
 
         Can be used directly as a qualifier for Biopython's SeqFeature.
     """
-    class Domain:  # pylint: disable=too-few-public-methods
+    @dataclass
+    class Domain:
         """ Contains information about a NRPS/PKS domain, including predictions
             made by modules.
 
             feature_name is identical to that of the AntismashDomain that contains
             this same information
         """
-        __slots__ = ["name", "label", "start", "end", "evalue", "bitscore",
-                     "_predictions", "feature_name", "subtypes"]
+        name: str
+        label: str
+        start: int
+        end: int
+        evalue: float
+        bitscore: float
+        feature_name: str
+        subtypes: list[str] = field(default_factory=list)
+        _predictions: dict[str, str] = field(default_factory=dict)
 
-        def __init__(self, name: str, label: str, start: int, end: int,
-                     evalue: float, bitscore: float, feature_name: str, subtypes: List[str] = None) -> None:
-            self.label = str(label)
-            self.name = str(name)
-            self.start = int(start)
-            self.end = int(end)
-            self.evalue = float(evalue)
-            self.bitscore = float(bitscore)
-            if not feature_name:
-                raise ValueError("a Domain must belong to a feature, feature_name is required")
-            self.feature_name = str(feature_name)
-            self._predictions: Dict[str, str] = {}  # method to prediction name
-            self.subtypes: List[str] = subtypes or []
+        def __post_init__(self) -> None:
+            if not self.feature_name:
+                raise ValueError("a Domain must belong to a feature")
 
         def __lt__(self, other: "NRPSPKSQualifier.Domain") -> bool:
             return (self.start, self.end) < (other.start, other.end)

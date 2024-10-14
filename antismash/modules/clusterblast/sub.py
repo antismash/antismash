@@ -23,7 +23,6 @@ from .core import (
     run_blast,
     score_clusterblast_output,
     write_fastas_with_all_genes,
-    write_raw_clusterblastoutput,
 )
 from .results import RegionResult, GeneralResults
 from .data_structures import ReferenceCluster, Protein
@@ -159,7 +158,6 @@ def perform_subclusterblast(options: ConfigType, record: Record, clusters: Dict[
                                         partitions=options.cpus)
             run_clusterblast_processes(options)
             blastoutput = read_clusterblast_output(options)
-            write_raw_clusterblastoutput(options.output_dir, blastoutput, prefix="subclusterblast")
             # parse and score diamond results
             _, cluster_names_to_queries = blastparse(blastoutput, record,
                                                      min_seq_coverage=40,

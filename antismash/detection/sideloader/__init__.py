@@ -20,7 +20,7 @@ from .html_output import generate_html, will_handle
 
 NAME = "sideloader"
 SHORT_DESCRIPTION = "Side-loaded annotations"
-DETECTION_STAGE = DetectionStage.AREA_FORMATION
+DETECTION_STAGE = DetectionStage.FULL_GENOME
 
 
 def _parse_arg(option: str) -> SideloadSimple:
@@ -62,7 +62,7 @@ class SideloadAction(argparse.Action):
 def get_arguments() -> ModuleArgs:
     """ Constructs commandline arguments and options for this module
     """
-    args = ModuleArgs("Advanced options", "sideload")
+    args = ModuleArgs("Sideload options", "sideload")
     args.add_option("sideload",
                     dest="sideload",
                     metavar="JSON",

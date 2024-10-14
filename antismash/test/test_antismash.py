@@ -7,10 +7,14 @@
 from argparse import Namespace
 import logging
 import os
+from tempfile import NamedTemporaryFile
 import unittest
 from unittest.mock import call, patch
 
-from antismash import main
+import pytest
+
+from antismash import __main__ as outer, config, main
+from antismash.common.errors import AntismashInputError
 from antismash.common.test.helpers import DummyRecord
 from antismash.config import build_config, destroy_config, get_config
 from antismash.config.args import build_parser
@@ -65,31 +69,33 @@ class TestAntismash(unittest.TestCase):
         bio = rec.to_biopython()
 
         main.add_antismash_comments([(rec, bio)], options)
-        assert "##antiSMASH-Data-START##" in bio.annotations["comment"]
-        assert "##antiSMASH-Data-END##" in bio.annotations["comment"]
-        assert "Version" in bio.annotations["comment"] and options.version in bio.annotations["comment"]
-        assert "Original ID" not in bio.annotations["comment"]
-        assert "Starting at" not in bio.annotations["comment"]
-        assert "Ending at" not in bio.annotations["comment"]
+        comment = bio.annotations["structured_comment"]["antiSMASH-Data"]
+        assert comment["Version"] == options.version
+        assert "Original ID" not in comment
+        assert "Starting at" not in comment
+        assert "Ending at" not in comment
 
-        bio.annotations["comment"] = ""
+        bio.annotations["structured_comment"].pop("antiSMASH-Data")
         options.start = 7
         main.add_antismash_comments([(rec, bio)], options)
-        assert "Original ID" not in bio.annotations["comment"]
-        assert "Starting at  :: 7\n" in bio.annotations["comment"]
+        comment = bio.annotations["structured_comment"]["antiSMASH-Data"]
+        assert "Original ID" not in comment
+        assert comment["Starting at"] == "7"
 
-        bio.annotations["comment"] = ""
+        bio.annotations["structured_comment"].pop("antiSMASH-Data")
         options.start = -1
         options.end = 1000
         main.add_antismash_comments([(rec, bio)], options)
-        assert "Original ID" not in bio.annotations["comment"]
-        assert "Ending at    :: 1000\n" in bio.annotations["comment"]
+        comment = bio.annotations["structured_comment"]["antiSMASH-Data"]
+        assert "Original ID" not in comment
+        assert comment["Ending at"] == "1000"
 
-        bio.annotations["comment"] = ""
+        bio.annotations["structured_comment"].pop("antiSMASH-Data")
         options.end = -1
         rec.original_id = "something else"
         main.add_antismash_comments([(rec, bio)], options)
-        assert "Original ID" in bio.annotations["comment"] and "something else" in bio.annotations["comment"]
+        comment = bio.annotations["structured_comment"]["antiSMASH-Data"]
+        assert comment["Original ID"] == rec.original_id
 
     def test_canonical_base_filename(self):
         options = build_parser(modules=self.all_modules).parse_args([])
@@ -120,6 +126,60 @@ class TestAntismash(unittest.TestCase):
 
         res = main.canonical_base_filename("foo.1_example.gbff.gz", "out", options)
         assert res == expected
+
+
+class TestErrorsInLogfile(unittest.TestCase):
+    def setUp(self):
+        destroy_config()
+
+    def tearDown(self):
+        destroy_config()
+
+    # in a TestCase, the pytest capture system can't be used for a 'test_*' method
+    # this solves the problem by storing it locally
+    @pytest.fixture(autouse=True)
+    def capture(self, capsys):
+        self.outputs = capsys  # pylint: disable=attribute-defined-outside-init
+
+    @patch.object(outer.os.path, "isfile", return_value=True)
+    @patch.object(outer, "get_git_version", return_value="deadbeef")
+    def test_error_logging_to_file(self, *_):
+        error_message = "bad"
+        with NamedTemporaryFile() as logfile:
+            logfile_path = logfile.name
+            # trick the input path checking by pointing it to the (empty) log file
+            args = [logfile_path, "--logfile", logfile_path]
+            options = build_config(args, isolated=True)
+            with patch.object(main, "_run_antismash", side_effect=AntismashInputError(error_message)) as runner:
+                # avoid constructing a non-isolated config
+                with patch.object(config.AntismashParser, "parse_args", return_value=options):
+                    assert build_config(args).logfile == logfile_path
+                    assert get_config(args).logfile == logfile_path
+
+                # finally, run the actual function being tested
+                result = outer.main(args)
+
+                # the run should count as a failure
+                assert result == 1
+                # the mocked inner call should have been run, with the options setting a logfile
+                assert runner.call_count == 1
+                assert runner.call_args == ((logfile_path, options),)
+            # read the temporary log file before it's deleted
+            with open(logfile_path, encoding="utf-8") as handle:
+                log_lines = handle.read().splitlines()
+
+        def check_message(line):
+            assert line.startswith("ERROR") and line.endswith(error_message)
+
+        # the error should be logged
+        assert len(log_lines) == 1
+        check_message(log_lines[0])
+
+        # and also printed to stderr, since the logfile would hide it from the terminal
+        printed = self.outputs.readouterr()  # fetches stdout/stderr via pytest
+        check_message(printed.err.strip())
+        # and nothing should have gone to stdout
+        assert not printed.out
 
 
 @patch.object(logging, 'debug')

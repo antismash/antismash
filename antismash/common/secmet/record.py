@@ -13,14 +13,27 @@
 
 import bisect
 from collections import Counter, defaultdict, OrderedDict
+import itertools
 import logging
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, TypeVar, Union, cast
+from typing import (
+    Any,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+    cast,
+)
 from zlib import crc32
 
 from Bio import SeqIO
 from Bio.Seq import Seq
-from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
-from Bio.SeqRecord import SeqRecord
+from Bio.SeqFeature import SeqFeature
+from Bio.SeqRecord import SeqRecord, UndefinedSequenceError
 
 from .errors import SecmetInvalidInputError
 from .features import (
@@ -36,12 +49,16 @@ from .features import (
     Prepeptide,
     Protocluster,
     Region,
+    Source,
     SubRegion,
 )
 from .features import CDSCollection
 from .features.candidate_cluster import create_candidates_from_protoclusters
 
 from .locations import (
+    CompoundLocation,
+    FeatureLocation,
+    Location,
     location_bridges_origin,
     split_origin_bridging_location,
     combine_locations,
@@ -74,13 +91,19 @@ class Record:
                  "_candidate_clusters", "_candidate_clusters_numbering",
                  "_subregions", "_subregion_numbering",
                  "_regions", "_region_numbering", "_antismash_domains_by_tool",
-                 "_antismash_domains_by_cds_name"]
+                 "_antismash_domains_by_cds_name", "_gc_content",
+                 "_cds_cache", "_cds_cache_dirty", "_sources",
+                 ]
 
-    def __init__(self, seq: Union[Seq, str] = "", transl_table: int = 1, **kwargs: Any) -> None:
+    def __init__(self, seq: Union[Seq, str] = "", *,
+                 transl_table: int = 1, gc_content: float = -1.,
+                 **kwargs: Any,
+                 ) -> None:
         # prevent paths from being used as a sequence
         assert not set("./\\").issubset(set(seq)), "Invalid sequence provided"
         if isinstance(seq, str):
             seq = Seq(seq)
+        assert isinstance(seq, Seq)
         self._record = SeqRecord(seq, **kwargs)
         self.record_index: Optional[int] = None
         self.original_id = None
@@ -92,6 +115,8 @@ class Record:
         self._cds_features: List[CDSFeature] = []
         self._cds_by_name: Dict[str, CDSFeature] = {}
         self._cds_by_location: Dict[str, CDSFeature] = {}
+        self._cds_cache: tuple[CDSFeature, ...] = tuple()
+        self._cds_cache_dirty: bool = False
 
         self._cds_motifs: List[CDSMotif] = []
 
@@ -122,6 +147,9 @@ class Record:
         self._region_numbering: Dict[Region, int] = {}
 
         self._transl_table = int(transl_table)
+        self._gc_content: float = gc_content
+
+        self._sources: List[Source] = []
 
     def __getattr__(self, attr: str) -> Any:
         # passthroughs to the original SeqRecord
@@ -360,7 +388,10 @@ class Record:
 
     def get_cds_features(self) -> Tuple[CDSFeature, ...]:
         """A list of secondary metabolite clusters present in the record"""
-        return tuple(self._cds_features)
+        if self._cds_cache_dirty or not self._cds_features:
+            self._cds_cache = tuple(self._cds_features)
+            self._cds_cache_dirty = False
+        return self._cds_cache
 
     def get_cds_name_mapping(self) -> Dict[str, CDSFeature]:
         """A dictionary mapping CDS name to CDS feature"""
@@ -453,25 +484,26 @@ class Record:
             raise ValueError(f"Use the appropriate get_* type instead for {label}")
         return tuple(i for i in self.get_generics() if i.type == label)
 
-    def get_all_features(self) -> List[Feature]:
-        """ Returns all features
-            note: This is slow, if only a specific type is required, use
-                  the other get_*() functions
-        """
-        features: list[Feature] = list(self._genes)
-        features.extend(self.get_generics())
-        features.extend(self.get_protoclusters())
-        features.extend(self.get_candidate_clusters())
-        features.extend(self.get_subregions())
-        features.extend(self.get_regions())
-        features.extend(self.get_cds_features())
-        features.extend(self.get_cds_motifs())
-        features.extend(self.get_antismash_domains())
-        features.extend(self.get_pfam_domains())
-        features.extend(self.get_modules())
-        return features
+    @property
+    def all_features(self) -> Iterable[Feature]:
+        """ An iterator over all the features contained by the record """
+        # in order of least references to other features
+        return itertools.chain(
+            self._sources,
+            self._nonspecific_features,
+            self._genes,
+            self._cds_features,
+            self._cds_motifs,
+            self._antismash_domains,
+            self._pfam_domains,
+            self._modules,
+            self._subregions,
+            self._protoclusters,
+            self._candidate_clusters,
+            self._regions,
+        )
 
-    def get_cds_features_within_location(self, location: FeatureLocation,
+    def get_cds_features_within_location(self, location: Location,
                                          with_overlapping: bool = False) -> List[CDSFeature]:
         """ Returns all CDS features within the given location
 
@@ -483,7 +515,7 @@ class Record:
             Returns:
                 a list of CDSFeatures, ordered by earliest position in feature location
         """
-        def find_start_in_list(location: FeatureLocation, features: List[CDSFeature],
+        def find_start_in_list(location: Location, features: list[CDSFeature],
                                include_overlaps: bool) -> int:
             """ Find the earliest feature that starts before the location
                 (and ends before, if include_overlaps is True)
@@ -521,9 +553,8 @@ class Record:
 
     def to_biopython(self) -> SeqRecord:
         """Returns a Bio.SeqRecord instance of the record"""
-        features = self.get_all_features()
         bio_features: List[SeqFeature] = []
-        for feature in sorted(features):
+        for feature in sorted(self.all_features):
             bio_features.extend(feature.to_biopython())
         if "molecule_type" not in self._record.annotations:
             self._record.annotations["molecule_type"] = "DNA"
@@ -539,7 +570,8 @@ class Record:
                        self._candidate_clusters, self._cds_motifs,
                        self._pfam_domains, self._antismash_domains,
                        self._nonspecific_features,
-                       self._genes, self._regions, self._subregions]
+                       self._genes, self._regions, self._subregions,
+                       self._sources]
         return sum(map(len, cast(List[List[Feature]], collections)))
 
     def add_gene(self, gene: Gene) -> None:
@@ -580,6 +612,7 @@ class Record:
         # only modify the record once all the checks are complete, otherwise
         # an exception can be caught leaving the state partially modified
         index = bisect.bisect_left(self._cds_features, cds_feature)
+        self._cds_cache_dirty = True
         self._cds_features.insert(index, cds_feature)
         self._link_cds_to_parent(cds_feature)
         self._cds_by_location[location_key] = cds_feature
@@ -653,6 +686,24 @@ class Record:
         """ Returns all Modules in the record """
         return tuple(self._modules)
 
+    def add_source(self, source: Source) -> None:
+        """ Add the given Source to the record """
+        assert isinstance(source, Source)
+
+        self._sources.append(source)
+
+    def clear_sources(self) -> None:
+        """ Removes all Sources from the record """
+        self._sources.clear()
+
+    def get_sources(self) -> Tuple[Source, ...]:
+        """ Returns all Sources in the record """
+        return tuple(self._sources)
+
+    def has_multiple_sources(self) -> bool:
+        """ Returns True if the record contains multiple Source features """
+        return len(self._sources) > 1
+
     def add_feature(self, feature: Feature) -> None:
         """ Adds a Feature or any subclass to the relevant list """
         assert isinstance(feature, Feature), type(feature)
@@ -676,6 +727,8 @@ class Record:
             self.add_antismash_domain(feature)
         elif isinstance(feature, Module):
             self.add_module(feature)
+        elif isinstance(feature, Source):
+            self.add_source(feature)
         else:
             self._nonspecific_features.append(feature)
 
@@ -720,12 +773,14 @@ class Record:
             self.add_subregion(SubRegion.from_biopython(feature, record=self))
         elif feature.type == Module.FEATURE_TYPE:
             self.add_module(Module.from_biopython(feature, record=self))
+        elif feature.type == Source.FEATURE_TYPE:
+            self.add_source(Source.from_biopython(feature, record=self))
         else:
             self.add_feature(Feature.from_biopython(feature))
 
     @classmethod
     def from_biopython(cls: Type[T], seq_record: SeqRecord, taxon: str,
-                       discard_antismash_features: bool = False) -> T:
+                       discard_antismash_features: bool = False, **kwargs: Any) -> T:
         """ Constructs a new Record instance from a biopython SeqRecord,
             also replaces biopython SeqFeatures with Feature subclasses
 
@@ -746,8 +801,8 @@ class Record:
         transl_table = 1  # standard
         if str(taxon) == "bacteria":
             transl_table = 11  # bacterial, archea, plant plastid code
-        record = cls(transl_table=transl_table)
-        record._record = seq_record  # pylint: disable=protected-access
+        record = cls(seq=seq_record.seq, transl_table=transl_table, **kwargs)
+        record._record = seq_record
         # because is_circular() can't be used reliably at this stage due to fasta files
         can_be_circular = taxon == "bacteria"
         try:
@@ -756,8 +811,8 @@ class Record:
             raise SecmetInvalidInputError(f"{seq_record.id}: {err}")
 
         for feature in seq_record.features:
-            if feature.ref or feature.ref_db:
-                for ref in [feature.ref, feature.ref_db]:
+            if feature.location.ref or feature.location.ref_db:
+                for ref in [feature.location.ref, feature.location.ref_db]:
                     if ref and ref != seq_record.id:
                         raise SecmetInvalidInputError(f"feature references another sequence: {feature.ref}")
                 # to handle a biopython issue, set the references to None
@@ -900,7 +955,7 @@ class Record:
             raise ValueError("location outside available sequence")
         if transl_table is None:
             transl_table = self._transl_table
-        extracted = location.extract(self.seq).ungap('-')
+        extracted = location.extract(self.seq).replace("-", "")
         if len(extracted) % 3 != 0:
             extracted = extracted[:-(len(extracted) % 3)]
         seq = extracted.translate(to_stop=True, table=transl_table)
@@ -918,7 +973,7 @@ class Record:
 
         return Seq(string_version)
 
-    def get_cds_features_within_regions(self) -> List[CDSFeature]:  # pylint: disable=invalid-name
+    def get_cds_features_within_regions(self) -> list[CDSFeature]:
         """ Returns all CDS features in the record that are located within a
             region of interest
         """
@@ -1015,9 +1070,11 @@ class Record:
         """ Calculate the GC content of the record's sequence """
         if not self.seq:
             raise ValueError("Cannot calculate GC content of empty sequence")
-        counter = Counter(str(self.seq))
-        gc_count = counter['G'] + counter['C'] + counter['g'] + counter['c']
-        return gc_count / len(self)
+        if self._gc_content < 0:  # not cached
+            counter = Counter(str(self.seq))
+            gc_count = counter['G'] + counter['C'] + counter['g'] + counter['c']
+            self._gc_content = gc_count / len(self)
+        return self._gc_content
 
     def strip_antismash_annotations(self) -> None:
         """ Removes all antismash features and annotations from the record """
@@ -1050,7 +1107,10 @@ class Record:
             Returns:
                 True if more than 80% of characters are nucleotide bases
         """
-        other = str(sequence).lower()
+        try:
+            other = str(sequence).lower()
+        except UndefinedSequenceError:
+            return False
         for char in "acgtn":
             other = other.replace(char, "")
         return len(other) < 0.2 * len(sequence)

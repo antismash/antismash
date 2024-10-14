@@ -607,15 +607,17 @@ def find_lan_a_features(area_feature: CDSCollection) -> List[CDSFeature]:
         if len(feature.translation) < MAX_PRECURSOR_LENGTH:
             lan_a_features.append(feature)
             continue
+        # if it has known precursor domains, that's also of interest if it's vaguely the right size
+        if len(feature.translation) > MAX_PRECURSOR_LENGTH * 1.25:
+            continue
         if feature.sec_met and set(feature.sec_met.domain_ids).intersection(KNOWN_PRECURSOR_DOMAINS):
             lan_a_features.append(feature)
 
     return lan_a_features
 
 
-def contains_feature_with_single_domain(genes: List[CDSFeature], domains: Set[str]) -> bool:
-    """ Checks for the existence of a feature within a group that has a single
-        domain and that the domain is within the provided set of domains
+def contains_feature_with_domain(genes: List[CDSFeature], domains: Set[str]) -> bool:
+    """ Checks for the existence of one of the given domains in the given features
 
         Arguments:
             genes: a list of genes to check
@@ -625,9 +627,9 @@ def contains_feature_with_single_domain(genes: List[CDSFeature], domains: Set[st
             True if a feature matching the conditions was found, otherwise False
     """
     for feature in genes:
-        if not feature.sec_met or len(feature.sec_met.domain_ids) > 1:
+        if not feature.sec_met:
             continue
-        if len(domains.intersection(set(feature.sec_met.domain_ids))) == 1:
+        if domains.intersection(set(feature.sec_met.domain_ids)):
             return True
     return False
 
@@ -702,10 +704,10 @@ def run_lanthi_on_genes(record: Record, focus: CDSFeature, cluster: Protocluster
         return
     domains = get_detected_domains(cluster.cds_children)
     non_candidate_neighbours = find_neighbours_in_range(focus, cluster.cds_children)
-    flavoprotein_found = contains_feature_with_single_domain(non_candidate_neighbours, {"Flavoprotein"})
-    halogenase_found = contains_feature_with_single_domain(non_candidate_neighbours, {"Trp_halogenase"})
-    oxygenase_found = contains_feature_with_single_domain(non_candidate_neighbours, {"p450"})
-    dehydrogenase_found = contains_feature_with_single_domain(non_candidate_neighbours, {"adh_short", "adh_short_C2"})
+    flavoprotein_found = contains_feature_with_domain(non_candidate_neighbours, {"Flavoprotein"})
+    halogenase_found = contains_feature_with_domain(non_candidate_neighbours, {"Trp_halogenase"})
+    oxygenase_found = contains_feature_with_domain(non_candidate_neighbours, {"p450"})
+    dehydrogenase_found = contains_feature_with_domain(non_candidate_neighbours, {"adh_short", "adh_short_C2"})
 
     lant_class = predict_class_from_genes(focus, cluster.cds_children)
     if not lant_class:

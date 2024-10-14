@@ -8,82 +8,82 @@
 
 <div class="focus-intro">
  <strong>{{identifier(feature.get_name())}}</strong><br>
- {% if feature.product and feature.gene != feature.get_name() %}
+ {%- if feature.product and feature.gene != feature.get_name() -%}
   {{feature.product}}<br>
- {% endif %}
+ {%- endif -%}
  <br>
  Locus tag: {{identifier(feature.locus_tag)}}<br>
  Protein ID: <span class="serif">{{feature.protein_id}}</span><br>
  Gene: <span class="serif">{{feature.gene}}</span><br>
- {% if ec_numbers %}
+ {%- if ec_numbers -%}
   EC-Number(s): {{ec_numbers}}<br>
- {% endif %}
+ {%- endif -%}
  Location: {{ "{:,d}".format(feature.location.start + 1) }} - {{ "{:,d}".format(feature.location.end) }},
- (total: {{feature.location | length}} nt{% if (feature.location.parts | length) > 1 %}, excluding introns{% endif %})<br>
+ (total: {{feature.location | length}} nt{%- if (feature.location.parts | length) > 1 -%} , excluding introns{%- endif -%} )<br>
  <br>
- {% for gene_function in feature.gene_functions %}
+ {%- for gene_function in feature.gene_functions -%}
   {{ gene_function }}<br>
- {% endfor %}
+ {%- endfor -%}
 </div>
 <div class="focus-info">
- {% if asf_notes %}
+ {%- if asf_notes -%}
   Active site details: {{collapser_start(feature.get_name(), level="none")}}
   <dl>
-  {% for domain, hits in asf_notes.items() %}
+  {%- for domain, hits in asf_notes.items() -%}
    <dt><strong>{{ domain[0] }}</strong> ({{domain[1]}}..{{domain[2]}})</dt>
    <dd>
-   {% for hit in hits %}
+   {%- for hit in hits -%}
     {{ hit }}<br>
-   {% endfor %}
+   {%- endfor -%}
    </dd>
-  {% endfor %}
+  {%- endfor -%}
   </dl>
   {{collapser_end()}}<br>
- {% endif %}
+ {%- endif -%}
 
- {% if pfam_notes %}
+ {%- if pfam_notes -%}
  <br>
  <span class="bold">Pfam hits:</span>{{collapser_start(feature.get_name(), level="none")}}
- {% for note in pfam_notes %}
+ {%- for note in pfam_notes -%}
   {{note}}<br>
- {% endfor %}
+ {%- endfor -%}
  {{collapser_end()}}<br>
- {% endif %}
+ {%- endif -%}
 
- {% if tigr_notes %}
+ {%- if tigr_notes -%}
  <br>
  <span class="bold">TIGRFam hits:</span>{{collapser_start(feature.get_name(), level="none")}}
- {% for note in tigr_notes %}
+ {%- for note in tigr_notes -%}
   {{note}}<br>
- {% endfor %}
+ {%- endfor -%}
  {{collapser_end()}}<br>
- {% endif %}
+ {%- endif -%}
 
 
- {% if go_notes %}
+ {%- if go_notes -%}
   <br>
   <span class="bold">Gene Ontology terms for Pfam domains:</span>{{collapser_start(feature.get_name(), level="none")}}
-  {% for note in go_notes %}
+  {%- for note in go_notes -%}
    {{note}}<br>
-  {% endfor %}
+  {%- endfor -%}
  {{collapser_end()}}<br>
- {% endif %}
+ {%- endif -%}
 </div>
 <div class="focus-urls">
  {{build_blastp_link(feature.get_name(), "NCBI BlastP on this gene")}}<br>
+ <span class="asdb-linkout link-like wildcard-container" data-locus="{{feature.get_name()}}" data-wildcard-attrs="data-seq" data-seq="{{replace_with('translation')}}">Blast against antiSMASH-database</span><br>
+ {%- if add_ncbi_context -%}
  <a href="{{urls['context']}}" target="_new">View genomic context</a><br>
- {% if urls['mibig'] %}
-  <a href="{{urls['mibig']}}" target="_new">MiBIG Hits</a><br>
- {% endif %}
- {% if urls['transport'] %}
+ {%- endif -%}
+ {%- if urls['mibig'] -%}
+  <a href="{{urls['mibig']}}" target="_new">MIBiG Hits</a><br>
+ {%- endif -%}
+ {%- if urls['transport'] -%}
   <a href="{{urls['transport']}}" target="_new">TransportDB BLAST on this gene</a><br>
- {% endif %}
- {% if urls['searchgtr'] %}
-  <a href="{{urls['searchgtr']}}" target="_new">SEARCHGTr on this gene</a><br>
- {% endif %}
- {% if urls['smcog_tree'] %}
+ {%- endif -%}
+ {%- if urls['smcog_tree'] -%}
   <a href="{{urls['smcog_tree']}}" target="_new">View smCOG seed phylogenetic tree with this gene</a><br>
- {% endif %}
+ {%- endif -%}
 </div>
 <div class="focus-clipboard">
  AA sequence: <span class="clipboard-copy wildcard-container" data-locus="{{feature.get_name()}}" data-wildcard-attrs="data-seq" data-seq="{{replace_with('translation')}}">Copy to clipboard</span><br>

@@ -28,8 +28,8 @@
      </td>
      <td class="digits">{{"{:,d}".format(region.location.start + 1)}}</td>
      <td class="digits table-split-left">{{"{:,d}".format(region.location.end)}}</td>
-     {% if region.bgc_id != "" -%}
-      {% set similarity = region.best_knowncluster_similarity %}
+     {% if region.most_related_area.identifier -%}
+      {% set similarity = region.most_related_area.similarity_percentage %}
       {% if similarity > 75 %}
         {% set colour = "rgba(0, 100, 0, 0.3)" %}
       {% elif similarity > 50 %}
@@ -37,8 +37,13 @@
       {% else %}
         {% set colour = "rgba(205, 92, 92, 0.3)" %}
       {% endif %}
-      <td><a class="external-link" href="https://mibig.secondarymetabolites.org/go/{{region.bgc_id}}/{{region.bgc_cluster_number}}" target="_blank">{{region.best_knowncluster_name}}</a></td>
-      <td>{{region.best_knowncluster_type}}</td>
+      {% set url = region.most_related_area.url %}
+      {% if url -%}
+      <td><a class="external-link" href="{{region.most_related_area.url}}" target="_blank">{{region.most_related_area.description}}</a></td>
+      {%- else %}
+      <td>{{region.most_related_area.description}}</td>
+      {%- endif %}
+      <td>{{region.most_related_area.product}}</td>
       <td class="digits similarity-text" style="background-image: linear-gradient(to left, {{colour}}, {{colour}} {{similarity}}%, #ffffff00 {{similarity}}%)">{{similarity}}%</td>
      {% else %}
       <td colspan="3"></td>

@@ -6,11 +6,12 @@
 
 import functools
 import logging
+import os
 import re
 from typing import Any, Dict, Callable, List, Set, Tuple
 import warnings
 
-from Bio.Seq import Seq, UnknownSeq
+from Bio.Seq import Seq, UndefinedSequenceError
 from Bio.SeqRecord import SeqRecord
 from helperlibs.bio import seqio
 
@@ -50,6 +51,8 @@ def _strict_parse(filename: str) -> List[SeqRecord]:
         # strip the "Ignoring" part, since it's not being ignored
         if message.startswith("Ignoring invalid location"):
             message = message[9:]
+        if isinstance(err, AttributeError):
+            message = f"error within parsing library: {message}"
         logging.error('Parsing %r failed: %s', filename, message)
         raise AntismashInputError(message) from err
     finally:
@@ -62,7 +65,8 @@ def _strict_parse(filename: str) -> List[SeqRecord]:
 
 
 def parse_input_sequence(filename: str, taxon: str = "bacteria", minimum_length: int = -1,
-                         start: int = -1, end: int = -1, gff_file: str = "") -> List[Record]:
+                         start: int = -1, end: int = -1, gff_file: str = "",
+                         ignore_invalid_records: bool = False) -> List[Record]:
     """ Parse input records contained in a file
 
         Arguments:
@@ -73,6 +77,7 @@ def parse_input_sequence(filename: str, taxon: str = "bacteria", minimum_length:
             start: a start location for trimming the sequence, or -1 to use all
             end: an end location for trimming the sequence, or -1 to use all
             gff_file: a GFF file to use for gene/CDS annotations
+            ignore_invalid_records: whether to continue past invalid records or not
 
         Returns:
             A list of secmet.Record instances, one for each record in the file
@@ -84,11 +89,20 @@ def parse_input_sequence(filename: str, taxon: str = "bacteria", minimum_length:
     records: List[SeqRecord] = []
 
     for record in _strict_parse(filename):
-        if minimum_length < 1 \
-                or len(record.seq) >= minimum_length \
-                or 'contig' in record.annotations \
-                or 'wgs_scafld' in record.annotations \
-                or 'wgs' in record.annotations:
+        # in no case allow record identifiers to be longer than the filesystem's
+        # maximum file length, allowing for region numbers and extension
+        if len(record.id) > os.pathconf("/", "PC_NAME_MAX") - len(".region000.gbk"):
+            raise AntismashInputError(f"record identifier too long for file system: {record.id}")
+
+        if records_contain_shotgun_scaffolds([record]):
+            raise AntismashInputError("incomplete whole genome shotgun records are not supported")
+
+        try:
+            record.seq[0]
+        except (IndexError, UndefinedSequenceError):
+            raise AntismashInputError(f"record contains no sequence information: {record.id}")
+
+        if minimum_length < 1 or len(record.seq) >= minimum_length:
             records.append(record)
 
     # if no records are left, that's a problem
@@ -129,17 +143,24 @@ def parse_input_sequence(filename: str, taxon: str = "bacteria", minimum_length:
         strip_record(record)
 
     logging.debug("Converting records from biopython to secmet")
-    try:
-        records = [Record.from_biopython(record, taxon, discard_antismash_features=True) for record in records]
-    except SecmetInvalidInputError as err:
-        raise AntismashInputError(str(err)) from err
+    converted_records = []
+    for record in records:
+        try:
+            converted_records.append(Record.from_biopython(record, taxon, discard_antismash_features=True))
+        except SecmetInvalidInputError as err:
+            if ignore_invalid_records:
+                logging.warning("Ignoring invalid record %r %s", record.id, err)
+            else:
+                raise AntismashInputError(str(err)) from err
+    if not converted_records:
+        raise AntismashInputError(f"no valid records found in file {filename}")
 
     # if parsable by secmet, it has a better context on what to strip, so run
     # the secmet stripping to ensure there's no surprises
-    for record in records:
+    for record in converted_records:
         record.strip_antismash_annotations()
 
-    return records
+    return converted_records
 
 
 def strip_record(record: SeqRecord) -> SeqRecord:
@@ -232,7 +253,7 @@ def ensure_cds_info(genefinding: Callable[[Record, Any], None], sequence: Record
     """
     if sequence.skip:
         return sequence
-    options = get_config()
+    options = get_config(no_defaults=True)
     if len(options) == 0:  # inside a parallel function where config doesn't pickle correctly
         new = Config(kwargs)
         assert isinstance(new, ConfigType)
@@ -242,7 +263,7 @@ def ensure_cds_info(genefinding: Callable[[Record, Any], None], sequence: Record
             logging.info("No CDS features found in record %r, running gene finding.", sequence.id)
             genefinding(sequence, options)
         if not sequence.get_cds_features():
-            logging.info("No genes found, skipping record")
+            logging.info("No genes found, skipping record %r", sequence.id)
             sequence.skip = "No genes found"
             return sequence
     return sequence
@@ -462,9 +483,16 @@ def records_contain_shotgun_scaffolds(records: List[Record]) -> bool:
             True if one of the given records is a WGS or supercontig record
     """
     for record in records:
-        if isinstance(record.seq, UnknownSeq) and ('wgs_scafld' in record.annotations
-                                                   or 'wgs' in record.annotations
-                                                   or 'contig' in record.annotations):
+        defined = True
+        try:
+            record.seq[0]
+        except UndefinedSequenceError:
+            defined = False
+        if not defined and any(key in record.annotations for key in [
+            "wgs_scafld",
+            "wgs",
+            "contig",
+        ]):
             return True
     return False
 

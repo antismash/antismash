@@ -15,7 +15,7 @@ from antismash.config import ConfigType
 from antismash.config.args import ModuleArgs
 
 from .config import get_config as local_config
-from .specific_analysis import specific_analysis, LassoResults
+from .specific_analysis import specific_analysis as run_analysis, LassoResults
 from .html_output import generate_html, will_handle
 
 NAME = "lassopeptides"
@@ -90,4 +90,4 @@ def run_on_record(record: Record, results: LassoResults, _options: ConfigType) -
     """ Finds all precursors within lassopeptide clusters """
     if results and isinstance(results, LassoResults):
         return results
-    return specific_analysis(record)
+    return run_analysis(record)

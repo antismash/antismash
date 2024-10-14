@@ -747,6 +747,7 @@ table.region-table {
 }
 
 .details-svg {
+    float: clear;
     margin: 0 2%;
     margin-top: 2px;
 }
@@ -902,11 +903,35 @@ rect.generic-type-transport {
 }
 
 .clusterblast-locustag {
+    @extend .tooltip;
     @extend .serif;
-    fill: $antismash-main;
-    display: none;
     font-size: 80%;
-    position: absolute;
+    right: unset;
+    width: unset;
+}
+.clusterblast-orf-tooltip {
+    @extend .clusterblast-locustag;
+    font-family: unset;
+    font-size: 90%;
+    min-width: 10vw;
+
+    .clusterblast-tooltip-locus {
+        @extend .serif;
+        font-weight: bold;
+    }
+
+    .clusterblast-tooltip-matches {
+        display:grid;
+        grid-template-columns: 1fr 8em 8em;
+
+        .cb-tooltip-table-locus {
+            @extend .serif;
+        }
+
+        .cb-tooltip-table-numeric {
+            justify-self: end;
+        }
+    }
 }
 .clusterblast-tooltip {
     @extend .tooltip;
@@ -1072,7 +1097,7 @@ ul.dropdown-options {
     & .body-details-header,
     & .sidepanel-details-header {
         font-size: 90%;
-        background-color: rgba($antismash-main, 60%);
+        background-color: rgba($antismash-main, 0.6);
         color: white;
         margin-right: 0.1em;
         padding-left: 0.5em;
@@ -1089,7 +1114,7 @@ ul.dropdown-options {
         @include unselectable();
 
         &:hover {
-            background-color: rgba($antismash-main, 80%);
+            background-color: rgba($antismash-main, 0.8);
         }
     }
 
@@ -1355,7 +1380,13 @@ ul.dropdown-options {
 
         .comparippson-midline {
             @extend .serif;
-            color: gray;
+            span {
+                opacity: 0.5;  // less important than the bracketing lines above/below
+            }
+            .near-match-cycle {
+                opacity: 1;  // undo the opacity above
+                font-weight: 600;  // matches the cys/dha/dhb weighting
+            }
         }
     }
 }

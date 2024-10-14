@@ -6,6 +6,8 @@
 # for test files, silence irrelevant and noisy pylint warnings
 # pylint: disable=protected-access,missing-docstring
 
+from Bio.Seq import Seq
+
 from ..features import (
     AntismashDomain,
     CDSFeature,
@@ -19,7 +21,7 @@ from ..features import (
 )
 from ..features.candidate_cluster import CandidateClusterKind
 from ..locations import FeatureLocation
-from ..record import Record
+from ..record import Record, Seq
 
 
 class DummyAntismashDomain(AntismashDomain):
@@ -42,13 +44,15 @@ class DummyAntismashDomain(AntismashDomain):
 class DummyCDS(CDSFeature):
     counter = 0
 
-    def __init__(self, start=0, end=7, strand=1, locus_tag=None, translation=None):
+    def __init__(self, start=0, end=7, strand=1, locus_tag=None, translation=None, location=None):
         if not translation:
             translation = "A"*(abs(start-end))
         if not locus_tag:
             locus_tag = f"dummy_locus_tag_{DummyCDS.counter}"
             DummyCDS.counter += 1
-        super().__init__(FeatureLocation(start, end, strand), translation=translation,
+        if location is None:
+            location = FeatureLocation(start, end, strand)
+        super().__init__(location, translation=translation,
                          locus_tag=locus_tag)
         assert self.get_accession() == locus_tag, self.get_accession()
 
@@ -117,8 +121,16 @@ class DummyPFAMDomain(PFAMDomain):
 
 class DummyRecord(Record):
     "class for generating a Record like data structure"
-    def __init__(self, features=None, seq='AGCTACGT', taxon='bacteria',
-                 record_id=None):
+    def __init__(self, features=None, seq=None, taxon='bacteria',
+                 record_id=None, *, length=None):
+        self.length = length
+        if features and seq is None:
+            length = length or max(f.location.end for f in features)
+            seq = "AGCTACGT" * (length // 8 + 1)
+        if seq is None:
+            seq = "AGCTACGT"
+        if isinstance(seq, str):
+            seq = Seq(seq)
         super().__init__(seq, transl_table=11 if taxon == 'bacteria' else 1)
         if features:
             for feature in features:
@@ -126,6 +138,9 @@ class DummyRecord(Record):
         self.record_index = 0
         if record_id is not None:
             self.id = record_id
+
+    def __len__(self):  # override the length so the sequence doesn't necessarily have to exist
+        return self.length or super().__len__()
 
 
 class DummyRegion(Region):

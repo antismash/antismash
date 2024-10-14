@@ -4,13 +4,13 @@
 # for test files, silence irrelevant and noisy pylint warnings
 # pylint: disable=use-implicit-booleaness-not-comparison,protected-access,missing-docstring
 
-import json
 import unittest
 
 from Bio.Seq import Seq
 from Bio.SeqFeature import FeatureLocation
 
 from antismash import get_all_modules
+from antismash.common import json
 from antismash.common.secmet.test.helpers import DummyRegion, DummySubRegion
 from antismash.common.test.helpers import (
     DummyCandidateCluster,

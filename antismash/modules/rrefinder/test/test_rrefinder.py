@@ -5,12 +5,12 @@
 # pylint: disable=use-implicit-booleaness-not-comparison,protected-access,missing-docstring
 
 from collections import defaultdict
-import json as jsonlib
 import unittest
 from unittest.mock import patch
 
 import antismash
 from antismash.common.hmmer import HmmerResults
+from antismash.common import json as jsonlib
 from antismash.common.secmet.features import FeatureLocation
 from antismash.common.secmet.test.helpers import DummyRegion
 from antismash.common.test.helpers import (
@@ -180,9 +180,9 @@ class TestRREResults(unittest.TestCase):
         record = DummyRecord()
         results = self.create_results(record_id=record.id)
 
-        assert not record.get_all_features()
+        assert not list(record.all_features)
         results.add_to_record(record)
-        assert len(record.get_all_features()) == 2
+        assert len(list(record.all_features)) == 2
         assert len(record.get_antismash_domains_by_tool(TOOL)) == 2
 
 

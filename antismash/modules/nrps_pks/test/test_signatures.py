@@ -37,7 +37,7 @@ class TestAngstromGeneration(unittest.TestCase):
         hits[0].hsps = [hsp]
         with patch.object(subprocessing.hmmpfam, "run_hmmpfam2", return_value=hits) as patched:
             sig_10aa, sig_34aa = signatures.get_a_dom_signatures(domain)
-            assert patched.called_once
+            patched.assert_called_once()
         assert sig_10aa == "DPYHGGTLCK"
         assert sig_34aa == "LDAAFDPSLYAVHLGTGGDRNTYGPTETTLCATW"
 

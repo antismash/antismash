@@ -6,7 +6,7 @@
 
 from unittest import TestCase
 
-from antismash.config import get_config, update_config
+from antismash.config import destroy_config, update_config
 from antismash.common.record_processing import parse_input_sequence, pre_process_sequences
 from antismash.common.test.helpers import get_simple_options, get_path_to_nisin_fasta
 from antismash.support import genefinding
@@ -19,7 +19,7 @@ class TestProdigal(TestCase):
                                                          '--cpus', '1']))
 
     def tearDown(self):
-        get_config().__dict__.clear()
+        destroy_config()
 
     def test_nisin(self):
         record = parse_input_sequence(get_path_to_nisin_fasta())[0]

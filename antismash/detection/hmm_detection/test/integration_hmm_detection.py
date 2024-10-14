@@ -4,11 +4,9 @@
 # for test files, silence irrelevant and noisy pylint warnings
 # pylint: disable=use-implicit-booleaness-not-comparison,protected-access,missing-docstring
 
-import json
 import unittest
-from unittest.mock import patch
 
-from antismash.common.hmm_rule_parser import cluster_prediction
+from antismash.common import json
 from antismash.common.secmet import Record
 from antismash.common.secmet.test.helpers import DummySubRegion
 from antismash.common.test.helpers import get_path_to_nisin_genbank
@@ -22,13 +20,17 @@ class TestSubregionAnnotations(unittest.TestCase):
 
     def tearDown(self):
         destroy_config()
+        hmm_detection._RULESETS.clear()
 
-    @patch.object(cluster_prediction, "create_rules", return_value=[])
-    def test_subregions_annotated(self, _patched_rules):
+    def test_subregions_annotated(self):
         record = Record.from_genbank(get_path_to_nisin_genbank())[0]
         record.strip_antismash_annotations()
         assert not record.get_regions()
         assert not record.get_subregions()
+         # this next hack requires that the ruleset cache is cleared in the test teardown
+         # because it's nuking the default ruleset that all following tests (not just this file)
+         # will use
+        hmm_detection.get_ruleset(self.options)._rules = []
 
         results = hmm_detection.run_on_record(record, None, self.options)
         assert not results.get_predicted_protoclusters()

@@ -327,19 +327,19 @@ def acquire_rodeo_heuristics(record: Record, cluster: Protocluster, query: CDSFe
     distance = utils.distance_to_pfam(record, query, hmmer_profiles)
     tabs.append(distance)
     # Within 500 nucleotides of any biosynthetic protein (E, B, C)	+1
-    if distance < 500:
+    if 0 <= distance < 500:
         score += 1
         tabs.append(1)
     else:
         tabs.append(0)
     # Within 150 nucleotides of any biosynthetic protein (E, B, C)	+1
-    if distance < 150:
+    if 0 <= distance < 150:
         score += 1
         tabs.append(1)
     else:
         tabs.append(0)
     # Greater than 1000 nucleotides from every biosynthetic protein (E, B, C)	-2
-    if distance > 1000:
+    if distance > 1000 or distance == -1:
         score -= 2
         tabs.append(1)
     else:
@@ -435,8 +435,8 @@ def acquire_rodeo_heuristics(record: Record, cluster: Protocluster, query: CDSFe
     else:
         tabs.append(0)
     # cluster does not contain PF13471	-2
-    if utils.distance_to_pfam(record, query, ['PF13471']) == -1 or \
-       utils.distance_to_pfam(record, query, ['PF13471']) > 10000:
+    distance = utils.distance_to_pfam(record, query, ['PF13471'])
+    if distance == -1 or distance > 10000:
         score -= 2
     # Peptide utilizes alternate start codon	-1
     if not str(query.extract(record.seq)).startswith("ATG"):
@@ -480,24 +480,12 @@ def generate_rodeo_svm_csv(record: Record, query: CDSFeature, leader: str, core:
     # classification
     columns.append(0)
     columns += previously_gathered_tabs
-    # cluster has PF00733?
-    if utils.distance_to_pfam(record, query, ['PF00733']) == -1 or \
-       utils.distance_to_pfam(record, query, ['PF00733']) > 10000:
-        columns.append(0)
-    else:
-        columns.append(1)
-    # cluster has PF05402?
-    if utils.distance_to_pfam(record, query, ['PF05402']) == -1 or \
-       utils.distance_to_pfam(record, query, ['PF05402']) > 10000:
-        columns.append(0)
-    else:
-        columns.append(1)
-    # cluster has PF13471?
-    if utils.distance_to_pfam(record, query, ['PF13471']) == -1 or \
-       utils.distance_to_pfam(record, query, ['PF13471']) > 10000:
-        columns.append(0)
-    else:
-        columns.append(1)
+    for identifier in ["PF00733", "PF05402", "PF13471"]:
+        distance = utils.distance_to_pfam(record, query, [identifier])
+        if 0 <= distance <= 10000:
+            columns.append(1)
+        else:
+            columns.append(0)
     # Leader has LxxxxxT motif?
     if re.search('(L.....T)', leader):
         columns.append(1)
@@ -710,12 +698,11 @@ def specific_analysis(record: Record) -> LassoResults:
     """
     results = LassoResults(record.id)
     motif_count = 0
+    existing_motifs: dict[str, set[str]] = defaultdict(set)
     for cluster in record.get_protoclusters():
         if cluster.product != 'lassopeptide':
             continue
-
         precursor_candidates = list(cluster.cds_children)
-
         # Find candidate ORFs that are not yet annotated
         extra_orfs = all_orfs.find_all_orfs(record, cluster, min_length=MIN_PRECURSOR_LENGTH * 3)
         precursor_candidates.extend(extra_orfs)
@@ -724,10 +711,16 @@ def specific_analysis(record: Record) -> LassoResults:
             motif = run_lassopred(record, cluster, candidate)
             if motif is None:
                 continue
+            # regardless of whether it's a duplication or not, track via protocluster
+            results.clusters[cluster.get_protocluster_number()].add(candidate.get_name())
 
+            # but if it is in multiple protoclusters, don't add it more than once
+            if motif.get_name() in existing_motifs[candidate.get_name()]:
+                continue
+
+            existing_motifs[candidate.get_name()].add(motif.get_name())
             results.motifs_by_locus[candidate.get_name()].append(motif)
             motif_count += 1
-            results.clusters[cluster.get_protocluster_number()].add(candidate.get_name())
             # track new CDSFeatures if found with all_orfs
             if candidate.region is None:
                 results.add_cds(candidate)

@@ -4,6 +4,7 @@
 """ A class for region features """
 
 from collections import OrderedDict
+from copy import deepcopy
 import os
 from typing import Any, Dict, List, Optional, Set, Tuple, Type, TypeVar, Union
 import warnings
@@ -12,6 +13,7 @@ from Bio.SeqFeature import SeqFeature
 from Bio.SeqRecord import SeqRecord
 from helperlibs.bio import seqio
 
+from .abstract import AbstractRegion
 from .cdscollection import CDSCollection, CDSFeature
 from .protocluster import Protocluster, SideloadedProtocluster
 from .feature import Feature, FeatureLocation
@@ -27,7 +29,7 @@ from ..locations import (
 T = TypeVar("T", bound="Region")
 
 
-class Region(CDSCollection):
+class Region(CDSCollection, AbstractRegion):
     """ A feature that represents a region of interest made up of overlapping
         CandidateCluster features and/or SubRegion features.
 
@@ -35,8 +37,8 @@ class Region(CDSCollection):
 
         Region features cannot overlap.
     """
-    __slots__ = ["_subregions", "_candidate_clusters", "clusterblast",
-                 "knownclusterblast", "subclusterblast"]
+    __slots__ = ["_subregions", "_candidate_clusters",
+                 ]
     FEATURE_TYPE = "region"
 
     def __init__(self, candidate_clusters: List[CandidateCluster] = None,
@@ -63,10 +65,6 @@ class Region(CDSCollection):
         super().__init__(location, feature_type=self.FEATURE_TYPE, child_collections=children)
         self._subregions = subregions
         self._candidate_clusters = candidate_clusters
-
-        self.clusterblast: Optional[List[str]] = None
-        self.knownclusterblast: Any = None
-        self.subclusterblast: Optional[List[str]] = None
 
     @property
     def subregions(self) -> Tuple[SubRegion, ...]:
@@ -176,27 +174,32 @@ class Region(CDSCollection):
             warnings.simplefilter("ignore")
             cluster_record = record[self.location.start:self.location.end]
 
-        cluster_record.annotations["date"] = record.annotations.get("date", '')
-        cluster_record.annotations["source"] = record.annotations.get("source", '')
-        cluster_record.annotations["organism"] = record.annotations.get("organism", '')
-        cluster_record.annotations["taxonomy"] = record.annotations.get("taxonomy", [])
-        cluster_record.annotations["data_file_division"] = record.annotations.get("data_file_division", 'UNK')
-        cluster_record.annotations["comment"] = record.annotations.get("comment", '')
-        # biopython does not persist the molecule_type annotation in slices,
-        # despite it being required for output to the genbank format
-        cluster_record.annotations["molecule_type"] = record.annotations["molecule_type"]
+        # find the source that starts this section of the record and insert it
+        for source in self.parent_record.get_sources():
+            if source.location.start < self.location.start < source.location.end:
+                source_bio = source.to_biopython()[0]
+                end = min(source_bio.location.end - self.location.start, len(cluster_record.seq))
+                source_bio.location = FeatureLocation(0, end)
+                cluster_record.features.insert(0, source_bio)
+                break
 
-        # update the antiSMASH annotation to include some cluster details
-        comment_end_marker = "##antiSMASH-Data-END"
-        cluster_comment = ("NOTE: This is a single region extracted from a larger record!\n"
-                           f"Orig. start  :: {self.location.start}\n"
-                           f"Orig. end    :: {self.location.end}\n"
-                           f"{comment_end_marker}")
-        original = cluster_record.annotations["comment"]
-        cluster_record.annotations["comment"] = original.replace(comment_end_marker, cluster_comment)
+        # biopython does not persist many annotations in slices
+        cluster_record.annotations = deepcopy(self.parent_record.annotations)
 
-        # our cut-out clusters are always linear
-        cluster_record.annotations["topology"] = "linear"
+        # update the antiSMASH annotation to include some region details
+        structured = cluster_record.annotations.get("structured_comment", {})
+        # insert if not present
+        if not structured:
+            cluster_record.annotations["structured_comment"] = structured
+
+        comment = structured.get("antiSMASH-Data", {})
+        # if it doesn't exist yet, create it
+        structured["antiSMASH-Data"] = comment
+
+        comment["NOTE"] = comment.get("NOTE", "")
+        comment["NOTE"] = " This is a single region extracted from a larger record!"
+        comment["Orig. start"] = str(self.location.start)
+        comment["Orig. end"] = str(self.location.end)
 
         # renumber clusters, candidate_clusters and regions to reflect changes
         # also update positions of RiPP component locations

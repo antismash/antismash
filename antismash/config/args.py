@@ -243,14 +243,14 @@ Options
         return tuple(self._actions)
 
 
-class FullPathAction(argparse.Action):  # pylint: disable=too-few-public-methods
+class FullPathAction(argparse.Action):
     """ An argparse.Action to ensure provided paths are absolute. """
     def __call__(self, parser: argparse.ArgumentParser, namespace: argparse.Namespace,
                  values: Any, option_string: str = None) -> None:
         setattr(namespace, self.dest, os.path.abspath(str(values)))
 
 
-class MultipleFullPathAction(argparse.Action):  # pylint: disable=too-few-public-methods
+class MultipleFullPathAction(argparse.Action):
     """ An argparse.Action to ensure provided paths are absolute in a comma separated list. """
     def __call__(self, parser: argparse.ArgumentParser, namespace: argparse.Namespace,
                  values: Any, option_string: str = None) -> None:
@@ -280,58 +280,34 @@ class SplitCommaAction(argparse.Action):
         setattr(namespace, self.dest, str(values).split(","))
 
 
-class ModuleArgs:
-    """ The vehicle for adding module specific arguments in sane groupings.
-        Each module should have a unique prefix for their arguments, for clarity
-        and safety. The prefix only has to be supplied when constructing a
-        ModuleArgs instance, it will be automatically applied to each argument
-        added.
+class _SimpleArgs:
+    """ Groups command line arguments which are unrelated to antiSMASH modules
+    (such as help options). For module specific arguments, use ModuleArgs.
 
-        To add arguments, use the following:
-            for an analysis option (e.g. --pref-general):
-                ModuleArgs.add_analysis_toggle('general', ...)
-            for a module config option (e.g. --pref-max-size):
-                ModuleArgs.add_option('max-size', ...)
+    To add arguments, use the following:
+            _SimpleArgs.add_option('max-size', ...)
 
-        Arguments:
-            title: The label shown on the help screen
-            prefix: A prefix to use for all options used by the module
-            override_safeties: If True, overrides many safety and consistency
-                    checks, only exists to help placeholders and will be removed
-            enabled_by_default: whether the module's analysis will be on by
-                    default or whether it has to be specifically enabled,
-                    if True, it will create a --enable-* arg to be used if
-                    --minimal is provided.
-            basic_help: Whether help for module options (not analysis toggles)
-                    should be shown in the basic --help output.
-    """
-    def __init__(self, title: str, prefix: str, override_safeties: bool = False,
-                 enabled_by_default: bool = False, basic_help: bool = False) -> None:
+    Arguments:
+        title: The label shown on the help screen
+        override_safeties: If True, overrides many safety and consistency
+            checks, only exists to help placeholders and will be removed
+        basic_help: Whether help for module options (not analysis toggles)
+            should be shown in the basic --help output.
+            """
+    def __init__(self, title: str, override_safeties: bool = False, basic_help: bool = False) -> None:
         if not title:
             raise ValueError("Argument group must have a title")
         self.title = str(title)
         self.parser = AntismashParser(parents=[])
         self.override = override_safeties
-        self.enabled_by_default = enabled_by_default
-        # options for the module
+
+        # store options for this argument group
         self.options = self.parser.add_argument_group(title=title, basic=basic_help)
-        # the main analysis toggle(s)
-        self.group = self.parser.add_argument_group(title="Additional analysis",
-                                                    basic=True)
-        # check the prefix is valid
-        if not isinstance(prefix, str):
-            raise TypeError("Argument prefix must be a string")
-        if len(prefix) < 2 and not self.override:
-            raise ValueError("Argument prefixes must be at least 2 chars")
-        if prefix and not prefix[0].isalpha():
-            raise ValueError("Argument prefixes cannot start with numbers")
-        if prefix and not prefix.isalnum():
-            raise ValueError("Argument prefixes must be alphanumeric")
-        self.prefix = prefix
 
         self.skip_type_check = self.override
         self.args: List[argparse.Action] = []
         self.basic = basic_help
+        self.prefix = ""  # core groups won't have one, but needed for writing config files
 
     def add_option(self, name: str, *args: Any, **kwargs: Any) -> None:
         """ Add a commandline option that takes a value """
@@ -347,14 +323,7 @@ class ModuleArgs:
             assert isinstance(default, option_type)
         self._add_argument(self.options, name, *args, **kwargs)
 
-    def add_analysis_toggle(self, name: str, *args: Any, **kwargs: Any) -> None:
-        """ Add a simple on-off option to appear in the "Additional analysis"
-            section. Every module that isn't running by default must have one
-            of these arguments.
-        """
-        self._add_argument(self.group, name, *args, **kwargs)
-
-    def _add_argument(self, group: argparse._ArgumentGroup, name: str,  # pylint: disable=protected-access
+    def _add_argument(self, group: argparse._ArgumentGroup, name: str,
                       *args: Any, **kwargs: Any) -> None:
         self.skip_type_check = self.override
         # prevent the option name being considered destination by argparse
@@ -411,8 +380,64 @@ class ModuleArgs:
         if not isinstance(name, str) or not isinstance(dest, str):
             raise TypeError("Argument name and dest must be strings")
 
+        return name, dest
+
+
+class ModuleArgs(_SimpleArgs):
+    """ The vehicle for adding module specific arguments in sane groupings.
+        Each module should have a unique prefix for their arguments, for clarity
+        and safety. The prefix only has to be supplied when constructing a
+        ModuleArgs instance, it will be automatically applied to each argument
+        added.
+
+        To add arguments, use the following:
+            for an analysis option (e.g. --pref-general):
+                ModuleArgs.add_analysis_toggle('general', ...)
+            for a module config option (e.g. --pref-max-size):
+                ModuleArgs.add_option('max-size', ...)
+
+        Arguments:
+            title: The label shown on the help screen
+            prefix: A prefix to use for all options used by the module
+            override_safeties: If True, overrides many safety and consistency
+                    checks, only exists to help placeholders and will be removed
+            enabled_by_default: whether the module's analysis will be on by
+                    default or whether it has to be specifically enabled,
+                    if True, it will create a --enable-* arg to be used if
+                    --minimal is provided.
+            basic_help: Whether help for module options (not analysis toggles)
+                    should be shown in the basic --help output.
+    """
+    def __init__(self, title: str, prefix: str, override_safeties: bool = False,
+                  enabled_by_default: bool = False, basic_help: bool = False) -> None:
+        super().__init__(title, override_safeties, basic_help)
+        self.enabled_by_default = enabled_by_default
+        # store options of specific modules
+        self._analysis_toggles = self.parser.add_argument_group(title="Additional analysis",
+                                                    basic=True)
+
+    # check if the prefix is valid
+        if not isinstance(prefix, str):
+            raise TypeError("Argument prefix must be a string")
+        if len(prefix) < 2 and not self.override:
+            raise ValueError("Argument prefixes must be at least 2 chars")
+        if prefix and not prefix[0].isalpha():
+            raise ValueError("Argument prefixes cannot start with numbers")
+        if prefix and not prefix.isalnum():
+            raise ValueError("Argument prefixes must be alphanumeric")
+        self.prefix = prefix
+
+    def add_analysis_toggle(self, name: str, *args: Any, **kwargs: Any) -> None:
+        """ Add a simple on-off option to appear in the "Additional analysis"
+        section. Every module that isn't running by default must have one
+        of these arguments.
+        """
+        self._add_argument(self._analysis_toggles, name, *args, **kwargs)
+
+    def process_names(self, name: str, dest: str) -> Tuple[str, str]:
+        name, dest = super().process_names(name, dest)
+
         # skip the remaining safety checks if set up
-        # required for some core options only
         if self.override:
             return name, dest
 
@@ -448,7 +473,7 @@ def build_parser(from_config_file: bool = False, modules: List[AntismashModule] 
         Returns:
             an AntismashParser instance with options for all provided modules
     """
-    parents = [basic_options(), output_options(), advanced_options(),
+    parents = [help_options(), basic_options(), output_options(), advanced_options(),
                debug_options()]
     minimal = specific_debugging(modules)
     if minimal:
@@ -466,36 +491,46 @@ def build_parser(from_config_file: bool = False, modules: List[AntismashModule] 
                         metavar='SEQUENCE',
                         nargs="*",
                         help="GenBank/EMBL/FASTA file(s) containing DNA.")
-
-    # optional non-grouped arguments
-    parser.add_argument('-h', '--help',
-                        dest='help',
-                        action='store_true',
-                        default=False,
-                        help="Show this help text.")
-    parser.add_argument('--help-showall',
-                        dest='help_showall',
-                        action='store_true',
-                        default=False,
-                        help="Show full lists of arguments on this help text.")
-    parser.add_argument('-c', '--cpus',
-                        dest='cpus',
-                        type=int,
-                        default=multiprocessing.cpu_count(),
-                        help="How many CPUs to use in parallel. (default: %(default)s)")
     return parser
 
+def help_options() -> _SimpleArgs:
+    """ Constructs help options for antismash. """
+    group = _SimpleArgs("Help options", basic_help=True)
 
-def basic_options() -> ModuleArgs:
+    group.add_option('-h', '--help',
+                    dest='help',
+                    action='store_true',
+                    default=False,
+                    help="Show basic help text.")
+    group.add_option('--help-showall',
+                    dest='help_showall',
+                    action='store_true',
+                    default=False,
+                    help="Show full list of arguments.")
+    return group
+
+def basic_options() -> _SimpleArgs:
     """ Constructs basic options for antismash. """
-    group = ModuleArgs("Basic analysis options", '', override_safeties=True, basic_help=True)
+    group = _SimpleArgs("Basic analysis options", basic_help=True)
 
-    group.add_option('--taxon',
+    group.add_option('-t', '--taxon',
                      dest='taxon',
                      default='bacteria',
                      choices=['bacteria', 'fungi'],
                      type=str,
                      help="Taxonomic classification of input sequence. (default: %(default)s)")
+    group.add_option('-c', '--cpus',
+                    dest='cpus',
+                    type=int,
+                    default=multiprocessing.cpu_count(),
+                    help="How many CPUs to use in parallel. (default for this machine: %(default)s)")
+    group.add_option('--databases',
+                    dest='database_dir',
+                    default=os.path.join(os.path.dirname(os.path.dirname(__file__)), 'databases'),
+                    metavar="PATH",
+                    action=FullPathAction,
+                    type=str,
+                    help="Root directory of the databases (default: %(default)s).")
     return group
 
 
@@ -534,6 +569,11 @@ def advanced_options() -> ModuleArgs:
                      type=int,
                      default=-1,
                      help="Only process the largest <limit> records (default: %(default)s). -1 to disable")
+    group.add_option('--abort-on-invalid-records',
+                     dest="abort_on_invalid_records",
+                     action=argparse.BooleanOptionalAction,
+                     default=True,
+                     help="Abort runs when encountering invalid records instead of skipping them")
     group.add_option('--minlength',
                      dest="minlength",
                      type=int,
@@ -549,13 +589,6 @@ def advanced_options() -> ModuleArgs:
                      type=int,
                      default=-1,
                      help="End analysis at nucleotide specified")
-    group.add_option('--databases',
-                     dest='database_dir',
-                     default=os.path.join(os.path.dirname(os.path.dirname(__file__)), 'databases'),
-                     metavar="PATH",
-                     action=FullPathAction,
-                     type=str,
-                     help="Root directory of the databases (default: %(default)s).")
     group.add_option('--write-config-file',
                      dest='write_config_file',
                      default="",

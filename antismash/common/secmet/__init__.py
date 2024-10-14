@@ -22,6 +22,7 @@ from .features import (
     Prepeptide,
     Protocluster,
     Region,
+    Source,
     SubRegion,
 )
 from .qualifiers import GeneFunction

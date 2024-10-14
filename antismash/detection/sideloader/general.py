@@ -4,6 +4,7 @@
 """ Generic sideloading """
 
 import itertools
+import logging
 from typing import List, Optional
 
 from antismash.common import path
@@ -49,9 +50,15 @@ def load_single_record_annotations(annotation_files: List[str], record: Record,
             if not record.has_name(name):
                 continue
             for area in json_record.get("subregions", []):
-                subregions.append(SubRegionAnnotation.from_schema_json(area, tool))
+                try:
+                    subregions.append(SubRegionAnnotation.from_schema_json(area, tool))
+                except ValueError as err:
+                    raise AntismashInputError(f"sideloaded subregion invalid: {err}")
             for area in json_record.get("protoclusters", []):
-                protoclusters.append(ProtoclusterAnnotation.from_schema_json(area, tool))
+                try:
+                    protoclusters.append(ProtoclusterAnnotation.from_schema_json(area, tool))
+                except ValueError as err:
+                    raise AntismashInputError(f"sideloaded protocluster invalid: {err}")
 
     tool = Tool("manual", "N/A", "command line argument", {})
     if manual and record.has_name(manual.accession):
@@ -59,15 +66,19 @@ def load_single_record_annotations(annotation_files: List[str], record: Record,
         subregions.append(subregion)
 
     if cds_markers:
+        missing = set()
         for name in cds_markers:
             try:
                 cds = record.get_cds_by_name(name)
             except KeyError:
+                missing.add(name)
                 continue
             start = max(cds.location.start - cds_marker_padding, 0)
             end = min(cds.location.end + cds_marker_padding, len(record.seq))
             subregion = SubRegionAnnotation(start, end, name, tool, {})
             subregions.append(subregion)
+        if missing:
+            logging.warning("Features named for sideloading are not present in %s: %s", record.id, ", ".join(missing))
 
     for area in itertools.chain(protoclusters, subregions):
         location = FeatureLocation(area.start, area.end)

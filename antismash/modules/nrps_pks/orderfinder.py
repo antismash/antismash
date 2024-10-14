@@ -9,6 +9,7 @@ from typing import Dict, List, Optional, Tuple
 
 from antismash.common import brawn, path, utils
 from antismash.common.secmet import CDSFeature, Module, Record
+from antismash.detection.nrps_pks_domains.modular_domain import ModularDomain
 
 from .html_output import will_handle
 from .results import CandidateClusterPrediction, modify_substrate
@@ -138,7 +139,7 @@ def find_candidate_cluster_modular_enzymes(cds_features: List[CDSFeature]) -> Tu
     """
     def is_pks_module(module: Module) -> bool:
         domain_names = set(domain.domain for domain in module.domains)
-        return bool(domain_names.intersection({"PKS_KS", "PKS_AT"}))
+        return bool(domain_names.intersection({"PKS_KS", "PKS_AT", "CAL_domain"}))
 
     def is_nrps_module(module: Module) -> bool:
         domain_names = set(domain.domain for domain in module.domains)
@@ -192,7 +193,14 @@ def generate_substrates_order(geneorder: List[CDSFeature], consensus_predictions
             if not monomer:
                 continue
             monomers.append(monomer)
-            components.append((substrate, monomer, [domain.domain or "" for domain in module.domains]))
+            domain_names = []
+            for domain in module.domains:
+                assert isinstance(domain, ModularDomain)
+                if domain.domain == "MT" and domain.domain_subtype:
+                    domain_names.append(domain.domain_subtype)
+                    continue
+                domain_names.append(domain.domain or "")
+            components.append((substrate, monomer, domain_names))
 
         if monomers:
             monomers_by_cds.append(f"({' - '.join(monomers)})")
@@ -332,6 +340,12 @@ def find_possible_orders(cds_features: List[CDSFeature], start_cds: Optional[CDS
         assert start_cds != end_cds, "Using same gene for start and end of ordering"
 
     tails = {v: k for k, v in chains.items()}
+
+    # if the end CDS is the tail end of a split module,
+    # use the beginning of that chain as the 'end CDS'
+    if end_cds:
+        while end_cds in tails:
+            end_cds = tails[end_cds]
 
     cds_to_order = []
     for cds in cds_features:

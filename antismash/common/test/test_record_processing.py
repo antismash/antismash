@@ -5,6 +5,7 @@
 # pylint: disable=use-implicit-booleaness-not-comparison,protected-access,missing-docstring
 
 from tempfile import NamedTemporaryFile
+import os
 import unittest
 from unittest import mock
 
@@ -16,7 +17,7 @@ from antismash import config
 from antismash.common import record_processing, path
 from antismash.common.errors import AntismashInputError
 from antismash.common.secmet import Record
-from antismash.common.secmet.test.helpers import DummyCDSMotif, DummyFeature
+from antismash.common.secmet.test.helpers import DummyCDSMotif, DummyFeature, DummyRecord
 from antismash.common.test import helpers
 
 
@@ -68,6 +69,39 @@ class TestParseRecords(unittest.TestCase):
         warning = "double-quote characters like \" should be escaped"
         with self.assertRaisesRegex(AntismashInputError, warning):
             record_processing.parse_input_sequence(filepath)
+
+    def test_partial_invalid(self):
+        # pretend there's two inputs, and that the first has an error
+        # with the ignore invalid option turned on, the valid input should still come back
+        dummy_error = record_processing.SecmetInvalidInputError("some reason")
+        dummy_inputs = [SeqRecord(Seq("ACGT"), id="bad"), SeqRecord(Seq("TGCA"), id="good")]
+        expected_outputs = [dummy_error, Record.from_biopython(dummy_inputs[1], taxon="bacteria")]
+        for value in [False, True]:
+            with mock.patch.object(record_processing, "_strict_parse", return_value=dummy_inputs):
+                with mock.patch.object(Record, "from_biopython", side_effect=expected_outputs):
+                    # with the option off, it should be an error
+                    if not value:
+                        with self.assertRaises(AntismashInputError):
+                            record_processing.parse_input_sequence("dummy file", ignore_invalid_records=value)
+                    else:
+                        records = record_processing.parse_input_sequence("dummy file", ignore_invalid_records=value)
+                        assert len(records) == 1
+                        assert records[0].id == dummy_inputs[1].id
+
+    def test_all_invalid_and_ignored(self):
+        dummy_error = record_processing.SecmetInvalidInputError("some reason")
+        dummy_inputs = [SeqRecord(Seq("ACGT"), id="bad")]
+        with mock.patch.object(Record, "from_biopython", side_effect=dummy_error):
+            with mock.patch.object(record_processing, "_strict_parse", return_value=dummy_inputs):
+                with self.assertRaisesRegex(AntismashInputError, "no valid records"):
+                    record_processing.parse_input_sequence("dummy file", ignore_invalid_records=True)
+
+    def test_absolute_name_limit(self):
+        record = DummyRecord()
+        record.id = "A" * os.pathconf("/", "PC_NAME_MAX")
+        with mock.patch.object(record_processing, "_strict_parse", return_value=[record]):
+            with self.assertRaisesRegex(AntismashInputError, "too long"):
+                record_processing.parse_input_sequence("dummy file")
 
 
 class TestGapNotation(unittest.TestCase):
@@ -240,9 +274,8 @@ class TestPreprocessRecords(unittest.TestCase):
 
     def test_shotgun(self):
         filepath = path.get_full_path(__file__, "data", "wgs.gbk")
-        records = record_processing.parse_input_sequence(filepath)
         with self.assertRaisesRegex(AntismashInputError, "incomplete whole genome shotgun records are not supported"):
-            record_processing.pre_process_sequences(records, self.options, self.genefinding)
+            record_processing.parse_input_sequence(filepath)
 
     def test_duplicate_record_ids(self):
         records = self.read_double_nisin()

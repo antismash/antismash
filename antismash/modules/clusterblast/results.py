@@ -10,12 +10,12 @@ import os
 from typing import Any, Dict, List, Optional, Tuple
 
 from antismash.common.module_results import ModuleResults
+from antismash.common.layers import AbstractRelatedArea
 from antismash.common.path import changed_directory
 from antismash.common.secmet import Record, Region
 from antismash.config import ConfigType, get_config
 
 from .data_structures import Score, Query, Subject, ReferenceCluster, Protein, MibigEntry
-from .svg_builder import ClusterSVGBuilder
 
 _CLUSTER_LIMIT = 50
 
@@ -25,22 +25,44 @@ def get_result_limit() -> int:
     return _CLUSTER_LIMIT
 
 
-class KnownHitSummary:
+class KnownHitSummary(AbstractRelatedArea):
     """ Stores some information about a hit from known-CB in a handy to access way """
     def __init__(self, bgc_id: str, name: str, cluster_number: str, similarity: int,
                  cluster_type: str) -> None:
-        self.bgc_id = str(bgc_id)
-        self.name = str(name)
-        self.cluster_number = cluster_number
-        self.similarity = int(similarity)
-        self.cluster_type = cluster_type
+        super().__init__()
+        self._bgc_id = bgc_id
+        self._name = name
+        self._cluster_number = cluster_number
+        self._similarity = similarity
+        self._cluster_type = cluster_type
+
+    @property
+    def identifier(self) -> str:
+        return self._bgc_id
+
+    @property
+    def description(self) -> str:
+        return self._name
+
+    @property
+    def product(self) -> str:
+        return self._cluster_type
+
+    @property
+    def similarity_percentage(self) -> int:
+        return self._similarity
+
+    @property
+    def url(self) -> str:
+        # at time of writing, knownclusterblast hits are always MIBiG
+        return f"https://mibig.secondarymetabolites.org/go/{self.identifier}"
 
 
 class RegionResult:
     """ Stores results for a specific cluster in a record, for a particular
         flavour of clusterblast.
     """
-    __slots__ = ["region", "ranking", "total_hits", "svg_builder", "prefix"]
+    __slots__ = ["region", "ranking", "total_hits", "prefix", "reference_proteins"]
 
     def __init__(self, region: Region, ranking: List[Tuple[ReferenceCluster, Score]],
                  reference_proteins: Dict[str, Protein], prefix: str) -> None:
@@ -57,6 +79,7 @@ class RegionResult:
         self.ranking = ranking[:get_result_limit()]  # [(ReferenceCluster, Score),...]
         self.total_hits = len(ranking)
         self.prefix = prefix
+        self.reference_proteins = {prot.locus_tag: prot for prot in reference_proteins.values()}
         # for the SVG portion, limit the ranking to the display limit
         display_limit = get_config().cb_nclusters
         # omitting any self-hits in the display
@@ -67,21 +90,15 @@ class RegionResult:
             if len(display_ranking) < display_limit < len(self.ranking) - 1:
                 display_ranking.append(self.ranking[display_limit])
         assert len(display_ranking) <= display_limit
-        self.svg_builder = ClusterSVGBuilder(region, display_ranking, reference_proteins, prefix)
 
-    def update_cluster_descriptions(self, search_type: str) -> None:
-        """ Rebuilds the cluster's result descriptions.
-            For knownclusterblast, this includes the accessions of the hits.
-        """
-        if search_type != "knownclusterblast":  # TODO clean this up
-            setattr(self.region, search_type, self.svg_builder.get_cluster_descriptions())
-            return
-        hits = []
-        for cluster in self.svg_builder.hits:
-            hits.append(KnownHitSummary(cluster.accession, cluster.description,
-                                        cluster.ref_cluster_number,
-                                        cluster.similarity, cluster.cluster_type))
-        self.region.knownclusterblast = hits
+    def get_best_match(self) -> Optional[KnownHitSummary]:
+        """ Returns the single best match from knownclusterblast hits, if any """
+        if not self.ranking:
+            return None
+        reference, score = self.ranking[0]
+        return KnownHitSummary(reference.accession, reference.description,
+                               reference.cluster_label,
+                               score.similarity, reference.cluster_type)
 
     def jsonify(self) -> Dict[str, Any]:
         """ Convert the object into a simple dictionary for use in storing
@@ -95,7 +112,7 @@ class RegionResult:
         """
         ranking = []
         for cluster, score in self.ranking:
-            scoring = {key: getattr(score, key) for key in score.__slots__ if key != "scored_pairings"}
+            scoring = {key.lstrip("_"): getattr(score, key) for key in score.__slots__ if key != "scored_pairings"}
             json_cluster = {key: getattr(cluster, key) for key in cluster.__slots__}
             scoring["pairings"] = [(query.entry, query.index, vars(subject))
                                    for query, subject in score.scored_pairings]
@@ -133,6 +150,7 @@ class RegionResult:
                                            cluster["cluster_type"], cluster["tags"])
             score = Score()
             pairings = details["pairings"]
+            score.similarity = details.pop("similarity")
             for key, val in details.items():
                 if key == "pairings":
                     continue
@@ -148,36 +166,10 @@ class RegionResult:
         result.total_hits = json["total_hits"]
         return result
 
-    def write_svg_files(self, svg_dir: str, prefix: str) -> List[str]:
-        """ Write all generated SVG files, one overview SVG and one for each
-            ReferenceCluster pairing. The overview SVG will have _all in
-            the filename and the individual pairings will have a counter.
-
-            Arguments:
-                svg_dir: the directory to save the files in
-                prefix: the file prefix to use (e.g. 'knownclusterblast')
-
-            Returns:
-                a list of filenames created
-        """
-        region_num = self.region.get_region_number()
-        record_index = self.region.parent_record.record_index
-        filename = f"{prefix}_r{record_index}c{region_num}_all.svg"
-        with open(os.path.join(svg_dir, filename), "w", encoding="utf-8") as handle:
-            handle.write(self.svg_builder.get_overview_contents(width=800, height=50 + 50 * len(self.svg_builder.hits)))
-
-        files = []
-        for i in range(len(self.svg_builder.hits)):
-            filename = f"{prefix}_r{record_index}c{region_num}_{i + 1}.svg"  # 1-indexed
-            with open(os.path.join(svg_dir, filename), "w", encoding="utf-8") as handle:
-                handle.write(self.svg_builder.get_pairing_contents(i, width=800, height=230))
-            files.append(filename)
-        return files
-
 
 class GeneralResults(ModuleResults):
     """ A variant-agnostic results class for clusterblast variants """
-    schema_version = 2
+    schema_version = 4
 
     def __init__(self, record_id: str, search_type: str = "clusterblast",
                  data_version: str = None) -> None:
@@ -224,11 +216,6 @@ class GeneralResults(ModuleResults):
                                       self.proteins_of_interest,
                                       searchtype=self.search_type)
 
-    def write_svg_files(self, svg_dir: str) -> None:
-        """ Write the SVG files for each cluster with results """
-        for cluster_result in self.region_results:
-            cluster_result.write_svg_files(svg_dir, self.search_type)
-
     def to_json(self) -> Dict[str, Any]:
         if not self.region_results:
             return {}
@@ -251,8 +238,7 @@ class GeneralResults(ModuleResults):
         return data
 
     def add_to_record(self, _record: Record) -> None:
-        for cluster_result in self.region_results:
-            cluster_result.update_cluster_descriptions(self.search_type)
+        pass
 
     @staticmethod
     def from_json(json: Dict[str, Any], record: Record) -> "GeneralResults":
@@ -292,7 +278,6 @@ class ClusterBlastResults(ModuleResults):
         self.general: Optional[GeneralResults] = None
         self.subcluster: Optional[GeneralResults] = None
         self.knowncluster: Optional[GeneralResults] = None
-        self.internal_homology_groups: Dict[int, List[List[str]]] = {}
 
     def to_json(self) -> Dict[str, Any]:
         assert self.general or self.subcluster or self.knowncluster
@@ -321,12 +306,6 @@ class ClusterBlastResults(ModuleResults):
         for result in [self.general, self.subcluster, self.knowncluster]:
             if result is not None:
                 result.add_to_record(record)
-
-    def write_svg_files(self, svg_dir: str) -> None:
-        """ Write the SVG files for each clusterblast variant if it exists """
-        for result in [self.general, self.subcluster, self.knowncluster]:
-            if result:
-                result.write_svg_files(svg_dir)
 
 
 def write_clusterblast_output(options: ConfigType, record: Record,

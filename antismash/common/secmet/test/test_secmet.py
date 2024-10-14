@@ -6,11 +6,13 @@
 
 from collections import defaultdict
 import unittest
+from unittest.mock import patch
 
 import Bio.SeqIO
 from Bio.Seq import Seq
 from Bio.SeqFeature import FeatureLocation, SeqFeature
 
+from antismash.common.secmet import record as record_pkg
 from antismash.common.test.helpers import get_path_to_nisin_genbank
 from antismash.common.hmmscan_refinement import HMMResult
 
@@ -75,6 +77,13 @@ class TestConversion(unittest.TestCase):
         assert type_counts["cluster"] == len(record.get_protoclusters())
         assert type_counts["aSDomain"] == len(record.get_antismash_domains())
 
+    def test_conversion_with_kwargs(self):
+        bio = Record(seq=Seq("ACGT")).to_biopython()
+        other_values = {"first": 5., "second": "value"}
+        with patch.object(record_pkg.SeqRecord, "__init__", return_value=None) as patched_bio:
+            Record.from_biopython(bio, "taxon", **other_values)
+            patched_bio.assert_called_once_with(bio.seq, **other_values)
+
     def test_protein_sequences_caught(self):
         before = list(Bio.SeqIO.parse(get_path_to_nisin_genbank(), "genbank"))[0]
 
@@ -121,7 +130,7 @@ class TestConversion(unittest.TestCase):
         assert len(rec.features) == 1
         assert rec.features[0].location.parts == [location.parts[0], location.parts[2]]
 
-        features = sec_rec.get_all_features()
+        features = list(sec_rec.all_features)
         assert len(features) == 2
         assert features[0].location.parts == [location.parts[2]]
         assert features[1].location.parts == [location.parts[0]]
@@ -139,7 +148,7 @@ class TestConversion(unittest.TestCase):
                 Record.from_biopython(bio, taxon="bacteria")
             # with the discard flag, the bad antismash-specific feature should just disappear
             rec = Record.from_biopython(bio, taxon="bacteria", discard_antismash_features=True)
-            assert len(rec.get_all_features()) == 1
+            assert len(list(rec.all_features)) == 1
             # and that single feature had better be the CDS
             assert len(rec.get_cds_features()) == 1
 
@@ -305,6 +314,17 @@ class TestRecord(unittest.TestCase):
         # ok, since ends aren't inclusive
         record.add_region(Region(subregions=[SubRegion(FeatureLocation(0, 10), "test")]))
 
+    def test_cds_caching(self):
+        record = Record("A" * 100)
+        record.add_cds_feature(DummyCDS(10, 40, strand=1))
+        original = record.get_cds_features()
+        assert len(original) == 1
+        assert record.get_cds_features() is original  # same object, since no change
+        record.add_cds_feature(DummyCDS(110, 140, strand=-1))
+        updated = record.get_cds_features()
+        assert len(updated) == 2
+        assert updated is not original
+
     def test_cds_protocluster_linkage(self):
         record = Record("A"*200)
         for start, end in [(50, 100), (10, 90), (0, 9), (150, 200)]:
@@ -401,6 +421,31 @@ class TestRecord(unittest.TestCase):
         second = Record(Seq("A" * 20))
         assert isinstance(second.seq, Seq)
         assert first.seq == second.seq
+
+    def test_gc_caching(self):
+        rec = Record("ATCG" * 20)
+        assert rec._gc_content == -1  # cache should not be set
+        # ensure 'Counter' is actually the mechanism for calculation, otherwise the test will be inaccurate
+        with patch.object(record_pkg, "Counter") as patched:
+            rec.get_gc_content()
+            patched.assert_called_once_with(rec.seq)
+        # since that will have cached the mock, reset it
+        rec._gc_content = -1
+        # now start the real calculation
+        gc_content = rec.get_gc_content()
+        self.assertAlmostEqual(gc_content, 0.5)
+        assert rec._gc_content == gc_content  # cache should be updated
+        # and ensure that it's cached and still the right value
+        with patch.object(record_pkg, "Counter") as patched:
+            assert rec.get_gc_content() == gc_content  # value should not change
+            assert not patched.called  # and the calculation shouldn't have run again
+
+    def test_gc_setting(self):
+        rec = Record("A", gc_content=0.3)
+        # the arg is trusted, even if it's wrong
+        assert rec._gc_content == 0.3
+        # and since it's already set, the getter should return it
+        assert rec.get_gc_content() == 0.3
 
 
 class TestCDSFetchByLocation(unittest.TestCase):

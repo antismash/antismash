@@ -17,13 +17,42 @@ from .helpers import DummyResult
 def test_diamond_version(mock_run_diamond):
     version = subprocessing.run_diamond_version()
     assert version == "1.2.3"
-    mock_run_diamond.assert_called_once_with("version")
+    mock_run_diamond.assert_called_once_with("version", use_default_opts=False)
 
 
-@patch("antismash.common.subprocessing.diamond.run_diamond", return_value=DummyResult("lots of useless text"))
-def test_diamond_makedb(mock_run_diamond):
+@patch.object(diamond, "run_diamond", return_value=DummyResult("lots of useless text"))
+@patch.object(diamond, "run_diamond_version", return_value="diamond version X.Y.Z")
+def test_diamond_makedb(_mocked_version, mock_run_diamond):
     subprocessing.run_diamond_makedb("fake.dmnd", "fake.fasta")
-    mock_run_diamond.assert_called_once_with("makedb", ["--db", "fake.dmnd", "--in", "fake.fasta"])
+    assert mock_run_diamond.call_count == 1
+    assert mock_run_diamond.call_args.kwargs == {"use_default_opts": True}
+    assert mock_run_diamond.call_args[0] == ("makedb", ["--db", "fake.dmnd", "--in", "fake.fasta"])
+
+
+@patch.object(diamond, "TemporaryDirectory")
+def test_diamond_tmpdir_bug(mocked_tempdir):
+    temp_dir = "some_temp_dir"
+    mocked_tempdir.return_value.__enter__.return_value = temp_dir
+    # make sure the mock works before continuing, since it's a bit complicated
+    with diamond.TemporaryDirectory() as temp:
+        assert temp == temp_dir
+
+    def run(version):
+        with patch.object(diamond, "execute") as mocked_execute:
+            with patch.object(diamond, "run_diamond_version", return_value=version):
+                subprocessing.run_diamond_makedb("fake.dmnd", "fake.fasta")
+                assert mocked_execute.call_count == 1
+                args = mocked_execute.call_args[0][0]
+        return args
+
+    # known good boundaries and some odd formats that can't be predicted
+    for version in ["0.9.3", "2.0.4", "2.1.7", "vX.Y.Z"]:
+        args_used = run(version)
+        assert "--tmpdir" in args_used
+    # known bad boundaries
+    for version in ["2.1.0", "2.1.4", "2.1.6"]:
+        args_used = run(version)
+        assert "--tmpdir" not in args_used
 
 
 class TestDiamondDatabaseChecks(unittest.TestCase):

@@ -32,7 +32,7 @@ RULE transAT-PKS
     DESCRIPTION Trans-AT polyketide
     EXAMPLE NCBI CP006259.1 382565-499230 kirromycin
     EXAMPLE NCBI CP001511.1 5000-30000 toblerol
-    CUTOFF 45  # kirromycin (CP006259) has a range of ~42kb
+    CUTOFF 20
     NEIGHBOURHOOD 20
     CONDITIONS cds(PKS_AT and not ANY_KS)
                and (
@@ -40,6 +40,7 @@ RULE transAT-PKS
                 # handle CP001511 5k-30k as per https://doi.org/10.1002/ange.201709056
                 or cds(tra_KS and PP-binding)
                )
+    EXTENDERS cds(ANY_KS and not PKS_AT)
 
 RULE hglE-KS
     CATEGORY PKS
@@ -48,6 +49,16 @@ RULE hglE-KS
     CUTOFF 20
     NEIGHBOURHOOD 20
     CONDITIONS hglE or hglD
+
+RULE polyhalogenated-pyrrole
+    CATEGORY other
+    DESCRIPTION polyhalogenated pyrrole
+    # doi:10.1073/pnas.1519695113
+    EXAMPLE NCBI KR011923.1 1-6705 tetrabromopyrrole  # BGC0001464
+    CUTOFF 10
+    NEIGHBOURHOOD 10
+    CONDITIONS Abhydrolase_6 and Trp_halogenase and (Acyl-CoA_dh_N or Acyl-CoA_dh_M or Acyl-CoA_dh_1)
+               and AMP-binding
 
 RULE prodigiosin
     CATEGORY PKS
@@ -66,11 +77,37 @@ RULE PpyS-KS
     CONDITIONS PpyS
 
 RULE arylpolyene
-    CATEGORY other
+    CATEGORY PKS
     DESCRIPTION Aryl polyene
     CUTOFF 20
     NEIGHBOURHOOD 20
     CONDITIONS APE_KS1 or APE_KS2
+
+RULE ladderane
+    CATEGORY PKS
+    DESCRIPTION Ladderane
+    EXAMPLE NCBI NZ_CP049055.1 1873471-1881357 ladderane
+    RELATED t2fas
+    CUTOFF 5
+    NEIGHBOURHOOD 20
+    CONDITIONS PF04055 and hr-t2pks-ksa
+
+RULE HR-T2PKS
+    CATEGORY PKS
+    DESCRIPTION Highly reducing PKS type II
+    EXAMPLE NCBI LC269948.1 0-37581 ishigamide  # BGC0001623
+    EXAMPLE NCBI JF430460.1 0-86806 skyllamycin  # BGC0000429
+    SUPERIORS arylpolyene, ladderane
+    CUTOFF 5
+    NEIGHBOURHOOD 20
+    CONDITIONS hr-t2pks-ksa and (t2fas or APE_KS2 or ketoacyl-synt)
+
+RULE PUFA
+    CATEGORY PKS
+    DESCRIPTION PolyUnsaturated Fatty Acid
+    CUTOFF 20
+    NEIGHBOURHOOD 20
+    CONDITIONS PUFA_KS
 
 RULE resorcinol
     CATEGORY other
@@ -78,20 +115,6 @@ RULE resorcinol
     CUTOFF 20
     NEIGHBOURHOOD 20
     CONDITIONS DarB
-
-RULE ladderane
-    CATEGORY other
-    DESCRIPTION Ladderane
-    CUTOFF 20
-    NEIGHBOURHOOD 20
-    CONDITIONS ladderane
-
-RULE PUFA
-    CATEGORY other
-    DESCRIPTION PolyUnsaturated Fatty Acid
-    CUTOFF 20
-    NEIGHBOURHOOD 20
-    CONDITIONS PUFA_KS
 
 RULE NRPS
     CATEGORY NRPS
@@ -142,11 +165,13 @@ RULE NAPAA
 RULE mycosporine-like
     CATEGORY NRPS
     DESCRIPTION mycosporine-like amino acid containing molecules
-    EXAMPLE NCBI MN401680.1 0-5063 mycosporine
-    RELATED Dala_Dala_lig_C, Dala_Dala_lig_N
+    # see DOI: 10.1128/AEM.00727-14
+    EXAMPLE NCBI MN401680.1 0-5063 mycosporine with ligase
+    EXAMPLE NCBI CP000117.1 4798900-4805360 mycosporine with NRPS-like
     CUTOFF 10
     NEIGHBOURHOOD 20
     CONDITIONS DHQ_synthase and Methyltransf_3 and ATP-grasp_3
+    EXTENDERS cds(Dala_Dala_lig_C or Dala_Dala_lig_N or AMP-binding)
 
 RULE terpene
     CATEGORY terpene
@@ -182,7 +207,7 @@ RULE lanthipeptide-class-ii
 
 RULE lanthipeptide-class-iii
     CATEGORY RiPP
-    DESCRIPTION Class III lanthipeptide clusters
+    DESCRIPTION Class III lanthipeptide
     EXAMPLE NCBI FN178622.1 0-6400 labyrinthopeptin
     CUTOFF 20
     NEIGHBOURHOOD 10
@@ -363,6 +388,34 @@ RULE redox-cofactor
     NEIGHBOURHOOD 10
     CONDITIONS rSAM_with_SPASM and (TIGR02111 or TIGR03966) and ANY_RRE
 
+RULE darobactin
+    CATEGORY RiPP
+    DESCRIPTION darobactin-like compounds
+    EXAMPLE NCBI NZ_WHZZ01000001.1 1236986-1243174 darobactin  # BGC0002116
+    CUTOFF 5
+    NEIGHBOURHOOD 10
+    CONDITIONS rSAM_with_SPASM and darobactin_precursor
+
+RULE triceptide
+    CATEGORY RiPP
+    DESCRIPTION triceptides
+    # see DOI: 10.1021/jacs.2c00521
+    EXAMPLE NCBI NZ_CP048261.1 9207808-9228995 YxD
+    EXAMPLE NCBI NZ_CP016279.1 10116044-10137204 HAA
+    EXAMPLE NCBI NZ_CP031253.1 933021-973170 YRDxHNRHNR
+    CUTOFF 5
+    NEIGHBOURHOOD 10
+    CONDITIONS triceptide_precursor and (SAM_SPASM_FxsB or rSAM_GlyRichRpt or rSAM_XyeB or rSAM_with_SPASM)
+
+RULE archaeal-RiPP
+    CATEGORY RiPP
+    DESCRIPTION archaeal-RiPP
+    # see the supplemental Fig S3 of DOI: 10.1021/jacs.2c00521 where these are mentioned in passing
+    EXAMPLE NCBI CP042937.1 327621-353782 unknown hypothetical archaeal RiPPs
+    CUTOFF 5
+    NEIGHBOURHOOD 10
+    CONDITIONS rSAM_pep_methan and methano_modCys
+
 RULE epipeptide
     CATEGORY RiPP
     DESCRIPTION D-amino-acid containing RiPPs
@@ -452,8 +505,9 @@ RULE aminocoumarin
 RULE NI-siderophore
     CATEGORY other
     DESCRIPTION NRPS-independent IucA/IucC-like siderophores
+    EXAMPLE NCBI CP001096.1 2834779-2852134 rhodopetrobactin  # https://doi.org/10.1111/1462-2920.14078
     CUTOFF 20
-    NEIGHBOURHOOD 5
+    NEIGHBOURHOOD 14  # for rhodopetrobactin
     CONDITIONS IucA_IucC
 
 RULE ectoine
@@ -669,3 +723,43 @@ RULE aminopolycarboxylic-acid
     CUTOFF 10
     NEIGHBOURHOOD 5
     CONDITIONS AesA and AesB and AesC
+
+RULE isocyanide
+    CATEGORY other
+    DESCRIPTION Isocyanides
+    # see DOI: 10.1093/nar/gkad573
+    EXAMPLE NCBI NC_007198.1 687200-701000 xanthocillin-X monomethylether # BGC0001990
+    RELATED DIT1_PvcA  # without the TauD it's probably not the core enzyme
+    CUTOFF 5
+    NEIGHBOURHOOD 20
+    CONDITIONS cds(TauD and DIT1_PvcA)
+
+RULE isocyanide-nrp
+    CATEGORY NRPS
+    DESCRIPTION NRP with isocyanide
+    # see DOI: 10.1128/mBio.00785-18
+    EXAMPLE NCBI CM000171.1 3584442-3651038 copper-responsive metabolite
+    CUTOFF 5
+    NEIGHBOURHOOD 25
+    CONDITIONS DIT1_PvcA and minimum(2, [AMP-binding, PP-binding, Transferase])
+
+RULE hydrogen-cyanide
+    CATEGORY other
+    DESCRIPTION hydrogen cyanide
+    # see DOI: 10.1128/jb.182.24.6940-6949.2000
+    EXAMPLE NCBI AF208523.2 1-3300 hydrogen cyanide
+    # and also BGC0002345 which is a different Pseudomonas
+    CUTOFF 5
+    NEIGHBOURHOOD 5
+    CONDITIONS Fer2_4 and cds(Pyr_redox_2 and Fer2_BFD) and DAO
+
+RULE hydroxytropolone
+    CATEGORY other
+    DESCRIPTION 7-hydroxytropolone-like cluster
+    # see DOIs: 10.1128/jb.00087-18  and  10.1128/jb.01756-14
+    EXAMPLE NCBI JH650757.1 85513-99428 7-hydroxytropolone
+    CUTOFF 10
+    NEIGHBOURHOOD 10
+    CONDITIONS 4HBT_2 and AMP-binding and
+               cds(Acyl-CoA_dh_N and Acyl-CoA_dh_M and Acyl-CoA_dh_1) and
+               cds(TPP_enzyme_N and TPP_enzyme_C)

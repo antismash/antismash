@@ -26,6 +26,7 @@ RULE fatty_acid
 RULE halogenated
     CATEGORY other
     DESCRIPTION Halogenases are frequently involved in secondary metabolite biosynthesis
+    SUPERIORS polyhalogenated-pyrrole
     CUTOFF 5
     NEIGHBOURHOOD 10
     CONDITIONS Trp_halogenase

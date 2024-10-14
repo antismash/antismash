@@ -7,14 +7,56 @@
     really belong in the original objects.
 """
 
+from abc import ABC as AbstractClass, abstractmethod
 import os
-from typing import Any, List, Optional, Tuple
+from typing import Any, List, Optional
 
 from antismash.config import ConfigType
 from antismash.common.html_renderer import Markup
 from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import Record, Region
 from antismash.custom_typing import AntismashModule
+
+
+class AbstractRelatedArea(AbstractClass):
+    """ An interface for modules to use in order to avoid circular import issues """
+    @property
+    @abstractmethod
+    def identifier(self) -> str:
+        """ The unique identifier of the related area, e.g. an accession. """
+
+    @property
+    @abstractmethod
+    def description(self) -> str:
+        """ A description of the related area. """
+
+    @property
+    def product(self) -> str:
+        """ The product of the related area. This will be an empty string if not relevant. """
+        return ""
+
+    @property
+    def similarity_percentage(self) -> Optional[int]:
+        """ The similarity of the related area to the current region, as a percentage in the range 0 - 100.
+            If a percentage is not appropriate, the value will be None.
+        """
+        return None
+
+    @property
+    def url(self) -> str:
+        """ The URL of the related area. This will be an empty string if not relevant. """
+        return ""
+
+
+class BlankRelatedArea(AbstractRelatedArea):
+    """ A class to represent the lack of a related area """
+    @property
+    def identifier(self) -> str:
+        return ""
+
+    @property
+    def description(self) -> str:
+        return ""
 
 
 class OptionsLayer:
@@ -95,15 +137,7 @@ class RegionLayer:
         self.handlers: List[AntismashModule] = []
         self.region_feature: Region = region_feature
 
-        self.cluster_blast: List[Tuple[str, str]] = []
-        self.knowncluster_blast: List[Tuple[str, str]] = []
-        self.subcluster_blast: List[Tuple[str, str]] = []
-        if self.region_feature.knownclusterblast:
-            self.knowncluster_blast = self.knowncluster_blast_generator()
-        if self.region_feature.subclusterblast:
-            self.subcluster_blast = self.subcluster_blast_generator()
-        if self.region_feature.clusterblast:
-            self.cluster_blast = self.cluster_blast_generator()
+        self.most_related_area: AbstractRelatedArea = BlankRelatedArea()
 
         self.find_plugins_for_region()
         self.has_details = self.determine_has_details()
@@ -113,42 +147,6 @@ class RegionLayer:
         if attr in self.__dict__:
             return super().__getattribute__(attr)
         return getattr(self.region_feature, attr)
-
-    @property
-    def best_knowncluster_type(self) -> str:
-        """ The type of the best hit from knownclusterblast, if it was run """
-        if not self.knownclusterblast:
-            return ""
-        return self.knownclusterblast[0].cluster_type
-
-    @property
-    def best_knowncluster_name(self) -> str:
-        """ The name of the best hit from knownclusterblast, if it was run """
-        if not self.knownclusterblast:
-            return ""
-        return self.knownclusterblast[0].name.replace("_", " ")
-
-    @property
-    def best_knowncluster_similarity(self) -> int:
-        """ The percentage similarity of the best hit from knownclusterblast as
-            an integer """
-        if not self.knownclusterblast:
-            return 0
-        return self.knownclusterblast[0].similarity
-
-    @property
-    def bgc_id(self) -> str:
-        """ The BGC id of the best hit from knownclusterblast, if it was run """
-        if not self.region_feature.knownclusterblast:
-            return ""
-        return format(self.region_feature.knownclusterblast[0].bgc_id)
-
-    @property
-    def bgc_cluster_number(self) -> Optional[int]:
-        """ The cluster number of the BGC id of the best knownclusterblast hit """
-        if not self.region_feature.knownclusterblast:
-            return None
-        return self.region_feature.knownclusterblast[0].cluster_number
 
     @property
     def detection_rules(self) -> List[str]:
@@ -163,40 +161,6 @@ class RegionLayer:
             f" (total: {len(self.location):,d} nt)"
         )
         return description_text
-
-    def cluster_blast_generator(self) -> List[Tuple[str, str]]:  # TODO: deduplicate
-        """ Generates the details to use for clusterblast results """
-        assert self.region_feature.clusterblast
-        top_hits = self.region_feature.clusterblast[:self.record.options.cb_nclusters]
-        results = []
-        for i, label in enumerate(top_hits):
-            i += 1  # 1-indexed
-            svg_file = os.path.join("svg", f"clusterblast_{self.build_anchor_id(self.region_feature)}_{i}.svg")
-            results.append((label, svg_file))
-        return results
-
-    def knowncluster_blast_generator(self) -> List[Tuple[str, str]]:
-        """ Generates the details to use for knownclusterblast results """
-        assert self.region_feature.knownclusterblast
-        top_hits = self.region_feature.knownclusterblast[:self.record.options.cb_nclusters]
-        results = []
-        for i, summary in enumerate(top_hits):
-            i += 1  # 1-indexed
-            svg_file = os.path.join("svg", f"knownclusterblast_{self.build_anchor_id(self.region_feature)}_{i}.svg")
-            results.append((summary.name, svg_file))
-        return results
-
-    def subcluster_blast_generator(self) -> List[Tuple[str, str]]:
-        """ Generates the details to use for subclusterblast results """
-        assert self.region_feature.subclusterblast
-        assert self.region_feature.subclusterblast is not None, self.region_feature.location
-        top_hits = self.region_feature.subclusterblast[:self.record.options.cb_nclusters]
-        results = []
-        for i, label in enumerate(top_hits):
-            i += 1  # since one-indexed
-            svg_file = os.path.join("svg", f"subclusterblast_{self.build_anchor_id(self.region_feature)}_{i}.svg")
-            results.append((label, svg_file))
-        return results
 
     def find_plugins_for_region(self) -> List[AntismashModule]:
         "Find a specific plugin responsible for a given Region type"

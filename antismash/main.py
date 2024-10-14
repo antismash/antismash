@@ -30,13 +30,14 @@ from antismash.config import (
     get_config,
     update_config,
 )
-from antismash.common import logs, record_processing, serialiser
+from antismash.common import errors, logs, record_processing, serialiser
+from antismash.common.errors import AntismashInputError
 from antismash.common.module_results import ModuleResults, DetectionResults
 from antismash.common.path import get_full_path
 from antismash.common.secmet import Record
 from antismash.common import subprocessing
 from antismash.detection import DetectionStage
-from antismash.outputs import html, svg
+from antismash.outputs import html
 from antismash.support import genefinding
 from antismash.custom_typing import AntismashModule
 
@@ -153,18 +154,18 @@ def verify_options(options: ConfigType, modules: List[AntismashModule]) -> bool:
         Returns:
             True if no problems detected, otherwise False
     """
-    errors: List[str] = []
+    errors_found: List[str] = []
     for module in modules:
         try:
             logging.debug("Checking options for %s", module.__name__)
-            errors.extend(module.check_options(options))
+            errors_found.extend(module.check_options(options))
         except ValueError as err:
-            errors.append(str(err))
-    if not errors:
+            errors_found.append(str(err))
+    if not errors_found:
         return True
 
-    logging.error("Incompatible options detected:\n  %s", "\n  ".join(errors))
-    for error in errors:
+    logging.error("Incompatible options detected:\n  %s", "\n  ".join(errors_found))
+    for error in errors_found:
         print(error)  # still commandline args, so don't use logging
     return False
 
@@ -324,11 +325,11 @@ def prepare_output_directory(name: str, input_file: str) -> None:
 
     if os.path.exists(name):
         if not os.path.isdir(name):
-            raise RuntimeError("Output directory {name!r} exists and is not a directory")
+            raise AntismashInputError("Output directory {name!r} exists and is not a directory")
         # not empty (apart from a possible input dir), and not reusing its results
         if not input_file.endswith(".json") and \
                 list(filter(_ignore_patterns, glob.glob(os.path.join(name, "*")))):
-            raise RuntimeError("Output directory contains other files, aborting for safety")
+            raise AntismashInputError("Output directory contains other files, aborting for safety")
 
         # --reuse
         logging.debug("Removing existing region genbank files")
@@ -397,35 +398,30 @@ def add_antismash_comments(records: List[Tuple[Record, SeqRecord]], options: Con
     """
     if not records:
         return
-    shared = []
+    base_comment = {
+        "Version": str(options.version),
+        "Run date": str(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+    }
     # include start/end details if relevant
     if options.start != -1 or options.end != -1:
         start = 1 if options.start == -1 else options.start
         # start/end is only valid for single records, as per record_processing
         assert len(records) == 1
         end = len(records[0][0].seq) if options.end == -1 else options.end
-        shared.append(
-            "NOTE: This is an extract from the original record!\n"
-            f"Starting at  :: {start}\n"
-            f"Ending at    :: {end}\n"
-        )
-    antismash_comment = (
-        "##antiSMASH-Data-START##\n"
-        f"Version      :: {options.version}\n"
-        f"Run date     :: {str(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))}\n"
-        "%s"
-        "##antiSMASH-Data-END##"
-    )
-    for record, bio_record in records:
-        extras: List[str] = []
-        if record.original_id:
-            extras.append(f"Original ID  :: {record.original_id}\n")
+        base_comment.update({
+            "NOTE": "This is an extract from the original record!",
+            "Starting at": str(start),
+            "Ending at": str(end),
+        })
 
-        comment = antismash_comment % "".join(extras + shared)
-        if 'comment' in bio_record.annotations:
-            bio_record.annotations['comment'] += '\n' + comment
-        else:
-            bio_record.annotations['comment'] = comment
+    for record, bio_record in records:
+        comment = dict(base_comment)
+        if record.original_id:
+            comment["Original ID"] = record.original_id
+
+        if "structured_comment" not in record.annotations:
+            record.annotations["structured_comment"] = {}
+        bio_record.annotations["structured_comment"]["antiSMASH-Data"] = comment
 
 
 def write_outputs(results: serialiser.AntismashResults, options: ConfigType) -> None:
@@ -449,10 +445,12 @@ def write_outputs(results: serialiser.AntismashResults, options: ConfigType) -> 
 
     if html.is_enabled(options):
         logging.debug("Creating results page")
+        start = time.time()
         html.write(results.records, module_results_per_record, options, get_all_modules())
-
-    logging.debug("Creating results SVGs")
-    svg.write(options, module_results_per_record)
+        # use an average of times for html
+        duration = (time.time() - start) / len(results.records)
+        for val in results.timings_by_record.values():
+            val[html.__name__] = duration
 
     # convert records to biopython
     bio_records = [record.to_biopython() for record in results.records]
@@ -541,7 +539,8 @@ def read_data(sequence_file: Optional[str], options: ConfigType) -> serialiser.A
     if sequence_file:
         records = record_processing.parse_input_sequence(
             sequence_file, options.taxon, options.minlength, options.start,
-            options.end, gff_file=options.genefinding_gff3
+            options.end, gff_file=options.genefinding_gff3,
+            ignore_invalid_records=not options.abort_on_invalid_records,
         )
         results = serialiser.AntismashResults(sequence_file.rsplit(os.sep, 1)[-1],
                                               records, [{} for i in records],
@@ -549,7 +548,7 @@ def read_data(sequence_file: Optional[str], options: ConfigType) -> serialiser.A
         update_config({"input_file": os.path.splitext(results.input_file)[1]})
     else:
         logging.debug("Attempting to reuse previous results in: %s", options.reuse_results)
-        with open(options.reuse_results, encoding="utf-8") as handle:
+        with open(options.reuse_results, "rb") as handle:
             contents = handle.read()
             if not contents:
                 raise ValueError(f"No results contained in file: {options.reuse_results!r}")
@@ -599,8 +598,8 @@ def check_prerequisites(modules: List[AntismashModule], options: ConfigType) -> 
         if res:
             errors_by_module[module.__name__] = res
     if errors_by_module:
-        for module_name, errors in errors_by_module.items():
-            for error in errors:
+        for module_name, errors_found in errors_by_module.items():
+            for error in errors_found:
                 logging.error("%s: preqrequisite failure: %s", module_name, error)
         raise RuntimeError("Modules failing prerequisites")
 
@@ -672,7 +671,11 @@ def run_antismash(sequence_file: Optional[str], options: ConfigType) -> int:
 
     with logs.changed_logging(logfile=options.logfile, verbose=options.verbose,
                               debug=options.debug):
-        result = _run_antismash(sequence_file, options)
+        try:
+            result = _run_antismash(sequence_file, options)
+        except errors.AntismashInputError as err:
+            logging.error(str(err))
+            raise
     return result
 
 
@@ -741,6 +744,7 @@ def _run_antismash(sequence_file: Optional[str], options: ConfigType) -> int:
         results.timings_by_record[record.id] = timings
 
     # Write results
+    logging.info("Writing results")
     json_filename = canonical_base_filename(results.input_file, options.output_dir, options)
     json_filename += ".json"
     logging.debug("Writing json results to '%s'", json_filename)

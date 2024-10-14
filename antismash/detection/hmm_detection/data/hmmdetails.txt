@@ -208,7 +208,8 @@ APE_KS2	Aryl polyene ketosynthase 2	50	APE_KS2.hmm
 DarB	(Dialkyl)resorcinol-associated ketosynthase	50	DarB.hmm
 FabF	FabF	50	FabF.hmm
 ksIII	CerJ-like KSIII enzyme	50	ksIII.hmm
-ladderane	Ladderane lipid ketosynthase	200	ladderane.hmm
+hr-t2pks-ksa	Highly reducing PKS type II ketosynthase alpha	200	hr-t2pks-ksa.hmm
+ketoacyl-synt	Beta-ketoacyl synthase, N-terminal domain	20	PF00109.hmm
 PUFA_KS	Polyunsaturated fatty acid ketosynthase	50	PUFA_KS.hmm
 PF13471	Transglut_core3 domain	22	PF13471.hmm
 Asn_synthase	Asparagine synthase	21	PF00733.hmm
@@ -280,6 +281,11 @@ SPASM	Iron-sulfur cluster-binding domain	21	PF13186.hmm
 TIGR02111	coenzyme PQQ biosynthesis protein C	240	TIGR02111.hmm
 TIGR03966	heme/flavin dehydrogenase, mycofactocin system	471	TIGR03966.hmm
 TIGR04078	peptide modification radical SAM enzyme, YydG family	300	TIGR04078.hmm
+rSAM_GlyRichRpt	GRRM system radical SAM/SPASM domain protein	310	TIGR04261.hmm
+SAM_SPASM_FxsB	FxsB family radical SAM/SPASM domain protein	370	TIGR04269.hmm
+rSAM_XyeB	XyeB family radical SAM/SPASM peptide maturase	450	TIGR04496.hmm
+rSAM_pep_methan	TIGR04083 family peptide-modifying radical SAM enzyme	100	TIGR04083.hmm
+methano_modCys	TIGR04165 family Cys-rich peptide	60	TIGR04165.hmm
 yydH	Epipeptide metalloprotease yydH	400	yydH.hmm
 TIGR04223	cyclic lactone autoinducer peptide	19	TIGR04223.hmm
 AgrB	cyclic lactone autoinducer endopeptidase	23	PF04647.hmm
@@ -295,6 +301,13 @@ ADSI-DH	3-amino-2,3-dideoxy-scyllo-inositol 1-dehydrogenase	460	adsi_dh.hmm
 ADH_N	Alcohol dehydrogenase GroES-like domain	21	PF08240.hmm
 ADH_zinc_N	Zinc-binding dehydrogenase	32	PF00107.hmm
 RCDPS	arginine-containing cyclic dipeptide synthase	500	rcdps.hmm
+DIT1_PvcA	Pyoverdine/dityrosine biosynthesis protein	27	PF05141.hmm
+TauD	Taurine catabolism dioxygenase TauD, TfdA family	27	PF02668.hmm
+Transferase	Transferase family	20	PF02458.hmm
+Fer2_4	2Fe-2S iron-sulfur cluster binding domain	22	PF13510.hmm
+Fer2_BFD	BFD-like [2Fe-2S] binding domain	23	PF04324.hmm
+Pyr_redox_2	Pyridine nucleotide-disulphide oxidoreductase	26	PF07992.hmm
+DAO	FAD dependent oxidoreductase	27	PF01266.hmm
 Lanthipeptide_LanB_RRE	RRE-containing LanB protein in a class I lanthipeptide cluster	25	RREFam001.hmm
 Stand_Alone_Lasso_RRE	Stand-alone RRE protein in a lasso peptide cluster	25	RREFam002.hmm
 Lasso_Fused_RRE	RRE-containing fused peptidase in a lasso peptide cluster	25	RREFam003.hmm
@@ -352,3 +365,4 @@ CntM	Staphylopine dehydrogenase found in opine-like zincophore clusters	100	CntM
 AesA	N-((2S)-2-amino-2-carboxyethyl)-L-glutamate dehydrogenase involved in APCA biosynthesis	300	AesA.hmm
 AesB	Pyridoxal-dependent decarboxylase involved in APCA biosynthesis	400	AesB.hmm
 AesC	N-(2-amino-2-carboxyethyl)-L-glutamate synthase involved in APCA biosynthesis	420	AesC.hmm
+4HBT_2	Hotdog fold Thioesterase-like superfamily	25	PF13279.hmm

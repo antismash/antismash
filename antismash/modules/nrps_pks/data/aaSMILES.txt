@@ -52,7 +52,7 @@ pPro N1CC(CCC)CC1C(=O)O # 4-propyl-proline
 aad NC(CCCC(=O)O)C(=O)O # 2-amino-adipic acid
 abu NC(C(C))C(=O)O # 2-amino-butyric acid
 bmt NC(C(O)C(C)CC=CC)C(=O)O # 4-butenyl-4-methyl threonine
-cap NC1=NCCC(N1)C(N)C(=O)O # capreomycidine
+cap NC(C1CCN=C(N1)N)C(=O)O # capreomycidine
 dab NC(CCN)C(=O)O # 2,4-diaminobutyric acid
 dht NC(C(=O)C)C(=O)O # dehydro-threonine/2,3-dehydroaminobutyric acid
 hiv OC(C(C)C)C(=O)O # 2-hydroxyisovalerate
@@ -105,3 +105,11 @@ emal C(CC)C(=O)
 ohemal C(CC)C(O)
 ccemal C(CC)=C
 redemal C(CC)C
+
+# MINOWA predictions
+AHBA C1=CC(=O)C(N)C=C1C(=O)O
+ohAHBA C1=CC(O)C(N)C=C1C(=O)O  # possible modification by a KR, consistent with PKS substrate modification naming
+fatty_acid C[*]C(=O)O
+NH2 N
+Acetyl-CoA CC(=O)O
+shikimic_acid C1C(O)C(O)C(O)C=C1C(=O)O

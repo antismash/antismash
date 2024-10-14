@@ -52,7 +52,7 @@ class TestMode(unittest.TestCase):
 
 class TestComponents(unittest.TestCase):
     def test_restrictions(self):
-        components = Components({}, {}, {}, {})
+        components = Components({}, {}, {}, {}, {})
         with self.assertRaises(AttributeError):
             components.something_invalid = "test"
 
