@@ -13,7 +13,6 @@ from antismash.config.args import ModuleArgs
 
 from .core import (
     check_clusterblast_files,
-    internal_homology_blast,
     load_clusterblast_database,
 )
 from .clusterblast import perform_clusterblast
@@ -146,7 +145,6 @@ def run_on_record(record: Record, results: Optional[ClusterBlastResults],
     """ Runs the specified clusterblast variants over the record """
     if not results:
         results = ClusterBlastResults(record.id)
-        results.internal_homology_groups = internal_homology_blast(record)
     if options.cb_general and not results.general:
         logging.info('Running ClusterBlast')
         clusters, proteins = load_clusterblast_database()

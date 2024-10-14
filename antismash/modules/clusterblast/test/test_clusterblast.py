@@ -17,9 +17,7 @@ from antismash.common.secmet import Record
 from antismash.common.secmet.test.helpers import (
     DummyCDS,
     DummyRegion,
-    DummySubRegion,
 )
-from antismash.common.test.helpers import DummyRecord
 from antismash.modules import clusterblast
 from antismash.modules.clusterblast import core
 
@@ -609,47 +607,3 @@ class TestDataPreparation(unittest.TestCase):
         with patch.object(clusterblast, "check_clusterblast_files", returns=[]) as check:
             clusterblast.check_prereqs(options)
             check.assert_called_once()
-
-
-class TestInternalBlast(unittest.TestCase):
-    def setUp(self):
-        self.record = DummyRecord(seq="A"*100)
-        self.run = clusterblast.core.internal_homology_blast
-
-    @patch.object(clusterblast.core.fasta, "write_fasta",
-                  side_effect=RuntimeError("function should not have been called"))
-    def test_empty_regions(self, mocked_fasta):
-        region = DummyRegion(subregions=[DummySubRegion()])
-        self.record.add_region(region)
-        assert not region.cds_children
-        assert self.run(self.record) == {region.get_region_number(): []}
-        assert not mocked_fasta.called
-
-    def test_numeric_ids(self):
-        # a typical identifier
-        self.record.add_cds_feature(DummyCDS(locus_tag="LOCI_1234", start=0, end=10, translation="ABC"))
-        # a problematic identifier
-        self.record.add_cds_feature(DummyCDS(locus_tag="c00001_NODE_1_.._c00001_NODE_1_.._2",
-                                             start=20, end=30, translation="DEF"))
-        region = DummyRegion(subregions=[DummySubRegion(start=0, end=50)])
-        self.record.add_region(region)
-        assert len(region.cds_children) == 2
-        with patch.object(clusterblast.core, "run_internal_blastsearch"):
-            with patch.object(clusterblast.core.fasta, "write_fasta") as mocked_fasta:
-                with patch.object(clusterblast.core, "blastparse", side_effect=RuntimeError("stop")) as mocked_parse:
-                    with self.assertRaisesRegex(RuntimeError, "stop"):
-                        self.run(self.record)
-                    assert mocked_fasta.called
-                    fasta_args = mocked_fasta.call_args.args
-                assert mocked_parse.called
-                parse_kwargs = mocked_parse.call_args.kwargs
-
-        # the fasta file created needs to have numeric identifiers
-        assert fasta_args[0] == ["0", "1"]
-        assert fasta_args[1] == [cds.translation for cds in region.cds_children]
-        # the parsing of the diamond results needs to map numeric back to actual identifiers
-        # including rest of fasta header per identifier for compatibility with other clusterblast types
-        assert parse_kwargs["mapping"] == {
-            "0": "input|c1|0-10|+|LOCI_1234|",
-            "1": "input|c1|20-30|+|c00001_NODE_1_.._c00001_NODE_1_.._2|",
-        }
