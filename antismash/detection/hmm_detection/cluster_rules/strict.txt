@@ -746,6 +746,16 @@ RULE methanobactin
     NEIGHBOURHOOD 10
     CONDITIONS DUF692 and MbnC
 
+RULE nitropropanoic_acid
+    CATEGORY other
+    DESCRIPTION 3-Nitropropanoic acid (neurotoxin)
+    # see DOI: 10.1021/acs.orglett.4c00758
+    EXAMPLE NCBI NC_036440.1 3581442-3584397 3-nitropropanoic_acid
+    RELATED NpaC
+    CUTOFF 5
+    NEIGHBOURHOOD 5
+    CONDITIONS NpaA and NpaB
+
 RULE opine-like-metallophore
     CATEGORY other
     DESCRIPTION Opine-like zincophores
