@@ -160,6 +160,9 @@ CTP_transf_like	Cytidylyltransferase-like	21	CTP_transf_like.hmm
 DUF4992	Domain of unknown function	29	DUF4992.hmm
 Fe-ADH	Iron-containing alcohol dehydrogenase	26	Fe-ADH.hmm
 Metallophos_2	Calcineurin-like phosphoesterase superfamily domain	27	Metallophos_2.hmm
+NpaA	Nitrosuccinic acid synthase	600	NpaA.hmm
+NpaB	Nitrosuccinic acid decarboxylase	200	NpaB.hmm
+NpaC	Nitronate monooxygenase	400	NpaC.hmm
 NTP_transf_3	MobA-like NTP transferase domain	27	NTP_transf_3.hmm
 NTP_transf_5	Uncharacterised nucleotidyltransferase	31	NTP_transf_5.hmm
 PALP	Pyridoxal-phosphate dependent enzyme	35	PALP.hmm
