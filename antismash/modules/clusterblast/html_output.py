@@ -68,36 +68,32 @@ def generate_html(region_layer: RegionLayer, results: ClusterBlastResults,
                     "genes within the current region.<br>"
                     "Double click on a reference drawing to reverse the display of the genes.<br>"
                     )
-    if options_layer.cb_general:
+    if results.general:
         tooltip = base_tooltip % "regions from the antiSMASH database"
         tooltip += "<br>Click on a reference name to open that entry in the antiSMASH database (if applicable)."
-        references = []
-        if results.general:
-            references = [ref for ref, _ in results.general.region_results[region.get_region_number() - 1].ranking]
+        references = [ref for ref, _ in results.general.region_results[region.get_region_number() - 1].ranking]
         div = generate_div(region_layer, record_layer, options_layer, "clusterblast",
                            tooltip, references, title=TITLE_GENERAL)
         html.add_detail_section("ClusterBlast", div, "clusterblast")
 
-    if options_layer.cb_knownclusters:
+    if results.knowncluster:
         assert results.knowncluster and results.knowncluster.data_version, "missing MIBiG data version"
         tooltip = base_tooltip % "clusters from the MIBiG database"
         tooltip += "<br>Click on an accession to open that entry in the MIBiG database."
         references = []
-        if results.knowncluster:
-            region_results = results.knowncluster.region_results[region.get_region_number() - 1]
-            references = [ref for ref, _ in region_results.ranking]
-            best_match = region_results.get_best_match()
-            if best_match:
-                region_layer.most_related_area = best_match
+        region_results = results.knowncluster.region_results[region.get_region_number() - 1]
+        references = [ref for ref, _ in region_results.ranking]
+        best_match = region_results.get_best_match()
+        if best_match:
+            region_layer.most_related_area = best_match
         title = TITLE_KNOWN % results.knowncluster.data_version
         div = generate_div(region_layer, record_layer, options_layer, "knownclusterblast",
                            tooltip, references, title=title)
         html.add_detail_section("KnownClusterBlast", div, "knownclusterblast")
 
-    if options_layer.cb_subclusters:
+    if results.subcluster:
         tooltip = base_tooltip % "sub-cluster units"
-        if results.subcluster:
-            references = [ref for ref, _ in results.subcluster.region_results[region.get_region_number() - 1].ranking]
+        references = [ref for ref, _ in results.subcluster.region_results[region.get_region_number() - 1].ranking]
         div = generate_div(region_layer, record_layer, options_layer, "subclusterblast",
                            tooltip, references, title=TITLE_SUB)
         html.add_detail_section("SubClusterBlast", div, "subclusterblast")
