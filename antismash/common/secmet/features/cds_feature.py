@@ -139,12 +139,12 @@ class CDSFeature(Feature):
     """ A feature representing a single CDS/gene. """
     __slots__ = ["_translation", "protein_id", "locus_tag", "gene", "product",
                  "transl_table", "_sec_met", "_gene_functions", "_modules",
-                 "unique_id", "_nrps_pks", "motifs", "region", "rbs"]
+                 "unique_id", "_nrps_pks", "motifs", "region"]
     FEATURE_TYPE = "CDS"
 
     def __init__(self, location: Location, translation: str, locus_tag: str = None,
                  protein_id: str = None, product: str = "", gene: str = None,
-                 translation_table: int = 1, rbs: Optional[bool] = None) -> None:
+                 translation_table: int = 1) -> None:
         super().__init__(location, feature_type=self.FEATURE_TYPE)
         _verify_location(location)
         # mandatory
@@ -168,8 +168,6 @@ class CDSFeature(Feature):
 
         self._modules: List[Module] = []
         self.motifs: List[CDSMotif] = []
-        if rbs is not None:
-            self.rbs = rbs
 
         # runtime-only data
         self.region: Optional[AbstractRegion] = None
