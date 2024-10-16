@@ -112,7 +112,7 @@ def acquire_rodeo_heuristics(record: secmet.Record, query: secmet.CDSFeature,
     # Precursor is within 500 nt?
     hmmer_profiles = ['LANC_like', 'Lant_dehyd_C']
     distance = utils.distance_to_pfam(record, query, hmmer_profiles)
-    if distance < 500:
+    if 0 <= distance < 500:
         score += 1
         tabs.append(1)
     else:

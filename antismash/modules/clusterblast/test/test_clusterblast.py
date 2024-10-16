@@ -258,24 +258,15 @@ class TestScore(unittest.TestCase):
 
 class TestProtein(unittest.TestCase):
     def test_string_conversion(self):
-        protein = core.Protein("n", "l", "a-b", "+", "anno")
-        self.assertEqual(str(protein), "l\tn\ta\tb\t+\tanno\n")
+        protein = core.Protein("n", "l", "5-12", "+", "anno")
+        self.assertEqual(str(protein), "l\tn\t5\t12\t+\tanno\n")
 
         # test name is used when no locus tag
-        protein = core.Protein("n", "no_locus_tag", "a-b", "+", "anno")
-        self.assertEqual(str(protein), "n\tn\ta\tb\t+\tanno\n")
-
-        # test location
-        protein = core.Protein("n", "no_locus_tag", "abb", "+", "anno")
-        with self.assertRaises(ValueError) as context:
-            str(protein)
-        self.assertTrue(str(context.exception).startswith("Invalid location in Protein"))
-        protein = core.Protein("n", "no_locus_tag", 123., "+", "anno")
-        with self.assertRaises(AttributeError) as context:
-            str(protein)
+        protein = core.Protein("n", "no_locus_tag", "5-12", "+", "anno")
+        self.assertEqual(str(protein), "n\tn\t5\t12\t+\tanno\n")
 
     def test_members(self):
-        protein = core.Protein("n", "no_locus_tag", "a-b", "+", "anno")
+        protein = core.Protein("n", "no_locus_tag", "5-12", "+", "anno")
         protein.locus_tag = "l"
         # if this doesn't raise an exception, __slots__ was removed from Protein
         with self.assertRaises(AttributeError):
@@ -561,7 +552,10 @@ class TestReferenceProteinLoading(unittest.TestCase):
         config.destroy_config()
 
     def test_standard(self):
-        hit = ">CVNH01000008|c1|65549-69166|-|BN1184_AH_00620|Urea_carboxylase_{ECO:0000313}|CRH36422"
+        hit = (
+            ">CVNH01000008|c1|65549-69166|-|linearised65549-69166"
+            "|BN1184_AH_00620|Urea_carboxylase_{ECO:0000313}|CRH36422"
+        )
         with patch("builtins.open", self.mock_with(hit)):
             proteins = core.load_reference_proteins("clusterblast")
         assert len(proteins) == 1
@@ -570,7 +564,10 @@ class TestReferenceProteinLoading(unittest.TestCase):
         assert protein.annotations == "Urea_carboxylase_{ECO:0000313}"
 
     def test_non_standard(self):
-        hit = ">CVNH01000008|c1|65549-69166|-|BN1184_AH_00620|Urea_carboxylase_{ECO:0000313|EMBL:CCF11062.1}|CRH36422"
+        hit = (
+            ">CVNH01000008|c1|65549-69166|-|linearised65549-69166"
+            "|BN1184_AH_00620|Urea_carboxylase_{ECO:0000313|EMBL:CCF11062.1}|CRH36422"
+        )
         with patch("builtins.open", self.mock_with(hit)):
             proteins = core.load_reference_proteins("clusterblast")
         assert len(proteins) == 1

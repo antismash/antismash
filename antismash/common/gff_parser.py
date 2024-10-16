@@ -8,11 +8,12 @@
 import logging
 from typing import Dict, IO, List, Set
 
-from Bio.SeqFeature import FeatureLocation, CompoundLocation, SeqFeature
+from Bio.SeqFeature import SeqFeature
 from Bio.SeqRecord import SeqRecord
 from BCBio import GFF
 
 from antismash.common.errors import AntismashInputError
+from antismash.common.secmet.locations import FeatureLocation, CompoundLocation
 
 # whether to use phase (codon start) to modify reported locations
 # Augustus and NCBI report phase but have already adjusted the
