@@ -447,6 +447,19 @@ class TestRecord(unittest.TestCase):
         # and since it's already set, the getter should return it
         assert rec.get_gc_content() == 0.3
 
+    def test_get_sequence_upstream_of_location(self):
+        record = Record("TCTGAGACTCGATCG"*47) #prime number so we dont hit on accident
+        location_begin = FeatureLocation(5, 40, 1)
+        location_end = FeatureLocation(100, 47 * len("TCTGAGACTCGATCG") - 5, -1)
+        location_middle = FeatureLocation(50, 70, 1)
+        upstream_sequence_location_begin = record.get_sequence_upstream_of_location(location_begin, length=15)
+        upstream_sequence_location_end = record.get_sequence_upstream_of_location(location_end)
+        upstream_sequence_location_middle = record.get_sequence_upstream_of_location(location_middle, length=15)
+        assert upstream_sequence_location_begin == "TCTGA"
+        assert upstream_sequence_location_middle == "GACTCGATCGTCTGA"
+        assert len(upstream_sequence_location_middle) == 15
+        assert upstream_sequence_location_end == "CGATC"
+
 
 class TestCDSFetchByLocation(unittest.TestCase):
     def setUp(self):

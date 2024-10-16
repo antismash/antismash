@@ -8,7 +8,7 @@
     ORFs that have been skipped in an annotated sequence such as RiPP precursors.
 """
 
-
+import re
 from typing import Iterable, List, Optional, Tuple
 
 from Bio.SeqFeature import FeatureLocation
@@ -18,6 +18,8 @@ from antismash.common.secmet.features import CDSCollection
 
 START_CODONS = ('ATG', 'GTG', 'TTG')
 STOP_CODONS = ('TAA', 'TAG', 'TGA')
+RIBOSOMAL_BINDING_SITE = re.compile('(?:GGA[AG]G)')
+FLEXIBLE_RIBOSOMAL_BINDING_SITE = re.compile('(?=(?:[^GA]*[GA]){6})[GACT]{8}')
 
 
 def get_trimmed_orf(orf: CDSFeature, record: Record, include: int = None,
@@ -157,6 +159,31 @@ def create_feature_from_location(record: Record, location: FeatureLocation,
                          locus_tag=label, protein_id=label, gene=label)
     feature.created_by_antismash = True
     return feature
+
+
+def has_rbs(orf: CDSFeature, record: Record, flexible: bool = False, search_scope: int = 15) -> bool:
+    """ Determines if ribosomal binding site in sequence.
+
+        Arguments:
+            orf: the orf to check for a rbs
+            record: the record containing the orf
+            flexible: if true, searches for a flexible binding site (80% GA content within 8 bp),
+            usefull for instance in streptomycetes that oftentimes do not use a canonical rbs
+            search_scope: the length of sequence upstream of the orf to search for an rbs in bp
+
+        Returns:
+            a boolean if the sequence contains a RBS
+    """
+    location = orf.location
+    sequence = str(record.get_sequence_upstream_of_location(location, length=search_scope))
+    if RIBOSOMAL_BINDING_SITE.search(sequence) is not None:
+        return True
+
+    if flexible:
+        if FLEXIBLE_RIBOSOMAL_BINDING_SITE.search(sequence) is not None:
+            return True
+
+    return False
 
 
 def find_intergenic_areas(start: int, end: int, cds_features: Iterable[CDSFeature],

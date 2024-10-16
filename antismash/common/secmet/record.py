@@ -973,6 +973,23 @@ class Record:
 
         return Seq(string_version)
 
+    def get_sequence_upstream_of_location(self, location: FeatureLocation, length: int = 15) -> Seq:
+        """Obtain the DNA sequence upstream of the location within the sequence"""
+        
+        if location.end > len(self.seq):
+            raise ValueError("location outside available sequence")
+        upstream_location = None
+        if location.strand == 1:
+            upstream_location = FeatureLocation(max(location.start - length, 0),
+                                                location.start,
+                                                location.strand)
+        else:
+            upstream_location = FeatureLocation(location.end,
+                                                min(location.end + length, len(self.seq)),
+                                                location.strand)
+        sequence = upstream_location.extract(self.seq).replace("-", "")
+        return sequence
+
     def get_cds_features_within_regions(self) -> list[CDSFeature]:
         """ Returns all CDS features in the record that are located within a
             region of interest

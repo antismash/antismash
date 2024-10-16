@@ -15,6 +15,7 @@ from antismash.common.all_orfs import (
     find_intergenic_areas,
     get_trimmed_orf,
     scan_orfs,
+    has_rbs
 )
 from antismash.common.secmet.test.helpers import DummySubRegion
 
@@ -257,3 +258,40 @@ def test_minimum_passthrough():
             # all calls must pass through the minimum length
             for args in patched.call_args_list:
                 assert args[-1]["minimum_length"] == min_length
+
+def test_has_rbs():
+    test_rbs_sequences = [
+        'TCTTTCCGATCTCTCCTGAATTCTC',
+        'TCTTTCTTGGAGTCTCTCTC',
+        'GGAG',
+        'GAGG',
+        'TCTGGAGGTCT',
+        'GGTTCTTTCTTTCGGAAG',
+        'GTTCTTTCTTCGAGAGTAGACG',
+        'GTGTGTGTGGGAGAGAGAG'
+    ]
+    true_results_without_flexible_site = [False, False, False, False, True, True, False, False]
+    true_results_with_flexible_site = [False, False, False, False, True, True, True, True]
+
+    test_cases = [
+        {
+            "record": DummyRecord(seq=f"{sequence}{'C' * 30}"),
+            "cds": DummyCDS(start=len(sequence), end=len(sequence) + 30),
+            "expected_without_flexible": without_flexible,
+            "expected_with_flexible": with_flexible
+        }
+        for sequence, without_flexible, with_flexible in zip(
+            test_rbs_sequences,
+            true_results_without_flexible_site,
+            true_results_with_flexible_site
+        )
+    ]
+
+    for test in test_cases:
+        result_without_flexible = has_rbs(test["cds"], test["record"], flexible=False)
+        result_with_flexible = has_rbs(test["cds"], test["record"], flexible=True)
+        
+        assert result_without_flexible == test["expected_without_flexible"], \
+            f"Test has_rbs failed for sequence {test['record'].seq} without flexible site"
+        assert result_with_flexible == test["expected_with_flexible"], \
+            f"Test has_rbs failed for sequence {test['record'].seq} with flexible site"
