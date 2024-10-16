@@ -371,3 +371,6 @@ QueE	7-carboxy-7-deazaguanine synthase	22	QueE.hmm
 QueC	7-cyano-7-deazaguanine synthase	22	PF06508.hmm
 dpdA1	family of paralogs of tRNA guanosine transglycosylase genes	20	dpdA1.hmm
 bTGT	homodimeric bacterial tRNA-guanine transglycosylases	22	bTGT.hmm
+NpaA	Nitrosuccinic acid synthase	600	NpaA.hmm
+NpaB	Nitrosuccinic acid decarboxylase	200	NpaB.hmm
+NpaC	Nitronate monooxygenase	400	NpaC.hmm
