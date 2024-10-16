@@ -162,17 +162,21 @@ def create_feature_from_location(record: Record, location: FeatureLocation,
     return feature
 
 
-def has_rbs(sequence: str, flexible: bool = False) -> bool:
+def has_rbs(orf: CDSFeature, record: Record, flexible: bool = False, search_scope: int = 15) -> bool:
     """ Determines if ribosomal binding site in sequence.
 
         Arguments:
-            sequence: the DNA sequence upstream of the ORF to check for the RBS
+            orf: the orf to check for a rbs
+            record: the record containing the orf
             flexible: if true, searches for a flexible binding site (80% GA content within 8 bp),
             usefull for instance in streptomycetes that oftentimes do not use a canonical rbs
+            search_scope: the length of sequence upstream of the orf to search for an rbs in bp
 
         Returns:
             a boolean if the sequence contains a RBS
     """
+    location = orf.location
+    sequence = str(record.get_sequence_upstream_of_location(location, length=search_scope))
     if RIBOSOMAL_BINDING_SITE.search(sequence) is not None:
         return True
 
@@ -216,8 +220,7 @@ def find_intergenic_areas(start: int, end: int, cds_features: Iterable[CDSFeatur
 
 
 def find_all_orfs(record: Record, area: Optional[CDSCollection] = None,
-                  min_length: int = 60, max_overlap: int = 10,
-                  include_rbs: bool = False, flexible_rbs: bool = False) -> List[CDSFeature]:
+                  min_length: int = 60, max_overlap: int = 10) -> List[CDSFeature]:
     """ Find ORFs within intergenic areas of the given record or subset of the record.
 
         Can (and should) be limited to just within a specific section of the record.
@@ -253,10 +256,6 @@ def find_all_orfs(record: Record, area: Optional[CDSCollection] = None,
         locations.extend(scan_orfs(chunk.reverse_complement(), -1, start, minimum_length=min_length))
     new_features = []
     for location in locations:
-        rbs = None
-        if include_rbs:
-            sequence = record.get_sequence_upstream_of_location(location, length=15)
-            rbs = has_rbs(sequence, flexible=flexible_rbs)
-        new_features.append(create_feature_from_location(record, location, rbs=rbs))
+        new_features.append(create_feature_from_location(record, location))
 
     return sorted(new_features)
