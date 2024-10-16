@@ -395,6 +395,16 @@ nav {
     color: royalblue;
 }
 
+.W {
+    @include bold;
+    color: tomato;
+}
+
+.Y {
+    @include bold;
+    color: teal;
+}
+
 .macrolactam {
     @include bold;
     color: red;

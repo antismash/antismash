@@ -19,6 +19,8 @@ RIPP_CLASSES = {
     "S": "dha",
     "T": "dhb",
     "C": "cys",
+    "W": "W",
+    "Y": "Y",
 }
 RIPP_SUBSTITUTIONS = {key: val.title() for key, val in RIPP_CLASSES.items()}
 WILDCARD_TEMPLATE = "@!{0}!@"

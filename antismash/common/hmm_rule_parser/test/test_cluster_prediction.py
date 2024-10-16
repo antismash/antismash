@@ -121,9 +121,9 @@ class TestDynamic(unittest.TestCase):
     def test_find_dynamic(self):
         expected_a = {"cds_name": [structures.DynamicHit("prof_a", "cds_name")]}
         expected_b = {"cds_name": [structures.DynamicHit("prof_b", "cds_name")]}
-        profile_a = structures.DynamicProfile("prof_a", "desc a", lambda record: expected_a)
-        profile_b = structures.DynamicProfile("prof_b", "desc b", lambda record: expected_b)
-        results = cluster_prediction.find_dynamic_hits(DummyRecord(), [profile_a, profile_b])
+        profile_a = structures.DynamicProfile("prof_a", "desc a", lambda record, _: expected_a)
+        profile_b = structures.DynamicProfile("prof_b", "desc b", lambda record, _: expected_b)
+        results = cluster_prediction.find_dynamic_hits(DummyRecord(), [profile_a, profile_b], {})
         assert results["cds_name"] == expected_a["cds_name"] + expected_b["cds_name"]
 
     @patch.object(cluster_prediction, "find_hmmer_hits", return_value={})
@@ -133,7 +133,7 @@ class TestDynamic(unittest.TestCase):
         record = DummyRecord(features=cdses)
 
         # create a dummy dynamic profile
-        def find_a(rec):
+        def find_a(rec, _hmmer_hits):
             hits = {}
             for cds in rec.get_cds_features():
                 if cds.get_name() == "A":
@@ -141,7 +141,7 @@ class TestDynamic(unittest.TestCase):
             return hits
         profile = structures.DynamicProfile("a_finder", "desc", find_a)
         # make sure the 'profile' functions as expected
-        assert cdses[0].get_name() in profile.find_hits(record)
+        assert cdses[0].get_name() in profile.find_hits(record, {})
 
         # build a dummy rule that will search for this hit
         condition = rule_parser.SingleCondition(False, "a_finder")
