@@ -133,7 +133,7 @@ def scan_orfs(seq: str, direction: int, offset: int = 0, minimum_length: int = 6
 
 
 def create_feature_from_location(record: Record, location: FeatureLocation,
-                                 label: Optional[str] = None, rbs: Optional[bool] = None) -> CDSFeature:
+                                 label: Optional[str] = None) -> CDSFeature:
     """ Creates a CDS feature covering the provided location.
 
         Arguments:
@@ -142,7 +142,6 @@ def create_feature_from_location(record: Record, location: FeatureLocation,
             location: The FeatureLocation specifying the location of the CDSFeature
             label: The locus tag, protein id, and gene name to use for the new
                    CDSFeature
-            rbs: The boolean if a ribosomal binding site can found upstream of the CDS
 
         Returns:
             The CDSFeature created.
@@ -157,7 +156,7 @@ def create_feature_from_location(record: Record, location: FeatureLocation,
     if translation[0] != "M":
         translation = "M" + translation[1:]
     feature = CDSFeature(location, translation,
-                         locus_tag=label, protein_id=label, gene=label, rbs=rbs)
+                         locus_tag=label, protein_id=label, gene=label)
     feature.created_by_antismash = True
     return feature
 
@@ -230,7 +229,6 @@ def find_all_orfs(record: Record, area: Optional[CDSCollection] = None,
             area: the specific CDSCollection to search within, or None
             min_length: the minimum length of ORFs to report, in nucleotides
             max_overlap: the maximum allowable bases of overlap with existing CDS features
-            include_rbs: if true, search for an rbs and include that information in the feature
 
         Returns:
             a list of CDSFeatures, one for each ORF
