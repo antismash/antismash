@@ -5,8 +5,8 @@
    <th>Type</th>
    <th>From</th>
    <th>To</th>
+   <th>Confidence</th>
    <th colspan="2">Most similar known cluster</th>
-   <th>Similarity</th>
   </tr>
  </thead>
 {%- endmacro %}
@@ -30,21 +30,29 @@
      <td class="digits table-split-left">{{"{:,d}".format(region.location.end)}}</td>
      {% if region.most_related_area.identifier -%}
       {% set similarity = region.most_related_area.similarity_percentage %}
-      {% if similarity > 75 %}
-        {% set colour = "rgba(0, 100, 0, 0.3)" %}
-      {% elif similarity > 50 %}
-        {% set colour = "rgba(210, 105, 30, 0.3)" %}
+      {% if similarity > 15 %}
+       {% set url = region.most_related_area.url %}
+       {% if similarity > 75 %}
+         {% set colour = "rgb(178, 208, 178)" %}
+         {% set label = "High" %}
+       {% elif similarity > 50 %}
+         {% set colour = "rgb(251, 214, 192)" %}
+         {% set label = "Medium" %}
+       {% else %}
+         {% set colour = "rgb(249, 178, 178)" %}
+         {% set label = "Low" %}
+       {% endif %}
+       <td class="similarity-text" style="background: {{colour}}">{{label}}</td>
+       {% if url -%}
+       <td><a class="external-link" href="{{region.most_related_area.url}}" target="_blank">{{region.most_related_area.description}}</a></td>
+       {%- else %}
+       <td>{{region.most_related_area.description}}</td>
+       {%- endif %}
+       <td>{{region.most_related_area.product}}</td>
       {% else %}
-        {% set colour = "rgba(205, 92, 92, 0.3)" %}
+       <td class="similarity-text"></td>
+       <td colspan="2"></td>
       {% endif %}
-      {% set url = region.most_related_area.url %}
-      {% if url -%}
-      <td><a class="external-link" href="{{region.most_related_area.url}}" target="_blank">{{region.most_related_area.description}}</a></td>
-      {%- else %}
-      <td>{{region.most_related_area.description}}</td>
-      {%- endif %}
-      <td>{{region.most_related_area.product}}</td>
-      <td class="digits similarity-text" style="background-image: linear-gradient(to left, {{colour}}, {{colour}} {{similarity}}%, #ffffff00 {{similarity}}%)">{{similarity}}%</td>
      {% else %}
       <td colspan="3"></td>
      {% endif %}
