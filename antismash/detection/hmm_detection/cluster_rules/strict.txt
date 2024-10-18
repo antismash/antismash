@@ -187,11 +187,11 @@ RULE mycosporine-like
 RULE terpene
     CATEGORY terpene
     DESCRIPTION Terpene
+    RELATED HAD_2
     CUTOFF 20
     NEIGHBOURHOOD 10
-    CONDITIONS Terpene_synth or Terpene_synth_C or phytoene_synt or Lycopene_cycl
-               or terpene_cyclase or NapT7 or fung_ggpps or fung_ggpps2
-               or trichodiene_synth or TRI5
+    CONDITIONS PT_phytoene_like or phytoene_synt or Lycopene_cycl or Lycopene_cycl_fung
+               or PT_FPPS_like or T1TS or T1TS_KS or T2TS or TS_UbiA or TS_Pyr4
 
 DEFINE all_YcaO AS (YcaO or TIGR03604)
 

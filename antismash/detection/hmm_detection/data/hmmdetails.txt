@@ -21,16 +21,9 @@ t2pks2	Type II PKS ketosynthase, model 2	450	t2ks2.hmm
 t2clf	Type II PKS Chain length factor	50	t2clf.hmm
 Chal_sti_synt_N	Type III PKS N-terminal	21	Chal_sti_synt_N.hmm
 Chal_sti_synt_C	Type III PKS C-terminal	21	Chal_sti_synt_C.hmm
-Terpene_synth_C	Terpene synthase, C-terminus	23	Terpene_synth_C.hmm
-Terpene_synth	Terpene synthase	23	Terpene_synth.hmm
 phytoene_synt	Phytoene_synthase	20	phytoene_synt.hmm
 Lycopene_cycl	Lycopene cyclase	80	Lycopene_cycl.hmm
-terpene_cyclase	Terpene cyclase	50	terpene_cyclase.hmm
-NapT7	NapT7-like protein	250	NapT7.hmm
-fung_ggpps	Fungal geranylgeranyl pyrophosphate synthase	420	fung_ggpps.hmm
-fung_ggpps2	Fungal geranylgeranyl pyrophosphate synthase, model 2	312	fung_ggpps2.hmm
 dmat	Dimethylallyl tryptophan synthase	200	dmat.hmm
-trichodiene_synth	Trichodiene synthase	150	trichodiene_synth.hmm
 LANC_like	LanC-like lantibiotics biosynthesis protein	17	LANC_like.hmm
 DUF4135	Lantibiotic-associated domain	150	PF13575.hmm
 Lant_dehydr_N	Lantibiotic dehydratase, N-terminus	27	PF04738.hmm
@@ -235,7 +228,6 @@ Peptidase_M50	Peptidase family M50	27	PF02163.hmm
 Peptidase_S9	Prolyl oligopeptidase family	22	PF00326.hmm
 Peptidase_C39	Peptidase C39 family	21	PF03412.hmm
 ThiF	ThiF family	22	PF00899.hmm
-TRI5	Trichodiene synthase	25	TRI5.hmm
 NasY	Long-chain N-acyl amino acid synthase	20	NasY.hmm
 FMO-like	Flavin-dependent monooxygenase	150	PF00743.hmm
 DUF98	p-hydroxybenzoic acid synthase	21	PF01947.hmm
@@ -384,3 +376,12 @@ LPG_synthase_C	Phosphatidylglycerol lysyltransferase, C-terminal	27	PF09924.hmm
 azdH_alignment	azdH	50	azdh.hmm
 azdO	azdO/vlmO	50	azdO.hmm
 Ketoacyl-synt_2	Ketoacyl-synt_2	25	PF13723.hmm
+PT_phytoene_like	Prenyltransferase; Phytoene synthase like	20	PT_phytoene_like.hmm
+PT_FPPS_like	Prenyltransferase; Farnesyl diphosphate synthase like	56	PT_FPPS_like.hmm
+T1TS	Type 1 terpene synthase	15	T1TS.hmm
+T1TS_KS	Type 1 terpene synthase; Ent-kaurene synthase type	200	T1TS_KS.hmm
+T2TS	Type 2 terpene synthase	45	T2TS.hmm
+TS_UbiA	UbiA type terpene synthase	117	TS_UbiA.hmm
+HAD_2	Haloacid dehalogenase-like hydrolase	15	PF13419.hmm
+TS_Pyr4	Pyr4 type terpene synthase	100	TS_Pyr4.hmm
+Lycopene_cycl_fung	Lycopene cyclase domain; fungal	40	TIGR03462.hmm
