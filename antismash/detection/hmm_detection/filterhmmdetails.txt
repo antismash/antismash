@@ -3,4 +3,3 @@ AMP-binding,A-OX,novH,mitE
 Antimicr18,Gallidermin,L_biotic_A,TIGR03731,leader_d,leader_eh,leader_abc,mature_d,mature_ab,mature_a,mature_b,mature_ha,mature_h_beta,lacticin_l,lacticin_mat,strepbact,Antimicrobial14,Bacteriocin_IIc,Bacteriocin_IId,BacteriocIIc_cy,Bacteriocin_II,Bacteriocin_IIi,Lactococcin,Antimicrobial17,Lactococcin_972,LcnG-beta,Subtilosin_A,Cloacin,Linocin_M18,TIGR03651,TIGR03678,TIGR03693,TIGR03798,TIGR03882,TIGR03601,TIGR03602,mvnA,thiostrepton
 Glycos_transf_1,Glycos_transf_2,Glyco_transf_28,MGT,DUF1205,Glyco_transf_9,Bac_transf,Glycos_transf_4,Glyco_transf_8,Glyco_tran_28_C,Glyco_transf_8C
 dmat,orf2_PTase,indole_PTase,ubiA
-Terpene_synth_C,TRI5,trichodiene_synth
