@@ -20,10 +20,12 @@ from .tools import (
     FunctionResults,
     Hit,
     Tool,
+    mite,
     resistance,
     smcogs,
 )
 
+from .tools.mite import Results as MiteResults
 from .tools.smcogs import Results as SmcogsResults
 from .tools.resistance import Results as ResistanceResults
 
@@ -32,6 +34,7 @@ SHORT_DESCRIPTION = "Gene function annotations"
 DETECTION_STAGE = DetectionStage.PER_AREA
 
 TOOLS = [
+    mite.TOOL,
     smcogs.TOOL,
     resistance.TOOL,
 ]
@@ -42,10 +45,13 @@ class ToolResults:
     """ A container for all tools generating gene function results """
     # members are named by tool to simplify downstream typing, avoiding a great
     # deal of extra type casting
+    mite: Optional[MiteResults] = None
     resist: Optional[ResistanceResults] = None
     smcogs: Optional[SmcogsResults] = None
 
     def __iter__(self) -> Iterator[FunctionResults[Any]]:
+        if self.mite:
+            yield self.mite
         if self.resist:
             yield self.resist
         if self.smcogs:
@@ -71,6 +77,10 @@ class ToolResults:
             assert isinstance(results, resistance.Results)
             self.resist = results
             return
+        if tool is mite.TOOL:
+            assert isinstance(results, mite.Results)
+            self.mite = results
+            return
 
         raise NotImplementedError(f"Results storage has no handling for {tool.name}")
 
@@ -78,6 +88,7 @@ class ToolResults:
     def from_json(cls, data: dict[str, dict[str, Any]]) -> Self:
         """ Reconstructs an instance from the given data """
         return cls(
+            mite=mite.regenerate_results(data.get(mite.TOOL.name.lower())),
             smcogs=smcogs.regenerate_results(data.get(smcogs.TOOL.name.lower())),
             resist=resistance.regenerate_results(data.get(resistance.TOOL.name.lower())),
         )
