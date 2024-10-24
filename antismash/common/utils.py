@@ -6,6 +6,7 @@
     antismash.common.
 """
 
+import dataclasses
 from typing import Dict, List, Optional
 
 import Bio.Data.IUPACData
@@ -13,6 +14,18 @@ from Bio.SeqUtils.ProtParam import ProteinAnalysis
 
 from .fasta import read_fasta
 from .secmet import Feature, Record
+
+
+@dataclasses.dataclass(kw_only=True, slots=True, eq=True)
+class Hit:
+    """ A container for a pairwise match of some query to a reference within a database.
+        E.g. a pHMM hit or a BLAST/diamond hit.
+    """
+    query_id: str
+    reference_id: str
+    identity: Optional[float] = None
+    evalue: Optional[float] = None
+    bitscore: Optional[float] = None
 
 
 class RobustProteinAnalysis(ProteinAnalysis):
