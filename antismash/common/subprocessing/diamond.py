@@ -194,8 +194,8 @@ def check_diamond_files(definition_file: str, fasta_file: str, db_file: str,
 
         Arguments:
             definition_file: the path to a database metadata file
-            fasta_file: the path to a proteins fasta file
-            db_file: the path to the diamond databse file
+            fasta_file: the path to a fasta file of query sequences
+            db_file: the path to the diamond database file
             logging_only: return a list of errors messages instead of raising errors
 
         Returns:
@@ -204,12 +204,12 @@ def check_diamond_files(definition_file: str, fasta_file: str, db_file: str,
     failure_messages: List[str] = []
 
     if path.locate_file(definition_file) is None:
-        failure_messages.append(f"Failed to locate cluster definition file: {definition_file!r}")
+        failure_messages.append(f"Failed to locate metadata file: {definition_file!r}")
 
     regen_message = ""
 
     if path.locate_file(fasta_file) is None:
-        failure_messages.append(f"Failed to locate cluster proteins: {fasta_file!r}")
+        failure_messages.append(f"Failed to locate sequence file: {fasta_file!r}")
         if not logging_only:
             raise FileNotFoundError(failure_messages[-1])
     elif path.locate_file(db_file) is None:
