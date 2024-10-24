@@ -622,12 +622,12 @@ def debug_options() -> ModuleArgs:
     group = ModuleArgs("Debugging & Logging options", '', override_safeties=True)
     group.add_option('-v', '--verbose',
                      dest='verbose',
-                     action='store_true',
+                     action=argparse.BooleanOptionalAction,
                      default=False,
                      help="Print verbose status information to stderr.")
     group.add_option('-d', '--debug',
                      dest='debug',
-                     action='store_true',
+                     action=argparse.BooleanOptionalAction,
                      default=False,
                      help="Print debugging information to stderr.")
     group.add_option('--logfile',
@@ -660,17 +660,17 @@ def debug_options() -> ModuleArgs:
                      help="Display the version number and exit.")
     group.add_option('--profiling',
                      dest='profile',
-                     action='store_true',
+                     action=argparse.BooleanOptionalAction,
                      default=False,
                      help="Generate a profiling report, disables multiprocess python.")
     group.add_option('--skip-sanitisation',
                      dest='skip_sanitisation',
-                     action='store_true',
+                     action=argparse.BooleanOptionalAction,
                      default=False,
                      help="Skip input record sanitisation. Use with care.")
     group.add_option('--skip-zip-file',
                      dest='skip_zip_file',
-                     action='store_true',
+                     action=argparse.BooleanOptionalAction,
                      default=False,
                      help="Do not create a zip of the output")
     return group
@@ -698,7 +698,7 @@ def specific_debugging(modules: Optional[List[AntismashModule]]) -> Optional[Mod
     group = ModuleArgs('Debugging options for cluster-specific analyses', '', override_safeties=True)
     group.add_option('--minimal',
                      dest='minimal',
-                     action='store_true',
+                     action=argparse.BooleanOptionalAction,
                      default=False,
                      help="Only run core detection modules, no analysis modules unless explicitly enabled")
     errors = []
@@ -706,7 +706,7 @@ def specific_debugging(modules: Optional[List[AntismashModule]]) -> Optional[Mod
         try:
             group.add_option(f"--enable-{module.NAME.replace('_', '-')}",
                              dest=f"{module.NAME}_enabled",
-                             action='store_true',
+                             action=argparse.BooleanOptionalAction,
                              default=False,
                              help=(f"Enable {module.SHORT_DESCRIPTION}"
                                    " (default: enabled, unless --minimal is specified)"
