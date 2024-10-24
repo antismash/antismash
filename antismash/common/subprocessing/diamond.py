@@ -11,6 +11,7 @@ from typing import List, Optional
 from helperlibs.wrappers.io import TemporaryDirectory
 
 from antismash.common import path
+from antismash.common.utils import Hit
 
 from .base import execute, get_config, RunResult
 
@@ -232,3 +233,43 @@ def check_diamond_files(definition_file: str, fasta_file: str, db_file: str,
         failure_messages.append(f"with diamond executable: {get_config().executables.diamond}")
 
     return failure_messages
+
+
+def parse_tabular_output(raw_output: str) -> list[Hit]:
+    """ Parse hits from a diamond/blastp tabular output
+
+        Arguments:
+            raw_output: the diamond/blastp tabular output
+
+        Returns:
+            a list of hits
+    """
+    # blast tabular chunks
+    # 0. 	 qseqid 	 query sequence id
+    # 1. 	 sseqid 	 reference sequence id
+    # 2. 	 pident 	 percentage of identical matches
+    # 3. 	 length 	 alignment length
+    # 4. 	 mismatch 	 number of mismatches
+    # 5. 	 gapopen 	 number of gap openings
+    # 6. 	 qstart 	 start of alignment in query
+    # 7. 	 qend 	 end of alignment in query
+    # 8. 	 sstart 	 start of alignment in subject
+    # 9. 	 send 	 end of alignment in subject
+    # 10. 	 evalue 	 expect value
+    # 11. 	 bitscore 	 bit score
+
+    results = []
+
+    for line in raw_output.splitlines():
+        parts = line.split("\t")
+        assert len(parts) == 12
+
+        query_id = parts[0]
+        reference_id = parts[1]
+        identity = float(parts[2])
+        evalue = float(parts[10])
+        bitscore = float(parts[11])
+
+        results.append(Hit(query_id=query_id, reference_id=reference_id, identity=identity,
+                           evalue=evalue, bitscore=bitscore))
+    return results

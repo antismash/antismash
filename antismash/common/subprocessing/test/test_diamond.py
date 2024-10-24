@@ -66,3 +66,17 @@ class TestDiamondDatabaseChecks(unittest.TestCase):
         assert diamond._extract_db_format(self.format1_file) == 1
         with self.assertRaises(ValueError):
             diamond._extract_db_format(self.empty)
+
+
+def test_output_parsing():
+    expected = [
+        diamond.Hit(query_id="queryid", reference_id="refid1", identity=95, evalue=1e-20, bitscore=250.5),
+        diamond.Hit(query_id="queryid", reference_id="refid2", identity=85, evalue=1e-25, bitscore=151.2),
+    ]
+
+    content = (
+        "queryid\trefid1\t95\t20\t1\t2\t80\t100\t20\t40\t1e-20\t250.5\n"
+        "queryid\trefid2\t85\t20\t3\t2\t5\t25\t25\t45\t1e-25\t151.2\n"
+    )
+    hits = diamond.parse_tabular_output(content)
+    assert hits == expected
