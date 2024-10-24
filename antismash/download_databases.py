@@ -61,6 +61,14 @@ COMPARIPPSON_DBS = {
     },
 }
 
+MITE = {
+    "url": "https://dl.secondarymetabolites.org/releases/mite/mite_1.3.tar.xz",
+    "archive": "2a3e456700a720a078a00c6f3d0c9d25fb51274fa92f5e57e747cd4b3c2aa76d",
+    "version": "1.3",
+    "sequences": "c75144d41974b371fefc9875ee11dfc227839614cc1ce370ba4838c961354e6a",
+    "metadata": "4a83153df89ae754533ad7701c7407fc5d4b50fd09fae3654e52cc14e43aa202",
+}
+
 RESFAM_URL = "https://dl.secondarymetabolites.org/releases/resfams/Resfams.hmm.gz"
 RESFAM_ARCHIVE_CHECKSUM = "ae1e4be5a4a4ef5f669d36daddb94020df0ec41c448a21c642bdeca43abed342"
 RESFAM_CHECKSUM = "780a0afdaa8c7a85d1b31367da66363c5b86ab8bc4a7288a8598f137cf55fbc0"
@@ -238,6 +246,29 @@ def download_antismash_js(db_dir: str) -> None:
     version = get_antismash_js_version()
     url = get_antismash_js_url()
     download_file(url, os.path.join(db_dir, "as-js", version, "antismash.js"))
+
+
+def download_mite(db_dir: str) -> None:
+    """ Downloads the latest converted MITE dataset """
+    archive_filename = os.path.join(db_dir, "mite", "mite.tar.xz")
+    version = MITE["version"]
+    subdir = os.path.join(db_dir, "mite", version)
+    if all([
+        present_and_checksum_matches(os.path.join(subdir, "metadata.json"), MITE["metadata"]),
+        present_and_checksum_matches(os.path.join(subdir, "mite.fasta"), MITE["sequences"]),
+    ]):
+        print(f"MITE {MITE['version']} already present")
+        return
+
+    print("Downloading MITE", MITE["version"])
+    check_diskspace(MITE["url"])
+    download_if_not_present(MITE["url"], archive_filename, MITE["archive"])
+    filename = unzip_file(archive_filename, lzma, lzma.LZMAError)
+    untar_file(filename)
+    for name in ["metadata.json", "mite.fasta"]:
+        assert os.path.exists(os.path.join(subdir, name))
+    delete_file(filename)
+    delete_file(filename + ".xz")
 
 
 def download_pfam(db_dir: str, url: str, version: str, archive_checksum: str, db_checksum: str) -> None:
@@ -479,6 +510,7 @@ def download(args: argparse.Namespace) -> bool:
         PFAM_LATEST_CHECKSUM,
     )
 
+    download_mite(args.database_dir)
     download_resfam(args.database_dir)
 
     download_tigrfam(args.database_dir)
