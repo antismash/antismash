@@ -13,7 +13,7 @@ from antismash.common import json, secmet
 from antismash.common.secmet.qualifiers import GeneFunction
 from antismash.common.test import helpers
 from antismash.config import build_config, destroy_config, get_config, update_config
-from antismash.detection.genefunctions import core, smcogs, prepare_data
+from antismash.detection.genefunctions.tools import smcogs
 
 
 class TestSMCOGs(unittest.TestCase):
@@ -25,7 +25,7 @@ class TestSMCOGs(unittest.TestCase):
 
         self.record = self.build_record(helpers.get_path_to_nisin_with_detection())
 
-        prepare_data()
+        smcogs.prepare_data()
 
     def tearDown(self):
         destroy_config()
@@ -58,8 +58,8 @@ class TestSMCOGs(unittest.TestCase):
                        "PVPVPDQRAEGGEEKARAGV")
         cds = helpers.DummyCDS(0, len(translation))
         cds.translation = translation
-        results = smcogs.classify("test", [cds], get_config())
-        assert results.best_hits[cds.get_name()].hit_id == "SMCOG1212:sodium:dicarboxylate symporter"
+        results = smcogs.classify([cds], get_config())
+        assert results.best_hits[cds.get_name()].reference_id == "SMCOG1212"
         record = helpers.DummyRecord(seq=translation)
         record.add_cds_feature(cds)
         record.add_protocluster(helpers.DummyProtocluster(0, len(translation)))
@@ -68,22 +68,24 @@ class TestSMCOGs(unittest.TestCase):
         results.add_to_record(record)
         gene_functions = cds.gene_functions.get_by_tool("smcogs")
         assert len(gene_functions) == 1
-        assert str(gene_functions[0]).startswith("transport (smcogs) SMCOG1212:sodium:dicarboxylate symporter"
-                                                 " (Score: 416; E-value: 2.3e-126)")
+        assert str(gene_functions[0]).startswith("transport (smcogs) SMCOG1212: sodium:dicarboxylate symporter")
 
     def test_results_reconstruction(self):
-        results = smcogs.classify(self.record.id, self.record.get_cds_features(), self.options)
+        results = smcogs.classify(self.record.get_cds_features(), self.options)
         assert results.tool == "smcogs"
-        assert results.best_hits["nisB"].hit_id == 'SMCOG1155:Lantibiotic dehydratase domain protein'
+        expected_description = "SMCOG1155: Lantibiotic dehydratase domain protein"
+        assert results.best_hits["nisB"].get_full_description() == expected_description
 
-        data = json.loads(json.dumps(results.to_json()))
-        reconstructed = core.FunctionResults.from_json(data, self.record)
+        raw = json.dumps(results.to_json())
+        reconstructed = smcogs.regenerate_results(json.loads(raw))
         assert reconstructed.tool == "smcogs"
-        assert reconstructed.best_hits["nisB"].hit_id == 'SMCOG1155:Lantibiotic dehydratase domain protein'
-        assert reconstructed.to_json() == data
+        best = reconstructed.best_hits["nisB"]
+        assert best.reference_id == "SMCOG1155"
+        assert best.get_full_description() == expected_description
+        assert json.loads(json.dumps(reconstructed.to_json())) == json.loads(raw)
 
     def test_annotations(self):
-        results = smcogs.classify(self.record.id, self.record.get_cds_features(), self.options)
+        results = smcogs.classify(self.record.get_cds_features(), self.options)
         results.add_to_record(self.record)
 
         for cds in self.record.get_cds_features():
