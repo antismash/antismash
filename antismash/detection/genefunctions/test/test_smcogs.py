@@ -8,8 +8,10 @@ import unittest
 
 from antismash.common.secmet.qualifiers import GeneFunction
 from antismash.common.test import helpers
-from antismash.common.hmmscan_refinement import HMMResult
-from antismash.detection.genefunctions import FunctionResults, smcogs
+from antismash.detection.genefunctions.tools.core import HMMFunctionResults
+from antismash.detection.genefunctions.tools import smcogs
+
+from .test_core import build_hit
 
 
 class TestSMCOGLoad(unittest.TestCase):
@@ -30,12 +32,11 @@ class TestAddingToRecord(unittest.TestCase):
         record.add_protocluster(helpers.DummyProtocluster(0, 100))
         record.create_candidate_clusters()
         record.create_regions()
-        results = FunctionResults(record.id, "smcogs",
-                                  best_hits={cds.get_name(): HMMResult("SMCOG1212:sodium:dicarboxylate_symporter",
-                                                                       0, 100, 2.3e-126, 416)},
-                                  function_mapping={cds.get_name(): GeneFunction.TRANSPORT})
+        hit = build_hit("SMCOG1212:sodium:dicarboxylate_symporter", 0, 100, 2.3e-126, 416)
+        results = HMMFunctionResults(tool="smcogs",
+                                     best_hits={cds.get_name(): hit},
+                                     function_mapping={cds.get_name(): GeneFunction.TRANSPORT})
         results.add_to_record(record)
         gene_functions = cds.gene_functions.get_by_tool("smcogs")
         assert len(gene_functions) == 1
-        assert str(gene_functions[0]).startswith("transport (smcogs) SMCOG1212:sodium:dicarboxylate_symporter"
-                                                 " (Score: 416; E-value: 2.3e-126)")
+        assert str(gene_functions[0]).startswith("transport (smcogs) SMCOG1212:sodium:dicarboxylate_symporter")

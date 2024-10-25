@@ -31,7 +31,7 @@ class Base(unittest.TestCase):
         # being caught awkwardly in the test itself
 
         # as smcogs_trees depends on genefunctions.smcogs' data, ensure that's ready to go
-        assert genefunctions.prepare_data() == []
+        assert genefunctions.tools.smcogs.prepare_data() == []
 
         assert smcog_trees.check_prereqs(self.options) == []
         assert smcog_trees.check_options(self.options) == []
@@ -62,8 +62,8 @@ class TestTreeGeneration(Base):
     def test_trees(self):
         with TemporaryDirectory(change=True):
             # add the classifications to work with
-            genefunctions.smcogs.classify(self.record.id, self.record.get_cds_features(),
-                                          self.options).add_to_record(self.record)
+            genefunctions.tools.smcogs.classify(self.record.get_cds_features(),
+                                                self.options).add_to_record(self.record)
 
             results = smcog_trees.run_on_record(self.record, None, self.options)
             assert len(results.tree_images) == 7
