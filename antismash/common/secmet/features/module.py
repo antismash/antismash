@@ -7,7 +7,7 @@ from enum import Enum, unique
 from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar
 
 from .antismash_domain import AntismashDomain
-from .feature import Feature, FeatureLocation, SeqFeature
+from .feature import Feature, FeatureLocation, Location, SeqFeature
 
 T = TypeVar("T", bound="Module")
 
@@ -50,7 +50,8 @@ class Module(Feature):
     types = ModuleType
     FEATURE_TYPE = "aSModule"
 
-    def __init__(self, domains: List[AntismashDomain], module_type: ModuleType = ModuleType.UNKNOWN,
+    def __init__(self, location: Location, domains: List[AntismashDomain], *,
+                 module_type: ModuleType = ModuleType.UNKNOWN,
                  complete: bool = False, starter: bool = False, final: bool = False,
                  iterative: bool = False) -> None:
         if not domains:
@@ -59,15 +60,6 @@ class Module(Feature):
         if len({domain.location.strand for domain in domains}) != 1:
             raise ValueError("domains within a module cannot be on different strands")
 
-        # if the parent CDSes are on the reverse strand, the domains are in the wrong order
-        # so ensure they're sorted here as they appear in the translation
-        strand = domains[0].location.strand
-        reverse = strand == -1
-        domains = sorted(domains, key=lambda x: x.location.start, reverse=reverse)
-        if reverse:
-            location = FeatureLocation(domains[-1].location.start, domains[0].location.end, strand=strand)
-        else:
-            location = FeatureLocation(domains[0].location.start, domains[-1].location.end, strand=strand)
         super().__init__(location, self.FEATURE_TYPE, created_by_antismash=True)
 
         if not isinstance(module_type, ModuleType):
@@ -233,7 +225,8 @@ class Module(Feature):
         if iterative:
             leftovers.pop("iterative")
 
-        module = cls(domains, module_type, complete, starter, final, iterative)
+        module = cls(bio_feature.location, domains, module_type=module_type, complete=complete,
+                     starter=starter, final=final, iterative=iterative)
 
         raw_monomers = leftovers.pop("monomer_pairings", [])
         for raw in raw_monomers:

@@ -205,6 +205,7 @@ class TestModuleMerging(unittest.TestCase):
 
     def test_merge(self, _patched_fasta, _patched_motifs, _patched_dbs):
         cdses = self.record.get_cds_features()
+        self.record.add_region(DummyRegion(start=0, end=300))
         with patch.object(Record, "get_cds_features_within_regions", return_value=cdses):
             with patch.object(domain_identification, "find_domains", return_value=self.domains):
                 with patch.object(domain_identification, "find_subtypes", side_effect=[self.ks_subtypes, []]):
@@ -221,7 +222,7 @@ class TestModuleMerging(unittest.TestCase):
         # insert the interrupt CDS between the two "halves" of the potential module
         spacer_cds = DummyCDS(locus_tag="mid", start=100, end=130)
         self.record.add_cds_feature(spacer_cds)
-
+        self.record.add_region(DummyRegion(start=0, end=300))
         cdses = self.record.get_cds_features()
         with patch.object(Record, "get_cds_features_within_regions", return_value=cdses):
             with patch.object(domain_identification, "find_domains", return_value=self.domains):

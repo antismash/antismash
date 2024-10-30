@@ -11,10 +11,9 @@
 
 from typing import Iterable, List, Optional, Tuple
 
-from Bio.SeqFeature import FeatureLocation
-
 from antismash.common.secmet import CDSFeature, Record
 from antismash.common.secmet.features import CDSCollection
+from antismash.common.secmet.locations import CompoundLocation, FeatureLocation, Location
 
 START_CODONS = ('ATG', 'GTG', 'TTG')
 STOP_CODONS = ('TAA', 'TAG', 'TGA')
@@ -82,8 +81,8 @@ def get_trimmed_orf(orf: CDSFeature, record: Record, include: int = None,
     return create_feature_from_location(record, location, label=label)
 
 
-def scan_orfs(seq: str, direction: int, offset: int = 0, minimum_length: int = 60
-              ) -> List[FeatureLocation]:
+def scan_orfs(seq: str, direction: int, offset: int = 0, minimum_length: int = 60,
+              record_length: int = None) -> list[FeatureLocation]:
     """ Scan for open reading frames on a given sequence.
         Skips all ORFs with a size less than the given minimum nucleotides.
 
@@ -92,6 +91,7 @@ def scan_orfs(seq: str, direction: int, offset: int = 0, minimum_length: int = 6
             direction: the search direction to use (all ORFs will use this as the strand)
             offset: an offset to add to any location discovered
             minimum_length: the minimum length, in nucleotides, for ORFs
+            record_length: the length of the record, all coordinates will be between zero and this
 
         Returns:
             a list of FeatureLocations for each ORF, ordered by ascending position
@@ -125,12 +125,22 @@ def scan_orfs(seq: str, direction: int, offset: int = 0, minimum_length: int = 6
                 else:
                     loc_start = seq_len + offset - end - 1
                     loc_end = seq_len + offset - start
-                matches.append(FeatureLocation(loc_start, loc_end, direction))
+                if record_length is not None:
+                    loc_start = (loc_start + record_length) % record_length
+                    # ends are 1-indexed, which trips up on mod maths, so 0-index it temporarily
+                    loc_end = ((loc_end - 1 + record_length) % record_length) + 1
+                if loc_start > loc_end:
+                    matches.append(CompoundLocation([
+                        FeatureLocation(loc_start, record_length, direction),
+                        FeatureLocation(0, loc_end, direction),
+                    ]))
+                else:
+                    matches.append(FeatureLocation(loc_start, loc_end, direction))
                 start = None
     return sorted(matches, key=lambda x: min(x.start, x.end))
 
 
-def create_feature_from_location(record: Record, location: FeatureLocation,
+def create_feature_from_location(record: Record, location: Location,
                                  label: Optional[str] = None) -> CDSFeature:
     """ Creates a CDS feature covering the provided location.
 
@@ -146,9 +156,12 @@ def create_feature_from_location(record: Record, location: FeatureLocation,
     """
     if label is None:
         digits = len(str(len(record)))
-        label = 'allorf_{start:0{digits}}_{end:0{digits}}'.format(
-            digits=digits, start=(location.start + 1), end=location.end
-        )
+        if len(location.parts) > 1:  # crosses the origin
+            label = f"allorf_{location.parts[0].start + 1:0{digits}}_{location.parts[1].end:0{digits}}"
+        else:
+            label = 'allorf_{start:0{digits}}_{end:0{digits}}'.format(
+                digits=digits, start=(location.start + 1), end=location.end
+            )
     translation = str(record.get_aa_translation_from_location(location))
     # always start with methionine for CDS features, even if it had an alternate start codon
     if translation[0] != "M":
@@ -191,6 +204,35 @@ def find_intergenic_areas(start: int, end: int, cds_features: Iterable[CDSFeatur
     return list(filter(lambda area: area[1] - area[0] >= min_length, intergenic_areas))
 
 
+def _find_cross_origin_intergenic(area: CDSCollection, existing: Iterable[CDSFeature], record: Record,
+                                  min_length: int, max_overlap: int) -> list[tuple[int, int]]:
+    """ Finds intergenic sections of sequence within a cross-origin area """
+    assert area.crosses_origin()
+    intergenic_areas = []
+    for part in area.location.parts:
+        existing = record.get_cds_features_within_location(part, with_overlapping=True)
+        intergenic_areas.extend(find_intergenic_areas(part.start, part.end, existing,
+                                                      min_length=min_length, padding=max_overlap))
+    pre_origin: Optional[int] = None
+    post_origin: Optional[int] = None
+    for i, i_area in enumerate(intergenic_areas):
+        if i_area[0] == 0:
+            assert not post_origin
+            post_origin = i
+        if i_area[1] == len(record):
+            assert not pre_origin
+            pre_origin = i
+    prior = len(intergenic_areas)
+    if pre_origin is not None and post_origin is not None:
+        pre = intergenic_areas[pre_origin]
+        post = intergenic_areas.pop(post_origin)
+        start = pre[0] - len(record)
+        assert start < 0
+        intergenic_areas[pre_origin] = (start, post[1])
+        assert len(intergenic_areas) == prior - 1
+    return intergenic_areas
+
+
 def find_all_orfs(record: Record, area: Optional[CDSCollection] = None,
                   min_length: int = 60, max_overlap: int = 10) -> List[CDSFeature]:
     """ Find ORFs within intergenic areas of the given record or subset of the record.
@@ -207,24 +249,34 @@ def find_all_orfs(record: Record, area: Optional[CDSCollection] = None,
             a list of CDSFeatures, one for each ORF
     """
     # Get sequence for the range
-    offset = 0
     seq = record.seq
-    offset_end = len(record.seq)
     existing: Iterable[CDSFeature] = record.get_cds_features()
     if area:
-        offset = area.location.start
-        offset_end = area.location.end
-        existing = record.get_cds_features_within_location(area.location,
-                                                           with_overlapping=True)
-    intergenic_areas = find_intergenic_areas(offset, offset_end, existing,
-                                             min_length=min_length, padding=max_overlap)
+        if area.crosses_origin():
+            intergenic_areas = _find_cross_origin_intergenic(area, existing, record, min_length, max_overlap)
+        else:
+            existing = record.get_cds_features_within_location(area.location,
+                                                               with_overlapping=True)
+            intergenic_areas = find_intergenic_areas(area.location.start, area.location.end, existing,
+                                                     min_length=min_length, padding=max_overlap)
+    else:
+        intergenic_areas = find_intergenic_areas(0, len(record), existing,
+                                                 min_length=min_length, padding=max_overlap)
 
     # Find orfs throughout the range
     locations = []
     for start, end in intergenic_areas:
-        chunk = seq[start:end]
-        locations.extend(scan_orfs(chunk, 1, start, minimum_length=min_length))
-        locations.extend(scan_orfs(chunk.reverse_complement(), -1, start, minimum_length=min_length))
+        assert end <= len(record)
+        if start >= 0:
+            chunk = seq[start:end]
+        else:
+            assert start < 0
+            # bit before origin + bit after origin
+            chunk = seq[len(record) + start:] + seq[:end]
+
+        locations.extend(scan_orfs(chunk, 1, start, minimum_length=min_length, record_length=len(record)))
+        locations.extend(scan_orfs(chunk.reverse_complement(), -1, start,
+                                   minimum_length=min_length, record_length=len(record)))
     new_features = []
     for location in locations:
         new_features.append(create_feature_from_location(record, location))

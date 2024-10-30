@@ -1,35 +1,30 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
-""" A class for region features """
+""" Datastructures for regions within records """
 
 from collections import OrderedDict
-from copy import deepcopy
 import os
 from typing import Any, Dict, List, Optional, Set, Tuple, Type, TypeVar, Union
-import warnings
 
 from Bio.SeqFeature import SeqFeature
 from Bio.SeqRecord import SeqRecord
-from helperlibs.bio import seqio
 
-from .abstract import AbstractRegion
-from .cdscollection import CDSCollection, CDSFeature
-from .protocluster import Protocluster, SideloadedProtocluster
-from .feature import Feature, FeatureLocation
-from .subregion import SideloadedSubRegion, SubRegion
-from .candidate_cluster import CandidateCluster
-from ..locations import (
-    build_location_from_others,
-    combine_locations,
-    location_from_string,
-    offset_location,
+from ..abstract import AbstractRegion
+from ..cdscollection import CDSCollection, CDSFeature, CollectionSection
+from ..protocluster import Protocluster, SideloadedProtocluster
+from ..feature import Feature
+from ..subregion import SideloadedSubRegion, SubRegion
+from ..candidate_cluster import CandidateCluster
+from ...locations import (
+    connect_locations,
 )
+from .helpers import RegionData, write_to_genbank
 
 T = TypeVar("T", bound="Region")
 
 
-class Region(CDSCollection, AbstractRegion):
+class Region(AbstractRegion, CDSCollection):
     """ A feature that represents a region of interest made up of overlapping
         CandidateCluster features and/or SubRegion features.
 
@@ -38,6 +33,7 @@ class Region(CDSCollection, AbstractRegion):
         Region features cannot overlap.
     """
     __slots__ = ["_subregions", "_candidate_clusters",
+                 "_pre_origin_children", "_post_origin_children",
                  ]
     FEATURE_TYPE = "region"
 
@@ -59,8 +55,11 @@ class Region(CDSCollection, AbstractRegion):
         for cluster in candidate_clusters:
             assert isinstance(cluster, CandidateCluster), type(cluster)
             children.append(cluster)
-
-        location = combine_locations(child.location for child in children)
+        locations = [child.location for child in children]
+        wrap_point: int | None = None
+        if any(loc.crosses_origin() for loc in locations):
+            wrap_point = max(location.parts[0].end for location in locations)
+        location = connect_locations(locations, wrap_point=wrap_point)
 
         super().__init__(location, feature_type=self.FEATURE_TYPE, child_collections=children)
         self._subregions = subregions
@@ -116,11 +115,11 @@ class Region(CDSCollection, AbstractRegion):
                 rules[product] = rule
         return list(rules.values())
 
-    def add_cds(self, cds: CDSFeature) -> None:
+    def add_cds(self, cds: CDSFeature, section: CollectionSection = None) -> None:
         """ Adds a CDS to the Region and all relevant child collections. Links
             the CDS back to this region
         """
-        super().add_cds(cds)
+        super().add_cds(cds, section)
         cds.region = self
 
     def get_region_number(self) -> int:
@@ -131,7 +130,7 @@ class Region(CDSCollection, AbstractRegion):
             raise ValueError("Region not in a record")
         return self._parent_record.get_region_number(self)
 
-    def get_unique_protoclusters(self) -> List[Protocluster]:
+    def get_unique_protoclusters(self, record_length: int = 0) -> List[Protocluster]:
         """ Returns all Protoclusters contained by CandidateClusters in this region,
             without duplicating them if multiple CandidateClusters contain the same
             Protocluster
@@ -141,7 +140,19 @@ class Region(CDSCollection, AbstractRegion):
         clusters: Set[Protocluster] = set()
         for candidate_cluster in self._candidate_clusters:
             clusters.update(candidate_cluster.protoclusters)
-        return sorted(clusters, key=lambda x: (x.location.start, -len(x.location), x.product))
+
+        if not self.crosses_origin():
+            return sorted(clusters)
+
+        # for handling the protoclusters of a cross-origin region, the wrapping point is vital
+        record_length = self.location.parts[0].end
+
+        def reduction(collection: Protocluster) -> tuple[int, int, str]:
+            if self.crosses_origin() and collection.start < record_length / 2:
+                return (collection.start + record_length, -len(collection.location), collection.product)
+            return (collection.start, -len(collection.location), collection.product)
+
+        return sorted(clusters, key=reduction)
 
     def get_sideloaded_areas(self) -> List[Union[SideloadedProtocluster, SideloadedSubRegion]]:
         """ Returns all protoclusters and subregions that were created by
@@ -170,84 +181,15 @@ class Region(CDSCollection, AbstractRegion):
         if record is None:
             record = self.parent_record.to_biopython()
         assert isinstance(record, SeqRecord)
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            cluster_record = record[self.location.start:self.location.end]
 
-        # find the source that starts this section of the record and insert it
-        for source in self.parent_record.get_sources():
-            if source.location.start < self.location.start < source.location.end:
-                source_bio = source.to_biopython()[0]
-                end = min(source_bio.location.end - self.location.start, len(cluster_record.seq))
-                source_bio.location = FeatureLocation(0, end)
-                cluster_record.features.insert(0, source_bio)
-                break
-
-        # biopython does not persist many annotations in slices
-        cluster_record.annotations = deepcopy(self.parent_record.annotations)
-
-        # update the antiSMASH annotation to include some region details
-        structured = cluster_record.annotations.get("structured_comment", {})
-        # insert if not present
-        if not structured:
-            cluster_record.annotations["structured_comment"] = structured
-
-        comment = structured.get("antiSMASH-Data", {})
-        # if it doesn't exist yet, create it
-        structured["antiSMASH-Data"] = comment
-
-        comment["NOTE"] = comment.get("NOTE", "")
-        comment["NOTE"] = " This is a single region extracted from a larger record!"
-        comment["Orig. start"] = str(self.location.start)
-        comment["Orig. end"] = str(self.location.end)
-
-        # renumber clusters, candidate_clusters and regions to reflect changes
-        # also update positions of RiPP component locations
-        if self.candidate_clusters:
-            first_candidate_cluster = min(sc.get_candidate_cluster_number() for sc in self.candidate_clusters)
-            first_cluster = min(cluster.get_protocluster_number() for cluster in self.get_unique_protoclusters())
-        else:
-            first_candidate_cluster = 0
-            first_cluster = 0
-        first_subregion = min(sub.get_subregion_number() for sub in self.subregions) if self.subregions else 0
-        for feature in cluster_record.features:
-            if feature.type == Region.FEATURE_TYPE:
-                candidates = feature.qualifiers.get("candidate_cluster_numbers")
-                if not candidates:
-                    continue
-                candidates = [str(int(num) - first_candidate_cluster + 1) for num in candidates]
-                feature.qualifiers["candidate_cluster_numbers"] = candidates
-            elif feature.type == CandidateCluster.FEATURE_TYPE:
-                new = str(int(feature.qualifiers["candidate_cluster_number"][0]) - first_candidate_cluster + 1)
-                feature.qualifiers["candidate_cluster_number"] = [new]
-                new_clusters = [str(int(num) - first_cluster + 1) for num in feature.qualifiers["protoclusters"]]
-                feature.qualifiers["protoclusters"] = new_clusters
-            elif feature.type in [Protocluster.FEATURE_TYPE, "proto_core"]:
-                original_number = int(feature.qualifiers["protocluster_number"][0])
-                # update core location qualifier first, if it's not the core feature
-                if feature.type == Protocluster.FEATURE_TYPE:
-                    location = self.parent_record.get_protocluster(original_number).core_location
-                    new_location = offset_location(location, -self.location.start)
-                    feature.qualifiers["core_location"] = [str(new_location)]
-                # then protocluster number
-                new = str(original_number - first_cluster + 1)
-                feature.qualifiers["protocluster_number"] = [new]
-            elif feature.type == "subregion":
-                new = str(int(feature.qualifiers["subregion_number"][0]) - first_subregion + 1)
-                feature.qualifiers["subregion_number"] = [new]
-            elif feature.type == "CDS_motif":
-                for qual in ["leader_location", "tail_location"]:
-                    if qual not in feature.qualifiers:
-                        continue
-                    loc = location_from_string(feature.qualifiers[qual][0])
-                    parts = []
-                    for part in loc.parts:
-                        new_start = part.start - self.location.start
-                        new_end = part.end - self.location.start
-                        parts.append(FeatureLocation(new_start, new_end, part.strand))
-                    feature.qualifiers[qual] = [str(build_location_from_others(parts))]
-
-        seqio.write([cluster_record], filename, 'genbank')
+        data = RegionData(
+            start=self.start,
+            end=self.end,
+            candidate_clusters=self.candidate_clusters,
+            subregions=self.subregions,
+        )
+        with open(filename, "w", encoding="utf-8") as handle:
+            write_to_genbank(data, record, handle)
 
     def to_biopython(self, qualifiers: Optional[Dict[str, List[str]]] = None) -> List[SeqFeature]:
         if not qualifiers:

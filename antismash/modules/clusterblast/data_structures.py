@@ -4,46 +4,64 @@
 """ A collection of data structures shared by the clusterblast variants """
 
 from collections import OrderedDict
-from typing import Dict, List, Tuple, Union
+from dataclasses import dataclass
+from typing import Any, Dict, List, Self, Tuple, Union
+
+from antismash.common.json import JSONBase, JSONCompatible
 
 
+@dataclass(slots=True)
 class ReferenceCluster:
     """ A reference cluster container, as read from a database of
         antismash-predicted clusters.
     """
-    __slots__ = ["accession", "cluster_label", "proteins", "description",
-                 "cluster_type", "tags"]
+    accession: str
+    cluster_label: str
+    proteins: list[str]
+    description: str
+    cluster_type: str
+    tags: list[str]
+    start: int = 0
+    end: int = 0
 
-    def __init__(self, accession: str, cluster_label: str, proteins: List[str],
-                 description: str, cluster_type: str, tags: List[str]) -> None:
-        self.accession = accession
-        assert cluster_label.startswith('c')
-        self.cluster_label = cluster_label
-        self.proteins = proteins
-        self.description = description.replace('biosynthetic_gene_cluster', '')
-        self.cluster_type = cluster_type
-        self.tags = tags
+    def __post_init__(self) -> None:
+        assert self.cluster_label.startswith("c")
+        if "-" not in self.cluster_label:  # no coordinates provided (e.g. subclusterblast)
+            start = 0
+            end = 0
+        else:
+            start, end = list(map(int, self.cluster_label.lstrip("c").split("-")))
+        self.start = start
+        self.end = end
+
+    def __hash__(self) -> int:
+        return id(self)
 
     def get_name(self) -> str:
         """ Returns the name of the cluster, including cluster number """
         return f"{self.accession}_{self.cluster_label}"
 
 
-class Protein:
-    """ Holds details of a protein. Members cannot be added dynamically.
-    """
-    # At time of writing this class will be instantiated ~7 million times per
-    # clusterblast invocation.
-    # With those numbers, the memory use of the class without slots: 2.3 Gb
-    #                                                and with slots: 0.4 Gb
-    __slots__ = ("name", "locus_tag", "location", "strand", "annotations")
+@dataclass(slots=True, repr=True)
+class Protein(JSONBase):
+    """ Holds details of a protein. """
+    name: str
+    locus_tag: str
+    location: str
+    strand: str
+    annotations: str
+    draw_start: int = 0
+    draw_end: int = 0
 
-    def __init__(self, name: str, locus_tag: str, location: str, strand: str, annotations: str) -> None:
-        self.name = name
-        self.locus_tag = locus_tag
-        self.location = location
-        self.strand = strand
-        self.annotations = annotations
+    def __post_init__(self) -> None:
+        # set more sane defaults
+        try:
+            self.draw_start = self.draw_start or self.start
+            self.draw_end = self.draw_end or self.end
+        except ValueError as err:
+            raise ValueError(f"Invalid location in Protein: {self.location}") from err
+        assert not self.get_id().startswith("linear")
+        assert self.draw_start < self.draw_end
 
     def get_id(self) -> str:
         """ Returns best identifier for a Protein """
@@ -69,6 +87,23 @@ class Protein:
     def end(self) -> int:
         """ The end coordinate of the reference gene within the reference area """
         return int(self.location.split("-")[1])
+
+    @classmethod
+    def from_json(cls, data: dict[str, Any]) -> Self:
+        """ Creates an instance from a raw JSON representation
+
+            Arguments:
+                data: the JSON representation to convert
+
+            Returns:
+                the newly created instance
+        """
+        return cls(data["name"], data["locus_tag"], data["location"], data["strand"], data["annotations"],
+                   data.get("draw_start", 0), data.get("draw_end", 0))
+
+    def to_json(self) -> JSONCompatible:
+        """ Returns a JSON-compatible object with the instance's data """
+        return self
 
 
 class Subject:

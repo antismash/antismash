@@ -594,9 +594,10 @@ table.region-table {
     stroke-width: 0;
 }
 
-.svgene-selected-orf {
+.svgene-selected-orf-border {
     stroke: #000;
     stroke-width: 1px;
+    fill: none;
 }
 .svgene-binding-site {
     line {
@@ -605,6 +606,16 @@ table.region-table {
     circle {
         fill: black;
     }
+}
+
+.svgene-source-marker {
+    stroke: black;
+}
+
+.svgene-source-name {
+    @extend .serif;
+    font-size: small;
+    text-anchor: middle;
 }
 
 .legend-items, .zoom-buttons {
@@ -1022,40 +1033,33 @@ rect.generic-type-transport {
     padding-left: 1em;
 }
 
+@mixin candidate($background: white, $text: black) {
+    path {
+        fill: $background;
+    }
+    rect {
+        fill: $background;
+    }
+    text {
+        fill: $text;
+    }
+}
+
+
 .candidate-hybrid {
-    & rect {
-        fill: #282268;
-    }
-    & text {
-        fill: lightgrey;
-    }
+    @include candidate(#282268, lightgrey);
 }
 
 .candidate-interleaved {
-    & rect {
-        fill: #4b4596;
-    }
-    & text {
-        fill: lightgrey;
-    }
+    @include candidate(#4b4596, lightgrey);
 }
 
 .candidate-neighbouring {
-    & rect {
-        fill: #8680cc;
-    }
-    & text {
-        fill: #ddd;
-    }
+    @include candidate(#8680cc, #ddd);
 }
 
 .candidate-single {
-    & rect {
-        fill: #c6c1f5;
-    }
-    & text {
-        fill: black;
-    }
+    @include candidate(#c6c1f5, black);
 }
 
 ul.dropdown-options {

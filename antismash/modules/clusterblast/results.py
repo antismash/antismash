@@ -222,8 +222,7 @@ class GeneralResults(ModuleResults):
         data = {"record_id": self.record_id,
                 "schema_version": self.schema_version,
                 "results": [res.jsonify() for res in self.region_results],
-                "proteins": [{key: getattr(protein, key) for key in protein.__slots__}
-                             for protein in self.proteins_of_interest.values()],
+                "proteins": [protein.to_json() for protein in self.proteins_of_interest.values()],
                 "search_type": self.search_type}
         if self.data_version:
             data["data_version"] = self.data_version
@@ -253,8 +252,7 @@ class GeneralResults(ModuleResults):
         result = GeneralResults(json["record_id"], search_type=json["search_type"],
                                 data_version=data_version)
         for prot in json["proteins"]:
-            protein = Protein(prot["name"], prot["locus_tag"], prot["location"],
-                              prot["strand"], prot["annotations"])
+            protein = Protein.from_json(prot)
             result.proteins_of_interest[protein.locus_tag] = protein
         for region_result in json["results"]:
             result.region_results.append(RegionResult.from_json(region_result,

@@ -6,7 +6,7 @@
 from collections import defaultdict
 from dataclasses import dataclass, field
 import math
-from typing import Any, List, Set
+from typing import Any, List, Self, Set
 
 from antismash.common import path
 from antismash.common.html_renderer import (
@@ -28,8 +28,8 @@ from .svg_builder import build_colour_groups
 ASDB_URL = (
     "https://antismash-db.secondarymetabolites.org/area"
     f"?record={WILDCARD_TEMPLATE.format('accession')}"
-    f"&start={WILDCARD_TEMPLATE.format('start')}"
-    f"&end={WILDCARD_TEMPLATE.format('end')}"
+    f"&start={WILDCARD_TEMPLATE.format('real_start')}"
+    f"&end={WILDCARD_TEMPLATE.format('real_end')}"
 )
 MIBIG_URL = f"https://mibig.secondarymetabolites.org/go/{WILDCARD_TEMPLATE.format('accession')}"
 TITLE_GENERAL = "Similar known clusters"
@@ -156,13 +156,18 @@ class _GeneJSON(JSONBase):
     end: int
     strand: int
     colour: str
+    real_start: int
+    real_end: int
+
+    def __post_init__(self) -> None:
+        assert self.start < self.end, f"{self.start=} < {self.end=}, {self.real_start=}, {self.real_end=}"
 
 
 @dataclass
 class QueryGeneJSON(_GeneJSON):
     """ JSON-friendly structure for a single CDS feature """
     @classmethod
-    def from_cds(cls, cds: CDSFeature, colour: str = "white") -> "QueryGeneJSON":
+    def from_cds(cls, cds: CDSFeature, colour: str = "white", start: int = 0, end: int = 0) -> Self:
         """ Create an instance from the given CDS feature.
 
             Arguments:
@@ -171,10 +176,12 @@ class QueryGeneJSON(_GeneJSON):
         """
         return cls(
             locus_tag=cds.get_name(),
-            start=cds.location.start,
-            end=cds.location.end,
+            start=start or cds.start,
+            end=end or cds.end,
             strand=cds.location.strand,
             colour=colour,
+            real_start=cds.start,
+            real_end=cds.end,
         )
 
 
@@ -200,8 +207,10 @@ class ReferenceGeneJSON(_GeneJSON):
         start, end = list(map(int, protein.location.strip("c").split("-")))
         return cls(
             locus_tag=protein.locus_tag,
-            start=start,
-            end=end,
+            start=protein.draw_start,
+            end=protein.draw_end,
+            real_start=start,
+            real_end=end,
             strand=-1 if protein.strand == "-" else 1,
             colour=colour,
             product=protein.annotations,
@@ -221,9 +230,14 @@ class ReferenceDataJSON(JSONBase):
     similarity: int
     genes: list[ReferenceGeneJSON]
     reverse: bool
+    real_start: int
+    real_end: int
+
+    def __post_init__(self) -> None:
+        assert self.start < self.end, f"{self.start=} < {self.end=}, {self.real_start=}, {self.real_end=}"
 
     @classmethod
-    def from_reference(cls, reference: ReferenceCluster, start: int, end: int, similarity: int,
+    def from_reference(cls, reference: ReferenceCluster, similarity: int, start: int, end: int,
                        genes: list[ReferenceGeneJSON] = None, reverse: bool = False) -> "ReferenceDataJSON":
         """ Create an instance from the given reference area.
 
@@ -249,6 +263,8 @@ class ReferenceDataJSON(JSONBase):
             similarity=similarity,
             genes=genes,
             reverse=reverse,
+            real_start=reference.start,
+            real_end=reference.end,
         )
 
 
@@ -287,10 +303,22 @@ class QueryJSON(JSONBase):
             Arguments:
                 region: the query region
         """
-        genes = [QueryGeneJSON.from_cds(cds) for cds in region.cds_children]
+        end = region.end
+        genes = []
+        if region.crosses_origin():
+            origin = region.location.end  # always the end of the record
+            end += origin
+            for cds in region.cds_children.pre_origin:
+                genes.append(QueryGeneJSON.from_cds(cds))
+            for cds in region.cds_children.cross_origin:
+                genes.append(QueryGeneJSON.from_cds(cds, end=cds.end + origin))
+            for cds in region.cds_children.post_origin:
+                genes.append(QueryGeneJSON.from_cds(cds, start=cds.start + origin, end=cds.end + origin))
+        else:
+            genes.extend(QueryGeneJSON.from_cds(cds) for cds in region.cds_children)
         return cls(
-            start=region.location.start,
-            end=region.location.end,
+            start=region.start,
+            end=end,
             genes=genes,
         )
 
@@ -355,8 +383,8 @@ def generate_javascript_data(record: Record, region: Region, results: ClusterBla
             assert pairs_per_ref
             reference_genes = [region_results.reference_proteins[tag] for tag in ref.tags]
 
-            start = min(gene.start for gene in reference_genes)
-            end = max(gene.end for gene in reference_genes)
+            start = min(gene.draw_start for gene in reference_genes)
+            end = max(gene.draw_end for gene in reference_genes)
             similarity = min(100, int(100 * len(pairs_per_ref) / len(ref.proteins)))
             ref_data = ReferenceDataJSON.from_reference(ref, start=start, end=end, similarity=similarity)
             # force the KCB accessions into their descriptions, as their products aren't unique

@@ -8,9 +8,9 @@ from typing import Any, Dict, List, Optional, Set, Type, TypeVar
 from Bio.SeqFeature import SeqFeature
 
 from .cds_feature import CDSFeature
-from .cdscollection import CDSCollection
-from .feature import Feature, FeatureLocation
-from ..locations import location_from_string
+from .cdscollection import CDSCollection, CollectionSection, CoredCollectionMixin
+from .feature import Feature
+from ..locations import Location, location_from_string
 from ..qualifiers.t2pks import T2PKSQualifier
 from ..qualifiers.gene_functions import GeneFunction
 
@@ -18,7 +18,7 @@ T = TypeVar("T", bound="Protocluster")
 S = TypeVar("S", bound="SideloadedProtocluster")
 
 
-class Protocluster(CDSCollection):
+class Protocluster(CDSCollection, CoredCollectionMixin):
     """ A feature which marks a specific region of a record as interesting.
         Protoclusters are only those determined by a rule-based method of detection
         and with a defined product.
@@ -27,14 +27,19 @@ class Protocluster(CDSCollection):
         protocluster to be formed, while the surrounding location includes the context.
     """
     core_seqfeature_type = "proto_core"
-    __slots__ = ["core_location", "detection_rule", "product", "product_category",
+    __slots__ = ["_core_location", "detection_rule", "product", "product_category",
                  "tool", "cutoff",
                  "_definition_cdses", "neighbourhood_range", "t2pks",]
     FEATURE_TYPE = "protocluster"  # primary type only
 
-    def __init__(self, core_location: FeatureLocation, surrounding_location: FeatureLocation,
+    def __init__(self, core_location: Location, surrounding_location: Location,
                  tool: str, product: str, cutoff: int, neighbourhood_range: int,
                  detection_rule: str, product_category: str = "other") -> None:
+
+        if core_location.crosses_origin() and not surrounding_location.crosses_origin():
+            raise ValueError(f"a core location ({core_location}) crossing the origin requires "
+                             f"the surrounding area ({surrounding_location}) to also cross the origin")
+        assert len(surrounding_location.parts) >= len(core_location.parts)
         super().__init__(surrounding_location, feature_type=self.FEATURE_TYPE)
         # cluster-wide
         self.detection_rule = detection_rule
@@ -45,7 +50,7 @@ class Protocluster(CDSCollection):
         self.tool = tool
 
         # core specific
-        self.core_location = core_location
+        self._core_location = core_location
         self.cutoff = cutoff
         self._definition_cdses: Set[CDSFeature] = set()
 
@@ -79,17 +84,26 @@ class Protocluster(CDSCollection):
         return contig_edge
 
     @property
+    def core_location(self) -> Location:
+        return self._core_location
+
+    @property
     def definition_cdses(self) -> Set[CDSFeature]:
         """ Returns the set of CDSFeatures responsible for the creation of this protocluster """
         return set(self._definition_cdses)
 
-    def add_cds(self, cds: CDSFeature) -> None:
-        super().add_cds(cds)
+    def add_cds(self, cds: CDSFeature, section: CollectionSection = None) -> None:
+        super().add_cds(cds, section)
         if not cds.is_contained_by(self.core_location):
             return
         cores = cds.gene_functions.get_by_function(GeneFunction.CORE)
         if any(core.product == self.product for core in cores):
             self._definition_cdses.add(cds)
+
+    def core_crosses_origin(self) -> bool:
+        """ Returns True if the core of the protocluster crosses the origin.
+        """
+        return len(self.core_location.parts) > 1
 
     def to_biopython(self, qualifiers: Optional[Dict[str, List[str]]] = None) -> List[SeqFeature]:
         common = {
@@ -165,7 +179,7 @@ class SideloadedProtocluster(Protocluster):
     """
     __slots__ = ["extra_qualifiers"]
 
-    def __init__(self, core_location: FeatureLocation, surrounding_location: FeatureLocation,
+    def __init__(self, core_location: Location, surrounding_location: Location,
                  tool: str, product: str, neighbourhood_range: int = 0,
                  extra_qualifiers: Dict[str, List[str]] = None) -> None:
         if not neighbourhood_range:
