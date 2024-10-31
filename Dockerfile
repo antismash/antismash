@@ -6,8 +6,13 @@ LABEL maintainer="Kai Blin <kblin@biosustain.dtu.dk>"
 # Python and Docker are not getting along encoding-wise
 ENV LANG C.UTF-8
 
-# Install git
-RUN apt-get update && apt-get install -y git && apt-get clean -y && apt-get autoclean -y && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
+# set up antiSMASH deb repo
+ADD https://dl.secondarymetabolites.org/antismash-stretch.list /etc/apt/sources.list.d/antismash.list
+ADD https://dl.secondarymetabolites.org/antismash.asc /tmp/
+RUN apt-key add /tmp/antismash.asc
+
+# Install git and meme-suite
+RUN apt-get update && apt-get install -y git meme-suite && apt-get clean -y && apt-get autoclean -y && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
 
 # Grab antiSMASH
 COPY . /antismash
