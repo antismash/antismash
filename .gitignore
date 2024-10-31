@@ -29,6 +29,10 @@ antismash/git_hash
 pip-delete-this-directory.txt
 pip-egg-info/*
 
+# release-specific files
+.mailmap
+changes.txt
+
 # generated during make test
 nisin/*
 /*/
