@@ -8,7 +8,9 @@ RULE NRPS-like
     SUPERIORS NRPS, NAPAA, isocyanide-nrp, mycosporine-like
     CUTOFF 0  # since we're really looking at single CDS fragments
     NEIGHBOURHOOD 20
-    CONDITIONS cds((PP-binding or NAD_binding_4) and (AMP-binding or A-OX))
+    CONDITIONS cds((PP-binding or NAD_binding_4) and (AMP-binding or A-OX)
+                and not alpha_am_amid   # Fungal lysine primary metabolism
+                )
 
 RULE PKS-like
     CATEGORY PKS
