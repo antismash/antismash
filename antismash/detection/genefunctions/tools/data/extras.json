@@ -1,0 +1,20 @@
+{
+    "entries": [
+        {
+            "identifier": "StrR_like",
+            "description": "StrR-like pathway specfic regulators",
+            "function": "regulatory",
+            "cutoff": 150,
+            "source": "doi.org/10.3390/antibiotics13020115"
+        },
+        {
+            "identifier": "DA_cyclase",
+            "description": "Diels-Alderase cyclase",
+            "function": "biosynthetic-additional",
+            "EC_groups": ["lyases"],
+            "subfunctions": ["cyclase"],
+            "cutoff": 68,
+            "source": "doi.org/10.1002/cbic.202300382"
+        }
+    ]
+}
