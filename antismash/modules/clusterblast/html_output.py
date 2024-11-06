@@ -381,7 +381,7 @@ def generate_javascript_data(record: Record, region: Region, results: ClusterBla
             for query, reference in score.scored_pairings:
                 pairs_per_ref[reference.name].append((query, reference))
             assert pairs_per_ref
-            reference_genes = [region_results.reference_proteins[tag] for tag in ref.tags]
+            reference_genes = [region_results.displayed_reference_proteins[tag] for tag in ref.tags]
 
             start = min(gene.draw_start for gene in reference_genes)
             end = max(gene.draw_end for gene in reference_genes)
@@ -393,7 +393,7 @@ def generate_javascript_data(record: Record, region: Region, results: ClusterBla
             output.append(ref_data)
             average_strand = 0
             for locus_tag in ref.tags:
-                protein: Protein = region_results.reference_proteins[locus_tag]
+                protein: Protein = region_results.displayed_reference_proteins[locus_tag]
                 colour = colours.get(locus_tag, "white")
                 ref_gene = ReferenceGeneJSON.from_protein(protein, colour=colour)
                 ref_data.genes.append(ref_gene)

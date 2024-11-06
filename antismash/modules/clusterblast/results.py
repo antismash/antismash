@@ -25,6 +25,11 @@ def get_result_limit() -> int:
     return _CLUSTER_LIMIT
 
 
+def get_display_limit() -> int:
+    """ Returns the maximum number of matches to display in visualisations """
+    return get_config().cb_nclusters
+
+
 class KnownHitSummary(AbstractRelatedArea):
     """ Stores some information about a hit from known-CB in a handy to access way """
     def __init__(self, bgc_id: str, name: str, cluster_number: str, similarity: int,
@@ -62,7 +67,7 @@ class RegionResult:
     """ Stores results for a specific cluster in a record, for a particular
         flavour of clusterblast.
     """
-    __slots__ = ["region", "ranking", "total_hits", "prefix", "reference_proteins"]
+    __slots__ = ["region", "ranking", "total_hits", "prefix", "displayed_reference_proteins"]
 
     def __init__(self, region: Region, ranking: List[Tuple[ReferenceCluster, Score]],
                  reference_proteins: Dict[str, Protein], prefix: str) -> None:
@@ -79,9 +84,10 @@ class RegionResult:
         self.ranking = ranking[:get_result_limit()]  # [(ReferenceCluster, Score),...]
         self.total_hits = len(ranking)
         self.prefix = prefix
-        self.reference_proteins = {prot.locus_tag: prot for prot in reference_proteins.values()}
+        self.displayed_reference_proteins = {}
+
         # for the SVG portion, limit the ranking to the display limit
-        display_limit = get_config().cb_nclusters
+        display_limit = get_display_limit()
         # omitting any self-hits in the display
         display_ranking = self.ranking[:display_limit]
         if prefix != "subclusterblast":
@@ -89,6 +95,12 @@ class RegionResult:
             display_ranking = list(filter(lambda pair: pair[0].accession != record_prefix, display_ranking))
             if len(display_ranking) < display_limit < len(self.ranking) - 1:
                 display_ranking.append(self.ranking[display_limit])
+
+        for ref_cluster, _ in display_ranking:
+            for name in ref_cluster.tags:
+                prot = reference_proteins[name]
+                self.displayed_reference_proteins[prot.locus_tag] = prot
+
         assert len(display_ranking) <= display_limit
 
     def get_best_match(self) -> Optional[KnownHitSummary]:
