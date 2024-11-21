@@ -7,9 +7,10 @@
 """
 
 import dataclasses
-from typing import Dict, List, Optional
+from typing import Dict, Iterable, List, Optional
 
 import Bio.Data.IUPACData
+from Bio.SearchIO import QueryResult
 from Bio.SeqUtils.ProtParam import ProteinAnalysis
 
 from .fasta import read_fasta
@@ -85,6 +86,27 @@ def extract_by_reference_positions(query: str, reference: str, ref_positions: Li
         return None
     # extract positions from query sequence
     return "".join([query[i] for i in positions])
+
+
+def extract_from_alignment(hit: QueryResult, positions: Iterable[int]) -> Optional[str]:
+    """ Extracts bases from the given alignment of a sequence against a profile,
+        at the given positions. The positions are adjusted to account for any
+        gaps in the reference sequence.
+
+        If not all positions can be satisfied, no result will be returned.
+
+        Arguments:
+            hit: the hit with the alignment
+            positions: the reference positions of the bases to extract
+
+        Returns:
+            a string containing the extracted bases
+            or None if not all positions could be extracted
+    """
+    profile = hit.aln[1].seq
+    query = hit.aln[0].seq
+    offset = hit.hit_start
+    return extract_by_reference_positions(query, profile, [p - offset for p in positions if p >= offset])
 
 
 def distance_to_pfam(record: Record, query: Feature, hmmer_profiles: List[str]) -> int:
