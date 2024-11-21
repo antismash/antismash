@@ -4,37 +4,72 @@
 """ The classification section of the smCOG module. Categorises gene function
     according to a curated set of HMM profiles.
 """
-from typing import Any, Iterable, Optional
 
-from antismash.common import hmmer, path
-from antismash.common.secmet import CDSFeature, GeneFunction
+from dataclasses import dataclass
+from typing import Any, Iterable, Optional, Self
+
+from antismash.common import hmmer, json, path
+from antismash.common.secmet import CDSFeature, ECGroup, GeneFunction
 from antismash.config import ConfigType
 
 from .core import HMMFunctionResults as Results, HMMHit, Tool, scan_profiles_for_functions
 
 DATABASE = path.get_full_path(__file__, "data", "smcogs.hmm")
+METADATA = path.get_full_path(__file__, "data", "cog_annotations.json")
 TOOL_NAME = "smcogs"
 
 
-def build_function_mapping() -> dict[str, GeneFunction]:
-    """ Load the smCOG gene function mapping from a file.
+@dataclass
+class SmcogProfile:
+    """ A container for all information regarding a profile """
+    id: str
+    description: str
+    function: GeneFunction
+    groups: list[ECGroup]
+    subfunctions: list[str]
+
+    @classmethod
+    def from_json(cls, data: dict[str, Any]) -> Self:
+        """ Reconstructs an instance from JSON """
+        return cls(
+            id=data["id"],
+            description=data["description"],
+            function=GeneFunction(data["function"]),
+            groups=[ECGroup(g) for g in data["groups"]],
+            subfunctions=data["subfunctions"],
+        )
+
+
+@dataclass
+class SmcogMetadata:
+    """ A container for SMCoG data """
+    version: str
+    profiles: list[SmcogProfile]
+
+    @classmethod
+    def from_json(cls, data: dict[str, Any]) -> Self:
+        """ Reconstructs an instance from JSON """
+        return cls(
+            version=data["version"],
+            profiles=[SmcogProfile.from_json(p) for p in data["profiles"]],
+        )
+
+
+def _load_profiles() -> dict[str, SmcogProfile]:
+    """ Load the smCOG metadata from a file.
 
         Returns:
-             a dictionary mapping smCOG id to its matching gene function
+             a dictionary mapping smCOG id to its matching SmcogProfile
     """
-    mapping = {
-        'B': GeneFunction.ADDITIONAL,  # 'biosynthetic-additional',
-        'T': GeneFunction.TRANSPORT,  # 'transport',
-        'R': GeneFunction.REGULATORY,  # 'regulatory',
-    }
-    annotations = {}
-    with open(path.get_full_path(__file__, "data", "cog_annotations.txt"), "r", encoding="utf-8") as handle:
-        lines = handle.readlines()
-    for line in lines:
-        cog, _desc, key = line.strip().split('\t', 3)
-        annotations[cog] = mapping.get(key, GeneFunction.OTHER)
+    mapping = {}
+    with open(METADATA, "rb") as handle:
+        data = json.loads(handle.read())
+    metadata = SmcogMetadata.from_json(data)
 
-    return annotations
+    for profile in metadata.profiles:
+        mapping[profile.id] = profile
+
+    return mapping
 
 
 def check_prereqs(options: ConfigType) -> list[str]:
@@ -62,17 +97,22 @@ def classify(cds_features: Iterable[CDSFeature],
     """
 
     hits: dict[str, HMMHit] = scan_profiles_for_functions(cds_features, DATABASE, hmmscan_opts=["-E", "1E-16"])
-    ids_to_function = build_function_mapping()
-    cds_name_to_function = {}
+    profiles = _load_profiles()
+    function_mapping = {}
+    group_mapping = {}
+    subfunction_mapping = {}
     for cds_name, hit in hits.items():
         # pull out the identifier by itself
-        smcog_id, description = hit.reference_id.split(":", 1)
-        # remove extraneous info
+        smcog_id = hit.reference_id.split(":", 1)[0]
         hit.reference_id = smcog_id
-        hit.description = description.replace("_", " ")
-        cds_name_to_function[cds_name] = ids_to_function[smcog_id]
+        profile = profiles[smcog_id]
+        hit.description = profile.description
+        function_mapping[cds_name] = profile.function
+        group_mapping[cds_name] = profile.groups
+        subfunction_mapping[cds_name] = profile.subfunctions
 
-    return Results(tool=TOOL_NAME, best_hits=hits, function_mapping=cds_name_to_function)
+    return Results(tool=TOOL_NAME, best_hits=hits, function_mapping=function_mapping,
+                   group_mapping=group_mapping, subfunction_mapping=subfunction_mapping)
 
 
 def prepare_data(logging_only: bool = False) -> list[str]:

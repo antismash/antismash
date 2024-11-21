@@ -5,7 +5,7 @@
 """
 
 from .asf import ActiveSiteFinderQualifier
-from .gene_functions import GeneFunction, GeneFunctionAnnotations
+from .gene_functions import ECGroup, GeneFunction, GeneFunctionAnnotations
 from .go import GOQualifier
 from .nrps_pks import NRPSPKSQualifier
 from .secmet import SecMetQualifier
