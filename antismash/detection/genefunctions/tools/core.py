@@ -13,7 +13,7 @@ from antismash.common.hmmscan_refinement import refine_hmmscan_results
 from antismash.common.html_renderer import Markup
 from antismash.common.json import JSONBase
 from antismash.common.secmet import CDSFeature, Record
-from antismash.common.secmet.qualifiers import GeneFunction
+from antismash.common.secmet.qualifiers import ECGroup, GeneFunction
 from antismash.config import ConfigType
 from antismash.config.args import ModuleArgs
 
@@ -97,10 +97,15 @@ class _ResultBase(AbstractBaseClass, Generic[T]):
 class FunctionResults(_ResultBase[T]):
     """ A container for functions detected by a particular tool """
     def __init__(self, *, tool: str, best_hits: dict[str, T],
-                 function_mapping: Mapping[str, GeneFunction]) -> None:
+                 function_mapping: Mapping[str, GeneFunction],
+                 group_mapping: Mapping[str, list[ECGroup]] | None = None,
+                 subfunction_mapping: Mapping[str, list[str]] | None = None,
+                 ) -> None:
         self.tool = tool
         self.best_hits = best_hits
         self.function_mapping = function_mapping
+        self.group_mapping: Mapping[str, list[ECGroup]] = group_mapping or {}
+        self.subfunction_mapping: Mapping[str, list[str]] = subfunction_mapping or {}
 
     def add_to_record(self, record: Record) -> None:
         """ Annotate resistance genes in CDS features """
@@ -127,6 +132,8 @@ class FunctionResults(_ResultBase[T]):
             "tool": self.tool,
             "best_hits": dict(self.best_hits.items()),
             "function_mapping": {name: str(function) for name, function in self.function_mapping.items()},
+            "group_mapping": dict(self.group_mapping),
+            "subfunction_mapping": dict(self.subfunction_mapping),
         }
 
 

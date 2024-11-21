@@ -17,10 +17,10 @@ from .test_core import build_hit
 class TestSMCOGLoad(unittest.TestCase):
     def test_load(self):
         # this mostly just tests that the cog annotation file isn't corrupted
-        mapping = smcogs.build_function_mapping()
+        mapping = smcogs._load_profiles()
         assert len(mapping) == 301
-        for key, function in mapping.items():
-            assert isinstance(function, GeneFunction), f"cog annotation {key} has bad type"
+        for key, profile in mapping.items():
+            assert isinstance(profile.function, GeneFunction), f"cog annotation {key} has bad type"
 
 
 class TestAddingToRecord(unittest.TestCase):

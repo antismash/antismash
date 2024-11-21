@@ -25,4 +25,4 @@ from .features import (
     Source,
     SubRegion,
 )
-from .qualifiers import GeneFunction
+from .qualifiers import ECGroup, GeneFunction

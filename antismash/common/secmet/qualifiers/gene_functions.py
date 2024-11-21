@@ -194,3 +194,25 @@ class GeneFunctionAnnotations:
         self._annotations = []
         self._by_tool = defaultdict(list)
         self._by_function = defaultdict(list)
+
+
+@unique
+class ECGroup(Enum):
+    """ An Enum representing the Enzyme Commission top level class an enzyme can be part of """
+    OXIDOREDUCTASES = 1
+    TRANSFERASES = 2
+    HYDROLASES = 3
+    LYASES = 4
+    ISOMERASES = 5
+    LIGASES = 6
+    TRANSLOCASES = 7
+
+    @staticmethod
+    def from_string(label: str) -> "ECGroup":
+        """ Converts a string to an ECGroup instance when possible.
+            Raises an error if not possible.
+        """
+        for value in ECGroup:
+            if value.name == label.upper():
+                return value
+        raise ValueError(f"Unknown EC group label: {label}")
