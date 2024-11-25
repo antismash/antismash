@@ -14,6 +14,8 @@ from antismash.common.secmet import CDSFeature, Region, CandidateCluster
 
 from .results import NRPS_PKS_Results, CandidateClusterPrediction, UNKNOWN
 
+_NORINE_BASE = "https://norine.univ-lille.fr/norine"
+
 
 def will_handle(_products: List[str], categories: Set[str]) -> bool:
     """ Returns true if one or more relevant products or product categories are present """
@@ -65,7 +67,9 @@ def generate_html(region_layer: RegionLayer, results: NRPS_PKS_Results,
                                   results=results,
                                   relevant_features=features_with_domain_predictions,
                                   options=options_layer,
-                                  tooltip=tooltip)
+                                  tooltip=tooltip,
+                                  norine_base=_NORINE_BASE,
+                                  )
         html.add_sidepanel_section(name, section, class_name)
 
     return html
@@ -117,7 +121,7 @@ def get_norine_url_for_specificities(specificities: List[List[str]],
     if not modules:
         return None
 
-    return "http://bioinfo.lifl.fr/norine/fingerPrintSearch.jsp?nrps1=" + ",".join(modules)
+    return f"{ _NORINE_BASE }/fingerPrintSearch.jsp?nrps1=" + ",".join(modules)
 
 
 class CandidateClusterLayer:
@@ -179,7 +183,7 @@ class CandidateClusterLayer:
             if monomers:
                 nrpslist.append("nrps" + str(i) + "=" + ",".join(monomers))
             i += 1
-        urlstring = "http://bioinfo.lifl.fr/norine/fingerPrintSearch.jsp?"+"&".join(nrpslist)
+        urlstring = f"{ _NORINE_BASE }/fingerPrintSearch.jsp?{ '&'.join(nrpslist)}"
         return urlstring
 
 
