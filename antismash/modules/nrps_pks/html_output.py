@@ -136,6 +136,13 @@ class CandidateClusterLayer:
         return super().__getattribute__(attr)
 
     @property
+    def polymer(self) -> str:
+        """ A string containing the polyer of the candidate cluster, with
+            each gene's contribution grouped together.
+        """
+        return self.result.polymer
+
+    @property
     def products(self) -> str:
         """ A string of the protocluster types within the candidate cluster """
         return "-".join(self._candidate.products)
