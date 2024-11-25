@@ -52,12 +52,12 @@ class TestFull(unittest.TestCase):
         # ordering should be correct
         assert proto.scores_by_region[0][1] > proto.scores_by_region[1][1]
         # check the winner makes sense for proto to region, the value won't be 1.0
-        assert proto.scores_by_region[0][0].accession == "BGC0000311"
+        assert proto.scores_by_region[0][0].accession == "BGC0000311.6"
         self.assertAlmostEqual(proto.scores_by_region[0][1], 1.80874, places=5)
 
         region = results.by_database["MIBiG"].by_region[1]["RegionToRegion_RiQ"]
         # ordering should be correct
         assert region.scores_by_region[0][1] > region.scores_by_region[1][1]
         # again, check the winner, but this time it *should* be 1.0 as there's no protoclusters used
-        assert region.scores_by_region[0][0].accession == "BGC0000311", region.scores_by_region
+        assert region.scores_by_region[0][0].accession == "BGC0000311.6", region.scores_by_region
         self.assertAlmostEqual(region.scores_by_region[0][1], 1.0, places=5)

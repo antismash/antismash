@@ -38,9 +38,9 @@ KCB_FASTA_CHECKSUM = "c956906c9c5056a330e2f6fcfff19d48bff65d6608e5befd95dee69de6
 
 CLUSTERCOMPARE_DBS = {
     "mibig": {
-        "url": "https://dl.secondarymetabolites.org/releases/clustercompare/cc_mibig_3.1.tar.xz",
-        "archive": "1249c64edbe32be7117b642d93f218ea09396de95e5da901e4632db3de6457be",
-        "fasta": "bd4fdb5dc17f9a3c94da399928be62fc5bb1cebd29425b74059ae5aaaa47cf19",
+        "url": "https://dl.secondarymetabolites.org/releases/clustercompare/cc_mibig_4.0.tar.xz",
+        "archive": "df009291f71d313d0e98260d1e9baae42db4efe1972d4fef502fd05355062ff5",
+        "fasta": "6cad44254d8ad7e2e735fcd15eb2e40b526150db62d8dff68001e533c5aa22d2",
     },
 }
 

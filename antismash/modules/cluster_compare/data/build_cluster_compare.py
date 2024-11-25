@@ -71,7 +71,7 @@ def convert_protocluster(protocluster: secmet.Protocluster) -> Dict[str, Any]:
 
 
 def convert_region(region: secmet.Region, cds_mapping: Dict[int, str], cds_index: Counter, fasta: IO,
-                   *, record_length: int = 0) -> dict[str, Any]:
+                   *, record_length: int = 0, accession_override: str = "") -> dict[str, Any]:
     # trim leading/trailing intergenic areas, accounting for possible cross-origin regions
     if region.crosses_origin():
         start = min(cds.start for cds in region.cds_children.pre_origin + region.cds_children.cross_origin)
@@ -102,12 +102,13 @@ def convert_region(region: secmet.Region, cds_mapping: Dict[int, str], cds_index
         result["draw_end"] = end + record_length
     for cds in region.cds_children:
         index = cds_index.next()
-        fasta.write(">%s|%d\n%s\n" % (region.parent_record.id, index, cds.translation))
+        accession = accession_override or region.parent_record.id
+        fasta.write(f">{accession}|{index}\n{cds.translation}\n")
         cds_mapping[index] = cds.get_name()
     return result
 
 
-def convert_record(record: secmet.Record, fasta: IO, skip_contig_edge: bool = True) -> Dict[str, Any]:
+def convert_record(record: secmet.Record, fasta: IO, skip_contig_edge: bool = True, accession_override: str = "") -> Dict[str, Any]:
     result = {
         "regions": [],
         "cds_mapping": {},
@@ -116,7 +117,7 @@ def convert_record(record: secmet.Record, fasta: IO, skip_contig_edge: bool = Tr
     for region in record.get_regions():
         if skip_contig_edge and region.contig_edge:
             continue
-        result["regions"].append(convert_region(region, result["cds_mapping"], cds_index, fasta, record_length=len(record)))
+        result["regions"].append(convert_region(region, result["cds_mapping"], cds_index, fasta, record_length=len(record), accession_override=accession_override))
     return result
 
 
@@ -144,20 +145,25 @@ def convert_all_mibig(input_dir: str, output_dir: str, accessions: List[str]) ->
         for accession in accessions:
             # get mibig data
             json_path = os.path.join(input_dir, accession, "annotations.json")
+            if not os.path.exists(json_path):
+                continue
             with open(json_path) as handle:
                 mibig_data = json.load(handle)
-            genbank = os.path.join(input_dir, accession, accession + ".gbk")
+            if mibig_data["status"] != "active":
+                continue
+            genbank = os.path.join(input_dir, accession, accession.split('.')[0] + ".gbk")
             try:
                 for record in secmet.Record.from_genbank(genbank):
                     record.id = record.annotations['structured_comment']['antiSMASH-Data'].get('Original ID', record.id)
-                    converted = convert_record(record, fasta, skip_contig_edge=False)
-                    converted["regions"][0]["products"] = mibig_data["cluster"]["biosyn_class"]
-                    if mibig_data["cluster"].get("other", {}).get("subclass"):
-                        index = converted["regions"][0]["products"].index("Other")
-                        converted["regions"][0]["products"][index] += " (%s)" % mibig_data["cluster"]["other"]["subclass"]
-                    converted["regions"][0]["organism"] = mibig_data["cluster"]["organism_name"]
-                    converted["regions"][0]["description"] = ", ".join([compound["compound"] for compound in mibig_data["cluster"]["compounds"]])
-                    result[record.id] = converted
+                    converted = convert_record(record, fasta, skip_contig_edge=False, accession_override=accession)
+                    classes = [c["class"] for c in mibig_data["biosynthesis"]["classes"]]
+                    converted["regions"][0]["products"] = list(sorted(set(classes)))
+                    if "other" in classes:
+                        index = converted["regions"][0]["products"].index("other")
+                        converted["regions"][0]["products"][index] += " (%s)" % mibig_data["biosynthesis"]["classes"][classes.index("other")]["subclass"]
+                    converted["regions"][0]["organism"] = mibig_data["taxonomy"]["name"]
+                    converted["regions"][0]["description"] = ", ".join([compound["name"] for compound in mibig_data["compounds"]])
+                    result[accession] = converted
             except secmet.errors.SecmetInvalidInputError as err:
                 print(accession, "failed:", err, list(mibig_data))
             except KeyError as err:
