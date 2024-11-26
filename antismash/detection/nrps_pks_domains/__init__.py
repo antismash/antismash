@@ -13,7 +13,6 @@ from antismash.config import ConfigType, get_config
 from antismash.config.args import ModuleArgs
 from antismash.detection import DetectionStage
 
-from .domain_drawing import generate_html, generate_js_domains, will_handle
 from .domain_identification import generate_domains, get_database_path, NRPSPKSDomains
 from .modular_domain import ModularDomain
 

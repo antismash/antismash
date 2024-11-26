@@ -130,11 +130,12 @@ class JSONDomain(JSONBase):
     dna: str
     abbreviation: str
     html_class: str
+    extra_links: list[str] = field(default_factory=list)
 
     @classmethod
-    def from_domain(cls, domain: NRPSPKSQualifier.Domain, *args: Any) -> Self:
+    def from_domain(cls, domain: NRPSPKSQualifier.Domain, *args: Any, **kwargs: Any) -> Self:
         """ A helper for constructing an instance from an existing domain """
-        return cls(domain.full_type, domain.start, domain.end, *args)
+        return cls(domain.full_type, domain.start, domain.end, *args, **kwargs)
 
 
 @dataclass

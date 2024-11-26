@@ -27,9 +27,6 @@ from antismash.detection.nrps_pks_domains import (
     ModularDomain,
     NRPSPKSDomains as DetectionResults,
 )
-from antismash.detection.nrps_pks_domains.domain_drawing import (
-    get_css_class_and_abbreviation,
-)
 from antismash.detection.nrps_pks_domains.domain_identification import HMMResult
 from antismash.detection.nrps_pks_domains.module_identification import (
     CARRIER_PROTEINS,
@@ -41,6 +38,10 @@ from antismash.modules.nrps_pks.html_output import NrpspksLayer
 from antismash.modules.nrps_pks.results import (
     CandidateClusterPrediction,
     NRPS_PKS_Results as AnalysisResults,
+)
+
+from .nrps_pks_domains import (
+    get_css_class_and_abbreviation,
 )
 
 

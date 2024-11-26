@@ -8,13 +8,13 @@ import unittest
 
 from antismash.common.secmet import Module
 from antismash.common.test.helpers import DummyCDS, DummyHMMResult, DummyRecord
-from antismash.detection.nrps_pks_domains import domain_drawing
 from antismash.detection.nrps_pks_domains.domain_identification import (
     CDSModuleInfo,
     CDSResult,
     build_modules_for_cds,
     combine_modules,
 )
+from antismash.outputs.html.visualisers import nrps_pks_domains as domain_drawing
 
 
 class TestModuleJSON(unittest.TestCase):
