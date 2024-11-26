@@ -10,7 +10,7 @@
 
 import itertools
 import string
-from typing import Dict, Iterator, List, Optional, Set, Tuple, Union
+from typing import Any, Iterator, Optional, Union
 
 from antismash.common import path
 from antismash.common.html_renderer import (
@@ -21,10 +21,13 @@ from antismash.common.html_renderer import (
     replace_with,
 )
 from antismash.common.json import JSONDomain, JSONOrf, JSONModule
-from antismash.common.layers import RegionLayer, RecordLayer, OptionsLayer
+from antismash.common.layers import RegionLayer, RecordLayer
 from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import CDSFeature, Module, Record, Region
 from antismash.common.secmet.qualifiers import NRPSPKSQualifier
+from antismash.config import ConfigType
+from antismash.detection import nrps_pks_domains
+from antismash.modules import nrps_pks
 
 _UNLABLED_DOMAINS = set([
     "PCP",
@@ -103,9 +106,27 @@ _NAPDOS_REFERENCES = {
 }
 
 
-def will_handle(_products: List[str], product_categories: Set[str]) -> bool:
+def will_handle(_products: list[str], product_categories: set[str]) -> bool:
     """ Returns true if one or more relevant products or product categories are present """
     return bool(product_categories.intersection({"NRPS", "PKS"}))
+
+
+def has_enough_results(_record: Record, region: Region, results: dict[str, ModuleResults]) -> bool:
+    """ Checks if enough information is present to create at least one
+        output visualisation HTML section
+
+        Arguments:
+            record: the parent record
+            region: the region to check
+            results: the results of all detection and analysis modules
+
+        Returns:
+            True if an HTML section would be created
+    """
+    # if no interesting modules have results for the whole record, get out early
+    if not any(results.get(module.__name__) for module in [nrps_pks_domains, nrps_pks]):
+        return False
+    return bool(region.product_categories.intersection({"NRPS", "PKS"}))
 
 
 def _get_domain_abbreviation(domain_name: str) -> str:
@@ -124,7 +145,7 @@ def _get_domain_class(abbreviation: str, domain_name: str) -> str:
     return f"jsdomain-{res}"
 
 
-def get_css_class_and_abbreviation(domain_name: str) -> Tuple[str, str]:
+def get_css_class_and_abbreviation(domain_name: str) -> tuple[str, str]:
     """ Convert a full domain name to a pair of CSS class and abbrevation """
     abbrevation = _get_domain_abbreviation(domain_name)
     css_class = _get_domain_class(abbrevation, domain_name)
@@ -132,7 +153,8 @@ def get_css_class_and_abbreviation(domain_name: str) -> Tuple[str, str]:
 
 
 def _parse_domain(record: Record, domain: NRPSPKSQualifier.Domain,
-                  feature: CDSFeature) -> JSONDomain:
+                  feature: CDSFeature, signature: str = "",
+                  ) -> JSONDomain:
     """ Convert a NRPS/PKS domain string to a dict useable by json.dumps
 
         Arguments:
@@ -159,6 +181,7 @@ def _parse_domain(record: Record, domain: NRPSPKSQualifier.Domain,
                  "&amp;PROGRAM=blastp&amp;BLAST_PROGRAMS=blastp"
                  f"&amp;QUERY={replace_with('sequence')}"
                  "&amp;LINK_LOC=protein&amp;PAGE_TYPE=BlastSearch")
+    extra_links = []
 
     dna_sequence = ""
     for as_domain in record.get_antismash_domains_in_cds(feature):
@@ -170,6 +193,7 @@ def _parse_domain(record: Record, domain: NRPSPKSQualifier.Domain,
     return JSONDomain.from_domain(
         domain, predictions, napdoslink, blastlink, domainseq, dna_sequence,
         abbreviation, css,
+        extra_links=extra_links,
     )
 
 
@@ -201,37 +225,6 @@ def _build_module_js(module: Module, cds: CDSFeature, match_ids: dict[tuple[str,
     return js_module
 
 
-def generate_js_domains(region: Region, record: Record) -> Dict[str, Union[str, List[JSONOrf]]]:
-    """ Creates a JSON-like structure for domains, used by javascript in
-        drawing the domains
-    """
-    orfs: List[JSONOrf] = []
-    match_ids: Dict[Tuple[str, ...], str] = {}
-
-    def match_id_generator() -> Iterator[str]:
-        """ Generates match names as A, B, .. Z, AA, AB, .. AZ, AAA, ... """
-        for size in itertools.count(start=1):
-            for i in itertools.product(string.ascii_uppercase, repeat=size):
-                yield "".join(i)
-
-    match_gen = iter(match_id_generator())
-
-    for feature in region.cds_children:
-        if not feature.nrps_pks:
-            continue
-        js_orf = JSONOrf.from_cds(feature)
-        for domain in feature.nrps_pks.domains:
-            js_orf.add_domain(_parse_domain(record, domain, feature))
-
-        for module in feature.modules:
-            js_module = _build_module_js(module, feature, match_ids, match_gen)
-            js_orf.add_module(js_module)
-        orfs.append(js_orf)
-
-    return {'id': RegionLayer.build_anchor_id(region),
-            'orfs': orfs}
-
-
 def has_domain_details(region: Union[Region, RegionLayer]) -> bool:
     """ Returns True if there are domain details to be had for the given cluster """
     for cds in region.cds_children:
@@ -249,11 +242,56 @@ def domains_have_predictions(region: Union[Region, RegionLayer]) -> bool:
     return False
 
 
-def generate_html(region_layer: RegionLayer, _results: ModuleResults,
-                  record_layer: RecordLayer, _options_layer: OptionsLayer
+def generate_javascript_data(record: Record, region: Region,
+                             results: dict[str, ModuleResults]) -> dict[str, Any]:
+    """ Generate the javascript data required for interactive visualisation """
+    orfs: list[JSONOrf] = []
+    match_ids: dict[tuple[str, ...], str] = {}
+
+    def match_id_generator() -> Iterator[str]:
+        """ Generates match names as A, B, .. Z, AA, AB, .. AZ, AAA, ... """
+        for size in itertools.count(start=1):
+            for i in itertools.product(string.ascii_uppercase, repeat=size):
+                yield "".join(i)
+
+    match_gen = iter(match_id_generator())
+
+    analysis_results = results.get(nrps_pks.__name__)
+    if analysis_results:
+        assert isinstance(analysis_results, nrps_pks.NRPS_PKS_Results)
+        full_predictions = analysis_results.domain_predictions
+    else:
+        full_predictions = {}
+
+    for feature in region.cds_children:
+        if not feature.nrps_pks:
+            continue
+        js_orf = JSONOrf.from_cds(feature)
+        for domain in feature.nrps_pks.domains:
+            signatures = full_predictions.get(domain.feature_name, {}).get("nrpys")
+            signature = ""
+            if signatures:
+                assert isinstance(signatures, nrps_pks.results.PredictorSVMResult)
+                signature = signatures.aa34
+            parsed = _parse_domain(record, domain, feature, signature)
+            js_orf.add_domain(parsed)
+
+        for module in feature.modules:
+            js_module = _build_module_js(module, feature, match_ids, match_gen)
+            js_orf.add_module(js_module)
+        orfs.append(js_orf)
+
+    return {
+        "id": RegionLayer.build_anchor_id(region),
+        "orfs": orfs,
+    }
+
+
+def generate_html(region_layer: RegionLayer, _results: dict[str, ModuleResults],
+                  record_layer: RecordLayer, _options: ConfigType,
                   ) -> HTMLSections:
     """ Generate the details section of NRPS/PKS domains in the main HTML output """
-    template = FileTemplate(path.get_full_path(__file__, 'templates', 'details.html'))
+    template = FileTemplate(path.get_full_path(__file__, "templates", "nrps_pks_domains.html"))
     html = HTMLSections("nrps_pks")
     if not has_domain_details(region_layer):
         return html

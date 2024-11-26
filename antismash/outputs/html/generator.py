@@ -7,7 +7,7 @@ import importlib
 import pkgutil
 import string
 import os
-from typing import cast, Any, Dict, List, Tuple, Union, Optional
+from typing import cast, Any, Dict, List, Tuple, Optional
 
 from antismash.common import json, path
 from antismash.common.html_renderer import (
@@ -20,7 +20,6 @@ from antismash.common.html_renderer import (
 from antismash.common.layers import RecordLayer, RegionLayer, OptionsLayer
 from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import Record
-from antismash.common.json import JSONOrf
 from antismash.config import ConfigType
 from antismash.modules import tfbs_finder as tfbs, tta
 from antismash.outputs.html import js
@@ -47,7 +46,6 @@ VISUALISERS = _get_visualisers()
 def build_json_data(records: List[Record], results: List[Dict[str, ModuleResults]],
                     options: ConfigType, all_modules: List[AntismashModule]) -> Tuple[
                         List[Dict[str, Any]],
-                        List[Dict[str, Union[str, List[JSONOrf]]]],
                         dict[str, dict[str, json.JSONCompatible]],
                     ]:
     """ Builds JSON versions of records and domains for use in drawing SVGs with
@@ -66,7 +64,6 @@ def build_json_data(records: List[Record], results: List[Dict[str, ModuleResults
 
     js_records = js.convert_records(records, results, options)
 
-    js_domains: List[Dict[str, Union[str, List[JSONOrf]]]] = []
     js_results: dict[str, dict[str, json.JSONCompatible]] = {}
 
     for i, record in enumerate(records):
@@ -79,10 +76,6 @@ def build_json_data(records: List[Record], results: List[Dict[str, ModuleResults
                 # if there's no results for the module, don't let it try
                 if handler.__name__ not in results[i]:
                     continue
-                if "generate_js_domains" in dir(handler):
-                    domains_by_region = handler.generate_js_domains(region, record)
-                    if domains_by_region:
-                        js_domains.append(domains_by_region)
                 if hasattr(handler, "generate_javascript_data"):
                     data = handler.generate_javascript_data(record, region, results[i][handler.__name__])
                     region_results[handler.__name__] = data
@@ -97,11 +90,10 @@ def build_json_data(records: List[Record], results: List[Dict[str, ModuleResults
             if region_results:
                 js_results[RegionLayer.build_anchor_id(region)] = region_results
 
-    return js_records, js_domains, js_results
+    return js_records, js_results
 
 
 def write_regions_js(records: List[Dict[str, Any]], output_dir: str,
-                     js_domains: List[Dict[str, Any]],
                      module_results: dict[str, dict[str, json.JSONCompatible]]) -> None:
     """ Writes out the cluster and domain JSONs to file for the javascript sections
         of code"""
@@ -114,11 +106,6 @@ def write_regions_js(records: List[Dict[str, Any]], output_dir: str,
                 regions[region['anchor']] = region
                 regions['order'].append(region['anchor'])
         handle.write(f"var all_regions = {json.dumps(regions)};\n")
-
-        details = {
-            "nrpspks": {region["id"]: region for region in js_domains},
-        }
-        handle.write(f"var details_data = {json.dumps(details)};\n")
         handle.write(f"var resultsData = {json.dumps(module_results)};\n")
 
 
@@ -203,8 +190,8 @@ def generate_webpage(records: List[Record], results: List[Dict[str, ModuleResult
                      options: ConfigType, all_modules: List[AntismashModule]) -> str:
     """ Generates the HTML itself """
 
-    json_records, js_domains, js_results = build_json_data(records, results, options, all_modules)
-    write_regions_js(json_records, options.output_dir, js_domains, js_results)
+    json_records, js_results = build_json_data(records, results, options, all_modules)
+    write_regions_js(json_records, options.output_dir, js_results)
 
     template = FileTemplate(os.path.join(TEMPLATE_PATH, "overview.html"))
 
@@ -239,7 +226,7 @@ def generate_webpage(records: List[Record], results: List[Dict[str, ModuleResult
     as_js_url = build_antismash_js_url(options)
 
     content = template.render(records=record_layers_with_regions, options=options_layer,
-                              version=options.version, extra_data=js_domains,
+                              version=options.version,
                               regions_written=regions_written, sections=html_sections,
                               results_by_record_id=results_by_record_id,
                               config=options, job_id=job_id, page_title=page_title,
