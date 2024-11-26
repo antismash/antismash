@@ -9,11 +9,12 @@ from typing import Any, Dict, List, Optional, Set, Tuple, Type, TypeVar
 
 from Bio.SeqFeature import SeqFeature
 
-from ..cdscollection import CDSCollection
+from ..cdscollection import CDSCollection, CoredCollectionMixin
 from ..protocluster import Protocluster, SideloadedProtocluster
-from ..feature import FeatureLocation, Feature
+from ..feature import Feature
 from ...locations import (
-    combine_locations,
+    Location,
+    connect_locations,
 )
 
 T = TypeVar("T", bound="CandidateCluster")
@@ -43,30 +44,33 @@ class CandidateClusterKind(Enum):
         raise ValueError(f"unknown candidate cluster kind: {label}")
 
 
-class CandidateCluster(CDSCollection):
+class CandidateCluster(CDSCollection, CoredCollectionMixin):
     """ A class representing a collection of overlapping Cluster features.
         The location of a CandidateCluster is defined as the minimum area that would
         contain all of the child Protolusters.
     """
     FEATURE_TYPE = "cand_cluster"
     kinds = CandidateClusterKind
-    __slots__ = ["_protoclusters", "_kind", "_core_location", "smiles_structure", "polymer"]
+    __slots__ = ["_protoclusters", "_kind", "_core_location", "smiles_structure", "polymer",
+                 "_wrap_point"]
 
     def __init__(self, kind: CandidateClusterKind, protoclusters: List[Protocluster],
-                 smiles: str = None, polymer: str = None) -> None:
+                 smiles: str = None, polymer: str = None, circular_wrap_point: int = None) -> None:
         if not protoclusters:
             raise ValueError("A CandidateCluster cannot exist without at least one Protocluster")
         for protocluster in protoclusters:
             assert isinstance(protocluster, Protocluster), type(protocluster)
         if not isinstance(kind, CandidateClusterKind):
             raise TypeError(f"argument 1 should be CandidateClusterKind, had {type(kind)}")
-        location = combine_locations(cluster.location for cluster in protoclusters)
+        locations = [cluster.location for cluster in protoclusters]
+        self._wrap_point = circular_wrap_point
+        location = connect_locations(locations, wrap_point=self._wrap_point)
         super().__init__(location, feature_type=CandidateCluster.FEATURE_TYPE, child_collections=protoclusters)
         self._protoclusters = protoclusters
         self._kind = kind
         self.smiles_structure = smiles
         self.polymer = polymer
-        self._core_location: Optional[FeatureLocation] = None
+        self._core_location: Optional[Location] = None
 
     def __repr__(self) -> str:
         return f"CandidateCluster({self.location}, {self.kind}, {self.products})"
@@ -114,15 +118,20 @@ class CandidateCluster(CDSCollection):
         return categories or {"unknown"}
 
     @property
-    def core_location(self) -> FeatureLocation:
-        """ Returns a FeatureLocation covering the range of child Protocluster
+    def core_location(self) -> Location:
+        """ Returns a Location covering the range of child Protocluster
             core locations
         """
         if not self._core_location:
-            first_core = min(proto.core_location.start for proto in self._protoclusters)
-            last_core = max(proto.core_location.end for proto in self._protoclusters)
-            self._core_location = FeatureLocation(first_core, last_core)
+            cores = [cluster.core_location for cluster in self._protoclusters]
+            self._core_location = connect_locations(cores, self._wrap_point)
         return self._core_location
+
+    def core_crosses_origin(self) -> bool:
+        """ Returns True if the collective core location of all contained protoclusters
+            crosses the origin.
+        """
+        return len(self.core_location.parts) > 1
 
     def get_product_string(self) -> str:
         """ Returns all unique products from contained clusters in the order
@@ -170,4 +179,5 @@ class CandidateCluster(CDSCollection):
         smiles = leftovers.pop("SMILES", [None])[0]
         polymer = leftovers.pop("polymer", [None])[0]
         children = [all_protoclusters[num - 1] for num in protocluster_numbers]
-        return cls(kind, children, smiles, polymer)
+        record_length = len(record) if record else 0
+        return cls(kind, children, smiles, polymer, circular_wrap_point=record_length)

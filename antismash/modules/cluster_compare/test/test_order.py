@@ -68,6 +68,14 @@ class TestOrdering(unittest.TestCase):
     def test_empty(self):
         assert ordering.calculate_order_score([], {}, None) == 0.
 
+    def test_single_hit_penalised(self):
+        hits = {
+            "0": generate_hit(self.cdses[0], "0"),
+        }
+        assert len(self.refs) > 1
+        score = ordering.calculate_order_score(self.cdses, hits, self.refs)
+        assert 0. < score < 1.
+
 
 class TestSegmentScoring(unittest.TestCase):
     def setUp(self):

@@ -21,11 +21,24 @@ class TestSub(unittest.TestCase):
     def test_bad_location(self):
         with self.assertRaisesRegex(ValueError, r"area end \(5\) must be greater than area start \(1,000\)"):
             structures.SubRegionAnnotation(1000, 5, "label", dummy_tool(), {})
+        # but with a circular input, this is fine
+        structures.SubRegionAnnotation(10, 5, "label", dummy_tool(), {}, circular_origin=20)
 
-    def test_attributes(self):
+    def test_length(self):
         sub = structures.SubRegionAnnotation(5, 50, "label", dummy_tool(),
                                              {"a": ["first", "second"], "b": ["third"]})
         assert len(sub) == sub.end - sub.start == 45
+        # and if it doesn't cross, this is unchanged
+        sub.circular_origin = 60
+        assert len(sub) == sub.end - sub.start == 45
+
+    def test_circular_crossing(self):
+        sub = structures.SubRegionAnnotation(50, 5, "label", dummy_tool(),
+                                             {"a": ["first", "second"], "b": ["third"]},
+                                             circular_origin=70)
+        assert sub.start == 50
+        assert sub.end == 5
+        assert len(sub) == 25
 
     def test_json_conversion(self):
         sub = structures.SubRegionAnnotation(5, 50, "label", dummy_tool(), {"a": ["first"], "b": ["and", "second"]})
@@ -50,6 +63,20 @@ class TestSub(unittest.TestCase):
         assert dest.location.start == 5
         assert dest.location.end == 50
 
+    def test_secmet_circular(self):
+        source = structures.SubRegionAnnotation(50, 5, "label", dummy_tool(), {"a": ["first"], "b": ["second"]},
+                                                circular_origin=80)
+        dest = source.to_secmet()
+        assert isinstance(dest, SideloadedSubRegion)
+        assert dest.crosses_origin()
+        assert dest.label == "label"
+        assert dest.tool == source.tool.name
+        assert dest.start == 50
+        assert dest.end == 5
+        assert len(dest.location.parts) == 2
+        assert dest.location.start == 0
+        assert dest.location.end == 80
+
     def test_equality(self):
         first = structures.SubRegionAnnotation(5, 50, "label", dummy_tool(), {"a": ["first"], "b": ["second"]})
         second = structures.SubRegionAnnotation(5, 50, "label", dummy_tool(), {"a": ["first"], "b": ["second"]})
@@ -63,6 +90,8 @@ class TestCluster(unittest.TestCase):
     def test_bad_location(self):
         with self.assertRaisesRegex(ValueError, r"area end \(5\) must be greater than area start \(1,000\)"):
             structures.ProtoclusterAnnotation(1000, 5, "product", dummy_tool(), {})
+        # but in circular records this is fine
+        structures.SubRegionAnnotation(10, 5, "label", dummy_tool(), {}, circular_origin=20)
 
         with self.assertRaisesRegex(ValueError, "absolute distance"):
             structures.ProtoclusterAnnotation(5, 10, "product", dummy_tool(), {}, neighbourhood_left=-1)
@@ -71,11 +100,9 @@ class TestCluster(unittest.TestCase):
 
         with self.assertRaisesRegex(ValueError, "cannot extend out of a record"):
             structures.ProtoclusterAnnotation(5, 10, "product", dummy_tool(), {}, neighbourhood_left=7)
+        structures.ProtoclusterAnnotation(5, 10, "product", dummy_tool(), {}, neighbourhood_left=7, circular_origin=40)
 
-    def test_attributes(self):
-        cluster = structures.ProtoclusterAnnotation(25, 50, "product", dummy_tool(),
-                                                    {"a": ["first"], "b": ["second"]},
-                                                    neighbourhood_left=10, neighbourhood_right=5)
+    def check_attributes(self, cluster):
         assert cluster.start == 15
         cluster.neighbourhood_left += 3
         assert cluster.start == 12
@@ -84,14 +111,57 @@ class TestCluster(unittest.TestCase):
         cluster.neighbourhood_right += 3
         assert cluster.end == 58
 
-        assert len(cluster) == cluster.end - cluster.start
-
         assert cluster.label == cluster.product == "product"
         cluster.product = "something else"
         assert cluster.label == cluster.product == "something else"
 
         assert isinstance(cluster.tool, structures.Tool)
         assert cluster.tool.name == dummy_tool().name
+
+    def test_attributes(self):
+        cluster = structures.ProtoclusterAnnotation(25, 50, "product", dummy_tool(),
+                                                    {"a": ["first"], "b": ["second"]},
+                                                    neighbourhood_left=10, neighbourhood_right=5)
+        assert len(cluster) == 40
+        self.check_attributes(cluster)
+
+    def test_circular_non_crossing(self):
+        cluster = structures.ProtoclusterAnnotation(25, 50, "product", dummy_tool(),
+                                                    {"a": ["first"], "b": ["second"]},
+                                                    neighbourhood_left=10, neighbourhood_right=5,
+                                                    circular_origin=70,
+                                                    )
+        assert len(cluster) == 40
+        self.check_attributes(cluster)
+
+    def test_circular_crossing(self):
+        cluster = structures.ProtoclusterAnnotation(50, 25, "product", dummy_tool(),
+                                                    {"a": ["first"], "b": ["second"]},
+                                                    neighbourhood_left=10, neighbourhood_right=5,
+                                                    circular_origin=70,
+                                                    )
+        assert len(cluster) == 60
+
+        assert cluster.start == 40
+        cluster.neighbourhood_left += 3
+        assert cluster.start == 37
+
+        assert cluster.end == 30
+        cluster.neighbourhood_right += 3
+        assert cluster.end == 33
+
+    def test_circular_neighbourhood_crossing(self):
+        cluster = structures.ProtoclusterAnnotation(50, 65, "product", dummy_tool(),
+                                                    {"a": ["first"], "b": ["second"]},
+                                                    neighbourhood_left=10, neighbourhood_right=10,
+                                                    circular_origin=70,
+                                                    )
+        assert len(cluster) == 35
+
+        assert cluster.start == 40
+        assert cluster.core_start == 50
+        assert cluster.core_end == 65
+        assert cluster.end == 5
 
     def test_json_conversion(self):
         cluster = structures.ProtoclusterAnnotation(5, 50, "product", dummy_tool(),
@@ -121,6 +191,20 @@ class TestCluster(unittest.TestCase):
         assert dest.location.start == 15
         assert dest.location.end == 55
         assert dest.neighbourhood_range == 10
+
+    def test_secmet_circular(self):
+        source = structures.ProtoclusterAnnotation(50, 25, "product", dummy_tool(),
+                                                   {"a": ["first"], "b": ["second"]},
+                                                   neighbourhood_left=10, neighbourhood_right=5,
+                                                   circular_origin=70,
+                                                   )
+        feature = source.to_secmet()
+        assert isinstance(feature, SideloadedProtocluster)
+        assert feature.crosses_origin()
+        assert feature.start == 40
+        assert feature.location.start == 0
+        assert feature.end == 30
+        assert feature.location.end == 70
 
     def test_equality(self):
         first = structures.ProtoclusterAnnotation(5, 50, "product", dummy_tool(), {"a": ["first"]})

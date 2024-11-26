@@ -31,9 +31,9 @@ def get_core_gene_ids(record: secmet.Record) -> Set[str]:  # TODO: consider movi
             a set containing all core gene names
     """
     cores = set()
-    for gene in record.get_cds_features_within_regions():
-        if gene.gene_function == secmet.GeneFunction.CORE:
-            cores.add(gene.get_name())
+    for protocluster in record.get_protoclusters():
+        for cds in protocluster.definition_cdses:
+            cores.add(cds.get_name())
     return cores
 
 
@@ -160,12 +160,25 @@ def load_reference_proteins(searchtype: str) -> Dict[str, Protein]:
                 continue
             # some lines are malformed, so always split the name off the annotation
             # e.g. >x|y|1-2|-|z|Urea_carboxylase_{ECO:0000313|EMBL:CCF11062.1}|CRH36422
-            tabs = line.split("|", 5)
-            annotations, name = tabs[5].rsplit("|", 1)
-            locustag = tabs[4]
+            # linearised coordinates can also be inserted for some databases
+            # e.g. >x|y|1-2|-|linearised5-20|z|Urea_carboxylase_{ECO:0000313|EMBL:CCF11062.1}|CRH36422
+            shift = 1 if "|linearised" in line else 0
+            tabs = line.split("|", 5 + shift)
             location = tabs[2]
             strand = tabs[3]
-            proteins[locustag] = Protein(name, locustag, location, strand, annotations)
+            locustag = tabs[4 + shift]
+            annotations, name = tabs[5 + shift].rsplit("|", 1)
+            assert not locustag.startswith("linearised")
+            assert not name.startswith("linearised")
+            # handle linearised coordinates, if present
+            linearised_start = 0
+            linearised_end = 0
+            if shift == 1:
+                assert len(tabs) == 7
+                assert tabs[4].startswith("linearised"), tabs[4]
+                linearised_start, linearised_end = map(int, tabs[4].replace("linearised", "").split("-"))
+            proteins[locustag] = Protein(name, locustag, location, strand, annotations,
+                                         draw_start=linearised_start, draw_end=linearised_end)
     return proteins
 
 
@@ -259,17 +272,18 @@ def parse_subject(line_parts: List[str], seqlengths: Dict[str, int],
         logging.error("Malformed blast pairing: %s", "\t".join(line_parts))
     query = mapping.get(line_parts[0], line_parts[0])
     subject_parts = mapping.get(line_parts[1], line_parts[1]).split("|")
-    subject = subject_parts[4]
+    shift = 1 if subject_parts[4].startswith("linearised") else 0
+    subject = subject_parts[4 + shift]
     if subject == "no_locus_tag":
-        subject = subject_parts[6]
-    if len(subject_parts) > 6:
-        locustag = subject_parts[6]
+        subject = subject_parts[6 + shift]
+    if len(subject_parts) > 6 + shift:
+        locustag = subject_parts[6 + shift]
     else:
         locustag = ""
     genecluster = f"{subject_parts[0]}_{subject_parts[1]}"
     start, end = subject_parts[2].split("-")[:2]
     strand = subject_parts[3]
-    annotation = subject_parts[5]
+    annotation = subject_parts[5 + shift]
     perc_ident = int(float(line_parts[2]) + 0.5)
     evalue = float(line_parts[10])
     blastscore = int(float(line_parts[11]) + 0.5)
@@ -419,7 +433,7 @@ def get_cds_lengths(record: secmet.Record) -> Dict[str, int]:
             a dictionary mapping CDS accession to length of the CDS
     """
     lengths = {}
-    for cds in record.get_cds_features():
+    for cds in record.get_cds_features_within_regions():
         lengths[cds.get_name()] = len(cds.translation)
     return lengths
 

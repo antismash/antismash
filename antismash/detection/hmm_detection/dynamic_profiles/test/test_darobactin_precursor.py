@@ -34,5 +34,5 @@ class TestDarobactinPrecursor(unittest.TestCase):
         self.record = DummyRecord(features=features)
 
     def test_hits(self) -> None:
-        results = darobactin_precursor.find_hits(self.record)
+        results = darobactin_precursor.find_hits(self.record, {})
         assert set(results.keys()) == {"darA"}

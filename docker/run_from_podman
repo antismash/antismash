@@ -1,0 +1,35 @@
+#!/bin/bash
+
+set -o errexit
+set -o nounset
+
+# ADJUST THIS FOR YOUR SYSTEM
+readonly DATABASE_DIR=${DATABASE_DIR:-/data/databases}
+
+# handle input file
+readonly INPUT_FILE=$(basename $1)
+readonly INPUT_DIR=$(dirname $(readlink -f $1))
+shift
+
+# handle output file
+readonly OUTPUT_DIR=$(readlink -f $1)
+shift
+
+# Links within the container
+readonly CONTAINER_SRC_DIR=/input
+readonly CONTAINER_DST_DIR=/output
+readonly CONTAINER_DB_DIR=/databases
+
+if [ ! -d ${OUTPUT_DIR} ]; then
+    mkdir -p ${OUTPUT_DIR}
+fi
+
+podman run \
+    --volume ${INPUT_DIR}:${CONTAINER_SRC_DIR}:ro \
+    --volume ${OUTPUT_DIR}:${CONTAINER_DST_DIR}:rw \
+    --volume ${DATABASE_DIR}:${CONTAINER_DB_DIR}:ro \
+    --detach=false \
+    --rm \
+    docker.io/antismash/antismash-dev:latest \
+    ${INPUT_FILE} \
+    $@

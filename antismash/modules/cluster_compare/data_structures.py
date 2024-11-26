@@ -144,11 +144,14 @@ class Hit:
 class ReferenceCDS:
     """ A CDS within a reference area """
     def __init__(self, name: str, function: str, components: Dict[str, List[Any]],
-                 location: Location) -> None:
+                 location: Location, *, draw_start: int = 0, draw_end: int = 0) -> None:
         self.name = name
         self.function = function
         self.components = components
         self.location = location
+        self.draw_start = draw_start or self.location.start
+        self.draw_end = draw_end or self.location.end
+        assert self.draw_start < self.draw_end
 
     def overlaps_with(self, area: "ReferenceArea") -> bool:
         """ Returns True if this CDS overlaps with the given ReferenceArea """
@@ -157,7 +160,10 @@ class ReferenceCDS:
     @classmethod
     def from_json(cls, name: str, data: Dict[str, Any]) -> "ReferenceCDS":
         """ Reconstructs a ReferenceCDS from a JSON representation """
-        return cls(name, data["function"], data["components"], location_from_string(data["location"]))
+        return cls(name, data["function"], data["components"], location_from_string(data["location"]),
+                   draw_start=data.get("draw_start", 0),
+                   draw_end=data.get("draw_end", 0),
+                   )
 
     def to_json(self) -> Dict[str, Any]:
         """ Constructs a JSON representation of a ReferenceCDS """
@@ -165,10 +171,20 @@ class ReferenceCDS:
             "function": self.function,
             "components": self.components,
             "location": str(self.location),
+            "draw_start": self.draw_start,
+            "draw_end": self.draw_end,
         }
 
     def __str__(self) -> str:
         return f"ReferenceCDS({self.name}, {self.location})"
+
+    def get_midpoint(self) -> int:
+        """ Returns the midpoint of the gene for the purposes of drawing.
+
+            If the CDS crosses the origin, then the midpoint will assume the
+            post-origin section of the location is extended past the record end
+        """
+        return self.draw_start + (self.draw_end - self.draw_start) // 2
 
     def get_minimal_json(self) -> Dict[str, Any]:
         """ Returns the minimum information required as JSON for the purposes of
@@ -177,8 +193,8 @@ class ReferenceCDS:
         # to match IOrf in antismash-js for the purposes of drawing
         return {
             "locus_tag": self.name,
-            "start": self.location.start,
-            "end": self.location.end,
+            "start": self.draw_start,
+            "end": self.draw_end,
             "strand": self.location.strand,
             "function": self.function,
         }
@@ -187,14 +203,16 @@ class ReferenceCDS:
 class ReferenceArea:
     """ A generic area within a reference record, e.g. a region or protocluster """
     def __init__(self, accession: str, start: int, end: int, cds_mapping: Dict[str, str],
-                 cdses: Dict[str, ReferenceCDS], products: List[str]) -> None:
+                 cdses: Dict[str, ReferenceCDS], products: List[str],
+                 *, draw_end: int = 0) -> None:
         self.accession = accession
         self.start = start
         self.end = end
         self.cds_mapping = cds_mapping
-        self.cdses = {name: cds for name, cds in cdses.items() if cds.overlaps_with(self)}
+        self.cdses = dict(cdses)
         self.products = products
         self._components: Optional[Components] = None
+        self.draw_end = draw_end or end
 
     def get_product_string(self) -> str:
         """ Returns a single string of the area's product(s) """
@@ -225,14 +243,17 @@ class ReferenceArea:
             "start": self.start,
             "end": self.end,
             "products": self.products,
+            "draw_end": self.draw_end,
         }
 
 
 class ReferenceProtocluster(ReferenceArea):
     """ A single protocluster within a reference record """
     def __init__(self, accession: str, start: int, end: int, cds_mapping: Dict[str, str],
-                 cdses: Dict[str, ReferenceCDS], cores: List[ReferenceCDS], product: str) -> None:
-        super().__init__(accession, start, end, cds_mapping, cdses, [product])
+                 cdses: Dict[str, ReferenceCDS], cores: List[ReferenceCDS], product: str,
+                 *, draw_end: int = 0) -> None:
+        super().__init__(accession, start, end, cds_mapping, cdses, [product],
+                         draw_end=draw_end)
         self.cores = cores
         self.product = product
 
@@ -242,7 +263,9 @@ class ReferenceProtocluster(ReferenceArea):
         """ Reconstructs a ReferenceProtocluster from a JSON representation """
         cores = [cdses[core] for core in data["core_cdses"]]
         location = location_from_string(data["location"])
-        return cls(accession, location.start, location.end, cds_mapping, cdses, cores, data["product"])
+        return cls(accession, location.start, location.end, cds_mapping, cdses, cores, data["product"],
+                   draw_end=data.get("draw_end", 0),
+                   )
 
     def to_json(self) -> Dict[str, Any]:
         return {
@@ -262,8 +285,10 @@ class ReferenceRegion(ReferenceArea):
     """ A single region within a reference record """
     def __init__(self, accession: str, start: int, end: int, protoclusters: List[ReferenceProtocluster],
                  cdses: Dict[str, ReferenceCDS], products: List[str], cds_mapping: Dict[str, str],
-                 description: str, organism: str) -> None:
-        super().__init__(accession, start, end, cds_mapping, cdses, products)
+                 description: str, organism: str,
+                 *, draw_end: int = 0) -> None:
+        super().__init__(accession, start, end, cds_mapping, cdses, products,
+                         draw_end=draw_end or end)
         self.protoclusters = protoclusters
         self.description = description
         self.organism = organism
@@ -283,6 +308,7 @@ class ReferenceRegion(ReferenceArea):
             cds_mapping,
             data.get("description", ""),
             data.get("organism", ""),
+            draw_end=data.get("draw_end", 0),
         )
 
     def to_json(self) -> Dict[str, Any]:
@@ -382,9 +408,7 @@ class ReferenceScorer:
     def final_score(self) -> float:
         """ Calculates the singular score of a result from its metric scores """
         if self._final_score is None:
-            metrics = [self.identity]
-            if len(self.hits_by_gene) > 1:
-                metrics.append(self.order)
+            metrics = [self.identity, self.order]
             if self.component is not None:
                 metrics.append(self.component)
             score = 1.

@@ -7,6 +7,7 @@
 
 import bz2
 from collections import defaultdict, OrderedDict
+from dataclasses import dataclass, field
 import logging
 import os
 from typing import Any, Dict, IO, List, Union
@@ -31,7 +32,7 @@ class AntismashResults:
     """ A single repository of all results of an antismash run, including input
         filename, records and individual module results
     """
-    SCHEMA_VERSION = 3
+    SCHEMA_VERSION = 4
 
     # the key must accept all the schemas in values as valid
     # this will typically only be useful for backwards compatibility
@@ -168,49 +169,52 @@ def dump_records(results: List[Dict[str, Union[Dict[str, Any], ModuleResults]]],
     return data
 
 
-def gather_record_areas(record: Record) -> List[Dict[str, Any]]:
+@dataclass
+class _RegionJSON(json.JSONBase):
+    start: int
+    end: int
+    products: list[str]
+    protoclusters: dict[str, Any] = field(default_factory=dict)
+    candidates: list[dict[str, Any]] = field(default_factory=list)
+    subregions: list[dict[str, Any]] = field(default_factory=list)
+
+
+def gather_record_areas(record: Record) -> list[json.JSONBase]:
     """ Constructs a JSON friendly representation of areas in Record
 
         Arguments:
             record: the Record instance to gather areas from
 
         Returns:
-            a list of JSON appropriate dictionaries, one for each region
+            a list of JSON-compatible objects, one for each region
     """
-    regions = []
+    regions: list[json.JSONBase] = []
     for region in record.get_regions():
-        region_json = {
-            "start": region.location.start,
-            "end": region.location.end,
-            "products": region.products,
-            "protoclusters": {},
-            "candidates": [],
-            "subregions": [],
-        }
+        region_json = _RegionJSON(region.start, region.end, region.products)
         regions.append(region_json)
 
         protoclusters_by_obj = {proto: i for i, proto in enumerate(region.get_unique_protoclusters())}
         for proto, i in protoclusters_by_obj.items():
-            region_json["protoclusters"][i] = {
+            region_json.protoclusters[str(i)] = {
                 "category": proto.product_category,
-                "start": proto.location.start,
-                "end": proto.location.end,
-                "core_start": proto.core_location.start,
-                "core_end": proto.core_location.end,
+                "start": proto.start,
+                "end": proto.end,
+                "core_start": proto.core_start,
+                "core_end": proto.core_end,
                 "product": proto.product,
                 "tool": proto.tool,
             }
         for candidate in region.candidate_clusters:
-            region_json["candidates"].append({
-                "start": candidate.location.start,
-                "end": candidate.location.end,
+            region_json.candidates.append({
+                "start": candidate.start,
+                "end": candidate.end,
                 "kind": str(candidate.kind),
                 "protoclusters": [protoclusters_by_obj[proto] for proto in candidate.protoclusters],
             })
         for subregion in region.subregions:
-            region_json["subregions"].append({
-                "start": subregion.location.start,
-                "end": subregion.location.end,
+            region_json.subregions.append({
+                "start": subregion.start,
+                "end": subregion.end,
                 "label": subregion.label,
                 "tool": subregion.tool,
             })

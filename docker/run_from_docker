@@ -4,7 +4,7 @@ set -o errexit
 set -o nounset
 
 # ADJUST THIS FOR YOUR SYSTEM
-readonly DATABASE_DIR="/data/databases"
+readonly DATABASE_DIR=${DATABASE_DIR:-/data/databases}
 
 # handle input file
 readonly INPUT_FILE=$(basename $1)
@@ -31,6 +31,6 @@ docker run \
     --detach=false \
     --rm \
     --user=$(id -u):$(id -g) \
-    antismash/antismash-dev:latest \
+    docker.io/antismash/antismash-dev:latest \
     ${INPUT_FILE} \
     $@

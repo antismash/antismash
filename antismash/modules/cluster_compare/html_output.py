@@ -105,7 +105,7 @@ def generate_div(tag: str, region_layer: RegionLayer, record_layer: RecordLayer,
                            class_name=label, url=url)
 
 
-def generate_javascript_data(_record: Record, region: Region, results: ClusterCompareResults) -> Dict[str, Any]:
+def generate_javascript_data(record: Record, region: Region, results: ClusterCompareResults) -> Dict[str, Any]:
     """ Generates JSON data for the javascript to draw relevant results in HTML output
 
         Arguments:
@@ -134,7 +134,7 @@ def generate_javascript_data(_record: Record, region: Region, results: ClusterCo
             for reference, _ in scores:
                 ref_entry: Dict[str, Any] = {
                     "start": reference.start,
-                    "end": reference.end,
+                    "end": reference.draw_end,  # cross-origin regions are pseudo-linearised
                     "links": [],  # added to afterwards
                     "reverse": False,  # potentially changed later
                 }
@@ -149,9 +149,12 @@ def generate_javascript_data(_record: Record, region: Region, results: ClusterCo
                 for ref_cds_id, hit in result.hits_by_region.get(reference, {}).items():
                     assert locations.locations_overlap(hit.cds.location, region.location)
                     query_cds = hit.cds
-                    query_point = query_cds.location.start + (query_cds.location.end - query_cds.location.start) // 2
+                    query_point = query_cds.start + len(query_cds.location) // 2
+                    # if in a cross-origin region, make sure to offset the looped CDSes
+                    if region.crosses_origin() and query_cds.is_contained_by(region.location.parts[1]):
+                        query_point += len(record)
                     ref_cds = reference.cdses[ref_cds_id]
-                    subject_point = ref_cds.location.start + (ref_cds.location.end - ref_cds.location.start) // 2
+                    subject_point = ref_cds.get_midpoint()
                     if query_cds.location.strand != ref_cds.location.strand:
                         mismatching_strands += 1
                     genes[ref_cds.name]["linked"][region.get_region_number()] = query_cds.get_name()

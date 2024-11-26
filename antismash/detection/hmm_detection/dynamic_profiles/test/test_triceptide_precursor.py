@@ -35,5 +35,5 @@ class TestTriceptidePrecursor(unittest.TestCase):
         self.record = DummyRecord(features=features)
 
     def test_hits(self) -> None:
-        results = triceptide_precursor.find_hits(self.record)
+        results = triceptide_precursor.find_hits(self.record, {})
         assert set(results.keys()) == {"YxD", "HAA", "YRD"}

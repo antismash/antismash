@@ -419,8 +419,9 @@ def add_antismash_comments(records: List[Tuple[Record, SeqRecord]], options: Con
         if record.original_id:
             comment["Original ID"] = record.original_id
 
-        if "structured_comment" not in record.annotations:
-            record.annotations["structured_comment"] = {}
+        if "structured_comment" not in bio_record.annotations:
+            bio_record.annotations["structured_comment"] = {}
+
         bio_record.annotations["structured_comment"]["antiSMASH-Data"] = comment
 
 

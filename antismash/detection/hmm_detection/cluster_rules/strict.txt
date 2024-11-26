@@ -652,6 +652,16 @@ RULE PBDE
     NEIGHBOURHOOD 10
     CONDITIONS FMO-like and p450 and DUF98
 
+RULE polyyne
+    CATEGORY other
+    DESCRIPTION polyyne
+    # see DOI: doi.org/10.1039/D3NP00059A and doi.org/10.1038/s42003-022-03409-6
+    EXAMPLE NCBI CP007142.1 5097502-5110027 ergoynes #BGC0000892 and BGC0001897
+    CUTOFF 10
+    NEIGHBOURHOOD 10
+    CONDITIONS (PP-binding_2 or PP-binding) and delta9_cd03505
+                and delta12_cd03507 and FAAL_cd05931 and (4HBT_2 or Thioesterase or PF00561)
+
 RULE betalactone
     CATEGORY other
     DESCRIPTION beta-lactone containing protease inhibitor

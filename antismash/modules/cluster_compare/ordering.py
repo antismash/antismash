@@ -49,7 +49,13 @@ def calculate_order_score(area_features: Sequence[CDSFeature], hits: Dict[str, H
     segments = find_segments(hits, area_features, references)
     assert segments
 
-    return score_segments(segments, len(area_features), len(references))
+    score = score_segments(segments, len(area_features), len(references))
+
+    # handle single hits only creating a single segment,
+    # despite potentially missing the remainder of a reference
+    if len(hits) == 1 and len(references) > 1:
+        score *= EXTRA_SEGMENT_PENALTY
+    return score
 
 
 def _build_segments_from_pairings(pairings: Sequence[Pairing]) -> List[List[Pairing]]:

@@ -372,3 +372,8 @@ QueC	7-cyano-7-deazaguanine synthase	22	PF06508.hmm
 dpdA1	family of paralogs of tRNA guanosine transglycosylase genes	20	dpdA1.hmm
 alpha_am_amid	L-aminoadipate-semialdehyde dehydrogenase	1030	TIGR03443.hmm
 bTGT	homodimeric bacterial tRNA-guanine transglycosylases	22	bTGT.hmm
+delta9_cd03505	delta9 desaturase	22	delta9_cd03505.hmm
+delta12_cd03507	delta12 desaturase	22	delta12_cd03507.hmm
+FAAL_cd05931	FAAL	20	FAAL_cd05931.hmm
+PP-binding_2	Acyl-carrier	10	PF14573.hmm
+Thioesterase	Thioesterase domain	26	PF00975.hmm

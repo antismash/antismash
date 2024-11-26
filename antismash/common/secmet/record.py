@@ -59,9 +59,10 @@ from .locations import (
     CompoundLocation,
     FeatureLocation,
     Location,
+    connect_locations,
+    get_distance_between_locations,
     location_bridges_origin,
-    split_origin_bridging_location,
-    combine_locations,
+    locations_overlap,
     ensure_valid_locations,
     remove_redundant_exons,
 )
@@ -515,7 +516,21 @@ class Record:
             Returns:
                 a list of CDSFeatures, ordered by earliest position in feature location
         """
-        def find_start_in_list(location: Location, features: list[CDSFeature],
+        results: list[CDSFeature] = []
+        # shortcut if no CDS features exist
+        if not self._cds_features:
+            return results
+
+        # compound locations need each chunk to be handled separately
+        if len(location.parts) > 1:
+            features: list[CDSFeature] = []
+            # this is not particularly efficient, but it gets very complicated very quickly
+            for part in location.parts:
+                found = self.get_cds_features_within_location(part, with_overlapping=True)
+                features.extend(f for f in found if f not in features)
+            return [f for f in features if f.is_contained_by(location)]
+
+        def find_start_in_list(location: Location, features: List[CDSFeature],
                                include_overlaps: bool) -> int:
             """ Find the earliest feature that starts before the location
                 (and ends before, if include_overlaps is True)
@@ -533,10 +548,6 @@ class Record:
             assert isinstance(location, FeatureLocation)
             location = FeatureLocation(0, max(1, location.end))
 
-        results: List[CDSFeature] = []
-        # shortcut if no CDS features exist
-        if not self._cds_features:
-            return results
         index = find_start_in_list(location, self._cds_features, with_overlapping)
         while index < len(self._cds_features):
             feature = self._cds_features[index]
@@ -577,6 +588,7 @@ class Record:
     def add_gene(self, gene: Gene) -> None:
         """ Adds a Gene feature to the record """
         assert isinstance(gene, Gene), type(gene)
+        ensure_valid_locations([gene], self.is_circular(), len(self))
         self._genes.append(gene)
         self._genes_by_name[gene.get_name()].append(gene)
 
@@ -621,6 +633,7 @@ class Record:
     def add_cds_motif(self, motif: Union[CDSMotif, Prepeptide]) -> None:
         """ Add the given CDSMotif to the record """
         assert isinstance(motif, (CDSMotif, Prepeptide)), f"{type(motif)}, {motif.type}"
+        ensure_valid_locations([motif], self.is_circular(), len(self))
         self._cds_motifs.append(motif)
         assert motif.get_name(), f"motif {motif} has no identifiers"
         if motif.get_name() in self._domains_by_name:
@@ -634,6 +647,7 @@ class Record:
     def add_pfam_domain(self, pfam_domain: PFAMDomain) -> None:
         """ Add the given PFAMDomain to the record and links it in the parent CDS """
         assert isinstance(pfam_domain, PFAMDomain)
+        ensure_valid_locations([pfam_domain], self.is_circular(), len(self))
         assert pfam_domain.get_name()
         self._pfam_domains.append(pfam_domain)
         if pfam_domain.get_name() in self._domains_by_name:
@@ -647,6 +661,7 @@ class Record:
     def add_antismash_domain(self, antismash_domain: AntismashDomain) -> None:
         """ Add the given AntismashDomain to the record """
         assert isinstance(antismash_domain, AntismashDomain)
+        ensure_valid_locations([antismash_domain], self.is_circular(), len(self))
         assert antismash_domain.get_name()
         assert antismash_domain.tool
         self._antismash_domains.append(antismash_domain)
@@ -662,6 +677,7 @@ class Record:
     def add_module(self, module: Module) -> None:
         """ Add the given Module to the record """
         assert isinstance(module, Module)
+        ensure_valid_locations([module], self.is_circular(), len(self))
 
         parents = set()
         for domain in module.domains:
@@ -689,6 +705,7 @@ class Record:
     def add_source(self, source: Source) -> None:
         """ Add the given Source to the record """
         assert isinstance(source, Source)
+        ensure_valid_locations([source], self.is_circular(), len(self))
 
         self._sources.append(source)
 
@@ -707,6 +724,7 @@ class Record:
     def add_feature(self, feature: Feature) -> None:
         """ Adds a Feature or any subclass to the relevant list """
         assert isinstance(feature, Feature), type(feature)
+        ensure_valid_locations([feature], self.is_circular(), len(self))
         if isinstance(feature, Protocluster):
             self.add_protocluster(feature)
         elif isinstance(feature, CandidateCluster):
@@ -808,7 +826,7 @@ class Record:
         try:
             ensure_valid_locations(seq_record.features, can_be_circular, len(seq_record.seq))
         except ValueError as err:
-            raise SecmetInvalidInputError(f"{seq_record.id}: {err}")
+            raise SecmetInvalidInputError(f"{seq_record.id}: {err}") from err
 
         for feature in seq_record.features:
             if feature.location.ref or feature.location.ref_db:
@@ -819,64 +837,10 @@ class Record:
                 feature.ref = None
                 feature.ref_db = None
 
-            locations_adjusted = False
-            name_modified = False
-
             # prefilter some NCBI Pfam hits locations that are generated poorly
             if all([can_be_circular, feature.type == "misc_feature",
                     location_bridges_origin(feature.location, allow_reversing=False)]):
                 feature.location = remove_redundant_exons(feature.location)
-
-            if can_be_circular and location_bridges_origin(feature.location, allow_reversing=False):
-                locations_adjusted = True
-                original_location = feature.location
-                try:
-                    lower, upper = split_origin_bridging_location(feature.location)
-                except ValueError as err:
-                    raise SecmetInvalidInputError(str(err)) from err
-
-                if feature.type in ['CDS', 'gene']:
-                    name_modified = True
-                    original_gene_name = feature.qualifiers.get("gene", [None])[0]
-                    gene_name = original_gene_name
-                    locus_tag = feature.qualifiers.get("locus_tag", [None])[0]
-                    # if neither exist, set the gene name as it is less precise
-                    # in meaning
-                    if not gene_name and not locus_tag:
-                        gene_name = "bridge"
-
-                # nuke any translation, since it's now out of date
-                feature.qualifiers.pop('translation', None)
-
-                # add a separate feature for the upper section
-                if len(upper) > 1:
-                    feature.location = CompoundLocation(upper, original_location.operator)
-                else:
-                    feature.location = upper[0]
-                if name_modified:
-                    if gene_name:
-                        feature.qualifiers["gene"] = [gene_name + "_UPPER"]
-                    if locus_tag:
-                        feature.qualifiers["locus_tag"] = [locus_tag + "_UPPER"]
-
-                # since CDSs need translations, skip if too small or not a CDS
-                if feature.type != "CDS" or len(feature) >= 3:
-                    try:
-                        record.add_biopython_feature(feature)
-                    except ValueError as err:
-                        if feature.type not in ANTISMASH_SPECIFIC_TYPES or not discard_antismash_features:
-                            raise SecmetInvalidInputError(str(err)) from err
-
-                # adjust the current feature to only be the lower section
-                if len(lower) > 1:
-                    feature.location = CompoundLocation(lower, original_location.operator)
-                else:
-                    feature.location = lower[0]
-                if name_modified:
-                    if gene_name:
-                        feature.qualifiers["gene"] = [gene_name + "_LOWER"]
-                    if locus_tag:
-                        feature.qualifiers["locus_tag"] = [locus_tag + "_LOWER"]
 
             if feature.type in postponed_features:
                 # again, since CDSs need translations, skip if too small or not a CDS
@@ -890,19 +854,6 @@ class Record:
                 except ValueError as err:
                     if feature.type not in ANTISMASH_SPECIFIC_TYPES or not discard_antismash_features:
                         raise SecmetInvalidInputError(str(err)) from err
-
-            # reset back to how the feature looked originally
-            if locations_adjusted:
-                feature.location = original_location
-                if name_modified:
-                    if not locus_tag:
-                        feature.qualifiers.pop("locus_tag", "")
-                    else:
-                        feature.qualifiers["locus_tag"][0] = locus_tag
-                    if not original_gene_name:
-                        feature.qualifiers.pop("gene", "")
-                    else:
-                        feature.qualifiers["gene"][0] = original_gene_name
 
         for feature_class, features in postponed_features.values():
             for feature in features:
@@ -982,6 +933,20 @@ class Record:
             features.extend(region.cds_children)
         return features
 
+    def connect_locations(self, locations: list[Location], *, disable_wrapping: bool = False) -> Location:
+        """ Combines the given locations into a single contiguous location, unless the record
+            crosses the origin, in which case the resulting location may be split over the origin/
+
+            Arguments:
+                locations: the locations to combine
+                disable_wrapping: if provided, explicitly disables forming a location over the origin
+
+            Returns:
+                the single location that covers all the input locations
+        """
+        wrap_point = len(self) if self.is_circular() and not disable_wrapping else None
+        return connect_locations(locations, wrap_point=wrap_point)
+
     def create_candidate_clusters(self) -> int:
         """ Takes all Cluster instances and constructs CandidateClusters that cover
             each Cluster. Each combination of overlapping clusters will create
@@ -993,7 +958,8 @@ class Record:
         if not self._protoclusters:
             return 0
 
-        candidate_clusters = create_candidates_from_protoclusters(self._protoclusters)
+        wrap_point = len(self) if self.is_circular() else None
+        candidate_clusters = create_candidates_from_protoclusters(self._protoclusters, circular_wrap_point=wrap_point)
 
         for candidate_cluster in sorted(candidate_clusters):
             self.add_candidate_cluster(candidate_cluster)
@@ -1021,44 +987,169 @@ class Record:
         areas.extend(subregions)
         areas.sort()
 
-        region_location = FeatureLocation(max(0, areas[0].location.start),
-                                          min(areas[0].location.end, len(self)))
+        wrap_point = len(self) if self.is_circular() else None
 
-        candidates = []
-        subs = []
-        if isinstance(areas[0], CandidateCluster):
-            candidates.append(areas[0])
-        else:
-            assert isinstance(areas[0], SubRegion), type(areas[0])
-            subs.append(areas[0])
+        # find all overlapping sets
+        sections: list[tuple[Location, list[CDSCollection]]] = []
 
-        regions_added = 0
+        location: Location = areas[0].location
+        included_areas = [areas[0]]
+
         for area in areas[1:]:
-            if area.overlaps_with(region_location):
-                region_location = combine_locations(area.location, region_location)
+            if not area.overlaps_with(location):
+                sections.append((location, included_areas))
+                location = area.location
+                included_areas = [area]
+            else:
+                location = connect_locations([area.location, location], wrap_point=wrap_point)
+                included_areas.append(area)
+
+        # finalise the last, unterminated section
+        sections.append((location, included_areas))
+
+        # then handle any cases over cross-origin overlap of sections by merging first and last
+        if len(sections) > 1:
+            first_location, first_areas = sections[0]
+            last_location, last_areas = sections[-1]
+            if locations_overlap(first_location, last_location):
+                sections.pop()
+                location = connect_locations([first_location, last_location], wrap_point=wrap_point)
+                for area in last_areas:
+                    if area not in first_areas:
+                        first_areas.append(area)
+                sections[0] = (location, first_areas)
+
+        # finally, create and add a region for each section
+        regions_added = len(sections)
+        for _, areas in sections:
+            candidates = []
+            subs = []
+            for area in areas:
                 if isinstance(area, CandidateCluster):
                     candidates.append(area)
                 else:
                     assert isinstance(area, SubRegion), type(area)
                     subs.append(area)
-                continue
-            # no overlap means new region
             self.add_region(Region(candidates, subs))
-            regions_added += 1
-            region_location = area.location
-            candidates = []
-            subs = []
-            if isinstance(area, CandidateCluster):
-                candidates.append(area)
-            else:
-                assert isinstance(area, SubRegion), type(area)
-                subs.append(area)
-
-        # add the final region being built
-        self.add_region(Region(candidates, subs))
-        regions_added += 1
 
         return regions_added
+
+    def extend_location(self, location: Location, distance: int) -> Location:
+        """ Constructs a new location which covers the given distance from the
+            given location, capped at record limits unless the record is circular,
+            in which case it wraps around.
+
+            Arguments:
+                location: the location to create an extended version of
+                distance: the distance to extend the location, applies in both directions
+
+            Returns:
+                a new location, covering the requested area(s)
+        """
+
+        parts = list(location.parts)  # the original location must not be changed
+        maximum = len(self)
+        if location.strand == -1:
+            parts.reverse()
+
+        # catch any case where both sides extend past the edges *and then overlap*
+        # in which case a simple bounding to the record edges is enough
+        n0 = parts[0].start
+        n1 = parts[-1].end
+        ns = n0 - distance
+        ne = n1 + distance
+        if self.is_circular() and ns < 0 and ns + maximum <= ne:
+            parts[0] = FeatureLocation(0, parts[0].end, location.strand)
+            parts[-1] = FeatureLocation(parts[-1].start, maximum, location.strand)
+            # merge any parts that now overlap with each other
+            if ns < 0:
+                upper = FeatureLocation(ns + maximum, maximum, location.strand)
+                merged = False
+                while parts and locations_overlap(parts[-1], upper):
+                    merged = True
+                    upper = FeatureLocation(min(parts[-1].start, upper.start), maximum, location.strand)
+                    parts.pop()
+                if merged:
+                    parts = [upper] + parts
+            if ne > maximum:
+                lower = FeatureLocation(0, ne % maximum, location.strand)
+                merged = False
+                while parts and locations_overlap(parts[0], lower):
+                    merged = True
+                    lower = FeatureLocation(0, max(parts[0].end, lower.end), location.strand)
+                    parts.pop(0)
+                if merged:
+                    parts.append(lower)
+
+            # if there's only one part remaining, it should be reduced to a whole-record location
+            if len(parts) == 1:
+                assert parts == [FeatureLocation(0, maximum, location.strand)], parts
+                return parts[0]
+
+            if location.strand == -1:
+                parts.reverse()
+            if len(location.parts) > 1:
+                return CompoundLocation(parts, operator=location.operator)
+            return CompoundLocation(parts)
+
+        # if the wrap around goes so far as to overlap other parts, merge them
+        while len(parts) > 1 and locations_overlap(parts[0], parts[-1]):
+            first = parts[0]
+            second = parts[-1]
+            parts[0] = FeatureLocation(min(first.start, second.start), max(first.end, second.end),
+                                       first.strand if first.strand == second.strand else 0)
+            parts.pop()
+
+        start_part = parts[0]
+        if start_part.start - distance < 0 and self.is_circular():
+            parts[0] = FeatureLocation(0, start_part.end, parts[0].strand)
+            parts.insert(0, FeatureLocation(min(maximum + (start_part.start - distance), maximum),
+                                            maximum, start_part.strand))
+        else:
+            parts[0] = FeatureLocation(max(0, start_part.start - distance), start_part.end, start_part.strand)
+
+        end_part = parts[-1]
+        if end_part.end + distance > maximum and self.is_circular():
+            parts[-1] = FeatureLocation(end_part.start, maximum, end_part.strand)
+            parts.append(FeatureLocation(0, min(end_part.end + distance - maximum, maximum), end_part.strand))
+        else:
+            parts[-1] = FeatureLocation(end_part.start, min(end_part.end + distance, maximum), end_part.strand)
+
+        # if the wrap around goes so far as to overlap other parts, merge them
+        while len(parts) > 1 and locations_overlap(parts[0], parts[-1]):
+            first = parts[0]
+            second = parts[-1]
+            parts[0] = FeatureLocation(min(first.start, second.start), max(first.end, second.end),
+                                       first.strand if first.strand == second.strand else 0)
+            parts.pop()
+
+        if len(parts) == 1:
+            return parts[0]
+        if location.strand == -1:
+            parts.reverse()
+        # reuse the operator of the original, if it was compound to start with
+        if len(location.parts) > 1:
+            return CompoundLocation(parts, operator=location.operator)
+        # otherwise use the default
+        return CompoundLocation(parts)
+
+    def get_distance_between_features(self, first: Feature, second: Feature) -> int:
+        """ Returns the shortest distance between the two given features, crossing
+            the origin if the record is circular.
+
+            Overlapping features are considered to have zero distance.
+        """
+        return self.get_distance_between_locations(first.location, second.location)
+
+    def get_distance_between_locations(self, first: Location, second: Location) -> int:
+        """ Returns the shortest distance between the two given locations, crossing
+            the origin if the record is circular.
+
+            Overlapping locations are considered to have zero distance.
+        """
+        if self.is_circular():
+            return get_distance_between_locations(first, second, wrap_point=len(self))
+        return get_distance_between_locations(first, second)
 
     def get_nrps_pks_cds_features(self) -> List[CDSFeature]:
         """ Returns a list of all CDS features within Clusters that contain at least
@@ -1114,6 +1205,14 @@ class Record:
         for char in "acgtn":
             other = other.replace(char, "")
         return len(other) < 0.2 * len(sequence)
+
+    def to_genbank(self, filename: str) -> None:
+        """ Writes the record to the given path in GenBank format
+
+            Arguments:
+                filename: the file path to write to
+        """
+        SeqIO.write([self.to_biopython()], filename, "genbank")
 
 
 def _calculate_crc32(string: str) -> str:
