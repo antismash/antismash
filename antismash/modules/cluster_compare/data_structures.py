@@ -408,9 +408,7 @@ class ReferenceScorer:
     def final_score(self) -> float:
         """ Calculates the singular score of a result from its metric scores """
         if self._final_score is None:
-            metrics = [self.identity]
-            if len(self.hits_by_gene) > 1:
-                metrics.append(self.order)
+            metrics = [self.identity, self.order]
             if self.component is not None:
                 metrics.append(self.component)
             score = 1.
