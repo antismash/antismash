@@ -152,6 +152,17 @@ def get_css_class_and_abbreviation(domain_name: str) -> tuple[str, str]:
     return css_class, abbrevation
 
 
+def _build_paras_link(cds: CDSFeature, domain: NRPSPKSQualifier.Domain, signature: str) -> str:
+    link = (
+        "http://paras.bioinformatics.nl/api/submit_quick?"
+        f"signature1={signature}"
+        f"&amp;name1={cds.get_name()}"
+        f"&amp;start1={domain.start}"
+        f"&amp;end1={domain.end}"
+    )
+    return f'<a class="external-link" href="{ link }" target="_blank">Repredict substrate with PARAS</a>'
+
+
 def _parse_domain(record: Record, domain: NRPSPKSQualifier.Domain,
                   feature: CDSFeature, signature: str = "",
                   ) -> JSONDomain:
@@ -182,6 +193,8 @@ def _parse_domain(record: Record, domain: NRPSPKSQualifier.Domain,
                  f"&amp;QUERY={replace_with('sequence')}"
                  "&amp;LINK_LOC=protein&amp;PAGE_TYPE=BlastSearch")
     extra_links = []
+    if signature and ("AMP-binding" in domain.name or "A-OX" in domain.name):
+        extra_links.append(_build_paras_link(feature, domain, signature))
 
     dna_sequence = ""
     for as_domain in record.get_antismash_domains_in_cds(feature):
