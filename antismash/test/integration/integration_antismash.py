@@ -190,4 +190,4 @@ class TestModuleData(unittest.TestCase):
         # and make sure they're all regenerated properly
         prepare_module_data()
         current_press_files = glob.glob(search, recursive=True)
-        assert current_press_files == existing_press_files
+        assert set(current_press_files) == set(existing_press_files)

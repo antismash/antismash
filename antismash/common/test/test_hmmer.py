@@ -6,15 +6,18 @@
 
 from collections import defaultdict
 from dataclasses import FrozenInstanceError, dataclass
+import os
+from tempfile import NamedTemporaryFile
 import unittest
+from unittest.mock import patch
 
+from antismash.common import hmmer, json
 from antismash.common.hmmer import (
     ensure_database_pressed,
     HmmerHit,
     HmmerResults,
     remove_overlapping,
 )
-from antismash.common import json
 
 from .helpers import DummyRecord
 
@@ -201,6 +204,42 @@ class TestResults(unittest.TestCase):
         assert regenerated.score == self.results.score
         assert regenerated.database == self.results.database
         assert regenerated.tool == self.results.tool
+
+
+class TestProfileAggregation(unittest.TestCase):
+    def setUp(self):
+        self.aggregate = NamedTemporaryFile()
+        self.first = NamedTemporaryFile()
+        self.second = NamedTemporaryFile()
+        for temp, content in [(temp, content) for temp, content in zip([self.first, self.second], "AB")]:
+            temp.write(content.encode())
+            temp.flush()
+
+    def tearDown(self):
+        self.aggregate.close()
+        self.first.close()
+        self.second.close()
+
+    def test_aggregation(self):
+        # aggregate is oldest
+        with patch.object(os.path, "getmtime", side_effect=[1, 2, 3]):
+            with patch.object(hmmer, "ensure_database_pressed", return_value=[]):
+                errors = hmmer.aggregate_profiles(self.aggregate.name, [self.first.name, self.second.name])
+        assert not errors
+        # content should have been written
+        with open(self.aggregate.name, "r") as handle:
+            assert handle.read() == "AB"
+
+        self.aggregate.close()
+        self.aggregate = NamedTemporaryFile()
+
+        # aggregate is newest
+        with patch.object(os.path, "getmtime", side_effect=[3, 1, 2]):
+            with patch.object(hmmer, "ensure_database_pressed", return_value=[]):
+                errors = hmmer.aggregate_profiles(self.aggregate.name, [self.first.name, self.second.name])
+        assert not errors
+        # nothing should have been written
+        assert not self.aggregate.read()
 
 
 class TestPressed(unittest.TestCase):
