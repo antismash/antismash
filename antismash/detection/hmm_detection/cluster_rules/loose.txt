@@ -23,6 +23,14 @@ RULE fatty_acid
     NEIGHBOURHOOD 10
     CONDITIONS  bt1fas or ft1fas or t2fas or fabH
 
+RULE lysine
+    CATEGORY NRPS
+    DESCRIPTION Fungal lysine primary metabolism
+    EXAMPLE NCBI NP_009673.1 1-1392 lysine
+    CUTOFF 5
+    NEIGHBOURHOOD 20
+    CONDITIONS alpha_am_amid
+
 RULE halogenated
     CATEGORY other
     DESCRIPTION Halogenases are frequently involved in secondary metabolite biosynthesis
