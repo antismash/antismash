@@ -9,7 +9,7 @@ import logging
 import os
 from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
 
-from antismash.common import fasta, module_results, pfamdb, subprocessing
+from antismash.common import fasta, module_results, path, pfamdb, subprocessing
 from antismash.common.pfamdb import ensure_database_pressed  # used by others # pylint: disable=unused-import
 from antismash.common.secmet import Record, CDSFeature
 from antismash.common.secmet.features import FeatureLocation, PFAMDomain
@@ -129,6 +129,61 @@ class HmmerResults(module_results.ModuleResults):
             pfam_feature.detection = "hmmscan"
             pfam_feature.domain_id = f"{self.tool}_{pfam_feature.locus_tag}_{i+1:04d}"
             record.add_pfam_domain(pfam_feature)
+
+
+def aggregate_profiles(aggregate_path: str, component_paths: list[str], force_replace: bool = False,
+                       return_not_raise: bool = False) -> list[str]:
+    """ Aggregates a set of individual HMM profiles into a single file.
+
+        If the aggregate file has been built after any of the component files
+        modification times, no changes will be made, unless forcing a replacement
+        is requested.
+
+        The resulting file will be pressed with hmmpress.
+
+        Arguments:
+            aggregate_path: the path to the aggregated file
+            component_paths: the paths of each component profile
+            force_replace: whether to ignore timestamps and force replacement of the aggregate
+            return_not_raise: whether to return a list of error messages
+                              instead of raising an exception on failure
+
+        Returns:
+            a list of error messages, if any and if not already raised
+    """
+    failure_messages = []
+
+    outdated = force_replace
+    if not path.locate_file(aggregate_path):
+        logging.debug("%s doesn't exist, regenerating", aggregate_path)
+        outdated = True
+    else:
+        seeds_timestamp = os.path.getmtime(aggregate_path)
+        for component in component_paths:
+            if os.path.getmtime(component) > seeds_timestamp:
+                logging.debug("%s out of date, regenerating", aggregate_path)
+                outdated = True
+                break
+
+    if outdated:
+        # try to generate file from all specified profiles in hmmdetails
+        try:
+            with open(aggregate_path, "w", encoding="utf-8") as aggregate_handle:
+                for profile_path in component_paths:
+                    with open(profile_path, "r", encoding="utf-8") as handle:
+                        aggregate_handle.write(handle.read())
+        except OSError:
+            if not return_not_raise:
+                raise
+            failure_messages.append(f"Failed to generate file {aggregate_path!r}")
+
+    # if regeneration failed, don't try to run hmmpress
+    if failure_messages:
+        return failure_messages
+
+    failure_messages.extend(ensure_database_pressed(aggregate_path, return_not_raise=return_not_raise))
+
+    return failure_messages
 
 
 def build_hits(record: Record, hmmscan_results: List, min_score: float,
