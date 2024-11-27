@@ -121,7 +121,9 @@ RULE NRPS
     DESCRIPTION non-ribosomal peptide synthase
     CUTOFF 20
     NEIGHBOURHOOD 20
-    CONDITIONS cds(Condensation and (AMP-binding or A-OX))
+    CONDITIONS cds(Condensation and (AMP-binding or A-OX)
+                    and not alpha_am_amid   # Fungal lysine primary metabolism
+                    )
 
 RULE CDPS
     CATEGORY NRPS
@@ -801,7 +803,7 @@ RULE hydroxytropolone
     CONDITIONS 4HBT_2 and AMP-binding and
                cds(Acyl-CoA_dh_N and Acyl-CoA_dh_M and Acyl-CoA_dh_1) and
                cds(TPP_enzyme_N and TPP_enzyme_C)
-	       
+
 RULE deazapurine
     CATEGORY other
     DESCRIPTION deazapurine containing secondary metabolites
