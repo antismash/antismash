@@ -41,7 +41,7 @@ def prepare_data(logging_only: bool = False) -> List[str]:
         C_TERMINAL_PATH,
         N_TERMINAL_PATH,
     ]
-    cache_dir = path.get_full_path(__file__, "data")
+    cache_dir = path.get_full_path(__file__, "data", "terminals")
     for fasta in expected_alignments:
         try:
             ensure_alignment_cached(fasta, cache_dir)
