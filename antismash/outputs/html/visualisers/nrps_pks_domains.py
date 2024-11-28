@@ -48,6 +48,7 @@ _UNLABLED_DOMAINS = set([
     "TIGR02353",
 ])
 _ABBREVIATED_DOMAINS = {
+    "Abhydrolase_1": "AbH",
     "Aminotran_1_2": "AmT",
     "Aminotran_3": "AmT",
     "Aminotran_4": "AmT",
@@ -75,6 +76,7 @@ _ABBREVIATED_DOMAINS = {
 }
 _CLASS_BY_ABBREVIATION = {
     "A": "adenylation",
+    "AbH": "terminal",
     "A-OX": "adenylation",
     "AT": "acyltransferase",
     "C": "condensation",

@@ -24,7 +24,7 @@ class TestAnalyses(unittest.TestCase):
         datafile = helpers.get_path_to_balhymicin_genbank()
         results = helpers.run_and_regenerate_results_for_module(datafile, nrps_pks_domains, self.options)
         assert results
-        assert len(results.cds_results) == 9
+        assert len(results.cds_results) == 10
 
         for cds, cds_result in results.cds_results.items():
             assert isinstance(cds_result, nrps_pks_domains.domain_identification.CDSResult)

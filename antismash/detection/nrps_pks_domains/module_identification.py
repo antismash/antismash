@@ -42,6 +42,7 @@ CONDENSATIONS = {
     "Heterocyclization",
 }
 ENDS = {
+    "Abhydrolase_1", # some alpha/beta hydrolases function as thioesterases
     "cAT",  # not a typical acyltransferase, closer to a thioesterase
     "Epimerization",
     "Thioesterase",
