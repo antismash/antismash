@@ -60,9 +60,6 @@ class LassoResults(module_results.ModuleResults):
         motifs = {}
         for locus, locus_motifs in self.motifs_by_locus.items():
             motifs[locus] = [motif.to_json() for motif in locus_motifs]
-        comparison = None
-        if comparison:
-            comparison = self.comparippson_results.to_json()
         return {
             "record_id": self.record_id,
             "schema_version": LassoResults.schema_version,

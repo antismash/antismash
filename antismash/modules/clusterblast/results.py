@@ -80,6 +80,10 @@ class RegionResult:
                         javascript on the results page can differentiate between
                         types of clusterblast
         """
+        record_prefix = (region.parent_record.original_id or region.parent_record.id).split(".", 1)[0]
+        # remove self-hits
+        if prefix != "subclusterblast":
+            ranking = list(filter(lambda pair: pair[0].accession != record_prefix, ranking))
         self.region = region
         self.ranking = ranking[:get_result_limit()]  # [(ReferenceCluster, Score),...]
         self.total_hits = len(ranking)
@@ -88,13 +92,7 @@ class RegionResult:
 
         # for the SVG portion, limit the ranking to the display limit
         display_limit = get_display_limit()
-        # omitting any self-hits in the display
         display_ranking = self.ranking[:display_limit]
-        if prefix != "subclusterblast":
-            record_prefix = (region.parent_record.original_id or region.parent_record.id).split(".", 1)[0]
-            display_ranking = list(filter(lambda pair: pair[0].accession != record_prefix, display_ranking))
-            if len(display_ranking) < display_limit < len(self.ranking) - 1:
-                display_ranking.append(self.ranking[display_limit])
 
         for ref_cluster, _ in display_ranking:
             for name in ref_cluster.tags:

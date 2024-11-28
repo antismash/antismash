@@ -42,6 +42,7 @@ CONDENSATIONS = {
     "Heterocyclization",
 }
 ENDS = {
+    "Abhydrolase_1", # some alpha/beta hydrolases function as thioesterases
     "cAT",  # not a typical acyltransferase, closer to a thioesterase
     "Epimerization",
     "Thioesterase",
@@ -89,6 +90,8 @@ OTHER = {
     "FkbH",
     "GNAT",
     "Hal",
+    "IBH_Asp",  # Aspartate beta-hydroxylyase forming the head part of a fused domain
+    "Interface",  # Interface domain forming the tail part of a fused doman
     "NAD_binding_4",
     "Polyketide_cyc", "Polyketide_cyc2",  # type-II PKS specific
     "PS",
@@ -100,6 +103,8 @@ SPECIAL = {
     "Trans-AT_docking",
     "TIGR01720",  # NRPS domain, between an Epimerase and the next Condensation
 }
+
+FUSED_STARTERS = ADENYLATIONS.union(ACYLTRANSFERASES, {"Interface"})
 
 CLASSIFICATIONS = {
     "A": ADENYLATIONS,
@@ -205,6 +210,10 @@ class Component:
     def is_special(self) -> bool:
         """ Returns True if the component has a special function for specific modules """
         return self.label in SPECIAL
+
+    def is_fused_starter(self) -> bool:
+        """ Returns True if the component can start a fused module even if the head module is complete """
+        return self.label in FUSED_STARTERS
 
     def is_pks_specific(self) -> bool:
         """ Returns True if the component is specific to PKS modules """
@@ -577,9 +586,8 @@ def combine_modules(current: CDSModuleInfo, previous: CDSModuleInfo) -> Optional
         return None
     head = previous.modules[-1]
     tail = current.modules[0]
-    # modules without a starter can be complete, so if the head is just the starter, that's valid
-    # otherwise both modules must be incomplete, or still compatible
-    invalid_tail = tail.is_complete() and not tail.is_starter_module()
+    # complete tails can only be part of a fused module if they start with a domain in FUSED_STARTERS
+    invalid_tail = tail.is_complete() and not tail.components[0].is_fused_starter()
     if head.is_complete() or invalid_tail:
         return None
     # and avoid creating hybrid modules
