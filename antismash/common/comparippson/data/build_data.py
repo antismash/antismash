@@ -145,7 +145,7 @@ def gather_entries(files: List[str]) -> List[Entry]:
     return entries
 
 
-def build_mibig_compound_string(compound_objects: List[Dict[str, Any]]) -> str:
+def build_mibig_compound_string(compound_objects: list[dict[str, Any]]) -> str:
     """ Builds a nice human-readable string from a list of compounds for use in
         a description of each MIBiG entry.
 
@@ -155,7 +155,7 @@ def build_mibig_compound_string(compound_objects: List[Dict[str, Any]]) -> str:
         Returns:
             a nicely formatted string with all the compound names
     """
-    compounds = [obj["compound"] for obj in compound_objects]
+    compounds = [obj["name"] for obj in compound_objects]
     assert compounds
     if len(compounds) == 1:
         compound_line = compounds[0]
@@ -166,7 +166,7 @@ def build_mibig_compound_string(compound_objects: List[Dict[str, Any]]) -> str:
     return compound_line
 
 
-def gather_mibig(mibig_jsons: List[str]) -> List[Entry]:
+def gather_mibig(mibig_jsons: list[str]) -> list[Entry]:
     """ Gathers entries from a list of MIBiG JSON filenames.
 
         Arguments:
@@ -175,27 +175,34 @@ def gather_mibig(mibig_jsons: List[str]) -> List[Entry]:
         Returns:
             a list of entries
     """
-    entries: List[Entry] = []
+    entries: list[Entry] = []
 
     for filename in mibig_jsons:
         with open(filename, encoding="utf-8") as handle:
             data = json.load(handle)
-        if data["cluster"]["status"] != "active":
+        if data["status"] != "active":
             continue
-        ripp = data["cluster"].get("ripp", {})
+        ripp = {}
+        for bgc_class in data["biosynthesis"]["classes"]:
+            if bgc_class["class"] == "ribosomal" and bgc_class["subclass"] == "RiPP":
+                ripp = bgc_class
         if not ripp:
             continue
-        accession = data["cluster"]["mibig_accession"]
-        compounds = build_mibig_compound_string(data["cluster"]["compounds"])
-        ripp_type = ripp.get("subclass")
-        precursors = ripp.get("precursor_genes", [])
+        accession = f"{data['accession']}.{data['version']}"
+        compounds = build_mibig_compound_string(data["compounds"])
+        ripp_type = ripp.get("ripp_type", "Unannotated RiPP type")
+        precursors = ripp.get("precursors", [])
         cores = {}
         for precursor in precursors:
-            gene = precursor["gene_id"]
-            for i, seq in enumerate(precursor["core_sequence"]):
+            gene = precursor["gene"]
+            seqs = precursor["core_sequence"]
+            if isinstance(seqs, str):
+                seqs = [seqs]
+            for i, seq in enumerate(seqs):
+                seq = seq.replace("[", "").replace("]", "").replace("'", "").upper()
                 if seq in cores:
                     cores[seq] = "multiple genes"
-                elif len(precursor["core_sequence"]) > 1:
+                elif len(seqs) > 1:
                     cores[seq] = f"{gene} (core {i + 1})"
                 else:
                     cores[seq] = gene
