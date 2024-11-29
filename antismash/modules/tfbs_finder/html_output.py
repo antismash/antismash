@@ -52,7 +52,7 @@ def generate_html(region_layer: RegionLayer, results: TFBSFinderResults,
 
     if not all_region_hits:
         return html
-    descriptions = {hit.name: hit.description for hit in all_region_hits}
+    descriptions = {hit.name: {"description": hit.description, "link": hit.link} for hit in all_region_hits}
 
     tooltip = "Shows descriptions for Transcription Factor Binding Site models"
     section = template.render(results=results, descriptions=descriptions, tooltip=tooltip)
@@ -278,6 +278,8 @@ def generate_javascript_data(record: Record, region: Region, results: TFBSFinder
             "start": hit.start,
             "end": end,
             "confidence": str(hit.confidence),
+            "species": str(hit.species),
+            "link": str(hit.link),
             "score": hit.score,
             "presequence": str(record.seq[hit.start - prefix_size: hit.start]),
             "sequence": core,

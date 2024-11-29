@@ -12,10 +12,10 @@
      </tr>
     </thead>
     <tbody>
-    {% for name, description in descriptions.items() %}
+    {% for name, data in descriptions.items() %}
      <tr>
-      <td><a href="https://logomotif.bioinformatics.nl/regulator/{{ name }}" target="_blank">{{ name }}</a></td>
-      <td>{{ description }}</td>
+      <td><a href="{{ data.link }}" target="_blank">{{ name.replace('_', ' ') }}</a></td>
+      <td>{{ data.description }}</td>
      </tr>
     {% endfor %}
     </tbody>

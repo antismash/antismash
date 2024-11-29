@@ -50,6 +50,8 @@ class Matrix:
     max_score: float
     min_score: float
     description: str
+    species: str
+    link: str
     consensus: str
     _threshold: float = -1.
 
@@ -98,6 +100,8 @@ class TFBSHit:
     """ Class to store the transcription factor binding site hits """
     name: str
     start: int
+    species: str
+    link: str
     description: str
     consensus: str
     confidence: Confidence
@@ -132,7 +136,7 @@ class TFBSHit:
         """
         if hit.strand not in [-1, 1]:
             raise ValueError(f"invalid strand: {hit.strand}")
-        return cls(matrix.name, hit.pos, matrix.description, matrix.consensus,
+        return cls(matrix.name, hit.pos, matrix.species, matrix.link, matrix.description, matrix.consensus,
                    matrix.get_score_confidence(hit.score), hit.strand, hit.score, matrix.max_score)
 
     def __lt__(self, other: Any) -> bool:

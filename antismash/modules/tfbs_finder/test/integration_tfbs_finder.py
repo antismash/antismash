@@ -56,7 +56,7 @@ class TestTFBSFinder(unittest.TestCase):
         region_start = 100
         all_hits = tfbs_finder.tfbs_finder.run_moods(sequence, bg, matrices, 0.01, region_start)
         matrix_hits = {matrix.name: hits for matrix, hits in zip(matrices, all_hits) if hits}
-        assert len(matrix_hits) == 4
+        assert len(matrix_hits) == 7
         # the scores will be largely useless thanks to the high threshold, but
         # the positional information is worth testing
         expected_positions = {

@@ -2,9 +2,10 @@
 <div class="tfbs-hit-list">
  {% for hit in hits %}
  <div class="tfbs-hit-detail">
-  {{ hit.name }}
+  {{ hit.name.replace('_', ' ') }}
   {{ collapser_start(target=hit.name, level='cds') }}
     <span>Description</span>: {{ hit.description }}<br>
+    <span>Species</span>: {{ hit.species }}<br>
     <span>Score</span>: {{ "%.2f" % hit.score | float }} out of {{ "%.2f" % hit.max_score }}
   {{ collapser_end() }}
  </div>
