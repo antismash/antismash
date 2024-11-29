@@ -108,6 +108,23 @@ def get_antismash_js_url() -> str:
     return f"https://dl.secondarymetabolites.org/releases/as-js/{_ANTISMASH_JS_VERSION}/antismash.js"
 
 
+def cds_selector_span(identifier: str, additional_classes: list[str] = None) -> Markup:
+    """ Builds an HTML span that will, when clicked, select the matching CDS
+        in the javascript cluster viewer.
+
+        Arguments:
+            identifier: the name of the CDS
+            additional_classes: any additional classes to add to the created span
+
+        Returns:
+            a Markup instance, containing the created span
+    """
+    return Markup(
+        f'<span class="cds-selector{" " if additional_classes else ""}{" ".join(additional_classes or [])}" '
+        f'data-locus="{identifier}">{identifier}</span>'
+    )
+
+
 def collapser_start(target: str, level: str = "all") -> Markup:
     """ Builds the start of a collapser specific to the target. Must be matched
         with a collapser_end() call.
@@ -312,6 +329,7 @@ class _Template:  # pylint: disable=too-few-public-methods
 
         defaults = {
             "build_blastp_link": build_blastp_link,
+            "cds_selector_span": cds_selector_span,
             "collapser_start": collapser_start,
             "collapser_end": collapser_end,
             "coloured_ripp_sequence": coloured_ripp_sequence,
