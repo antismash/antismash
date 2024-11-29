@@ -44,7 +44,9 @@ class TestResults(unittest.TestCase):
     def setUp(self):
         self.record = DummyRecord()
         self.record.id = 'test_record'
-        self.hits_by_region = {1: [TFBSHit('Test1', 1, 'TestHit', 'TGA', Confidence.STRONG, 1, 10, 10)]}
+        self.hits_by_region = {1: [
+            TFBSHit('Test1', 1, 'TestSpecies', 'TestLink', 'TestHit', 'TGA', Confidence.STRONG, 1, 10, 10)
+        ]}
 
         build_config([
             "--tfbs",
@@ -121,7 +123,8 @@ class TestResults(unittest.TestCase):
         assert feature.created_by_antismash
 
     def test_cross_origin_output_features(self):
-        hit = TFBSHit(name="Test1", start=20, description="TestHit", consensus="TGA" * 4,
+        hit = TFBSHit(name="Test1", start=20, species="TestSpecies", link="TestLink",
+                      description="TestHit", consensus="TGA" * 4,
                       confidence=Confidence.STRONG, strand=1, score=10, max_score=10)
         hits_by_region = {1: [hit]}
         record = DummyRecord(length=25)
@@ -153,7 +156,9 @@ def make_dummy_matrix(name="name"):
     matrix_min_score = 3.0
     description = 'desc'
     consensus = 'AACGTT'
-    return Matrix(name, matrix, matrix_min_score, matrix_max_score, description, consensus)
+    species = 'coelicolor'
+    link = 'test.link'
+    return Matrix(name, matrix, matrix_min_score, matrix_max_score, description, species, link, consensus)
 
 
 class TestTFBSFinder(unittest.TestCase):
@@ -213,10 +218,10 @@ class TestFinder(unittest.TestCase):
         self.hit_record = DummyRecord(seq=seq, features=[self.region])
         self.region_hits = {
             1: [
-                TFBSHit('A', 1, 'TestHit', 'TT', Confidence.WEAK, 1, 40.0, 41.7),
-                TFBSHit('A', 1, 'TestHit', 'TT', Confidence.STRONG, 1, 40.0, 41.7),
-                TFBSHit('B', 1, 'TestHit', 'TT', Confidence.MEDIUM, 1, 40.0, 41.7),
-                TFBSHit('B', 2, 'TestHit', 'TT', Confidence.WEAK, 1, 19.0, 27.0),
+                TFBSHit('A', 1, 'TestSpecies', 'TestLink', 'TestHit', 'TT', Confidence.WEAK, 1, 40.0, 41.7),
+                TFBSHit('A', 1, 'TestSpecies', 'TestLink', 'TestHit', 'TT', Confidence.STRONG, 1, 40.0, 41.7),
+                TFBSHit('B', 1, 'TestSpecies', 'TestLink', 'TestHit', 'TT', Confidence.MEDIUM, 1, 40.0, 41.7),
+                TFBSHit('B', 2, 'TestSpecies', 'TestLink', 'TestHit', 'TT', Confidence.WEAK, 1, 19.0, 27.0),
             ],
         }
         self.results = TFBSFinderResults(record_id="dummy", pvalue=0.001, start_overlap=1,
