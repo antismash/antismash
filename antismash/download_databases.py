@@ -53,11 +53,11 @@ COMPARIPPSON_DBS = {
         "version": "4.0",
     },
     "mibig": {
-        "archive_hash": "ac027be0b41af074f1c08ee99ddbb936f3caa47671cf147d7e4ae925c9273265",
-        "fasta_hash": "1b129cff983d50ddd4da1f88ca0b5352d42f18beeee9a507fc698f810fcbeb2b",
-        "metadata_hash": "2ab8c95e092a83ec014aa62f96d5af169e03fa9a4c868fde76e50c1b4b999a1f",
-        "url": "https://dl.secondarymetabolites.org/releases/comparippson/mibig_3.1.tar.xz",
-        "version": "3.1",
+        "archive_hash": "8008762e1df0f080b2699823915b46660fb81543e01804695fe4eea9828de95d",
+        "fasta_hash": "f5ece2ed3880e40b849aa999ed76445d796a71b97681021343b2a83ccf0dfde0",
+        "metadata_hash": "4c591dae7be95622870530a2d911698350fceb951eba4d13121c5dc70923e365",
+        "url": "https://dl.secondarymetabolites.org/releases/comparippson/mibig_4.0.tar.xz",
+        "version": "4.0",
     },
 }
 
