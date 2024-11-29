@@ -225,6 +225,16 @@ class TestWildcards(unittest.TestCase):
         assert renderer.replace_with("foo") == "@!foo!@"
 
 
+class TestSelector(unittest.TestCase):
+    def test_construction(self):
+        html = renderer.cds_selector_span("some-name", additional_classes=["other", "classes"])
+        _verify_html_tags_match(html)
+        assert f'data-locus="some-name"' in html
+        assert 'class="cds-selector other classes"' in html
+        assert html.startswith("<span")
+        assert html.endswith("</span>")
+
+
 class TestBlastLink(unittest.TestCase):
     def test_static(self):
         translation = "METMG"
