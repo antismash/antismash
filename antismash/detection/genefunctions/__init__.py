@@ -4,17 +4,24 @@
 """ A module to find and mark gene functions in records with a variety of tools
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from itertools import chain
 import logging
 import os
-from typing import Any, Dict, Iterator, List, Optional, Self
+from typing import Any, Dict, Iterable, Iterator, List, Optional, Self
+
+from markupsafe import Markup
 
 from antismash.common import hmmer, module_results, path
+from antismash.common.pfamdb import check_db
 from antismash.common.secmet import Record
+from antismash.common.secmet.qualifiers.gene_functions import ECGroup
 from antismash.config import ConfigType, get_config
 from antismash.config.args import ModuleArgs
 from antismash.detection import DetectionStage
+
+from antismash.common.html_renderer import HTMLSections, FileTemplate
+from antismash.common.layers import RegionLayer, RecordLayer, OptionsLayer
 
 from .tools import (
     FunctionResults,
@@ -221,3 +228,83 @@ def run_on_record(record: Record, results: AllFunctionResults, options: ConfigTy
     for tool in TOOLS:
         results.add_tool_results(tool, tool.classify(cds_features, options))
     return results
+
+
+@dataclass(kw_only=True, order=True)
+class TailoringEntry:
+    """ An entry in the Tailoring Enzymes table """
+    name: str
+    hits: list[tuple[Hit, dict[str, Any]]] = field(default_factory=list)
+    subfunction: str = field(default="")
+
+    def add_tool_results(self, results: FunctionResults[Any]) -> None:
+        """ Add the hit info for a tool """
+        hit: Hit | None = results.best_hits.get(self.name)
+        if not hit:
+            return
+        metadata = results.get_metadata()
+        if results.tool == "smcogs" and len(hit.subfunctions):
+            self.subfunction = hit.subfunctions[0]
+        self.hits.append((hit, metadata))
+
+    @property
+    def description(self) -> str:
+        """ Get the most specific description of the entry """
+        if not self.hits:
+            return ""
+
+        return self.hits[0][0].description
+
+    def __hash__(self) -> int:
+        return hash(self.name)
+
+    def __iter__(self) -> Iterator[Markup]:
+        for hit, metadata in self.hits:
+            tool = metadata["tool"]
+            fragment = hit.get_html_fragment(metadata, hide_id=True)
+            yield Markup(f"<dt>{tool}</dt><dd>{fragment}</dd>")
+
+
+def generate_html(region_layer: RegionLayer, results: AllFunctionResults,
+                  record_layer: RecordLayer, options_layer: OptionsLayer) -> HTMLSections:
+    """ Generate the details panel HTML with results from the tailoring module """
+
+    name_to_entry: dict[str, TailoringEntry] = {}
+    entries_by_group: dict[ECGroup, set[TailoringEntry]] = {}
+    for group in ECGroup:
+        entries_by_group[group] = set()
+
+    for tool in results.tool_results:
+        for cds, mappings in tool.group_mapping.items():
+            if cds not in name_to_entry:
+                name_to_entry[cds] = TailoringEntry(name=cds)
+            entry = name_to_entry[cds]
+            entry.add_tool_results(tool)
+            for mapping in mappings:
+                entries_by_group[mapping].add(entry)
+
+    sorted_entries: dict[ECGroup, Iterable[TailoringEntry]] = {}
+    subfunctions: dict[ECGroup, Iterable[str]] = {}
+
+    for group, entries in entries_by_group.items():
+        if not entries:
+            continue
+        sub_funcs = {e.subfunction for e in entries}
+        subfunctions[group] = sorted(sub_funcs)
+        sorted_entries[group] = sorted(entries)
+
+    # description of EC numbers and
+    html = HTMLSections("tailoring")
+    template = FileTemplate(path.get_full_path(__file__, "templates", "tailoring.html"))
+    section = template.render(record=record_layer, region=region_layer,
+                              results=results,
+                              entries=sorted_entries,
+                              subfunctions=subfunctions,
+                              tooltip="Tailoring enzymes detected in this region")
+    html.add_detail_section("Tailoring", section, "gene-function-details")
+    return html
+
+
+def will_handle(products: list[str], _product_categories: set[str]) -> bool:
+    """ Returns true if one or more relevant products or product categories are present """
+    return True
