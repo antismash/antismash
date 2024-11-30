@@ -1,0 +1,34 @@
+<div class="details">
+  <div class="heading">
+    <span>Tailoring functions</span>
+    {{help_tooltip(tooltip, "tf-help-tooltip")}}
+  </div>
+  <div class="gt-scroll-container">
+    <div class="tailoring-container">
+    {% for ec_group in entries %}
+      <div class="tailoring-ec-group">
+        <span class="tailoring-ec-label">{{ ec_group.name.capitalize() }}:</span>
+        {% for subfunc in subfunctions[ec_group] %}
+        <span class="tailoring-subfunction">{{ subfunc }}</span>
+        {% endfor %}
+        {{ collapser_start(ec_group.name, level="none") }}
+        <div class="tailoring-entries">
+        {% for entry in entries[ec_group] %}
+          <div class="tailoring-entry">
+            {{ cds_selector_span(entry.name, ["tailoring-name"]) }}: <span class="tailoring-description">{{ entry.description }}</span>
+            {{ collapser_start(entry.name, level="none") }}
+            <dl class="tailoring-details-container">
+              {% for details in entry %}
+              {{ details }}
+              {% endfor %}
+            </dl>
+            {{ collapser_end() }}
+          </div>
+        {% endfor %}
+        </div>
+        {{ collapser_end() }}
+      </div>
+    {% endfor %}
+    </div>
+  </div>
+</div>
