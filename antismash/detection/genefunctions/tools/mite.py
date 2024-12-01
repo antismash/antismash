@@ -86,8 +86,10 @@ class MiteHit(Hit):
     def get_full_description(self) -> str:
         return f"{self.reference_id}: {self.description} ({int(self.identity)}% identity)"
 
-    def get_html_fragment(self, metadata: dict[str, Any] = None) -> Markup:
-        components = [f"{self.query_id}: "]
+    def get_html_fragment(self, metadata: dict[str, Any] | None = None, *, hide_id: bool = False) -> Markup:
+        components = []
+        if not hide_id:
+            components.append(f"{self.query_id}: ")
         url = metadata.get("url", "").format(accession=self.reference_id) if metadata else ""
         if url:
             components.append(f'<a href="{url}">')
