@@ -36,9 +36,10 @@ class Hit(JSONBase):
             return f"{self.reference_id}: {self.description}"
         return self.reference_id
 
-    def get_html_fragment(self, metadata: dict[str, Any] = None) -> Markup:  # pylint: disable=unused-argument
+    def get_html_fragment(self, metadata: dict[str, Any] | None = None, *, hide_id: bool = False) -> Markup:  # pylint: disable=unused-argument
         """ Constructs a small HTML-compatible fragment to describe the hit """
-        return Markup(f"{self.query_id}: {self.get_full_description()}")
+        id_str = "" if hide_id else f"{self.query_id}: "
+        return Markup(f"{id_str}{self.get_full_description()}")
 
     @classmethod
     def from_json(cls, data: dict[str, Any]) -> Self:
