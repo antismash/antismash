@@ -129,8 +129,11 @@ class Results(FunctionResults[MiteHit]):
         hits = cls.regenerate_hits(data.pop("best_hits", {}))
         mapping = {cds_name: GeneFunction.from_string(function)
                    for cds_name, function in data.pop("function_mapping").items()}
+        group_mapping = {}
+        for name, raw_ec_groups in data.pop("group_mapping").items():
+            group_mapping[name] = [ECGroup(g) for g in raw_ec_groups]
         return cls(version=data.pop("version"), url=data.pop("url"), best_hits=hits, function_mapping=mapping,
-                   **data)
+                   group_mapping=group_mapping, **data)
 
 
 def add_arguments(args: ModuleArgs) -> None:

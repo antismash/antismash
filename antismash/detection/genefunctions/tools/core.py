@@ -125,7 +125,11 @@ class FunctionResults(_ResultBase[T]):
         mapping = {cds_name: GeneFunction.from_string(function)
                    for cds_name, function in data.pop("function_mapping").items()}
         hits = cls.regenerate_hits(data.pop("best_hits", {}))
-        result = cls(tool=data.pop("tool"), best_hits=hits, function_mapping=mapping, **data)
+        group_mapping = {}
+        for name, raw_ec_groups in data.pop("group_mapping").items():
+            group_mapping[name] = [ECGroup(g) for g in raw_ec_groups]
+        result = cls(tool=data.pop("tool"), best_hits=hits, function_mapping=mapping,
+                     group_mapping=group_mapping, **data)
         return result
 
     def to_json(self) -> Dict[str, Any]:
