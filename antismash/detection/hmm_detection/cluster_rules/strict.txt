@@ -547,7 +547,7 @@ RULE azoxy-crosslink
     EXAMPLE NCBI JARAKF010000001.1 1937858-1978761 azodyrecin # BGC0002805
     CUTOFF 20
     NEIGHBOURHOOD 10
-    CONDITIONS azdH_alignment and LPG_synthase_C and azdO and vlmB  # H A O B
+    CONDITIONS azdH and LPG_synthase_C and azdO and vlmB  # H A O B
 
 RULE azoxy-dimer
     # https://doi.org/10.1021/acschembio.3c00632
