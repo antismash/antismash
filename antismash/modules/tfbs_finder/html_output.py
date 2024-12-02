@@ -52,16 +52,17 @@ def generate_html(region_layer: RegionLayer, results: TFBSFinderResults,
 
     if not all_region_hits:
         return html
-    descriptions = {hit.name: {"description": hit.description, "link": hit.link} for hit in all_region_hits}
-
-    tooltip = "Shows descriptions for Transcription Factor Binding Site models"
-    section = template.render(results=results, descriptions=descriptions, tooltip=tooltip)
-    html.add_sidepanel_section("TFBS Finder", section, class_name="tfbs-finder")
 
     weak = results.get_hits_by_region(region_layer.get_region_number(), confidence=Confidence.WEAK)
     other = results.get_hits_by_region(region_layer.get_region_number(), confidence=Confidence.MEDIUM,
                                        allow_better=True)
     assert other or weak, all_region_hits
+
+    tooltip = "Shows descriptions for Transcription Factor Binding Site models"
+    glossary_order = sorted(other, key=lambda x: x.name)
+    descriptions = {hit.name: {"description": hit.description, "link": hit.link} for hit in glossary_order}
+    section = template.render(results=results, descriptions=descriptions, tooltip=tooltip)
+    html.add_sidepanel_section("TFBS Finder", section, class_name="tfbs-finder")
 
     tooltip = Markup(
         "Detailed information for Transcription Factor Binding Site hits, including "
