@@ -385,3 +385,4 @@ TS_UbiA	UbiA type terpene synthase	117	TS_UbiA.hmm
 HAD_2	Haloacid dehalogenase-like hydrolase	15	PF13419.hmm
 TS_Pyr4	Pyr4 type terpene synthase	100	TS_Pyr4.hmm
 Lycopene_cycl_fung	Lycopene cyclase domain; fungal	40	TIGR03462.hmm
+Amidohydro_1	Amidohydrolase family	25	PF01979.hmm
