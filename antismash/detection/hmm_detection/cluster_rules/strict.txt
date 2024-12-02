@@ -193,6 +193,19 @@ RULE terpene
     CONDITIONS PT_phytoene_like or phytoene_synt or Lycopene_cycl or Lycopene_cycl_fung
                or PT_FPPS_like or T1TS or T1TS_KS or T2TS or TS_UbiA or TS_Pyr4
 
+
+RULE atropopeptide
+    # See doi:10.1039/d4sc03469d
+    CATEGORY RiPP
+    DESCRIPTION Atropopeptide
+    EXAMPLE NCBI NZ_VCLA01000160.1 22964-24216 amyxirubin B
+    EXAMPLE NCBI NZ_KB889561.1 321249-322612 scabrirubin
+    EXAMPLE NCBI NZ_JOBF01000044.1 9365-10577 tryptorubin
+    RELATED atropopeptide_precursor
+    CUTOFF 10
+    NEIGHBOURHOOD 10
+    CONDITIONS atropopeptide_p450
+
 DEFINE all_YcaO AS (YcaO or TIGR03604)
 
 RULE lanthipeptide-class-i
