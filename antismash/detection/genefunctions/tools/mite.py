@@ -92,11 +92,12 @@ class MiteHit(Hit):
             components.append(f"{self.query_id}: ")
         url = metadata.get("url", "").format(accession=self.reference_id) if metadata else ""
         if url:
-            components.append(f'<a href="{url}">')
+            # Add trailing slash to URL to handle a MITE routing issue
+            components.append(f'<a href="{url}/" class="external-link" target="_blank">')
         components.append(self.reference_id)
         if url:
             components.append("</a>")
-        components.append(f" (identity: {self.identity:0.2f}%) {self.description}")
+        components.append(f"{self.description} (identity: {self.identity:0.2f}%)")
         return Markup("".join(components))
 
 
