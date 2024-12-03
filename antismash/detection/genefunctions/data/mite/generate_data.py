@@ -21,7 +21,7 @@ VERSION_INFO = {
         "schema": "1.4",
         "source_url": "https://zenodo.org/records/13963495/files/mite-standard/mite_data-1.3.zip",
         "md5sum": "8b0ba08f82b90e8ff5528ea5a932e035",
-        "base_ref_url": "https://mite.bioinformatics.nl/repository/{accession}",
+        "base_ref_url": "https://mite.bioinformatics.nl/repository/{accession}/",
     },
 }
 
