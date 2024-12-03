@@ -108,10 +108,13 @@ class Results(FunctionResults[MiteHit]):
         self.version = version
         self.url = url
 
+    def get_metadata(self) -> dict[str, Any]:
+        metadata = super().get_metadata()
+        metadata["url"] = self.url
+        return metadata
+
     def build_html_fragments(self) -> list[Markup]:
-        metadata = {
-            "url": self.url,
-        }
+        metadata = self.get_metadata()
         return [hit.get_html_fragment(metadata) for hit in self.best_hits.values()]
 
     @staticmethod
