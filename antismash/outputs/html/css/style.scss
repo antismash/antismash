@@ -1645,6 +1645,11 @@ ul.dropdown-options {
     margin-right: 0.5em;
 }
 
+.cds-selector {
+    cursor: pointer;
+    @extend .serif;
+}
+
 .tfbs-details-container {
     .tfbs-weak-hits {
         padding-bottom: 1em;
