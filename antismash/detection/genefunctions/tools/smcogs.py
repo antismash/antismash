@@ -107,6 +107,7 @@ def classify(cds_features: Iterable[CDSFeature],
         hit.reference_id = smcog_id
         profile = profiles[smcog_id]
         hit.description = profile.description
+        hit.subfunctions = profile.subfunctions
         function_mapping[cds_name] = profile.function
         group_mapping[cds_name] = profile.groups
         subfunction_mapping[cds_name] = profile.subfunctions
