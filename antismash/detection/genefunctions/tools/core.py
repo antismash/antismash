@@ -120,6 +120,12 @@ class FunctionResults(_ResultBase[T]):
     def build_html_fragments(self) -> list[Markup]:
         return [hit.get_html_fragment() for hit in self.best_hits.values()]
 
+    def get_metadata(self) -> dict[str, Any]:
+        """ Get any metadata that might be relevant for e.g. HTML building """
+        return {
+            "tool": self.tool,
+        }
+
     @classmethod
     def from_json(cls, data: Dict[str, Any]) -> Optional[Self]:
         mapping = {cds_name: GeneFunction.from_string(function)
