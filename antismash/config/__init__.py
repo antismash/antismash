@@ -23,7 +23,7 @@ from .args import build_parser, AntismashParser
 from .executables import get_default_paths
 from .loader import load_config_from_file
 
-_USER_FILE_NAME = os.path.expanduser('~/.antismash7.cfg')
+_USER_FILE_NAME = os.path.expanduser('~/.antismash8.cfg')
 _INSTANCE_FILE_NAME = os.path.abspath(os.path.join(os.path.dirname(__file__), 'instance.cfg'))
 
 
