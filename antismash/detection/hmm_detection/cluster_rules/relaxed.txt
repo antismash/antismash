@@ -15,7 +15,7 @@ RULE NRPS-like
 RULE PKS-like
     CATEGORY PKS
     DESCRIPTION Catches PKS-like fragments that are not detected by another PKS rule
-    SUPERIORS T2PKS
+    SUPERIORS T2PKS, benzoxazole
     CUTOFF 10
     NEIGHBOURHOOD 20
     CONDITIONS t2pks2 or ksIII
