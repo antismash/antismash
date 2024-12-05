@@ -184,7 +184,7 @@ class TestRefinement(unittest.TestCase):
         # ensure they're all too short to be caught
         for result in results:
             assert len(result) / self.hmm_lengths[result.hit_id] < 1
-        new = refinement._remove_incomplete(results, self.hmm_lengths)
+        new = refinement.remove_incomplete(results, self.hmm_lengths)
         # ensure all were removed
         assert not new
         # and original list untouched
@@ -198,17 +198,17 @@ class TestRefinement(unittest.TestCase):
 
         assert longest < 1./3.
         # ensure the fallback works as intended
-        new = refinement._remove_incomplete(results, self.hmm_lengths)
+        new = refinement.remove_incomplete(results, self.hmm_lengths)
         # ensure all were removed
         assert not new
 
-        new = refinement._remove_incomplete(results, self.hmm_lengths, fallback=longest - 0.01)
+        new = refinement.remove_incomplete(results, self.hmm_lengths, fallback=longest - 0.01)
         # ensure the longest, and longer than the fallback, remain
         assert len(new) == 1
         assert len(new[0]) / self.hmm_lengths[new[0].hit_id] == longest
 
         # change the fallback to 0 and ensure only one comes back
-        new = refinement._remove_incomplete(results, self.hmm_lengths, fallback=0.)
+        new = refinement.remove_incomplete(results, self.hmm_lengths, fallback=0.)
         assert len(new) == 1
         assert len(new[0]) / self.hmm_lengths[new[0].hit_id] == longest
 
@@ -222,7 +222,7 @@ class TestRefinement(unittest.TestCase):
         new_lengths = dict(self.hmm_lengths)
         new_lengths[regulator_id] = len(regulator_result) * 100  # always big
         # set the thresholds to be unreachable
-        new = refinement._remove_incomplete(results, new_lengths, threshold=2., fallback=2.)
+        new = refinement.remove_incomplete(results, new_lengths, threshold=2., fallback=2.)
         # ensure the tiny, but present, regulator is still in the list
         assert len(new) == 1
         assert new[0].hit_id == regulator_id

@@ -163,7 +163,7 @@ def _remove_overlapping(results: List[HMMResult], hmm_lengths: Dict[str, int]) -
     return non_overlapping
 
 
-def _remove_incomplete(domains: List[HMMResult], hmm_lengths: Dict[str, int],
+def remove_incomplete(domains: List[HMMResult], hmm_lengths: Dict[str, int],
                        threshold: float = 0.5, fallback: float = 1./3.) -> List[HMMResult]:
     """ Removes all incomplete fragments for a domain type that are less than
         the threshold. If this would remove all hits for the domain type, then
@@ -284,7 +284,7 @@ def refine_hmmscan_results(hmmscan_results: List[QueryResult], hmm_lengths: Dict
             # Only keep best hits for overlapping domains
             refined = _remove_overlapping(refined, hmm_lengths)
         # Remove incomplete domains (covering less than 60% of total domain hmm length)
-        refined = _remove_incomplete(refined, hmm_lengths)
+        refined = remove_incomplete(refined, hmm_lengths)
         if refined:
             refined_results[cds] = refined
 
