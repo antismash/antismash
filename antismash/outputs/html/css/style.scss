@@ -1788,3 +1788,65 @@ ul.dropdown-options {
         }
     }
 }
+
+.terpene-details {
+    .cluster-header {
+        font-weight: bold;
+    }
+    .section-header {
+        font-weight: bold;
+    }
+    .protocluster-pred {
+        padding-left: 1em;
+        padding-top: 0.5em;
+    }
+    .products {
+        padding-top: 0.5em;
+        padding-bottom: 0.5em;
+    }
+    .product-table {
+        * th, * td {
+            padding: 0.5em;
+            padding-right: 1em;
+        }
+        tbody tr {
+            &:nth-of-type(even) {
+                background-color: #eaeaea;
+            }
+            &:nth-of-type(odd) {
+                background-color: #f8f8f8;
+            }
+        }
+    }
+    .domain-details {
+        font-size: 90%;
+        padding-top: 0.5em;
+        padding-bottom: 0.5em;
+    }
+}
+
+.terpene-sidepanel {
+    .glossary {
+        font-size: 75%;
+    }
+    .glossary-table {
+        margin: 1em;
+
+        * th, * td {
+            padding: .8em 1em;
+        }
+        tbody tr {
+            border-bottom: 1px solid #ddd;
+
+            &:nth-of-type(even) {
+                background-color: #f3f3f3;
+            }
+            &:last-of-type {
+                border-bottom: 2px solid #444;
+            }
+            &:first-of-type {
+                border-top: 2px solid #444;
+            }
+        }
+    }
+}
