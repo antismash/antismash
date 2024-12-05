@@ -17,7 +17,7 @@ from .data_loader import CompoundGroup, Reaction, TerpeneHMM, load_hmm_lengths, 
 from .results import ProtoclusterPrediction, DomainPrediction
 
 
-_MAIN_TYPES_PRIORITY = (
+_MAIN_TYPE_PRIORITY = {val: i for i, val in enumerate([
     "Lycopene_cycl",
     "TS_Pyr4",
     "TS_UbiA",
@@ -27,7 +27,7 @@ _MAIN_TYPES_PRIORITY = (
     "PT_phytoene_like",
     "PT_FPPS_like",
     "ambiguous"
-)
+])}
 
 
 def run_terpene_hmmscan(cds_features: Iterable[CDSFeature]) -> list[QueryResult]:
@@ -219,16 +219,27 @@ def get_cluster_prediction(cds_predictions: dict[str, list[DomainPrediction]]) -
     """
     cluster_pred = ProtoclusterPrediction(cds_predictions)
     all_domains = [domain for domains in cds_predictions.values() for domain in domains]
-    # List domains that don't have a subtype first
-    ordered_domains = sorted(all_domains, key=lambda domain: not domain.subtypes)
-    # Then order by the predefined main type order
-    ordered_domains = sorted(ordered_domains, key=lambda domain: _MAIN_TYPES_PRIORITY.index(domain.domain_type))
-    # Then order by whether the domain has any reactions
-    ordered_domains = sorted(ordered_domains, key=lambda domain: not domain.reactions)
-    # Find the products of the most informative domain
-    for reaction in ordered_domains[0].reactions:
-        for product in reaction.products:
-            cluster_pred.add_product(product)
+    if not all_domains:
+        return cluster_pred
+    # order by whether the domain has any reactions
+    # then the predefined main type priority
+    ordered_domains = sorted(all_domains, key=lambda domain: (
+        0 if domain.reactions else 1,
+        _MAIN_TYPE_PRIORITY[domain.domain_type],
+    ))
+
+    # Find the products of the most informative domain(s)
+    compounds_by_name: dict[str, set[CompoundGroup]] = defaultdict(set)
+    domain_type = ordered_domains[0].domain_type
+    for domain in ordered_domains:
+        if domain.domain_type != domain_type:
+            break
+        for reaction in domain.reactions:
+            for product in reaction.products:
+                compounds_by_name[product.name].add(product)
+    for compounds in sorted(compounds_by_name.values()):
+        assert len(compounds) == 1, "Multiple CompoundGroup instances with the same name are not allowed"
+        cluster_pred.products.append(compounds.pop())
     return cluster_pred
 
 
