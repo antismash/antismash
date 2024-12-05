@@ -1,0 +1,27 @@
+<div class="terpene-sidepanel">
+  <div class="heading">
+    <span>Glossary</span> {{help_tooltip(tooltip, "terpene-side")}}
+  </div>
+  <div class="glossary prediction-text">
+    {% if glossary_data %}
+    <table class="glossary-table">
+      <thead>
+        <tr>
+          <th>Acronym</th>
+          <th>Full compound name</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for name, extended_name in glossary_data.items() %}
+        <tr>
+          <td>{{ name }}</td>
+          <td>{{ extended_name }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    No acronyms to display
+    {% endif %}
+  </div>
+</div>
