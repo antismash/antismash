@@ -6,19 +6,19 @@
 
 import unittest
 
+import pytest
+
 import antismash
 from antismash.common import path
 from antismash.common.test import helpers
-from antismash.config import build_config, destroy_config
+from antismash.config import build_config, destroy_config, ConfigType
+from antismash.config.test.helpers import skip_without_fimo
 from antismash.modules import lassopeptides
 from antismash.modules.lassopeptides import check_prereqs
 
 
-class IntegrationLasso(unittest.TestCase):
-    def setUp(self):
-        self.options = build_config(["--minimal", "--enable-lassopeptides", "--enable-html"],
-                                    isolated=True, modules=antismash.get_all_modules())
-        check_prereqs(self.options)
+class LassoBase(unittest.TestCase):
+    options: ConfigType
 
     def tearDown(self):
         destroy_config()
@@ -26,6 +26,29 @@ class IntegrationLasso(unittest.TestCase):
     def run_analysis(self, filename):
         datafile = path.get_full_path(__file__, "data", filename)
         return helpers.run_and_regenerate_results_for_module(datafile, lassopeptides, self.options)
+
+    def _run_ssv2083(self):
+        result = self.run_analysis("SSV2083.gbk")
+
+        assert list(result.motifs_by_locus) == ["ctg1_orf11610"]
+        assert len(result.motifs_by_locus["ctg1_orf11610"]) == 1
+        motif = result.motifs_by_locus["ctg1_orf11610"][0]
+
+        self.assertAlmostEqual(motif.detailed_information.cut_mass, 2090.8, delta=1)
+        self.assertAlmostEqual(motif.detailed_information.cut_weight, 2092.4, delta=1)
+        self.assertEqual(motif.detailed_information.num_bridges, 2)
+        self.assertEqual(motif.leader, "MLISTTNGQGTPMTSTDELYEAPELIEIGDYAELTR")
+        self.assertEqual(motif.core, "CVWGGDCTDFLGCGTAWICV")
+        assert motif.detailed_information.macrolactam == "CVWGGDCTD"
+        self.assertEqual(motif.tail, "")
+        self.assertEqual(motif.peptide_subclass, 'Class I')
+
+
+class IntegrationLasso(LassoBase):
+    def setUp(self):
+        self.options = build_config(["--minimal", "--enable-lassopeptides", "--enable-html", "--no-fimo"],
+                                    isolated=True, modules=antismash.get_all_modules())
+        check_prereqs(self.options)
 
     def test_astexin1(self):
         "Test lassopeptides prediction for astexin-1"
@@ -64,19 +87,19 @@ class IntegrationLasso(unittest.TestCase):
         self.assertAlmostEqual(motif.monoisotopic_mass, 2521.1, delta=1)
         self.assertAlmostEqual(motif.molecular_weight, 2522.5, delta=1)
 
+    @pytest.mark.xfail(reason="Expecting this test to fail without fimo")
     def test_ssv2083(self):
         "Test lassopeptide prediction for SSV-2083"
-        result = self.run_analysis("SSV2083.gbk")
+        self._run_ssv2083()
 
-        assert list(result.motifs_by_locus) == ["ctg1_orf11610"]
-        assert len(result.motifs_by_locus["ctg1_orf11610"]) == 1
-        motif = result.motifs_by_locus["ctg1_orf11610"][0]
 
-        self.assertAlmostEqual(motif.detailed_information.cut_mass, 2090.8, delta=1)
-        self.assertAlmostEqual(motif.detailed_information.cut_weight, 2092.4, delta=1)
-        self.assertEqual(motif.detailed_information.num_bridges, 2)
-        self.assertEqual(motif.leader, "MLISTTNGQGTPMTSTDELYEAPELIEIGDYAELTR")
-        self.assertEqual(motif.core, "CVWGGDCTDFLGCGTAWICV")
-        assert motif.detailed_information.macrolactam == "CVWGGDCTD"
-        self.assertEqual(motif.tail, "")
-        self.assertEqual(motif.peptide_subclass, 'Class I')
+@skip_without_fimo
+class IntegrationLassoWithFimo(LassoBase):
+    def setUp(self):
+        self.options = build_config(["--minimal", "--enable-lassopeptides", "--enable-html", "--fimo"],
+                                    isolated=True, modules=antismash.get_all_modules())
+        check_prereqs(self.options)
+
+    def test_ssv2083(self):
+        "Test lassopeptide prediction for SSV-2083"
+        self._run_ssv2083()
