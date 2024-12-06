@@ -263,6 +263,30 @@ class TestAnalysis(TestCase):
         assert cds_preds == {"cds1": [DomainPrediction(domain_type="T1TS", subtypes=tuple(),
                                                        start=1, end=10, reactions=tuple())]}
 
+    def test_get_cluster_prediction(self):
+        bad_product = DummyCompoundGroup(name="BadProduct")
+        good_product1 = DummyCompoundGroup(name="GoodProduct1")
+        good_product2 = DummyCompoundGroup(name="GoodProduct2")
+        good_product3 = DummyCompoundGroup(name="GoodProduct3")
+        cds_preds = {
+            "cds1": [
+                DummyDomainPrediction(domain_type="ambiguous",
+                                      reactions=tuple()),
+                DummyDomainPrediction(domain_type="T1TS",
+                                      reactions=(Mock(products=(good_product1, good_product2,)),)),
+                DummyDomainPrediction(domain_type="T2TS",
+                                      reactions=(Mock(products=(bad_product,)),))
+            ],
+            "cds2": [
+                DummyDomainPrediction(domain_type="T1TS",
+                                      reactions=(Mock(products=(good_product1, good_product3,)),)),
+                DummyDomainPrediction(domain_type="Lycopene_cycl",
+                                      reactions=tuple())
+            ],
+        }
+        cluster_pred = terpene_analysis.get_cluster_prediction(cds_preds)
+        assert cluster_pred.products == [good_product1, good_product2, good_product3]
+
 
 class TestHTML(TestCase):
     def test_get_domain_description(self):
