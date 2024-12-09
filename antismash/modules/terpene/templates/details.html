@@ -2,10 +2,10 @@
     <div class="heading">
       <span>Detailed domain annotation</span> {{ help_tooltip(tooltip, "terpene-body") }}
     </div>
-    {% if preds_by_cluster | length > 1 %}
-      <span class="cluster-header"> Terpene cluster {{ loop.index }}: {{ cluster.location.start }}-{{ cluster.location.end }} </span><br>
-    {% endif %}
       {% for cluster, prediction in preds_by_cluster.items() %}
+      {% if preds_by_cluster | length > 1 %}
+      <span class="cluster-header"> Terpene cluster {{ loop.index }}: {{ cluster.location.start }}-{{ cluster.location.end }} </span><br>
+      {% endif %}
       <div class="protocluster-pred">
         {% if prediction.products %}
         <span class="section-header"> Product predictions: </span><br>
