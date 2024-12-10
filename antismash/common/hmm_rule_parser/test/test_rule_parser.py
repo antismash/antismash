@@ -645,13 +645,17 @@ class RuleParserTest(unittest.TestCase):
 
     def test_extenders(self):
         text = format_as_rule("A", 10, 10, "other")
+
+        rule = self.parse(f"{text} EXTENDERS single").rules[0]
+        assert str(rule.extenders) == "single"
+        # a single identifier is a valid extender, but otherwise
         # extenders must be an explicit CDS condition
         # not is fine if within a cds condition, otherwise it's no good
         for extenders in ["a and b", "a or b", "a and not b"]:
             rule = self.parse(f"{text} EXTENDERS cds({extenders})").rules[0]
             assert str(rule.extenders) == f"cds({extenders})"
 
-            with self.assertRaisesRegex(rule_parser.RuleSyntaxError, "expected 'cds' after 'extenders'"):
+            with self.assertRaisesRegex(rule_parser.RuleSyntaxError, "after 'extenders'"):
                 _ = self.parse(f"{text} EXTENDERS {extenders}").rules[0]
 
 
