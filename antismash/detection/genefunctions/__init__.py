@@ -12,11 +12,10 @@ from typing import Any, Dict, Iterable, Iterator, List, Optional, Self
 
 from markupsafe import Markup
 
-from antismash.common import hmmer, module_results, path
-from antismash.common.pfamdb import check_db
+from antismash.common import module_results, path
 from antismash.common.secmet import Record
 from antismash.common.secmet.qualifiers.gene_functions import ECGroup
-from antismash.config import ConfigType, get_config
+from antismash.config import ConfigType
 from antismash.config.args import ModuleArgs
 from antismash.detection import DetectionStage
 
