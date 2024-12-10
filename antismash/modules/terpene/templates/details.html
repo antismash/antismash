@@ -2,14 +2,18 @@
     <div class="heading">
       <span>Detailed domain annotation</span> {{ help_tooltip(tooltip, "terpene-body") }}
     </div>
-    {% if preds_by_cluster | length > 1 %}
-      <span class="cluster-header"> Terpene cluster {{ loop.index }}: {{ cluster.location.start }}-{{ cluster.location.end }} </span><br>
-    {% endif %}
-      {% for cluster, prediction in preds_by_cluster.items() %}
+    {% for cluster, prediction in preds_by_cluster.items() %}
       <div class="protocluster-pred">
+      {% if preds_by_cluster | length > 1 %}
+        <div>
+          <span class="cluster-header"> Terpene cluster {{ loop.index }}</span>
+          ({{ "{:,d}".format(cluster.location.start) }} - {{ "{:,d}".format(cluster.location.end) }}):</span>
+        </div>
+      {% endif %}
+        <div class="products">
+        <div class="section-header">Product predictions:</div>
+          <div class="section-body">
         {% if prediction.products %}
-        <span class="section-header"> Product predictions: </span><br>
-          <div class="products">
             <table class="product-table">
               <thead>
                 <tr>
@@ -34,19 +38,23 @@
                 {% endfor %}
               </tbody>
             </table>
-          </div>
         {% else %}
-          <span> No product predictions </span><br>
-          <div class="products"></div>
+            No product predictions
         {% endif %}
+          </div>
+        </div>
         {% if prediction.cds_predictions %}
+        <div class="domains">
         <span class="section-header"> Genes with terpene domains: </span>
-          <dl class="domains">
+          <div class="domain-list">
             {% for cds, domain_preds in prediction.cds_predictions.items() %}
-              <strong><span class="serif">{{ cds }}</span></strong>: {{ format_domain_types(domain_preds) }}
+              <div>
+              {{ cds_selector_span(cds, ["section-header"]) }}: {{ format_domain_types(domain_preds) }}
               {{collapser_start(target=cds, level="cds")}}
               {% for pred in domain_preds %}
-                <dd><strong>Domain {{ loop.index }}: {{pred.start}}-{{pred.end}}</strong>: {{ get_domain_description(pred) }}
+               <div>
+                <strong>Domain {{ loop.index }}</strong>
+                  ({{ "{:,d}".format(pred.start)}}  - {{ "{:,d}".format(pred.end) }}): {{ get_domain_description(pred) }}
                 {% if format_subtype(pred) != "none" or pred.reactions %}
                   {{collapser_start(cds, level="cds")}}
                   <div class="domain-details">
@@ -62,12 +70,13 @@
                   </div>
                   {{collapser_end()}}
                 {% endif %}
-                </dd>
+               </div>
               {% endfor %}
               {{collapser_end()}}
-              <br>
+             </div>
             {% endfor %}
-          </dl>
+          </div>
+          </div>
         {% endif %}
       </div>
     {% endfor %}

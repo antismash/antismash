@@ -1796,15 +1796,18 @@ ul.dropdown-options {
     .section-header {
         font-weight: bold;
     }
+    .section-body {
+        padding-left: 2em;
+    }
     .protocluster-pred {
         padding-left: 1em;
-        padding-top: 0.5em;
+        padding-bottom: 1.5em;
     }
     .products {
-        padding-top: 0.5em;
-        padding-bottom: 0.5em;
+        padding-left: 2em;
     }
     .product-table {
+        padding-left: 1.5em;
         * th, * td {
             padding: 0.5em;
             padding-right: 1em;
@@ -1818,10 +1821,21 @@ ul.dropdown-options {
             }
         }
     }
+    .domains {
+        padding-left: 2em;
+        padding-top: 0.5em;
+
+        .domain-list {
+            padding-left: 2em;
+            margin-top: 0em;
+        }
+    }
     .domain-details {
         font-size: 90%;
-        padding-top: 0.5em;
-        padding-bottom: 0.5em;
+    }
+    .reactions {
+        margin-bottom: 0;
+        margin-top: 0;
     }
 }
 
