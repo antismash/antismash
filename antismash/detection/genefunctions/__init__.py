@@ -274,11 +274,15 @@ def generate_html(region_layer: RegionLayer, results: AllFunctionResults,
     for group in ECGroup:
         entries_by_group[group] = set()
 
-    for tool in results.tool_results:
-        for cds, mappings in tool.group_mapping.items():
-            if cds not in name_to_entry:
-                name_to_entry[cds] = TailoringEntry(name=cds)
-            entry = name_to_entry[cds]
+    for cds in region_layer.cds_children:
+        for tool in results.tool_results:
+            name = cds.get_name()
+            mappings = tool.group_mapping.get(name)
+            if not mappings:
+                continue
+            if name not in name_to_entry:
+                name_to_entry[name] = TailoringEntry(name=name)
+            entry = name_to_entry[name]
             entry.add_tool_results(tool)
             for mapping in mappings:
                 entries_by_group[mapping].add(entry)
