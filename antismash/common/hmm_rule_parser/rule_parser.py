@@ -789,7 +789,7 @@ class DetectionRule:
         """
     def __init__(self, name: str, category: str, cutoff: int, neighbourhood: int, conditions: Conditions,
                  description: str = "", examples: List["ExampleRecord"] = None, superiors: List[str] = None,
-                 related: List[str] = None, extenders: CDSCondition = None) -> None:
+                 related: list[str] = None, extenders: Union[CDSCondition, SingleCondition] = None) -> None:
         self.name = name
         self.category = category
         self.cutoff = cutoff
@@ -1106,7 +1106,7 @@ class Parser:  # pylint: disable=too-few-public-methods
         neighbourhood = self._consume_int() * 1000
         self._consume(TokenTypes.CONDITIONS)
         conditions = Conditions(False, self._parse_conditions())
-        extenders = None
+        extenders: Optional[Union[CDSCondition, SingleCondition]] = None
         if self.current_token and self.current_token.type == TokenTypes.EXTENDERS:
             self._consume(TokenTypes.EXTENDERS)
             if not self.current_token:

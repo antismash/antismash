@@ -401,6 +401,15 @@ def apply_extenders(clusters: list[Protocluster],
 
         core_cdses = record.get_cds_features_within_location(cluster.core_location)
 
+        # since the extender conditions might not be a subset of the main rule,
+        # mark any contained and unmarked genes that satisfy the extender condition
+        for cds in core_cdses:
+            if cds in cluster.definition_cdses:
+                continue
+            extendable = rule.can_extend_to(cds, results_by_id.get(cds.get_name(), []))
+            if extendable:
+                cds_domains_by_cluster[cds.get_name()][rule.name].update(extendable.matches)
+
         # for each direction, the domain/result updates will be handled by the marker
         # but since the core location updates are direction dependent, they still must be handled
 
