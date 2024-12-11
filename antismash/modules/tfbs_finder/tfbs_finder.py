@@ -205,14 +205,15 @@ class TFBSFinderResults(ModuleResults):
             raise ValueError("Record to store in and record analysed don't match")
         for hits in self.hits_by_region.values():
             for hit in hits:
+                start = hit.start % len(record)
                 end = (hit.start + len(hit.consensus)) % len(record)
-                if hit.start > end:
+                if start > end:
                     location = CompoundLocation([
-                        FeatureLocation(hit.start, len(record), hit.strand),
+                        FeatureLocation(start, len(record), hit.strand),
                         FeatureLocation(0, end, hit.strand),
                     ])
                 else:
-                    location = FeatureLocation(hit.start, end, hit.strand)
+                    location = FeatureLocation(start, end, hit.strand)
                 tfbs_feature = Feature(location,
                                        feature_type="misc_feature", created_by_antismash=True)
                 tfbs_feature.notes.append(f"TFBS match to {hit.name}, {hit.description}, "

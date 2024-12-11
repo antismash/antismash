@@ -260,11 +260,12 @@ def generate_javascript_data(record: Record, region: Region, results: TFBSFinder
 
     converted: list[dict[str, Any]] = []
     for hit in hits_in_region:
-        end = hit.start + len(hit)
-        core = str(record.seq[hit.start:end])
+        start = hit.start % len(record)
+        end = start + len(hit)
+        core = str(record.seq[start:end])
         if record.is_circular() and end > len(record):
             end %= len(record)
-            core = str(record.seq[:end] + record.seq[hit.start:])
+            core = str(record.seq[:end] + record.seq[start:])
         assert len(record) >= end
         # don't extend context before the start of the record
         prefix_size = min(PRE_SEQUENCE_SIZE, hit.start)
@@ -282,7 +283,7 @@ def generate_javascript_data(record: Record, region: Region, results: TFBSFinder
             "species": str(hit.species),
             "link": str(hit.link),
             "score": hit.score,
-            "presequence": str(record.seq[hit.start - prefix_size: hit.start]),
+            "presequence": str(record.seq[start - prefix_size: start]),
             "sequence": core,
             "postsequence": str(record.seq[end:end + suffix_size]),
             "target": consensus,

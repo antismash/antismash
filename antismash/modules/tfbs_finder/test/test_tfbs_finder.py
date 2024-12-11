@@ -145,6 +145,23 @@ class TestResults(unittest.TestCase):
         assert feature.type == "misc_feature"
         assert feature.created_by_antismash
 
+    def test_post_origin_circular_feature(self):
+        # can occur in a cross-origin region when the gap between genes results
+        # in hits that entirely post-origin, resulting in the hit start being after the end
+        hit = TFBSHit(name="Test1", start=30, species="TestSpecies", link="TestLink",
+                      description="TestHit", consensus="TGA" * 4,
+                      confidence=Confidence.STRONG, strand=1, score=10, max_score=10)
+        hits_by_region = {1: [hit]}
+        record = DummyRecord(length=25)
+        results = self.create_results(record_id=record.id, hits_by_region=hits_by_region)
+        assert not list(record.all_features)
+        results.add_to_record(record)
+        features = list(record.all_features)
+        assert len(features) == 1
+        feature = features[0]
+        assert feature.strand == 1
+        assert feature.location == FeatureLocation(5, 5 + len(hit.consensus), 1)
+
 
 def make_dummy_matrix(name="name"):
     nuc_a = [1.0, 1.0, -1.0, -1.0, -1.0, -1.0]
