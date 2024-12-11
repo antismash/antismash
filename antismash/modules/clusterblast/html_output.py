@@ -397,12 +397,8 @@ def generate_javascript_data(record: Record, region: Region, results: ClusterBla
                 colour = colours.get(locus_tag, "white")
                 ref_gene = ReferenceGeneJSON.from_protein(protein, colour=colour)
                 ref_data.genes.append(ref_gene)
-                if colour != "white":
-                    assert protein.locus_tag in pairs_per_ref or protein.name in pairs_per_ref, protein.locus_tag
-                else:
+                if colour == "white":
                     continue
-                gene: Subject = pairs_per_ref[locus_tag][0][1]
-                assert gene.genecluster == ref.get_name()
                 for query, subject in pairs_per_ref[locus_tag]:
                     average_strand += ref_gene.strand * record.get_cds_by_name(query.id).location.strand
                     record.get_cds_by_name(query.id)
