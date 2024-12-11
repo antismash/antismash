@@ -18,6 +18,7 @@ from antismash.common import json, path
 from antismash.common.hmm_rule_parser import rule_parser, cluster_prediction as hmm_detection  # TODO: redo tests
 from antismash.common.hmm_rule_parser.test.helpers import check_hmm_signatures, create_ruleset
 from antismash.common.secmet import Record
+from antismash.common.secmet.qualifiers import GeneFunction
 from antismash.common.test.helpers import DummyCDS, DummyRecord, FakeHSPHit
 from antismash.config import build_config, destroy_config
 import antismash.detection.hmm_detection as core
@@ -369,14 +370,14 @@ class TestRuleExtenders(unittest.TestCase):
         self.add_hit("X0", self.extender_name)
         self.add_hit("X1", self.extender_name)
 
-    def detect(self, add_extenders):
+    def detect(self, add_extenders, *, extenders_text=""):
         pkg = hmm_detection  # to avoid quite a bit of repetition below
         # create the signatures before parsing, otherwise there'll be problems with missing identifiers
         sigs = {name: pkg.HmmSignature(name, "", 0, "") for name in self.sig_names}
         # the X signature/requirement is present just to make a valid CDS condition
         rule_text = self.rule_text
         if add_extenders:
-            rule_text += f" EXTENDERS cds({self.extender_name} and not X)"
+            rule_text += extenders_text or f" EXTENDERS cds({self.extender_name} and not X)"
         rules = rule_parser.Parser(rule_text, set(sigs), {"Cat"}).rules
         assert len(rules) == 1
         if not add_extenders:
@@ -420,6 +421,48 @@ class TestRuleExtenders(unittest.TestCase):
         expected = self.potential_cores[2:]
         results = self.detect(add_extenders=True)
         self.check_results(expected, results)
+
+    def test_extenders_within(self):
+        # in the case of the extender condition not being a subset of the full conditions,
+        # relevant CDS features should also be marked as core
+        standard = "standard"
+        self.extender_name = "within"
+        self.sig_names = [standard, self.extender_name]
+
+        def reset_record():
+            self.cdses = [
+                DummyCDS(locus_tag="3", start=7000, end=8000),
+                DummyCDS(locus_tag="4", start=9000, end=10000),
+                DummyCDS(locus_tag="5", start=11000, end=12000),
+            ]
+            self.results_by_id = {}
+            self.add_hit(self.cdses[0].get_name(), standard)
+            self.add_hit(self.cdses[1].get_name(), self.extender_name)
+            self.add_hit(self.cdses[2].get_name(), standard)
+            self.record = DummyRecord(features=self.cdses)
+            return self.record
+
+        def run(expected_functions, extender=""):
+            cdses = reset_record().get_cds_features()
+            results = self.detect(add_extenders=bool(extender), extenders_text=extender)
+            results.annotate_cds_features()
+            assert len(results.protoclusters) == 1
+            assert [cds.gene_function for cds in cdses] == expected_functions
+
+        self.rule_text = "\n".join([
+            "RULE contained-extender",
+            "CATEGORY Cat",
+            "CUTOFF 10",
+            "NEIGHBOURHOOD 0",
+            f"CONDITIONS {standard}",
+        ])
+
+        # first check the extender CDS isn't hit by the main conditions accidentally
+        run([GeneFunction.CORE, GeneFunction.ADDITIONAL, GeneFunction.CORE])
+
+        # then add the extender and make sure it's marked core
+        run([GeneFunction.CORE, GeneFunction.CORE, GeneFunction.CORE],
+            extender=f"\nEXTENDERS {self.extender_name}")
 
     def test_left_over_origin(self):
         self.record = DummyRecord(seq="A" * 16000, features=self.cdses, circular=True)

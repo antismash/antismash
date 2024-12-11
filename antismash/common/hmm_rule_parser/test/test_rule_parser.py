@@ -651,6 +651,8 @@ class RuleParserTest(unittest.TestCase):
         # a single identifier is a valid extender, but otherwise
         # extenders must be an explicit CDS condition
         # not is fine if within a cds condition, otherwise it's no good
+        with self.assertRaisesRegex(rule_parser.RuleSyntaxError, "after 'extenders'"):
+            self.parse(f"{text} EXTENDERS not valid")
         for extenders in ["a and b", "a or b", "a and not b"]:
             rule = self.parse(f"{text} EXTENDERS cds({extenders})").rules[0]
             assert str(rule.extenders) == f"cds({extenders})"
