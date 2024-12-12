@@ -598,6 +598,15 @@ RULE indole
     NEIGHBOURHOOD 10
     CONDITIONS indsynth or dmat or indole_PTase
 
+RULE lincosamides
+    CATEGORY other
+    DESCRIPTION NRPS-adjacent biosynthesis of lincosamides
+    EXAMPLE NCBI EU124663.1 0-38217 lincomycin
+    RELATED LmbU
+    CUTOFF 20
+    NEIGHBOURHOOD 20
+    CONDITIONS SIS_2 and (GFO_IDH_MocA or GFO_IDH_MocA_C3) and PP-binding
+
 RULE nucleoside
     CATEGORY other
     DESCRIPTION Nucleoside
@@ -677,7 +686,7 @@ RULE other
     DESCRIPTION Fallback category covering some secondary metabolite-related profiles
     CUTOFF 20
     NEIGHBOURHOOD 20
-    CONDITIONS LmbU or Neocarzinostat or bcpB
+    CONDITIONS Neocarzinostat or bcpB
                or frbD or mitE or prnB or CaiA or bacilysin or orf2_PTase
 
 RULE acyl_amino_acids
