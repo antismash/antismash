@@ -116,7 +116,7 @@ The grammar itself:
             [SUPERIORS_MARKER superiors:COMMA_SEPARATED_IDS]
             CUTOFF_MARKER cutoff:INT NEIGHBOURHOOD_MARKER neighbourhood:INT
             CONDITIONS_MARKER conditions:CONDITIONS
-            EXTENDERS_MARKER condition:CDS_CONDITION
+            EXTENDERS_MARKER condition:(ID | CDS_CONDITION)
 
     CONDITIONS = CONDITION {BINARY_OP CONDITIONS}*;
     CONDITION =  [UNARY_OP] ( ID | CDS | MINIMUM | CONDITION_GROUP );
@@ -789,7 +789,7 @@ class DetectionRule:
         """
     def __init__(self, name: str, category: str, cutoff: int, neighbourhood: int, conditions: Conditions,
                  description: str = "", examples: List["ExampleRecord"] = None, superiors: List[str] = None,
-                 related: List[str] = None, extenders: CDSCondition = None) -> None:
+                 related: list[str] = None, extenders: Union[CDSCondition, SingleCondition] = None) -> None:
         self.name = name
         self.category = category
         self.cutoff = cutoff
@@ -1106,12 +1106,25 @@ class Parser:  # pylint: disable=too-few-public-methods
         neighbourhood = self._consume_int() * 1000
         self._consume(TokenTypes.CONDITIONS)
         conditions = Conditions(False, self._parse_conditions())
-        extenders = None
+        extenders: Optional[Union[CDSCondition, SingleCondition]] = None
         if self.current_token and self.current_token.type == TokenTypes.EXTENDERS:
             self._consume(TokenTypes.EXTENDERS)
-            if self.current_token and self.current_token.type != TokenTypes.CDS:
-                raise self._build_syntax_error(f"expected '{TokenTypes.CDS}' after '{TokenTypes.EXTENDERS}'")
-            extenders = CDSCondition(False, self._parse_cds())
+            if not self.current_token:
+                raise self._build_syntax_error(f"unexpected end of input after '{TokenTypes.EXTENDERS}'")
+            if self.current_token.type == TokenTypes.CDS:
+                extenders = CDSCondition(False, self._parse_cds())
+            elif self.current_token.type == TokenTypes.IDENTIFIER:
+                extenders = self._parse_single_condition(allow_cds=False)
+                if self.current_token and self.current_token.type not in _STARTERS:
+                    raise self._build_syntax_error(
+                        f"expected '{TokenTypes.CDS}'"
+                        f" or single identifier after '{TokenTypes.EXTENDERS}'"
+                    )
+            else:
+                raise self._build_syntax_error(
+                    f"expected '{TokenTypes.CDS}'"
+                    f" or single identifier after '{TokenTypes.EXTENDERS}'"
+                )
         if self.current_token is not None and self.current_token.type not in _STARTERS:
             raise self._build_syntax_error(f"Unexpected symbol {self.current_token.type}", context_lines=5)
         return DetectionRule(rule_name, category, cutoff, neighbourhood, conditions,

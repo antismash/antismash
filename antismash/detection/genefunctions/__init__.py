@@ -12,11 +12,10 @@ from typing import Any, Dict, Iterable, Iterator, List, Optional, Self
 
 from markupsafe import Markup
 
-from antismash.common import hmmer, module_results, path
-from antismash.common.pfamdb import check_db
+from antismash.common import module_results, path
 from antismash.common.secmet import Record
 from antismash.common.secmet.qualifiers.gene_functions import ECGroup
-from antismash.config import ConfigType, get_config
+from antismash.config import ConfigType
 from antismash.config.args import ModuleArgs
 from antismash.detection import DetectionStage
 
@@ -274,11 +273,15 @@ def generate_html(region_layer: RegionLayer, results: AllFunctionResults,
     for group in ECGroup:
         entries_by_group[group] = set()
 
-    for tool in results.tool_results:
-        for cds, mappings in tool.group_mapping.items():
-            if cds not in name_to_entry:
-                name_to_entry[cds] = TailoringEntry(name=cds)
-            entry = name_to_entry[cds]
+    for cds in region_layer.cds_children:
+        for tool in results.tool_results:
+            name = cds.get_name()
+            mappings = tool.group_mapping.get(name)
+            if not mappings:
+                continue
+            if name not in name_to_entry:
+                name_to_entry[name] = TailoringEntry(name=name)
+            entry = name_to_entry[name]
             entry.add_tool_results(tool)
             for mapping in mappings:
                 entries_by_group[mapping].add(entry)

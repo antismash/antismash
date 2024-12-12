@@ -78,6 +78,7 @@ TIGR03975	Bacteriocin maturation radical SAM protein 1	282	TIGR03975.hmm
 TIGR01193	ABC-type bacteriocin transporter	523	TIGR01193.hmm
 mvnA	Microviridin A	25	mvnA.hmm
 thiostrepton	Thiostrepton-like thiopeptides	20	thiostrepton.hmm
+atropopeptide_p450	atropopeptide-specific cytochrome p450	500	atropopeptide_p450.hmm
 BLS	Beta-lactam synthase	250	BLS.hmm
 CAS	Clavulanic acid synthase-like	250	CAS.hmm
 tabtoxin	Tabtoxin synthase-like	500	tabtoxin.hmm
