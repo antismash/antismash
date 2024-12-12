@@ -850,4 +850,4 @@ RULE deazapurine
     CUTOFF 20
     NEIGHBOURHOOD 10
     CONDITIONS GTP_cyclohydroI and PTPS and QueE and QueC and
-    	       not(dpdA1 or bTGT) # avoid detecting deazapurine modifications in tRNA or DNA
+               not(dpdA1 or bTGT) # avoid detecting deazapurine modifications in tRNA or DNA
