@@ -201,8 +201,8 @@ RULE terpene
     CUTOFF 20
     NEIGHBOURHOOD 10
     CONDITIONS PT_phytoene_like or phytoene_synt or Lycopene_cycl or Lycopene_cycl_fung
-               or PT_FPPS_like or T1TS or T1TS_KS or T2TS or TS_UbiA or TS_Pyr4
-
+               or T1TS or T1TS_KS or T2TS or TS_UbiA or TS_Pyr4
+    EXTENDERS PT_FPPS_like
 
 RULE atropopeptide
     # See doi:10.1039/d4sc03469d
