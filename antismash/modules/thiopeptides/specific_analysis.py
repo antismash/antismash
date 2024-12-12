@@ -681,7 +681,7 @@ def specific_analysis(record: secmet.Record) -> ThioResults:
     """
     results = ThioResults(record.id)
     for cluster in record.get_protoclusters():
-        if cluster.product != "thiopeptide":
+        if cluster.product != "azole-containing-RiPP":
             continue
 
         new_orfs = find_unannotated_candidates(record, cluster)

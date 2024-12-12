@@ -107,11 +107,7 @@
     @include secmet(black, gold, black);
 }
 
-.thiopeptide {
-    @include thiolated_ripp;
-}
-
-.LAP {
+.azole-containing-RiPP {
     @include thiolated_ripp;
 }
 
