@@ -2,6 +2,16 @@
 
 # Cutoffs and neighbourhoods are given in kilobases
 
+RULE benzoxazole
+    CATEGORY PKS
+    DESCRIPTION Benzoxazoles
+    EXAMPLE NCBI KR476659.1 1-38456 A33853  # BGC0001292
+    EXAMPLE NCBI KK106988.1 1556260-1601776 nataxazole  # BGC0001213
+    EXAMPLE NCBI JJOB01000001.1 5309241-5323285 caboxamycin  # BGC0001444
+    CUTOFF 10
+    NEIGHBOURHOOD 15
+    CONDITIONS ksIII and AMP-binding and PP-binding and Amidohydro_1
+
 DEFINE ANY_KS AS (PKS_KS or ene_KS or mod_KS or hyb_KS or itr_KS or tra_KS)
 
 RULE T1PKS
@@ -841,13 +851,3 @@ RULE deazapurine
     NEIGHBOURHOOD 10
     CONDITIONS GTP_cyclohydroI and PTPS and QueE and QueC and
     	       not(dpdA1 or bTGT) # avoid detecting deazapurine modifications in tRNA or DNA
-
-RULE benzoxazole
-    CATEGORY PKS
-    DESCRIPTION Benzoxazoles
-    EXAMPLE NCBI KR476659.1 1-38456 A33853  # BGC0001292
-    EXAMPLE NCBI KK106988.1 1556260-1601776 nataxazole  # BGC0001213
-    EXAMPLE NCBI JJOB01000001.1 5309241-5323285 caboxamycin  # BGC0001444
-    CUTOFF 10 
-    NEIGHBOURHOOD 15  
-    CONDITIONS ksIII and AMP-binding and PP-binding and Amidohydro_1
