@@ -216,10 +216,13 @@ RULE lanthipeptide-class-i
             mature_ha, lacticin_mat, mature_b, mature_d, mature_ab, mature_a, TIGR03731,
             LD_lanti_pre, strep_PEQAXS, Peptidase_S8, Peptidase_C39, PCMT, adh_short, adh_short_C2
 
-    CUTOFF 20
+    CUTOFF 10
     NEIGHBOURHOOD 10
-    CONDITIONS (LANC_like and (Lant_dehydr_N or Lant_dehydr_C))
-               and not all_YcaO # because then it'd be a thiopeptide
+    CONDITIONS (
+                (Lant_dehydr_N or Lant_dehydr_C)  # LanB
+                and cds(LANC_like and not Pkinase)  # LanC, but not when it's a LanKC/LanL
+               )
+               and not all_YcaO  # because then it'd be a thiopeptide
 
 RULE lanthipeptide-class-ii
     CATEGORY RiPP
