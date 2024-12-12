@@ -280,17 +280,32 @@ RULE lipolanthine
     NEIGHBOURHOOD 10
     CONDITIONS micKC and Flavoprotein
 
-RULE thiopeptide
+DEFINE thiopeptide_maturases AS (PF06968 or PF04055 or PF07366)
+
+RULE azole-containing-RiPP
     CATEGORY RiPP
-    DESCRIPTION Thio-linked RiPPs
-    RELATED PF00561
-    CUTOFF 20
+    DESCRIPTION (Thio)azol(in)e-containing peptides, linear and macrocyclic
+    EXAMPLE NCBI FJ652572.1 0-29379 thiostrepton
+    EXAMPLE NCBI AB205012.1 0-20194 goadsporin
+    EXAMPLE NCBI FM877811.1 0-5145 microcin B17
+    RELATED PF00561, TIGR04424, TIGR01408
+    CUTOFF 10
     NEIGHBOURHOOD 10
-    CONDITIONS all_YcaO
-               and ((thio_amide and (PF06968 or PF04055 or PF07366))
+    CONDITIONS all_YcaO and (
+                    (  # thiopeptide
+                        (thio_amide and thiopeptide_maturases)
                          or Lant_dehydr_C or Lant_dehydr_N
-                         or PF07366 or PF06968 or PF04055)
-               or thiostrepton
+                         or thiopeptide_maturases
+                    )
+                    or
+                    (  # LAP
+                        goadsporin_like or PF00881 or TIGR03605
+                    )
+               )
+               # other intersting enzymes
+               or TIGR03882 or TIGR03603
+               # Precursors
+               or thiostrepton or TIGR03602
 
 RULE thioamitides
     CATEGORY RiPP
@@ -327,21 +342,6 @@ RULE glycocin
     CUTOFF 20
     NEIGHBOURHOOD 10
     CONDITIONS glycocin or sublancin
-
-RULE LAP
-    CATEGORY RiPP
-    DESCRIPTION Linear azol(in)e-containing peptides
-    EXAMPLE NCBI AB205012.1 0-20194 goadsporin
-    EXAMPLE NCBI FM877811.1 0-5145 microcin B17
-    RELATED TIGR04424, TIGR01408
-    CUTOFF 20
-    NEIGHBOURHOOD 10
-    CONDITIONS (((goadsporin_like or PF00881 or TIGR03605)
-               and all_YcaO)
-               or TIGR03882
-               or TIGR03603   # peptide maturase
-               or TIGR03602)  # precursor
-               and not cyanobactin_synth
 
 RULE lassopeptide
     CATEGORY RiPP

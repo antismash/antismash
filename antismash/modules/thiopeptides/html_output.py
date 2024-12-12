@@ -15,14 +15,14 @@ from .specific_analysis import ThioResults
 
 def will_handle(products: List[str], _product_categories: Set[str]) -> bool:
     """ Returns true if one or more relevant products or product categories are present """
-    return 'thiopeptide' in products
+    return 'azole-containing-RiPP' in products
 
 
 def generate_html(region_layer: RegionLayer, results: ThioResults,
                   record_layer: RecordLayer, options_layer: OptionsLayer
                   ) -> HTMLSections:
     """ Generates HTML for the module """
-    html = HTMLSections("thiopeptides")
+    html = HTMLSections("azole-containing-RiPP")
 
     if not results:
         return html
@@ -45,7 +45,7 @@ def generate_html(region_layer: RegionLayer, results: ThioResults,
                               comparippson_results=results.comparippson_results,
                               options=options_layer,
                               tooltip=detail_tooltip)
-    html.add_detail_section("Thiopeptides", details)
+    html.add_detail_section("Azole RiPPs", details)
 
     side_tooltip = ("Lists the possible core peptides in the region. "
                     "Each core peptide lists its possible molecular weights "
@@ -56,5 +56,5 @@ def generate_html(region_layer: RegionLayer, results: ThioResults,
                                 motifs=motifs,
                                 options=options_layer,
                                 tooltip=side_tooltip)
-    html.add_sidepanel_section("Thiopeptides", sidepanel)
+    html.add_sidepanel_section("Azole RiPPs", sidepanel)
     return html
