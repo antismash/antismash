@@ -183,7 +183,7 @@ RULE NAPAA
     NEIGHBOURHOOD 15
     CONDITIONS AMP-binding and TIGR02353
 
-RULE mycosporine-like
+RULE mycosporine
     CATEGORY NRPS
     DESCRIPTION mycosporine-like amino acid containing molecules
     # see DOI: 10.1128/AEM.00727-14
