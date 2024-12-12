@@ -79,3 +79,12 @@ RULE phosphonate-like
     CUTOFF 20
     NEIGHBOURHOOD 20
     CONDITIONS phosphonates-like
+
+##### Precursor-related rules
+RULE terpene-precursor
+    CATEGORY terpene
+    DESCRIPTION Compound likely used as a terpene precursor
+    SUPERIORS terpene
+    CUTOFF 10
+    NEIGHBOURHOOD 10
+    CONDITIONS PT_FPPS_like
