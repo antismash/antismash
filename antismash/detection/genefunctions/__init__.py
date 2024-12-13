@@ -242,7 +242,7 @@ class TailoringEntry:
         if not hit:
             return
         metadata = results.get_metadata()
-        if results.tool == "smcogs" and len(hit.subfunctions):
+        if hit.subfunctions:
             self.subfunction = hit.subfunctions[0]
         self.hits.append((hit, metadata))
 
