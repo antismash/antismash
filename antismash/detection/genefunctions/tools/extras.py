@@ -78,10 +78,12 @@ def classify(cds_features: Iterable[CDSFeature], _options: ConfigType) -> Result
         if entry.groups:
             ec_mapping[cds_name] = list(entry.groups)
         if entry.subfunctions:
-            subfunction_mapping[cds_name] = list(entry.subfunctions)
+            subfunctions = list(entry.subfunctions)
+            hit.subfunctions = subfunctions
+            subfunction_mapping[cds_name] = list(subfunctions)
 
     return Results(tool=TOOL_NAME, best_hits=filtered, function_mapping=cds_name_to_function,
-                   group_mapping=ec_mapping)
+                   group_mapping=ec_mapping, subfunction_mapping=subfunction_mapping)
 
 
 def _load_metadata(metadata: str = ENTRY_DATA) -> dict[str, Entry]:
