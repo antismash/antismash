@@ -38,6 +38,7 @@
 {%- endmacro -%}
 
 {%- set display_limit = 3 -%}
+{%- set extra_limit = 10 -%}
 <div class="comparippson-details">
   <h4>{{ db.name }} {{ db.version }} matches for {{ name }}</h4>
   {% if not groups -%}
@@ -51,7 +52,11 @@
   {%- if groups | length > display_limit -%}
   <div class="comparippson-block comparippson-extension">
    with {{ groups | length - display_limit }} more sequence matches {{ collapser_start("comparippson-worse-hits", "none") }}
-    {% for hit, tail, tail_list in groups[display_limit:] -%}
+    {%- set extras = [extra_limit, groups | length - display_limit] | min -%}
+    {%- if groups | length - display_limit > extra_limit -%}
+    <div style="padding: 1em;"> Only the first {{ extras }} are displayed here.</div>
+    {%- endif -%}
+    {% for hit, tail, tail_list in groups[display_limit:display_limit + extra_limit] -%}
      {{ create_hit_block(hit, tail, tail_list, colour_subset) }}
     {% endfor -%}
    {{ collapser_end() }}
