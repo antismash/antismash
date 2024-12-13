@@ -558,6 +558,16 @@ RULE azoxy-dimer
     NEIGHBOURHOOD 10
     CONDITIONS AurF and Ketoacyl-synt_2 and AMP-binding  # C F J
 
+RULE cytokinin
+    CATEGORY other
+    DESCRIPTION cytokinin
+    EXAMPLE NCBI CM003200.1 7244202-7253668 fusatin, trans-zeatin
+            # core gene present, but some gene annotations missing in genbank
+            # https://doi.org/10.1111/mpp.12593
+    CUTOFF 20
+    NEIGHBOURHOOD 10
+    CONDITIONS IPPT and Lysine_decarbox
+
 RULE NI-siderophore
     CATEGORY other
     DESCRIPTION NRPS-independent IucA/IucC-like siderophores
