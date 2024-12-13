@@ -15,6 +15,51 @@
             "subfunctions": ["cyclase"],
             "cutoff": 68,
             "source": "doi.org/10.1002/cbic.202300382"
+        },
+        {
+            "identifier": "Sulfotransfer_1",
+            "description": "Sulfotransferase domain",
+            "function": "biosynthetic-additional",
+            "EC_groups": ["transferases"],
+            "subfunctions": ["sulfotransferase"],
+            "cutoff": 22,
+            "source": "Pfam PF00685.30"
+        },
+        {
+            "identifier": "Sulfotransfer_2",
+            "description": "Sulfotransferase domain",
+            "function": "biosynthetic-additional",
+            "EC_groups": ["transferases"],
+            "subfunctions": ["sulfotransferase"],
+            "cutoff": 22,
+            "source": "Pfam PF03567.17"
+        },
+        {
+            "identifier": "Sulfotransfer_3",
+            "description": "Sulfotransferase domain",
+            "function": "biosynthetic-additional",
+            "EC_groups": ["transferases"],
+            "subfunctions": ["sulfotransferase"],
+            "cutoff": 27,
+            "source": "Pfam PF13469.9"
+        },
+        {
+            "identifier": "Sulfotransfer_4",
+            "description": "Sulfotransferase domain",
+            "function": "biosynthetic-additional",
+            "EC_groups": ["transferases"],
+            "subfunctions": ["sulfotransferase"],
+            "cutoff": 22.8,
+            "source": "Pfam PF17784.4"
+        },
+        {
+            "identifier": "Sulfotransfer_5",
+            "description": "Sulfotransferase domain",
+            "function": "biosynthetic-additional",
+            "EC_groups": ["transferases"],
+            "subfunctions": ["sulfotransferase"],
+            "cutoff": 23.2,
+            "source": "Pfam PF19798.2"
         }
     ]
 }
