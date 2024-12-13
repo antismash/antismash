@@ -166,7 +166,7 @@ def convert_cds_features(record: Record, features: Iterable[CDSFeature], options
                 start += len(record)
                 end += len(record)
             elif feature.crosses_origin():
-                end = len(record)
+                end += len(record)
         js_orfs.append({
             "start": start,
             "end": end,
