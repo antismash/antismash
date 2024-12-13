@@ -386,6 +386,8 @@ TS_UbiA	UbiA type terpene synthase	117	TS_UbiA.hmm
 HAD_2	Haloacid dehalogenase-like hydrolase	15	PF13419.hmm
 TS_Pyr4	Pyr4 type terpene synthase	100	TS_Pyr4.hmm
 Lycopene_cycl_fung	Lycopene cyclase domain; fungal	40	TIGR03462.hmm
+IPPT	IPP transferase	24	PF01715.hmm
+Lysine_decarbox	Possible lysine decarboxylase	27	PF03641.hmm
 Amidohydro_1	Amidohydrolase family	25	PF01979.hmm
 GFO_IDH_MocA	Oxidoreductase family, NAD-binding Rossmann fold	24	PF01408.hmm
 GFO_IDH_MocA_C3	GFO/IDH/MocA C-terminal domain	27	PF22725.hmm
