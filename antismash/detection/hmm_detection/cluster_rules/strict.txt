@@ -42,12 +42,12 @@ RULE transAT-PKS
     DESCRIPTION Trans-AT polyketide
     EXAMPLE NCBI CP006259.1 382565-499230 kirromycin
     EXAMPLE NCBI CP001511.1 5000-30000 toblerol
+    REFERENCE DOI 10.1002/ange.201709056 toblerol with tra_KS and PP-binding
     CUTOFF 20
     NEIGHBOURHOOD 20
     CONDITIONS cds(PKS_AT and not ANY_KS)
                and (
                 cds(ATd and ANY_KS)
-                # handle CP001511 5k-30k as per https://doi.org/10.1002/ange.201709056
                 or cds(tra_KS and PP-binding)
                )
     EXTENDERS cds(ANY_KS and not PKS_AT)
@@ -63,7 +63,7 @@ RULE hglE-KS
 RULE polyhalogenated-pyrrole
     CATEGORY other
     DESCRIPTION polyhalogenated pyrrole
-    # doi:10.1073/pnas.1519695113
+    REFERENCE DOI 10.1073/pnas.1519695113
     EXAMPLE NCBI KR011923.1 1-6705 tetrabromopyrrole  # BGC0001464
     CUTOFF 10
     NEIGHBOURHOOD 10
@@ -156,7 +156,7 @@ RULE fungal_CDPS
 RULE RCDPS
     CATEGORY NRPS
     DESCRIPTION fungal tRNA-dependent arginine-containing cyclodipeptide synthases
-    # as described in doi: 10.1038/s41589-022-01246-6
+    REFERENCE DOI 10.1038/s41589-022-01246-6
     EXAMPLE NCBI NKHU02000029.1 123918-147820
     CUTOFF 5
     NEIGHBOURHOOD 12
@@ -165,7 +165,7 @@ RULE RCDPS
 RULE thioamide-NRP
     CATEGORY NRPS
     DESCRIPTION thioamide-containing non-ribosomal peptides
-    # see (https://doi.org/10.1002/anie.201807970)
+    REFERENCE DOI 10.1002/anie.201807970
     EXAMPLE NCBI CP001348.1 3804343-3815207 closthioamide
     RELATED Chor_lyase
     CUTOFF 20
@@ -176,7 +176,7 @@ RULE thioamide-NRP
 RULE NAPAA
     CATEGORY NRPS
     DESCRIPTION non-alpha poly-amino acids
-    # see (https://doi.org/10.1101/2020.07.24.220772)
+    REFERENCE DOI 10.1101/2020.07.24.220772
     EXAMPLE NCBI NC_015859.1 135101-140457 e-Polylysin
     RELATED PP-binding
     CUTOFF 5
@@ -186,7 +186,7 @@ RULE NAPAA
 RULE mycosporine
     CATEGORY NRPS
     DESCRIPTION mycosporine-like amino acid containing molecules
-    # see DOI: 10.1128/AEM.00727-14
+    REFERENCE DOI 10.1128/AEM.00727-14
     EXAMPLE NCBI MN401680.1 0-5063 mycosporine with ligase
     EXAMPLE NCBI CP000117.1 4798900-4805360 mycosporine with NRPS-like
     CUTOFF 10
@@ -205,9 +205,9 @@ RULE terpene
     EXTENDERS PT_FPPS_like
 
 RULE atropopeptide
-    # See doi:10.1039/d4sc03469d
     CATEGORY RiPP
     DESCRIPTION Atropopeptide
+    REFERENCE DOI 10.1039/d4sc03469d
     EXAMPLE NCBI NZ_VCLA01000160.1 22964-24216 amyxirubin B
     EXAMPLE NCBI NZ_KB889561.1 321249-322612 scabrirubin
     EXAMPLE NCBI NZ_JOBF01000044.1 9365-10577 tryptorubin
@@ -273,7 +273,7 @@ RULE lanthipeptide-class-v
 RULE lipolanthine
     CATEGORY RiPP
     DESCRIPTION Lanthipeptide class containing N-terminal fatty acids
-    # See https://doi.org/10.1038/s41589-018-0068-6
+    REFERENCE DOI 10.1038/s41589-018-0068-6
     EXAMPLE NCBI MG673929.1 0-40001 microvionin
     RELATED PKS_KS, AMP-binding, PP-binding
     CUTOFF 20
@@ -310,7 +310,7 @@ RULE azole-containing-RiPP
 RULE thioamitides
     CATEGORY RiPP
     DESCRIPTION Thioamitide RiPPs
-    # as described in https://doi.org/10.1093/nar/gkz192
+    REFERENCE DOI 10.1093/nar/gkz192
     EXAMPLE NCBI JOBF01000011.1 155003-161953 thiovarsolin
     CUTOFF 20
     NEIGHBOURHOOD 10
@@ -436,6 +436,7 @@ RULE darobactin
 RULE triceptide
     CATEGORY RiPP
     DESCRIPTION triceptides
+    REFERENCE DOI 10.1021/jacs.2c00521
     # see DOI: 10.1021/jacs.2c00521
     EXAMPLE NCBI NZ_CP048261.1 9207808-9228995 YxD
     EXAMPLE NCBI NZ_CP016279.1 10116044-10137204 HAA
@@ -447,7 +448,7 @@ RULE triceptide
 RULE archaeal-RiPP
     CATEGORY RiPP
     DESCRIPTION archaeal-RiPP
-    # see the supplemental Fig S3 of DOI: 10.1021/jacs.2c00521 where these are mentioned in passing
+    REFERENCE DOI 10.1021/jacs.2c00521 these are mentioned in passing in supplemental Fig S3
     EXAMPLE NCBI CP042937.1 327621-353782 unknown hypothetical archaeal RiPPs
     CUTOFF 5
     NEIGHBOURHOOD 10
@@ -480,8 +481,8 @@ RULE spliceotide
 RULE RaS-RiPP
     CATEGORY RiPP
     DESCRIPTION streptide-like thioether-bond RiPPs
-    # See https://pubs.acs.org/doi/10.1021/jacs.8b11060 and
-    # https://pubs.acs.org/doi/full/10.1021/jacs.8b10266
+    REFERENCE DOI 10.1021/jacs.8b11060
+    REFERENCE DOI 10.1021/jacs.8b10266
     EXAMPLE NCBI FR875178.1 1334639-1338848 streptide
     EXAMPLE NCBI CP000419.1 1259085-1262598 streptide
     CUTOFF 5
@@ -540,9 +541,9 @@ RULE aminocoumarin
     CONDITIONS novK or novJ or novI or novH or SpcDK_cou
 
 RULE azoxy-crosslink
-    # https://doi.org/10.1021/acschembio.3c00632
     CATEGORY other
     DESCRIPTION azoxy compound formed by carboxilic cross-link
+    REFERENCE DOI 10.1021/acschembio.3c00632
     EXAMPLE NCBI AY116644.1 1-21500 valanimycin
     EXAMPLE NCBI JARAKF010000001.1 1937858-1978761 azodyrecin # BGC0002805
     CUTOFF 20
@@ -550,9 +551,9 @@ RULE azoxy-crosslink
     CONDITIONS azdH_alignment and LPG_synthase_C and azdO and vlmB  # H A O B
 
 RULE azoxy-dimer
-    # https://doi.org/10.1021/acschembio.3c00632
     CATEGORY other
     DESCRIPTION azoxy compound formed by dimerisation
+    REFERENCE DOI 10.1021/acschembio.3c00632
     EXAMPLE NCBI NZ_LGKG01000136.1 15894-43317 azoxymycin
     CUTOFF 20
     NEIGHBOURHOOD 10
@@ -561,9 +562,9 @@ RULE azoxy-dimer
 RULE cytokinin
     CATEGORY other
     DESCRIPTION cytokinin
+    REFERENCE DOI 10.1111/mpp.12593
     EXAMPLE NCBI CM003200.1 7244202-7253668 fusatin, trans-zeatin
             # core gene present, but some gene annotations missing in genbank
-            # https://doi.org/10.1111/mpp.12593
     CUTOFF 20
     NEIGHBOURHOOD 10
     CONDITIONS IPPT and Lysine_decarbox
@@ -571,7 +572,8 @@ RULE cytokinin
 RULE NI-siderophore
     CATEGORY other
     DESCRIPTION NRPS-independent IucA/IucC-like siderophores
-    EXAMPLE NCBI CP001096.1 2834779-2852134 rhodopetrobactin  # https://doi.org/10.1111/1462-2920.14078
+    EXAMPLE NCBI CP001096.1 2834779-2852134 rhodopetrobactin
+    REFERENCE DOI 10.1111/1462-2920.14078 for rhodopetrobactin
     CUTOFF 20
     NEIGHBOURHOOD 14  # for rhodopetrobactin
     CONDITIONS IucA_IucC
@@ -586,7 +588,7 @@ RULE ectoine
 RULE NAGGN
     CATEGORY other
     DESCRIPTION N-acetylglutaminylglutamine amide
-    # see https://doi.org/10.1128/AEM.00686-10
+    REFERENCE DOI 10.1128/AEM.00686-10
     EXAMPLE NCBI NC_007005.1 4464460-4469261 N-acetylglutaminylglutamine amide
     CUTOFF 10
     NEIGHBOURHOOD 5
@@ -719,7 +721,8 @@ RULE PBDE
 RULE polyyne
     CATEGORY other
     DESCRIPTION polyyne
-    # see DOI: doi.org/10.1039/D3NP00059A and doi.org/10.1038/s42003-022-03409-6
+    REFERENCE DOI 10.1039/D3NP00059A
+    REFERENCE DOI 10.1038/s42003-022-03409-6
     EXAMPLE NCBI CP007142.1 5097502-5110027 ergoynes #BGC0000892 and BGC0001897
     CUTOFF 10
     NEIGHBOURHOOD 10
@@ -738,7 +741,7 @@ RULE betalactone
 RULE tropodithietic-acid
     CATEGORY other
     DESCRIPTION tropodithietic acid like cluster
-    # described in DOI: 10.1039/C4CC01924E
+    REFERENCE DOI 10.1039/C4CC01924E
     EXAMPLE NCBI CP002977.1 88771-108389 tropodithietic acid
     CUTOFF 20
     NEIGHBOURHOOD 10
@@ -749,7 +752,7 @@ RULE tropodithietic-acid
 RULE pyrrolidine
     CATEGORY other
     DESCRIPTION Pyrrolidines
-    # See https://dx.doi.org/10.1073/pnas.1701361114
+    REFERENCE DOI 10.1073/pnas.1701361114
     EXAMPLE NCBI KY014292.1 0-14535 anisomycin
     RELATED Mac, adh_short
     CUTOFF 10
@@ -759,7 +762,7 @@ RULE pyrrolidine
 RULE crocagin
     CATEGORY RiPP
     DESCRIPTION Crocagin-like cluster
-    # See https://dx.doi.org/10.1002/anie.201612640
+    REFERENCE DOI 10.1002/anie.201612640
     EXAMPLE NCBI CP012159.1 3370631-3383702 crocagin
     CUTOFF 10
     NEIGHBOURHOOD 10
@@ -785,7 +788,7 @@ RULE NRP-metallophore
 RULE methanobactin
     CATEGORY RiPP
     DESCRIPTION Copper-chelating/transporting peptides
-    # see DOI: 10.1126/science.aap9437
+    REFERENCE DOI 10.1126/science.aap9437
     EXAMPLE NCBI CP023737.1 1498747-1508549 methanobactin  # BGC0002004
     CUTOFF 5
     NEIGHBOURHOOD 10
@@ -794,7 +797,7 @@ RULE methanobactin
 RULE nitropropanoic_acid
     CATEGORY other
     DESCRIPTION 3-Nitropropanoic acid (neurotoxin)
-    # see DOI: 10.1021/acs.orglett.4c00758
+    REFERENCE DOI 10.1021/acs.orglett.4c00758
     EXAMPLE NCBI NC_036440.1 3581442-3584397 3-nitropropanoic_acid
     RELATED NpaC
     CUTOFF 5
@@ -804,7 +807,7 @@ RULE nitropropanoic_acid
 RULE opine-like-metallophore
     CATEGORY other
     DESCRIPTION Opine-like zincophores
-    # see DOI: 10.1128/mSystems.00554-20
+    REFERENCE DOI 10.1128/mSystems.00554-20
     EXAMPLE NCBI BA000017.4 2598076-2607334 staphylopine  # BGC0002487
     CUTOFF 5
     NEIGHBOURHOOD 10
@@ -813,7 +816,7 @@ RULE opine-like-metallophore
 RULE aminopolycarboxylic-acid
     CATEGORY other
     DESCRIPTION Aminopolycarboxylic acid metallophores
-    # see DOI: 10.1039/C8MT00009C
+    REFERENCE DOI 10.1039/C8MT00009C
     EXAMPLE NCBI OLMK01000008.1 45415-56279 ethylenediaminesuccinic acid hydroxyarginine  # BGC0002567
     CUTOFF 10
     NEIGHBOURHOOD 5
@@ -822,7 +825,7 @@ RULE aminopolycarboxylic-acid
 RULE isocyanide
     CATEGORY other
     DESCRIPTION Isocyanides
-    # see DOI: 10.1093/nar/gkad573
+    REFERENCE DOI 10.1093/nar/gkad573
     EXAMPLE NCBI NC_007198.1 687200-701000 xanthocillin-X monomethylether # BGC0001990
     RELATED DIT1_PvcA  # without the TauD it's probably not the core enzyme
     CUTOFF 5
@@ -832,7 +835,7 @@ RULE isocyanide
 RULE isocyanide-nrp
     CATEGORY NRPS
     DESCRIPTION NRP with isocyanide
-    # see DOI: 10.1128/mBio.00785-18
+    REFERENCE DOI 10.1128/mBio.00785-18
     EXAMPLE NCBI CM000171.1 3584442-3651038 copper-responsive metabolite
     CUTOFF 5
     NEIGHBOURHOOD 25
@@ -841,7 +844,7 @@ RULE isocyanide-nrp
 RULE hydrogen-cyanide
     CATEGORY other
     DESCRIPTION hydrogen cyanide
-    # see DOI: 10.1128/jb.182.24.6940-6949.2000
+    REFERENCE DOI 10.1128/jb.182.24.6940-6949.2000
     EXAMPLE NCBI AF208523.2 1-3300 hydrogen cyanide
     # and also BGC0002345 which is a different Pseudomonas
     CUTOFF 5
@@ -851,7 +854,8 @@ RULE hydrogen-cyanide
 RULE hydroxytropolone
     CATEGORY other
     DESCRIPTION 7-hydroxytropolone-like cluster
-    # see DOIs: 10.1128/jb.00087-18  and  10.1128/jb.01756-14
+    REFERENCE DOI 10.1128/jb.00087-18
+    REFERENCE DOI 10.1128/jb.01756-14
     EXAMPLE NCBI JH650757.1 85513-99428 7-hydroxytropolone
     CUTOFF 10
     NEIGHBOURHOOD 10
@@ -862,8 +866,10 @@ RULE hydroxytropolone
 RULE deazapurine
     CATEGORY other
     DESCRIPTION deazapurine containing secondary metabolites
-    # see DOIs: 10.1016/j.bioorg.2012.01.001 and 10.3390/biom10071074 and
-    # 10.1016/j.chembiol.2008.07.012 and 10.1128/mmbr.00199-23
+    REFERENCE DOI 10.1016/j.bioorg.2012.01.001
+    REFERENCE DOI 10.3390/biom10071074
+    REFERENCE DOI 10.1016/j.chembiol.2008.07.012
+    REFERENCE DOI 10.1128/mmbr.00199-23
     EXAMPLE NCBI KY022432.1 1-10381 toyocamycin # BGC0001808
     EXAMPLE NCBI CP007155.1 4592550-4600486 huimycin # BGC0002354
     CUTOFF 20
