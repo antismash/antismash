@@ -382,6 +382,15 @@ class TestPreprocessRecords(unittest.TestCase):
         # then ensure genefinding would have run normally
         assert self.genefinding.was_run
 
+    def test_missing_sequence(self):
+        # a record missing a sequence shouldn't crash in WGS testing
+        # and shouldn't report as a WGS
+        with NamedTemporaryFile(suffix=".fasta") as handle:
+            handle.write(">R1\nACGT\n>R2\n\n>R3\nACGT\n".encode())
+            handle.flush()
+            with self.assertRaisesRegex(AntismashInputError, "no sequence .*R2.*"):
+                record_processing.parse_input_sequence(handle.name)
+
 
 class TestUniqueID(unittest.TestCase):
     def test_bad_starts(self):

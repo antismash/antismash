@@ -490,6 +490,8 @@ def records_contain_shotgun_scaffolds(records: List[Record]) -> bool:
             record.seq[0]
         except UndefinedSequenceError:
             defined = False
+        except IndexError:
+            raise AntismashInputError(f"record contains no sequence information: {record.id}")
         if not defined and any(key in record.annotations for key in [
             "wgs_scafld",
             "wgs",
