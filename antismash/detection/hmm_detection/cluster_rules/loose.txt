@@ -39,6 +39,15 @@ RULE lysine
     NEIGHBOURHOOD 20
     CONDITIONS alpha_am_amid
 
+RULE quinone_isoprenoid_chain
+    CATEGORY terpene
+    DESCRIPTION Prenyltransferase involved in biosynthesis of the isoprenoid side chain
+                of quinones (e.g. coenzyme Q, menaquinone)
+    EXAMPLE NCBI J05547.2 752-2173 hexaprenyl diphosphate
+    CUTOFF 5
+    NEIGHBOURHOOD 5
+    CONDITIONS PT_HPP
+
 RULE halogenated
     CATEGORY other
     DESCRIPTION Halogenases are frequently involved in secondary metabolite biosynthesis
