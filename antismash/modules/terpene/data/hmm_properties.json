@@ -117,25 +117,6 @@
             ]
         },
         {
-            "name": "PT_HPP",
-            "description": "Prenyltransferase; Hexaprenyl diphosphate synthase",
-            "type": "PT_FPPS_like",
-            "length": 340,
-            "cutoff": 139,
-            "subtypes": [],
-            "reactions": [
-                {
-                    "substrates": [
-                        "IPP",
-                        "DMAPP"
-                    ],
-                    "products": [
-                        "HPP"
-                    ]
-                }
-            ]
-        },
-        {
             "name": "PT_FPPS_like",
             "description": "Prenyltransferase; Farnesyl diphosphate synthase like",
             "type": "PT_FPPS_like",
@@ -146,8 +127,7 @@
                 "PT_FPP_fung",
                 "PT_GFPP",
                 "PT_GGI",
-                "PT_GGPP",
-                "PT_HPP"
+                "PT_GGPP"
             ],
             "reactions": [
                 {
@@ -948,32 +928,6 @@
                     ],
                     "products": [
                         "sesterterpene_C1-C7/C6-C10"
-                    ]
-                }
-            ]
-        },
-        {
-            "name": "HAD_2",
-            "description": "Haloacid dehalogenase-like hydrolase",
-            "type": "HAD_2",
-            "length": 178,
-            "cutoff": 30,
-            "subtypes": [],
-            "reactions": [
-                {
-                    "substrates": [
-                        "sesquiterpene_C2-C7/C6-C11_PP"
-                    ],
-                    "products": [
-                        "sesquiterpene_C2-C7/C6-C11_OH"
-                    ]
-                },
-                {
-                    "substrates": [
-                        "sesquiterpene_C6-C11_PP"
-                    ],
-                    "products": [
-                        "sesquiterpene_C6-C11_OH"
                     ]
                 }
             ]
