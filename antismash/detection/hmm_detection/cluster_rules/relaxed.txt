@@ -79,4 +79,4 @@ RULE terpene-precursor
     SUPERIORS terpene
     CUTOFF 10
     NEIGHBOURHOOD 10
-    CONDITIONS PT_FPPS_like
+    CONDITIONS PT_FPPS_like and not PT_HPP
