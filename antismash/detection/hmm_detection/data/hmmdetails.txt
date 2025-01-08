@@ -383,6 +383,7 @@ azdO	azdO/vlmO	50	azdO.hmm
 Ketoacyl-synt_2	Ketoacyl-synt_2	25	PF13723.hmm
 PT_phytoene_like	Prenyltransferase; Phytoene synthase like	20	PT_phytoene_like.hmm
 PT_FPPS_like	Prenyltransferase; Farnesyl diphosphate synthase like	56	PT_FPPS_like.hmm
+PT_HPP	Prenyltransferase; involved in isoprenoid quinone biosynthesis	139	PT_HPP.hmm
 T1TS	Type 1 terpene synthase	15	T1TS.hmm
 T1TS_KS	Type 1 terpene synthase; Ent-kaurene synthase type	200	T1TS_KS.hmm
 T2TS	Type 2 terpene synthase	45	T2TS.hmm
