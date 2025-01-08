@@ -533,21 +533,6 @@
             "functional_groups": []
         },
         {
-            "name": "sesquiterpene_C2-C7/C6-C11_OH",
-            "extended_name": null,
-            "single_compound": false,
-            "biosynthetic_class": "sesquiterpene",
-            "biosynthetic_subclass": null,
-            "chain_length": 15,
-            "initial_cyclisations": [
-                "C2-C7",
-                "C6-C11"
-            ],
-            "functional_groups": [
-                "OH"
-            ]
-        },
-        {
             "name": "sesquiterpene_C2-C7/C6-C11_PP",
             "extended_name": null,
             "single_compound": false,
@@ -560,20 +545,6 @@
             ],
             "functional_groups": [
                 "PP"
-            ]
-        },
-        {
-            "name": "sesquiterpene_C6-C11_OH",
-            "extended_name": null,
-            "single_compound": false,
-            "biosynthetic_class": "sesquiterpene",
-            "biosynthetic_subclass": null,
-            "chain_length": 15,
-            "initial_cyclisations": [
-                "C6-C11"
-            ],
-            "functional_groups": [
-                "OH"
             ]
         },
         {
