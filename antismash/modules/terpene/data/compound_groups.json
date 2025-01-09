@@ -449,8 +449,8 @@
             ]
         },
         {
-            "name": "oxidosqualene",
-            "extended_name": "2,3-oxidosqualene",
+            "name": "2,3-oxidosqualene",
+            "extended_name": null,
             "single_compound": true,
             "biosynthetic_class": "triterpene",
             "biosynthetic_subclass": "steroid precursor",
