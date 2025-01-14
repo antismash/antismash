@@ -644,12 +644,30 @@
             ]
         },
         {
+            "name": "T1TS_PLE",
+            "description": "Type 1 terpene synthase; Premutilin synthase type",
+            "type": "T1TS",
+            "length": 365,
+            "cutoff": 500,
+            "subtypes": [],
+            "reactions": [
+                {
+                    "substrates": [
+                        "diterpene_C6-C11/C10-C14_PP"
+                    ],
+                    "products": [
+                        "premutilin_like"
+                    ]
+                }
+            ]
+        },
+        {
             "name": "T1TS_KS",
             "description": "Type 1 terpene synthase; Ent-kaurene synthase type",
             "type": "T1TS",
             "length": 392,
             "cutoff": 200,
-            "subtypes": [],
+            "subtypes": ["T1TS_PLE"],
             "reactions": [
                 {
                     "substrates": [
@@ -786,12 +804,30 @@
             ]
         },
         {
+            "name": "T2TS_PLE",
+            "description": "Type 2 terpene synthase; Premutilin synthase type",
+            "type": "T2TS",
+            "length": 537,
+            "cutoff": 800,
+            "subtypes": [],
+            "reactions": [
+                {
+                    "substrates": [
+                        "GGPP"
+                    ],
+                    "products": [
+                        "diterpene_C6-C11/C10-C14_PP"
+                    ]
+                }
+            ]
+        },
+        {
             "name": "T2TS_C20",
             "description": "Type 2 terpene synthase; Diterpene synthase",
             "type": "T2TS",
             "length": 529,
             "cutoff": 167,
-            "subtypes": [],
+            "subtypes": ["T2TS_PLE"],
             "reactions": [
                 {
                     "substrates": [
