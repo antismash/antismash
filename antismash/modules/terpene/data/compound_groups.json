@@ -182,6 +182,19 @@
             "functional_groups": []
         },
         {
+            "name": "diterpene_C6-C11/C10-C14_PP",
+            "extended_name": null,
+            "single_compound": false,
+            "biosynthetic_class": "diterpene",
+            "biosynthetic_subclass": null,
+            "chain_length": 20,
+            "initial_cyclisations": [
+                "C6-C11",
+                "C10-C14"
+            ],
+            "functional_groups": ["PP"]
+        },
+        {
             "name": "diterpene_C6-C11/C10-C15",
             "extended_name": null,
             "single_compound": false,
@@ -479,6 +492,20 @@
             "chain_length": 30,
             "initial_cyclisations": [
                 "polypodane skeleton"
+            ],
+            "functional_groups": [
+                "unknown"
+            ]
+        },
+        {
+            "name": "premutilin_like",
+            "extended_name": null,
+            "single_compound": false,
+            "biosynthetic_class": "diterpene",
+            "biosynthetic_subclass": null,
+            "chain_length": 20,
+            "initial_cyclisations": [
+                "premutilin skeleton"
             ],
             "functional_groups": [
                 "unknown"
