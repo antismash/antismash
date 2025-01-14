@@ -411,6 +411,18 @@
             ]
         },
         {
+            "name": "kaurene_like",
+            "extended_name": null,
+            "single_compound": false,
+            "biosynthetic_class": "diterpene",
+            "biosynthetic_subclass": null,
+            "chain_length": 20,
+            "initial_cyclisations": ["kaurene skeleton"],
+            "functional_groups": [
+                "unknown"
+            ]
+        },
+        {
             "name": "monoterpene_C1-C10",
             "extended_name": null,
             "single_compound": false,
@@ -469,6 +481,20 @@
             "chain_length": 40,
             "initial_cyclisations": [],
             "functional_groups": []
+        },
+        {
+            "name": "pimaradiene_like",
+            "extended_name": null,
+            "single_compound": false,
+            "biosynthetic_class": "diterpene",
+            "biosynthetic_subclass": null,
+            "chain_length": 20,
+            "initial_cyclisations": [
+                "pimaradiene skeleton"
+            ],
+            "functional_groups": [
+                "unknown"
+            ]
         },
         {
             "name": "polypodane",
