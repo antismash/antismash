@@ -263,7 +263,7 @@
             "extended_name": null,
             "single_compound": false,
             "biosynthetic_class": "triterpene",
-            "biosynthetic_subclass": "polypodane",
+            "biosynthetic_subclass": "polypodane-type",
             "chain_length": 30,
             "initial_cyclisations": [
                 "polypodane skeleton"
@@ -537,7 +537,7 @@
             "extended_name": null,
             "single_compound": false,
             "biosynthetic_class": "sesquiterpene",
-            "biosynthetic_subclass": null,
+            "biosynthetic_subclass": "drimane-type",
             "chain_length": 15,
             "initial_cyclisations": [
                 "C2-C7",
