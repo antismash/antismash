@@ -44,7 +44,7 @@ class DummyCompoundGroup(CompoundGroup):
                  initial_cyclisations=("unknown",),
                  functional_groups=("PP",)):
         super().__init__(name, extended_name, single_compound, biosynthetic_class,
-                         biosynthetic_subclass, chain_length, initial_cyclisations, functional_groups)
+                         chain_length, initial_cyclisations, functional_groups, biosynthetic_subclass)
 
 
 class DummyDomainPrediction(DomainPrediction):
@@ -61,7 +61,7 @@ class DummyTerpeneHMM(TerpeneHMM):
                  cutoff=250,
                  subtypes=tuple(),
                  reactions=tuple()):
-        super().__init__(name, description, type, length, cutoff, subtypes, reactions)
+        super().__init__(name, description, domain_type, length, cutoff, subtypes, reactions)
 
 
 EXISTING_COMPOUND_GROUPS = {
