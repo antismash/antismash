@@ -44,7 +44,7 @@ class DummyCompoundGroup(CompoundGroup):
                  initial_cyclisations=("unknown",),
                  functional_groups=("PP",)):
         super().__init__(name, extended_name, single_compound, biosynthetic_class,
-                         biosynthetic_subclass, chain_length, initial_cyclisations, functional_groups)
+                         chain_length, initial_cyclisations, functional_groups, biosynthetic_subclass)
 
 
 class DummyDomainPrediction(DomainPrediction):
