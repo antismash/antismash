@@ -334,6 +334,8 @@ class TestHTML(TestCase):
         assert clusters[1] in preds_by_cluster
 
     def test_get_glossary_data(self):
-        predictions = [build_dummy_cluster_pred()]
-        name_mappings = html_output.get_glossary_data(predictions)
-        assert name_mappings == {'GFPP': 'Geranylfarnesyl diphosphate'}
+        prediction = build_dummy_cluster_pred()
+        prediction.products = [DummyCompoundGroup(functional_groups=("PP",))]
+        name_mappings = html_output.get_glossary_data([prediction])
+        assert name_mappings == {"GFPP": "Geranylfarnesyl diphosphate",
+                                 "PP": "Diphosphate"}
