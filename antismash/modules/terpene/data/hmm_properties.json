@@ -856,29 +856,49 @@
             "reactions": []
         },
         {
-            "name": "TS_Pyr4",
-            "description": "Pyr4 type terpene synthase",
+            "name": "TS_Pyr4_C15_polyketide_a",
+            "description": "Pyr4 type terpene synthase; polyketide sesquiterpenoid synthase, group a",
             "type": "TS_Pyr4",
             "length": 243,
-            "cutoff": 100,
+            "cutoff": 250,
             "subtypes": [],
             "reactions": [
                 {
                     "substrates": [
-                        "epoxy_merosesquiterpenoid"
+                        "epoxy_polyketide_sesquiterpenoid"
                     ],
                     "products": [
-                        "cyclic_merosesquiterpenoid"
+                        "cyclic_polyketide_sesquiterpenoid"
                     ]
-                },
+                }
+            ]
+        },
+        {
+            "name": "TS_Pyr4_C15_polyketide_b",
+            "description": "Pyr4 type terpene synthase; polyketide sesquiterpenoid synthase, group b",
+            "type": "TS_Pyr4",
+            "length": 240,
+            "cutoff": 320,
+            "subtypes": [],
+            "reactions": [
                 {
                     "substrates": [
-                        "epoxy_meroditerpenoid"
+                        "epoxy_polyketide_sesquiterpenoid"
                     ],
                     "products": [
-                        "cyclic_meroditerpenoid"
+                        "cyclic_polyketide_sesquiterpenoid"
                     ]
-                },
+                }
+            ]
+        },
+        {
+            "name": "TS_Pyr4_C20_indole",
+            "description": "Pyr4 type terpene synthase; indole diterpenoid synthase",
+            "type": "TS_Pyr4",
+            "length": 243,
+            "cutoff": 345,
+            "subtypes": [],
+            "reactions": [
                 {
                     "substrates": [
                         "epoxy_indole_diterpenoid"
@@ -886,7 +906,53 @@
                     "products": [
                         "cyclic_indole_diterpenoid"
                     ]
-                },
+                }
+            ]
+        },
+        {
+            "name": "TS_Pyr4_C20_polyketide_a",
+            "description": "Pyr4 type terpene synthase; polyketide diterpenoid synthase, group a",
+            "type": "TS_Pyr4",
+            "length": 243,
+            "cutoff": 350,
+            "subtypes": [],
+            "reactions": [
+                {
+                    "substrates": [
+                        "epoxy_polyketide_diterpenoid"
+                    ],
+                    "products": [
+                        "cyclic_polyketide_diterpenoid"
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "TS_Pyr4_C20_polyketide_b",
+            "description": "Pyr4 type terpene synthase; polyketide diterpenoid synthase, group b",
+            "type": "TS_Pyr4",
+            "length": 240,
+            "cutoff": 250,
+            "subtypes": [],
+            "reactions": [
+                {
+                    "substrates": [
+                        "epoxy_polyketide_diterpenoid"
+                    ],
+                    "products": [
+                        "cyclic_polyketide_diterpenoid"
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "TS_Pyr4_onoceroid",
+            "description": "Pyr4 type terpene synthase; onoceroid synthase",
+            "type": "TS_Pyr4",
+            "length": 249,
+            "cutoff": 280,
+            "subtypes": [],
+            "reactions": [
                 {
                     "substrates": [
                         "epoxy_polypodane"
@@ -896,6 +962,22 @@
                     ]
                 }
             ]
+        },
+        {
+            "name": "TS_Pyr4",
+            "description": "Pyr4 type terpene synthase",
+            "type": "TS_Pyr4",
+            "length": 243,
+            "cutoff": 100,
+            "subtypes": [
+                "TS_Pyr4_C15_polyketide_a",
+                "TS_Pyr4_C15_polyketide_b",
+                "TS_Pyr4_C20_indole",
+                "TS_Pyr4_C20_polyketide_a",
+                "TS_Pyr4_C20_polyketide_b",
+                "TS_Pyr4_onoceroid"
+        ],
+            "reactions": []
         },
         {
             "name": "TS_UbiA",
