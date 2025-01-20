@@ -367,11 +367,12 @@ def connect_locations(locations: list[Location], wrap_point: int = None) -> Loca
 
 
 def convert_protein_position_to_dna(start: int, end: int, location: Location) -> Tuple[int, int]:
-    """ Convert a protein position to a nucleotide sequence position for use in generating
+    """ Convert protein coordinates to a nucleotide sequence position for use in generating
         new FeatureLocations from existing FeatureLocations and/or CompoundLocations.
 
         Arguments:
-            position: the position in question, must be contained by the location
+            start: the start coordinate
+            end: the start coordinate
             location: the location of the related feature, for handling introns/split locations
 
         Returns:
@@ -393,7 +394,7 @@ def convert_protein_position_to_dna(start: int, end: int, location: Location) ->
                 f"Converted coordinates {dna_start}..{dna_end} "
                 f"out of bounds for location {location}"
             )
-        return dna_start, dna_end
+        return int(dna_start), int(dna_end)
 
     parts = sorted(location.parts, key=lambda x: x.start)
     gap = 0
@@ -421,7 +422,7 @@ def convert_protein_position_to_dna(start: int, end: int, location: Location) ->
             f"Converted coordinates {dna_start}..{dna_end} "
             f"out of bounds for location {location}"
         )
-    return dna_start, dna_end
+    return int(dna_start), int(dna_end)
 
 
 def build_location_from_others(locations: list[Location]) -> Location:

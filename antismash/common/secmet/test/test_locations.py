@@ -260,6 +260,31 @@ class TestProteinPositionConversion(unittest.TestCase):
                                      FeatureLocation(4952, 5682, strand=-1)])
         assert self.func(97, 336, location) == (5078, 5854)
 
+    def test_ambiguous_starts(self):
+        # DNA coordinates of a domain should never be ambiguous
+        # when the initial feature's DNA coordinate is ambiguous
+        location = FeatureLocation(BeforePosition(10), 40, 1)
+        # sanity check that ambiguous positions convert as such
+        assert str(location.start) == "<10"
+        start, end = convert_protein_position_to_dna(2, 4, location)
+        assert start == 16
+        assert end == 22
+        # ensure no ambiguity remains
+        assert not isinstance(start, BeforePosition)
+        assert not isinstance(end, BeforePosition)
+
+        # and for good measure, compound locations
+        location = CompoundLocation([
+            FeatureLocation(BeforePosition(10), 40, 1),
+            FeatureLocation(60, 80, 1),
+        ])
+        assert str(location.start) == "<10"
+        start, end = convert_protein_position_to_dna(2, 14, location)
+        assert start == 16
+        assert end == 72
+        assert not isinstance(start, BeforePosition)
+        assert not isinstance(end, BeforePosition)
+
 
 class TestCompoundCombination(unittest.TestCase):
     def test_separate(self):
