@@ -14,6 +14,7 @@ from antismash.common import fasta, serialiser
 from antismash.common.hmmscan_refinement import HSP
 from antismash.common.secmet import CDSFeature, Feature, FeatureLocation, Protocluster, Record
 from antismash.common.secmet.locations import (
+    CompoundLocation,
     Location,
     location_bridges_origin,
     location_contains_other,
@@ -640,6 +641,19 @@ def merge_over_origin(clusters: list[Protocluster], record: Record) -> list[Prot
     def merge_pair(first: Protocluster, second: Protocluster) -> Protocluster:
         core_location = record.connect_locations([first.core_location, second.core_location])
         surrounding_location = record.extend_location(core_location, first.neighbourhood_range)
+        # in cases where the core doesn't span the full region, but the neighbourhood does
+        # then the neighbourhood must also cross the origin, so split the difference between
+        # the sides and meet (almost) in the middle
+        if all([
+            len(surrounding_location) == len(record),
+            not surrounding_location.crosses_origin(),
+            core_location.crosses_origin(),
+        ]):
+            halfway = (core_location.parts[0].start - core_location.parts[1].end) // 2
+            surrounding_location = CompoundLocation([
+                FeatureLocation(core_location.parts[0].start - halfway, len(record), 1),
+                FeatureLocation(0, core_location.parts[1].end + halfway - 1, 1),
+            ])
         return Protocluster(
             core_location=core_location,
             surrounding_location=surrounding_location,
