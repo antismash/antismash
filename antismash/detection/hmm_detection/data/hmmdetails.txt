@@ -116,6 +116,10 @@ LmbU	LmbU-like protein	50	LmbU.hmm
 mmyO	MmyO-like protein	500	mmyO.hmm
 AvrD	Pseudomonas avriulence D protein	50	PF05655.hmm
 goadsporin_like	Goadsporin-like protein	500	goadsporin_like.hmm
+LeupA	leupeptin A	580	LeupA.hmm
+LeupB	leupeptin B	800	LeupB.hmm
+LeupC	leupeptin C	450	LeupC.hmm
+LeupD	leupeptin D	225	LeupD.hmm
 TIGR03602	Bacteriocin protoxin, streptolysin S family	50	TIGR03602.hmm
 TIGR03603	Bacteriocin biosynthesis cyclodehydratase	150	TIGR03603.hmm
 TIGR03604	Bacteriocin biosynthesis docking scaffold	219	TIGR03604.hmm
