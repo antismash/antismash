@@ -117,25 +117,6 @@
             ]
         },
         {
-            "name": "PT_HPP",
-            "description": "Prenyltransferase; Hexaprenyl diphosphate synthase",
-            "type": "PT_FPPS_like",
-            "length": 340,
-            "cutoff": 139,
-            "subtypes": [],
-            "reactions": [
-                {
-                    "substrates": [
-                        "IPP",
-                        "DMAPP"
-                    ],
-                    "products": [
-                        "HPP"
-                    ]
-                }
-            ]
-        },
-        {
             "name": "PT_FPPS_like",
             "description": "Prenyltransferase; Farnesyl diphosphate synthase like",
             "type": "PT_FPPS_like",
@@ -146,8 +127,7 @@
                 "PT_FPP_fung",
                 "PT_GFPP",
                 "PT_GGI",
-                "PT_GGPP",
-                "PT_HPP"
+                "PT_GGPP"
             ],
             "reactions": [
                 {
@@ -664,19 +644,38 @@
             ]
         },
         {
+            "name": "T1TS_PLE",
+            "description": "Type 1 terpene synthase; Premutilin synthase type",
+            "type": "T1TS",
+            "length": 365,
+            "cutoff": 500,
+            "subtypes": [],
+            "reactions": [
+                {
+                    "substrates": [
+                        "diterpene_C6-C11/C10-C14_PP"
+                    ],
+                    "products": [
+                        "premutilin_like"
+                    ]
+                }
+            ]
+        },
+        {
             "name": "T1TS_KS",
             "description": "Type 1 terpene synthase; Ent-kaurene synthase type",
             "type": "T1TS",
             "length": 392,
             "cutoff": 200,
-            "subtypes": [],
+            "subtypes": ["T1TS_PLE"],
             "reactions": [
                 {
                     "substrates": [
                         "diterpene_C6-C11/C10-C15_PP"
                     ],
                     "products": [
-                        "diterpene_C6-C11/C10-C15"
+                        "kaurene_like",
+                        "pimaradiene_like"
                     ]
                 }
             ]
@@ -799,8 +798,25 @@
                         "FPP"
                     ],
                     "products": [
-                        "sesquiterpene_C2-C7/C6-C11_PP",
-                        "sesquiterpene_C6-C11_PP"
+                        "sesquiterpene_C2-C7/C6-C11_PP"
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "T2TS_PLE",
+            "description": "Type 2 terpene synthase; Premutilin synthase type",
+            "type": "T2TS",
+            "length": 537,
+            "cutoff": 800,
+            "subtypes": [],
+            "reactions": [
+                {
+                    "substrates": [
+                        "GGPP"
+                    ],
+                    "products": [
+                        "diterpene_C6-C11/C10-C14_PP"
                     ]
                 }
             ]
@@ -811,7 +827,7 @@
             "type": "T2TS",
             "length": 529,
             "cutoff": 167,
-            "subtypes": [],
+            "subtypes": ["T2TS_PLE"],
             "reactions": [
                 {
                     "substrates": [
@@ -833,7 +849,7 @@
             "reactions": [
                 {
                     "substrates": [
-                        "oxidosqualene"
+                        "2,3-oxidosqualene"
                     ],
                     "products": [
                         "steroid"
@@ -948,32 +964,6 @@
                     ],
                     "products": [
                         "sesterterpene_C1-C7/C6-C10"
-                    ]
-                }
-            ]
-        },
-        {
-            "name": "HAD_2",
-            "description": "Haloacid dehalogenase-like hydrolase",
-            "type": "HAD_2",
-            "length": 178,
-            "cutoff": 30,
-            "subtypes": [],
-            "reactions": [
-                {
-                    "substrates": [
-                        "sesquiterpene_C2-C7/C6-C11_PP"
-                    ],
-                    "products": [
-                        "sesquiterpene_C2-C7/C6-C11_OH"
-                    ]
-                },
-                {
-                    "substrates": [
-                        "sesquiterpene_C6-C11_PP"
-                    ],
-                    "products": [
-                        "sesquiterpene_C6-C11_OH"
                     ]
                 }
             ]
