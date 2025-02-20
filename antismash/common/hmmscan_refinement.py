@@ -6,6 +6,7 @@
 
 from collections import defaultdict
 from typing import Any, Dict, Iterable, List, Set, Tuple, Union
+import logging
 
 from Bio.SearchIO import QueryResult
 from Bio.SearchIO._model.hsp import HSP
@@ -13,15 +14,19 @@ from Bio.SearchIO._model.hsp import HSP
 
 class HMMResult:
     """ A variant of HSP that allows for operations between multiple instances
-        along with simplified operations e.g. len()
+        along with simplified operations
     """
-    __slots__ = ["_hit_id", "_query_start", "_query_end", "_evalue", "_bitscore", "_internal_hits"]
+    __slots__ = ["_hit_id", "_hit_start", "_hit_end", "_query_start", "_query_end",
+                  "_evalue", "_bitscore", "_internal_hits"]
 
-    def __init__(self, hit_id: str, start: int, end: int, evalue: float,
-                 bitscore: float, *, internal_hits: Iterable["HMMResult"] = None) -> None:
+    def __init__(self, hit_id: str, query_start: int, query_end: int, evalue: float,
+                 bitscore: float, hit_start: int = 1, hit_end: int = 1, *,
+                 internal_hits: Iterable["HMMResult"] = None) -> None:
         self._hit_id = hit_id
-        self._query_start = int(start)
-        self._query_end = int(end)
+        self._hit_start = int(hit_start)
+        self._hit_end = int(hit_end)
+        self._query_start = int(query_start)
+        self._query_end = int(query_end)
         self._evalue = float(evalue)
         self._bitscore = float(bitscore)
         self._internal_hits: List[HMMResult] = []
@@ -34,6 +39,21 @@ class HMMResult:
         return self._hit_id
 
     @property
+    def hit_start(self) -> int:
+        """ Returns the start position within the profile hit """
+        return self._hit_start
+
+    @property
+    def hit_end(self) -> int:
+        """ Returns the end position within the profile hit """
+        return self._hit_end
+
+    @property
+    def hit_length(self) -> int:
+        """ Returns the length of the profile hit """
+        return self._hit_end - self._hit_start
+
+    @property
     def query_start(self) -> int:
         """ Returns the start position within the query's translation """
         return self._query_start
@@ -42,6 +62,11 @@ class HMMResult:
     def query_end(self) -> int:
         """ Returns the end position within the query's translation """
         return self._query_end
+
+    @property
+    def query_length(self) -> int:
+        """ Returns the length of the query sequence """
+        return self._query_end - self._query_start
 
     @property
     def evalue(self) -> float:
@@ -74,37 +99,86 @@ class HMMResult:
     def add_internal_hits(self, hits: Iterable["HMMResult"]) -> None:
         """ Add hits within this hit """
         for hit in hits:
-            if not hit.overlaps_with(self):
+            if not hit.query_overlaps_with(self):
                 raise ValueError(f"subdomain is not co-located with parent: {hit}, {self}")
         self._internal_hits.extend(hits)
 
     def __len__(self) -> int:
-        return self.query_end - self.query_start
+        logging.warning(DeprecationWarning("len(HMMResult) has been replaced by HMMResult.query_length"))
+        return self.query_length
 
     def merge(self, other: "HMMResult") -> "HMMResult":
         """ Creates a new HMMResult instance from this instance and the
             provided instance.
         """
         assert self.hit_id == other.hit_id
-        if self.query_start < other.query_start:
-            start, end = self.query_start, other.query_end
-        else:
-            start, end = other.query_start, self.query_end
-        return HMMResult(self.hit_id, start, end,
+        return HMMResult(self.hit_id,
+                         min(self.query_start, other.query_start),
+                         max(self.query_end, other.query_end),
                          min(self.evalue, other.evalue),
-                         max(self.bitscore, other.bitscore))
+                         max(self.bitscore, other.bitscore),
+                         min(self.hit_start, other.hit_start),
+                         max(self.hit_end, other.hit_end),)
 
     def is_contained_by(self, other: "HMMResult") -> bool:
         """ Returns True if this instance is contained within the provided instance """
+        logging.warning(DeprecationWarning("HMMResult.is_contained_by() has been replaced by HMMResult.query_is_contained_by()"))
+        return self.query_is_contained_by(other)
+
+    def query_is_contained_by(self, other: "HMMResult") -> bool:
+        """ Returns True if the query region of this instance is contained within
+            the query region of the provided instance """
         if not isinstance(other, HMMResult):
             return False
         return other.query_start <= self.query_start < self.query_end <= other.query_end
 
-    def overlaps_with(self, other: "HMMResult") -> bool:
-        """ Returns True if this instance overlaps with the provided instance """
+    def hit_is_contained_by(self, other: "HMMResult") -> bool:
+        """ Returns True if the hit region of this instance is contained within
+            the hit region of the provided instance """
         if not isinstance(other, HMMResult):
             return False
-        return other.query_end > self.query_start and self.query_end > other.query_start
+        return other.hit_start <= self.hit_start < self.hit_end <= other.hit_end
+
+    def overlaps_with(self, other: "HMMResult") -> bool:
+        """ Returns True if this instance overlaps with the provided instance """
+        logging.warning(DeprecationWarning("HMMResult.overlaps_with() has been replaced by HMMResult.query_overlaps_with()"))
+        return self.query_overlaps_with(other)
+
+    def query_overlaps_with(self, other: "HMMResult", min_overlap: int = 1) -> bool:
+        """ Returns True if the query region of this instance overlaps with
+            the query region of the provided instance,
+            and the overlap is equal to or greater than the minimum overlap
+
+            Arguments:
+                other: an HMMResult instance
+                min_overlap: int value for the minimum overlap
+                             required to consider instances as overlapping
+
+            Returns:
+                boolean value
+        """
+        if not isinstance(other, HMMResult):
+            return False
+        return other.query_end - self.query_start >= min_overlap and \
+            self.query_end - other.query_start >= min_overlap
+
+    def hit_overlaps_with(self, other: "HMMResult", min_overlap: int = 1) -> bool:
+        """ Returns True if the hit region of this instance overlaps with
+            the hit region of the provided instance,
+            and the overlap is equal to or greater than the minimum overlap
+
+            Arguments:
+                other: an HMMResult instance
+                min_overlap: int value for the minimum overlap
+                             required to consider instances as overlapping
+
+            Returns:
+                boolean value
+        """
+        if not isinstance(other, HMMResult):
+            return False
+        return other.hit_end - self.hit_start >= min_overlap and \
+            self.hit_end - other.hit_start >= min_overlap
 
     def to_json(self) -> Dict[str, Union[str, int, float]]:
         """ Converts the instance into a dictionary for use in json formats """
@@ -119,7 +193,9 @@ class HMMResult:
         """ Rebuilds a HMMResult instance from a JSON representation """
         internal_hits = [HMMResult.from_json(hit) for hit in data.get("internal_hits", [])]
         return HMMResult(str(data["hit_id"]), int(data["query_start"]), int(data["query_end"]),
-                         float(data["evalue"]), float(data["bitscore"]), internal_hits=internal_hits)
+                         float(data["evalue"]), float(data["bitscore"]),
+                         int(data.get("hit_start", 1)), int(data.get("hit_end", 1)),
+                         internal_hits=internal_hits)
 
     def __repr__(self) -> str:
         return str(self)
@@ -128,7 +204,8 @@ class HMMResult:
         subtypes = ""
         if self.detailed_names[1:]:
             subtypes = f", subtypes=[{', '.join(self.detailed_names[1:])}]"
-        return (f"HMMResult({self.hit_id}, {self.query_start}, {self.query_end}, "
+        return (f"HMMResult({self.hit_id}, hit_start={self.hit_start}, hit_end={self.hit_end}, "
+                f"query_start={self.query_start}, query_end={self.query_end}, "
                 f"evalue={self.evalue:g}, bitscore={self.bitscore}{subtypes})")
 
     def __eq__(self, other: Any) -> bool:
@@ -175,7 +252,7 @@ def remove_incomplete(domains: List[HMMResult], hmm_lengths: Dict[str, int],
     complete = []
     for domain in domains:
         domainlength = hmm_lengths[domain.hit_id]
-        if len(domain) > (threshold * domainlength):
+        if domain.query_length > (threshold * domainlength):
             complete.append(domain)
     if complete:
         return complete
@@ -185,7 +262,7 @@ def remove_incomplete(domains: List[HMMResult], hmm_lengths: Dict[str, int],
     longest_index = 0
     for i, domain in enumerate(domains):
         domain_length = hmm_lengths[domain.hit_id]
-        proportional_length = len(domain) / domain_length
+        proportional_length = domain.query_length / domain_length
         if proportional_length > longest:
             longest = proportional_length
             longest_index = i
@@ -249,7 +326,8 @@ def gather_by_query(results: List[HSP]) -> Dict[str, Set[HMMResult]]:
         for hsp in result.hsps:
             results_by_id[hsp.query_id].add(HMMResult(hsp.hit_id, hsp.query_start,
                                                       hsp.query_end, hsp.evalue,
-                                                      hsp.bitscore))
+                                                      hsp.bitscore, hsp.hit_start,
+                                                      hsp.hit_end))
     return results_by_id
 
 
