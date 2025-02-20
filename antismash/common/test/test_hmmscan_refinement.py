@@ -8,6 +8,7 @@ import unittest
 import warnings
 
 from antismash.common import json, path
+from antismash.common.test.helpers import DummyHMMResult
 import antismash.common.hmmscan_refinement as refinement
 
 # Don't display the SearchIO experimental warning, we know this.
@@ -27,11 +28,18 @@ class TestHMMResult(unittest.TestCase):
             assert result.evalue == 3e-10
             assert result.bitscore == 53.5
 
+    def test_length(self):
+        result = refinement.HMMResult("dummy_hit", 1, 5, 3e-10, 53.5, 1, 6)
+        assert result.query_length == 4
+        assert result.hit_length == 5
+
     def test_merge(self):
-        first = refinement.HMMResult("dummy_hit", 1, 5, 3e-10, 53.5)
-        second = refinement.HMMResult("dummy_hit", 15, 25, 3e-20, 73.5)
+        first = refinement.HMMResult("dummy_hit", 1, 5, 3e-10, 53.5, 1, 6)
+        second = refinement.HMMResult("dummy_hit", 15, 25, 3e-20, 73.5, 20, 30)
         for merged in [first.merge(second), second.merge(first)]:
             assert merged.hit_id == "dummy_hit"
+            assert merged.hit_start == 1
+            assert merged.hit_end == 30
             assert merged.query_start == 1
             assert merged.query_end == 25
             assert merged.evalue == 3e-20
@@ -43,6 +51,8 @@ class TestHMMResult(unittest.TestCase):
         assert data == {'bitscore': 53.5,
                         'evalue': 3e-10,
                         'hit_id': 'dummy_hit',
+                        'hit_start': 1,
+                        'hit_end': 1,
                         'query_end': 5,
                         'query_start': 1}
         regenerated = refinement.HMMResult.from_json(data)
@@ -53,8 +63,9 @@ class TestHMMResult(unittest.TestCase):
         assert regenerated.bitscore == 53.5
 
     def test_str_conversion(self):
-        result = refinement.HMMResult("dummy_hit", 1, 5, 3e-10, 53.5)
-        assert str(result) == "HMMResult(dummy_hit, 1, 5, evalue=3e-10, bitscore=53.5)"
+        result = refinement.HMMResult("dummy_hit", 1, 5, 3e-10, 53.5, 1, 6)
+        assert str(result) == "HMMResult(dummy_hit, hit_start=1, hit_end=6, " \
+                              "query_start=1, query_end=5, evalue=3e-10, bitscore=53.5)"
         outer = refinement.HMMResult("other", 1, 5, 3e-10, 53.5, internal_hits=[result])
         assert str(outer).endswith(", subtypes=[dummy_hit])")
 
@@ -68,32 +79,77 @@ class TestHMMResult(unittest.TestCase):
         second._evalue /= 10
         assert first != second
 
-    def test_containment(self):
-        outer = refinement.HMMResult("dummy_hit", 5, 20, 3e-10, 53.5)
+    def test_query_containment(self):
+        outer = DummyHMMResult(start=5, end=20)
         # check self containment
-        assert outer.is_contained_by(outer)
+        assert outer.query_is_contained_by(outer)
         # check right bounds
-        inner = refinement.HMMResult("dummy_hit", 10, 20, 3e-10, 53.5)
-        assert inner.is_contained_by(outer)
-        assert not outer.is_contained_by(inner)
+        inner = DummyHMMResult(start=10, end=20)
+        assert inner.query_is_contained_by(outer)
+        assert not outer.query_is_contained_by(inner)
         # check left bounds
-        inner = refinement.HMMResult("dummy_hit", 5, 15, 3e-10, 53.5)
-        assert inner.is_contained_by(outer)
-        assert not outer.is_contained_by(inner)
+        inner = DummyHMMResult(start=5, end=15)
+        assert inner.query_is_contained_by(outer)
+        assert not outer.query_is_contained_by(inner)
         # check completely within
-        inner = refinement.HMMResult("dummy_hit", 10, 15, 3e-10, 53.5)
-        assert inner.is_contained_by(outer)
-        assert not outer.is_contained_by(inner)
+        inner = DummyHMMResult(start=10, end=15)
+        assert inner.query_is_contained_by(outer)
+        assert not outer.query_is_contained_by(inner)
 
-    def test_overlaps(self):
-        center = refinement.HMMResult("dummy", 10, 20, 1., 1.)
-        floating = refinement.HMMResult("dummy", 1, 10, 1., 1.)
-        assert not center.overlaps_with(floating)
-        for start, end in [(5, 15), (10, 20), (15, 25)]:
-            floating = refinement.HMMResult("dummy", start, end, 1., 1.)
-            assert center.overlaps_with(floating) and floating.overlaps_with(center)
-        floating = refinement.HMMResult("dummy", 20, 30, 1., 1.)
-        assert not center.overlaps_with(floating)
+    def test_hit_containment(self):
+        outer = DummyHMMResult(hit_start=5, hit_end=20)
+        # check self containment
+        assert outer.hit_is_contained_by(outer)
+        # check right bounds
+        inner = DummyHMMResult(hit_start=10, hit_end=20)
+        assert inner.hit_is_contained_by(outer)
+        assert not outer.hit_is_contained_by(inner)
+        # check left bounds
+        inner = DummyHMMResult(hit_start=5, hit_end=15)
+        assert inner.hit_is_contained_by(outer)
+        assert not outer.hit_is_contained_by(inner)
+        # check completely within
+        inner = DummyHMMResult(hit_start=10, hit_end=15)
+        assert inner.hit_is_contained_by(outer)
+        assert not outer.hit_is_contained_by(inner)
+
+    def test_query_overlaps(self):
+        center = DummyHMMResult(start=10, end=20)
+        # Neigbouring to the left
+        floating = DummyHMMResult(start=1, end=10)
+        assert not center.query_overlaps_with(floating)
+        # Overlapping the left bound
+        floating = DummyHMMResult(start=1, end=15)
+        assert center.query_overlaps_with(floating)
+        assert center.query_overlaps_with(floating, min_overlap=5)
+        assert not center.query_overlaps_with(floating, min_overlap=6)
+        # Overlapping the right bound
+        floating = DummyHMMResult(start=15, end=25)
+        assert center.query_overlaps_with(floating)
+        assert center.query_overlaps_with(floating, min_overlap=5)
+        assert not center.query_overlaps_with(floating, min_overlap=6)
+        # Neigbouring to the right
+        floating = DummyHMMResult(start=20, end=30)
+        assert not center.query_overlaps_with(floating)
+
+    def test_hit_overlaps(self):
+        center = DummyHMMResult(hit_start=10, hit_end=20)
+        # Neigbouring to the left
+        floating = DummyHMMResult(hit_start=1, hit_end=10)
+        assert not center.hit_overlaps_with(floating)
+        # Overlapping the left bound
+        floating = DummyHMMResult(hit_start=1, hit_end=15)
+        assert center.hit_overlaps_with(floating)
+        assert center.hit_overlaps_with(floating, min_overlap=5)
+        assert not center.hit_overlaps_with(floating, min_overlap=6)
+        # Overlapping the right bound
+        floating = DummyHMMResult(hit_start=15, hit_end=25)
+        assert center.hit_overlaps_with(floating)
+        assert center.hit_overlaps_with(floating, min_overlap=5)
+        assert not center.hit_overlaps_with(floating, min_overlap=6)
+        # Neigbouring to the right
+        floating = DummyHMMResult(hit_start=20, hit_end=30)
+        assert not center.hit_overlaps_with(floating)
 
     def test_hashability(self):
         first = refinement.HMMResult("dummy_hit", 1, 5, 3e-10, 53.5)
@@ -183,7 +239,7 @@ class TestRefinement(unittest.TestCase):
         assert len(results) == 5
         # ensure they're all too short to be caught
         for result in results:
-            assert len(result) / self.hmm_lengths[result.hit_id] < 1
+            assert result.query_length / self.hmm_lengths[result.hit_id] < 1
         new = refinement.remove_incomplete(results, self.hmm_lengths)
         # ensure all were removed
         assert not new
@@ -192,7 +248,7 @@ class TestRefinement(unittest.TestCase):
 
         longest = 0
         for result in results:
-            proportional_length = len(result) / self.hmm_lengths[result.hit_id]
+            proportional_length = result.query_length / self.hmm_lengths[result.hit_id]
             if proportional_length > longest:
                 longest = proportional_length
 
@@ -205,12 +261,12 @@ class TestRefinement(unittest.TestCase):
         new = refinement.remove_incomplete(results, self.hmm_lengths, fallback=longest - 0.01)
         # ensure the longest, and longer than the fallback, remain
         assert len(new) == 1
-        assert len(new[0]) / self.hmm_lengths[new[0].hit_id] == longest
+        assert new[0].query_length / self.hmm_lengths[new[0].hit_id] == longest
 
         # change the fallback to 0 and ensure only one comes back
         new = refinement.remove_incomplete(results, self.hmm_lengths, fallback=0.)
         assert len(new) == 1
-        assert len(new[0]) / self.hmm_lengths[new[0].hit_id] == longest
+        assert new[0].query_length / self.hmm_lengths[new[0].hit_id] == longest
 
     def test_incomplete_regulator(self):
         results = refinement.gather_by_query(self.results)[self.gene_id]
@@ -220,7 +276,7 @@ class TestRefinement(unittest.TestCase):
         regulator_result = refinement.HMMResult(regulator_id, 1, 2, 1e-10, 1)
         results.append(regulator_result)
         new_lengths = dict(self.hmm_lengths)
-        new_lengths[regulator_id] = len(regulator_result) * 100  # always big
+        new_lengths[regulator_id] = regulator_result.query_length * 100  # always big
         # set the thresholds to be unreachable
         new = refinement.remove_incomplete(results, new_lengths, threshold=2., fallback=2.)
         # ensure the tiny, but present, regulator is still in the list
