@@ -157,6 +157,12 @@ class GeneralIntegrationTest(Base):
 
 @patch.object(known, "_get_datafile_path", side_effect=known_dir)
 class KnownIntegrationTest(Base):
+    def run_antismash(self, *args, **kwargs):
+        print(args, kwargs)
+        reference_clusters = core._load_cluster_data(known_dir("clusters.txt"))
+        with patch.object(core, "_load_cluster_data", return_value=reference_clusters):
+            return super().run_antismash(*args, **kwargs)
+
     def get_args(self):
         return ["--cb-knowncluster", "--minimal", "--enable-html"]
 
