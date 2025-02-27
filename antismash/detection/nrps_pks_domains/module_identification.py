@@ -186,7 +186,7 @@ class Component:
             ADENYLATIONS,
             ACYLTRANSFERASES,
             ALTERNATE_STARTERS
-        )) or self.is_coa_ligase()
+        ))
 
     def is_loader(self) -> bool:
         """ Returns True if the component can function as a loader domain """

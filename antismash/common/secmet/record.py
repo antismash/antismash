@@ -829,6 +829,12 @@ class Record:
             raise SecmetInvalidInputError(f"{seq_record.id}: {err}") from err
 
         for feature in seq_record.features:
+            if (len(feature.location.parts) > 1 and feature.location.start == 0
+                and feature.location.end == len(record) and not record.is_circular()):
+                raise SecmetInvalidInputError(
+                    "feature contains an origin spanning exon while in a linear record: "
+                    f"{record.id} {feature.type} {feature.location}"
+                )
             if feature.location.ref or feature.location.ref_db:
                 for ref in [feature.location.ref, feature.location.ref_db]:
                     if ref and ref != seq_record.id:
