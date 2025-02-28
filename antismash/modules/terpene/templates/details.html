@@ -43,10 +43,10 @@
         {% endif %}
           </div>
         </div>
-        {% if prediction.cds_predictions %}
         <div class="domains">
         <span class="section-header"> Genes with terpene domains: </span>
           <div class="domain-list">
+            {% if prediction.cds_predictions.items() %}
             {% for cds, domain_preds in prediction.cds_predictions.items() %}
               <div>
               {{ cds_selector_span(cds, ["section-header"]) }}: {{ format_domain_types(domain_preds) }}
@@ -75,9 +75,11 @@
               {{collapser_end()}}
              </div>
             {% endfor %}
+            {% else %}
+              No domains found
+            {% endif %}
           </div>
           </div>
-        {% endif %}
       </div>
     {% endfor %}
 </div>
