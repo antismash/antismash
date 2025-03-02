@@ -136,6 +136,16 @@ def check_gff_suitability(gff_file: str, sequences: List[SeqRecord]) -> None:
         ) from err
 
 
+def get_topology_from_gff(gff_file: str) -> set[str]:
+    db = gffutils.create_db(gff_file, dbfn=":memory:", verbose=False)
+    is_circular = set()
+    for reg in db.region(featuretype="region"):
+        record = to_seqfeature(reg)
+        if record.qualifiers.get("Is_circular", ["false"])[0] == "true":
+            is_circular.add(record.id)
+    return is_circular
+
+
 def get_features_from_file(handle: IO) -> Dict[str, List[SeqFeature]]:
     """Generates new SeqFeatures from a GFF file.
 

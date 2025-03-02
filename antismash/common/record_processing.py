@@ -134,11 +134,24 @@ def parse_input_sequence(filename: str, taxon: str = "bacteria", minimum_length:
             if str(err):
                 logging.error(err)
             raise AntismashInputError("could not parse records from GFF3 file") from err
+
+        gff_circular_ids = gff_parser.get_topology_from_gff(gff_file)
+        for record in records:
+            if record.id in gff_circular_ids:
+                record.annotations["topology"] = "circular"
         gff_features = gff_parser.run(gff_file)
         for record in records:
             if any(feature.type == "CDS" for feature in record.features):
                 continue
             record.features.extend(gff_features.get(record.id, []))
+            record.annotations.get("topology", "").lower() == "circular"
+        # the specific case if len(records) == 1 and len(gff_features) == 1 but name doesn't match
+        if len(gff_features) == len(records) == 1 and not any(
+            feature.type == "CDS" for feature in records[0].features
+        ):
+            records[0].features.extend(list(gff_features.values())[0])
+            if len(gff_circular_ids) == 1:
+                records[0].annotations["topology"] = "circular"
 
     # remove any previous or obselete antiSMASH annotations to minimise incompatabilities
     for record in records:
