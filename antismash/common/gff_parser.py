@@ -120,9 +120,11 @@ def check_gff_suitability(gff_file: str, sequences: List[SeqRecord]) -> None:
 
         # Check CDS are childless but not parentless
         for record in cds_records:
-            if len(list(db.parents(record.id))) < 1:
-                logging.error("CDS features must have a parent.")
-                raise AntismashInputError("GFF3 structure is not suitable.")
+            # ignore cases where no parents are given for gff
+            #   BCBio will automatically set its parent as the whole sequence
+            # if len(list(db.parents(record.id))) < 1:
+            #     logging.error("CDS features must have a parent.")
+            #     raise AntismashInputError("GFF3 structure is not suitable.")
             if len(list(db.children(record.id))) > 0:
                 logging.error("CDS features must be childless.")
                 raise AntismashInputError("GFF3 structure is not suitable.")
@@ -139,7 +141,9 @@ def check_gff_suitability(gff_file: str, sequences: List[SeqRecord]) -> None:
 def get_topology_from_gff(gff_file: str) -> set[str]:
     db = gffutils.create_db(gff_file, dbfn=":memory:", verbose=False)
     is_circular = set()
-    for reg in db.region(featuretype="region"):
+    for reg in db.all_features():
+        if reg.featuretype != "region":
+            continue
         record = to_seqfeature(reg)
         if record.qualifiers.get("Is_circular", ["false"])[0] == "true":
             is_circular.add(record.id)
