@@ -95,7 +95,7 @@ def check_gff_suitability(gff_file: str, sequences: List[SeqRecord]) -> None:
             region_records = list(db.region(seqid=record.id, featuretype="region"))
             if len(region_records) == 1:
                 region_define = to_seqfeature(region_records[0])
-                if len(record) != region_define.location.end.real:
+                if len(record) < region_define.location.end.real:
                     logging.error("Sequence given is not that long as defined in GFF.")
                     raise AntismashInputError("incompatible GFF record and sequence coordinates")
                 is_circular = region_define.qualifiers.get("Is_circular", ["false"])[0]
