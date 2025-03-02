@@ -199,12 +199,12 @@ def get_features_from_file(handle: IO) -> Dict[str, List[SeqFeature]]:
                     name = name_tmp
                     break
 
-            multiple_cds = len(list(filter(lambda x: x.type == 'CDS', new_features))) > 1
+            multiple_cds = len(list(filter(lambda x: x.type == "CDS", new_features))) > 1
             for i, new_feature in enumerate(new_features):
                 variant = name
-                if new_feature.type == 'CDS' and multiple_cds:
+                if new_feature.type == "CDS" and multiple_cds:
                     variant = f"{name}_{i}"
-                new_feature.qualifiers["gene"] = [variant]
+                new_feature.qualifiers['gene'] = [variant]
                 if locus_tag is not None:
                     new_feature.qualifiers["locus_tag"] = locus_tag
                 features.append(new_feature)
@@ -248,7 +248,7 @@ def generate_details_from_subfeature(sub_feature: SeqFeature,
     start = sub_feature.location.start.real
     end = sub_feature.location.end.real
     if MODIFY_LOCATIONS_BY_PHASE:
-        phase = int(sub_feature.qualifiers.get("phase", [0])[0])
+        phase = int(sub_feature.qualifiers.get('phase', [0])[0])
         if sub_feature.location.strand == 1:
             start += phase
         else:
@@ -297,8 +297,8 @@ def check_sub(feature: SeqFeature, db: gffutils.FeatureDB) -> List[SeqFeature]:
 
     for qualifier in mismatching_qualifiers:
         del qualifiers[qualifier]
-    if "Parent" in qualifiers:
-        del qualifiers["Parent"]
+    if 'Parent' in qualifiers:
+        del qualifiers['Parent']
 
     # if nothing to work on
     if not new_features and not locations:
