@@ -8,6 +8,7 @@ import bisect
 from collections import defaultdict
 import dataclasses
 import logging
+import math
 from typing import Any, Dict, FrozenSet, Iterable, Iterator, List, Optional, Set, Tuple, Union
 
 from antismash.common import fasta, serialiser
@@ -326,7 +327,7 @@ def remove_redundant_protoclusters(clusters: List[Protocluster],
         first_core_cds, last_core_cds = get_first_and_last(cluster)
         for superior in rules_by_name[rule_name].superiors:
             for other_cluster in clusters_by_rule.get(superior, []):
-                if cluster.is_contained_by(other_cluster):
+                if other_cluster.core_location.contains(cluster.core_location):
                     is_redundant = True
                     continue
                 other_first, other_last = get_first_and_last(other_cluster)
@@ -423,7 +424,7 @@ def apply_extenders(clusters: list[Protocluster],
         # the new core should be at least as large as the old core
         assert location_contains_other(core, cluster.core_location), f"{cluster.core_location} not in {core}"
         # update locations
-        surrounds = _extend_area_location(core, rule.neighbourhood, record)
+        surrounds = _extend_area_location(core, rule.neighbourhood, record, force_cross_origin=True)
         results.append(Protocluster(core, surrounding_location=surrounds,
                                     tool="rule-based-clusters", cutoff=rule.cutoff,
                                     neighbourhood_range=rule.neighbourhood, product=rule.name,
@@ -431,7 +432,8 @@ def apply_extenders(clusters: list[Protocluster],
     return results
 
 
-def _extend_area_location(location: Location, distance: int, record: Record) -> Location:
+def _extend_area_location(location: Location, distance: int, record: Record,
+                          *, force_cross_origin: bool = False) -> Location:
     """ A restrictive wrapper of Record.extend_location(), specifically for areas
         and not CDS features. No area should have more than two parts when
         overlapping the origin in circular genomes and in non-circular genomes,
@@ -441,6 +443,9 @@ def _extend_area_location(location: Location, distance: int, record: Record) -> 
             location: the location to extend, at most two parts and in the forward strand
             distance: the distance to extend the location, both before and after
             record: the record the location belongs in
+            force_cross_origin: whether to keep the result as a cross-origin location,
+                                in cases where the initial location crosses the origin
+                                and the resulting location would cover the full record
 
         Returns:
             a new location, covering the requested distance, with two parts iff it crosses the origin
@@ -457,18 +462,31 @@ def _extend_area_location(location: Location, distance: int, record: Record) -> 
     if len(location.parts) > max_parts:
         raise ValueError("Area has too many sub-locations for record type")
 
+    result = location
     # the extension will be much simpler if the strand is always fowards
     if location.strand != 1:
-        location = make_forwards(location)
+        result = make_forwards(location)
 
     # extend the location
-    location = record.connect_locations([record.extend_location(location, distance)])
+    result = record.connect_locations([record.extend_location(result, distance)])
+
+    if location.crosses_origin() and len(result) == len(record) \
+            and not result.crosses_origin() and force_cross_origin:
+        # set the edges of the location as the midpoint of the initial location's end and start
+        start = location.parts[0].start
+        end = location.parts[-1].end
+        padding = math.floor((start - end) / 2)
+        mid = padding + end
+        result = CompoundLocation([
+            FeatureLocation(mid, len(record), result.strand),
+            FeatureLocation(0, mid - 1, result.strand),
+        ])
 
     # too many parts means something has gone wrong prior to this function
-    if len(location.parts) > max_parts:
+    if len(result.parts) > max_parts:
         raise ValueError("Area has too many sub-locations for record type")
 
-    return location
+    return result
 
 
 def find_protoclusters(record: Record, cds_by_cluster_type: Dict[str, Set[str]],
@@ -529,7 +547,8 @@ def find_protoclusters(record: Record, cds_by_cluster_type: Dict[str, Set[str]],
         # form a protocluster for each core
         for core in cores:
             core_location = core.location
-            surrounds = _extend_area_location(core_location, rule.neighbourhood, record)
+            surrounds = _extend_area_location(core_location, rule.neighbourhood,
+                                              record, force_cross_origin=True)
             clusters.append(Protocluster(core_location, surrounding_location=surrounds,
                                          tool="rule-based-clusters", cutoff=cutoff,
                                          neighbourhood_range=rule.neighbourhood, product=cluster_type,
