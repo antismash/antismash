@@ -149,9 +149,7 @@ def get_topology_from_gff(gff_file: str) -> set[str]:
     """
     db = gffutils.create_db(gff_file, dbfn=":memory:", verbose=False)
     is_circular = set()
-    for reg in db.all_features():
-        if reg.featuretype != "region":
-            continue
+    for reg in db.all_features(featuretype="region"):
         record = to_seqfeature(reg)
         if record.qualifiers.get("Is_circular", ["false"])[0] == "true":
             is_circular.add(record.id)
@@ -182,7 +180,7 @@ def get_features_from_file(handle: IO) -> Dict[str, List[SeqFeature]]:
                 new_features = [feature]
             else:
                 new_features = check_sub(feature, db)
-                if feature.type == 'gene':
+                if feature.type == "gene":
                     features.append(feature)
                 if not new_features:
                     continue
