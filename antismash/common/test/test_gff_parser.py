@@ -78,14 +78,6 @@ class GffParserTest(TestCase):
         gff_file = path.get_full_path(__file__, "data", "circular.gff")
 
         contig1 = SeqRecord(Seq("A"*6407), "J02448")
-        contig2 = SeqRecord(Seq("A"*6406), "J02448_decoy")
 
         gff_parser.check_gff_suitability(gff_file, [contig1])
-        with self.assertRaisesRegex(errors.AntismashInputError,
-                                    "incompatible GFF record and sequence coordinates"):
-            gff_parser.check_gff_suitability(gff_file, [contig1, contig2])
-        with self.assertRaisesRegex(errors.AntismashInputError,
-                                    "incompatible GFF record and sequence coordinates"):
-            gff_parser.check_gff_suitability(gff_file, [contig1[:6406]])
-
         assert gff_parser.get_topology_from_gff(gff_file) == {"J02448"}

@@ -8,10 +8,9 @@
 import logging
 from typing import Dict, IO, List, Set
 
-from Bio.SeqFeature import SeqFeature, SimpleLocation
+from Bio.SeqFeature import SeqFeature
 from Bio.SeqRecord import SeqRecord
-import gffutils
-import gffutils.feature
+from BCBio import GFF
 
 from antismash.common.errors import AntismashInputError
 from antismash.common.secmet.locations import FeatureLocation, CompoundLocation
@@ -20,40 +19,6 @@ from antismash.common.secmet.locations import FeatureLocation, CompoundLocation
 # Augustus and NCBI report phase but have already adjusted the
 # locations and since they're the bulk of inputs, disable further modification
 MODIFY_LOCATIONS_BY_PHASE = False
-
-
-_BIOPYTHON_STRAND = {'+': 1,
-                     '-': -1,
-                     '.': 0}
-
-
-def to_seqfeature(feature: gffutils.feature.Feature) -> SeqFeature:
-    """
-        Converts a gffutils.Feature object to a Bio.SeqFeature object.
-
-        The GFF fields `source`, `score`, `seqid`, and `frame` are stored as
-        qualifiers.  GFF `attributes` are also stored as qualifiers.
-
-        Parameters
-        ----------
-        feature : Feature object, or string
-            If string, assume it is a GFF or GTF-format line; otherwise just use
-            the provided feature directly.
-    """
-    qualifiers = {
-        "source": [feature.source],
-        "score": [feature.score],
-        "seqid": [feature.seqid],
-        "frame": [feature.frame],
-    }
-    qualifiers.update(feature.attributes)
-    start, stop = sorted((feature.start, feature.end))
-    return SeqFeature(
-        SimpleLocation(start - 1, stop, strand=_BIOPYTHON_STRAND[feature.strand]),
-        id=feature.id,
-        type=feature.featuretype,
-        qualifiers=qualifiers,
-    )
 
 
 def check_gff_suitability(gff_file: str, sequences: List[SeqRecord]) -> None:
@@ -71,57 +36,56 @@ def check_gff_suitability(gff_file: str, sequences: List[SeqRecord]) -> None:
             None
     """
     try:
-        db = gffutils.create_db(gff_file, dbfn=":memory:", verbose=False)
-        if 'CDS' not in set(db.featuretypes()):
-            logging.error("GFF3 does not contain any CDS.")
-            raise AntismashInputError("no CDS features in GFF3 file.")
-
+        examiner = GFF.GFFExaminer()
+        # file handle is automatically closed by GFF lib
+        with open(gff_file, encoding="utf-8") as handle:
+            gff_data = examiner.available_limits(handle)
         # Check if at least one GFF locus appears in sequence
-        gff_ids = set(db.seqids())
-        gff_seqs = [seq for seq in sequences if seq.id in gff_ids]
-        if not gff_seqs:
-            if len(gff_ids) == len(sequences) == 1:
-                logging.info("GFF3 and sequence have only one record. Assuming is "
-                             "the same as long as coordinates are compatible.")
-                gff_seqs = [SeqRecord(id=list(gff_ids)[0], seq=sequences[0].seq)]
-            else:
-                logging.error("No GFF3 record IDs match any sequence record IDs.")
-                raise AntismashInputError("GFF3 record IDs don't match sequence file record IDs.")
+        gff_ids = set(n[0] for n in gff_data['gff_id'])
 
-        # Check GFF contains CDSs
-        for record in gff_seqs:
-            # check if sequence is circular in GFF
-            is_circular = "false"
-            region_records = list(db.region(seqid=record.id, featuretype="region"))
-            if len(region_records) == 1:
-                region_define = to_seqfeature(region_records[0])
+        if len(gff_ids) == 1 and len(sequences) == 1:
+            # If both inputs only have one record, assume is the same,
+            # but first check coordinate compatibility
+            logging.info("GFF3 and sequence have only one record. Assuming is "
+                         "the same as long as coordinates are compatible.")
+            limit_info = dict(gff_type=['CDS'])
+            with open(gff_file, encoding="utf-8") as handle:
+                record_iter = GFF.parse(handle, limit_info=limit_info)
+                try:
+                    record = next(record_iter)
+                except StopIteration:
+                    raise AntismashInputError("could not parse records from GFF3 file")
+
+            if not record.features:
+                raise AntismashInputError(f"GFF3 record {record.id} contains no features")
+
+            is_circular = False
+            if record.features[0].type == "region":
+                region_define = record.features[0]
                 if len(record) < region_define.location.end.real:
                     logging.error("Sequence given is not that long as defined in GFF.")
                     raise AntismashInputError("incompatible GFF record and sequence coordinates")
                 is_circular = region_define.qualifiers.get("Is_circular", ["false"])[0]
-            cds_records = [
-                to_seqfeature(record)
-                for record in db.region(seqid=record.id, featuretype='CDS')
-            ]
-            # raise AntismashInputError("could not parse records from GFF3 file")
-            if not cds_records:
-                raise AntismashInputError(f"GFF3 record {record.id} contains no features")
-            coord_max = max(n.location.end.real for n in cds_records)
-            if coord_max > len(record):
-                if is_circular != "true":
-                    logging.error("GFF3 record exceed the end of the sequence.")
-                    raise AntismashInputError("incompatible GFF record and sequence coordinates")
+
+            coord_max = max(n.location.end.real for n in record.features)
+            if coord_max > len(sequences[0]) and is_circular != "true":
+                logging.error('GFF3 record and sequence coordinates are not compatible.')
+                raise AntismashInputError('incompatible GFF record and sequence coordinates')
+
+        elif not gff_ids.intersection({seq.id for seq in sequences}):
+            logging.error('No GFF3 record IDs match any sequence record IDs.')
+            raise AntismashInputError("GFF3 record IDs don't match sequence file record IDs.")
+
+        # Check GFF contains CDSs
+        if not ('CDS',) in gff_data['gff_type']:
+            logging.error('GFF3 does not contain any CDS.')
+            raise AntismashInputError("no CDS features in GFF3 file.")
 
         # Check CDS are childless but not parentless
-        for record in cds_records:
-            # ignore cases where no parents are given for gff
-            #   BCBio will automatically set its parent as the whole sequence
-            # if len(list(db.parents(record.id))) < 1:
-            #     logging.error("CDS features must have a parent.")
-            #     raise AntismashInputError("GFF3 structure is not suitable.")
-            if len(list(db.children(record.id))) > 0:
-                logging.error("GFF3 structure is not suitable. CDS features must be childless.")
-                raise AntismashInputError("GFF3 structure is not suitable.")
+        with open(gff_file, encoding="utf-8") as handle:
+            if 'CDS' in set(n for key in examiner.parent_child_map(handle) for n in key):
+                logging.error('GFF3 structure is not suitable. CDS features must be childless but not parentless.')
+                raise AntismashInputError('GFF3 structure is not suitable.')
 
     except AssertionError as err:
         # usually the assertion "assert len(parts) >= 8, line"
@@ -147,13 +111,17 @@ def get_topology_from_gff(gff_file: str) -> set[str]:
         Returns:
             a set of record IDs that are circular
     """
-    db = gffutils.create_db(gff_file, dbfn=":memory:", verbose=False)
-    is_circular = set()
-    for reg in db.all_features(featuretype="region"):
-        record = to_seqfeature(reg)
-        if record.qualifiers.get("Is_circular", ["false"])[0] == "true":
-            is_circular.add(record.id)
-    return is_circular
+    try:
+        with open(gff_file, encoding="utf-8") as handle:
+            gff_records = list(GFF.parse(handle, limit_info=dict(gff_type=['region'])))
+    except Exception as err:
+        raise AntismashInputError("could not parse records from GFF3 file") from err
+    circular_seqs = set()
+    for gff_record in gff_records:
+        is_circular = gff_record.features[0].qualifiers.get("Is_circular", ["false"])[0]
+        if is_circular == "true":
+            circular_seqs.add(gff_record.id)
+    return circular_seqs
 
 
 def get_features_from_file(handle: IO) -> Dict[str, List[SeqFeature]]:
@@ -165,21 +133,19 @@ def get_features_from_file(handle: IO) -> Dict[str, List[SeqFeature]]:
         Returns:
             a dictionary mapping record ID to a list of SeqFeatures for that record
     """
-    db = gffutils.create_db(
-        handle.read(), dbfn=":memory:", from_string=True, verbose=False
-    )
+    try:
+        gff_records = list(GFF.parse(handle))
+    except Exception as err:
+        raise AntismashInputError("could not parse records from GFF3 file") from err
 
-    results: "dict[str, list]" = {i: [] for i in db.seqids()}
-    for seqid, features in results.items():
-        for feature_ in db.region(seqid=seqid):
-            parents = list(db.parents(feature_.id))
-            if len(parents) > 0 and parents[0].featuretype != "region":
-                continue
-            feature = to_seqfeature(feature_)
+    results = {}
+    for gff_record in gff_records:
+        features = []
+        for feature in gff_record.features:
             if feature.type == 'CDS':
                 new_features = [feature]
             else:
-                new_features = check_sub(feature, db)
+                new_features = check_sub(feature)
                 if feature.type == "gene":
                     features.append(feature)
                 if not new_features:
@@ -206,6 +172,7 @@ def get_features_from_file(handle: IO) -> Dict[str, List[SeqFeature]]:
                 if locus_tag is not None:
                     new_feature.qualifiers["locus_tag"] = locus_tag
                 features.append(new_feature)
+        results[gff_record.id] = features
     return results
 
 
@@ -273,7 +240,7 @@ def generate_details_from_subfeature(sub_feature: SeqFeature,
     return mismatching_qualifiers
 
 
-def check_sub(feature: SeqFeature, db: gffutils.FeatureDB) -> List[SeqFeature]:
+def check_sub(feature: SeqFeature) -> List[SeqFeature]:
     """ Recursively checks a GFF feature for any subfeatures and generates any
         appropriate SeqFeature instances from them.
     """
@@ -282,12 +249,11 @@ def check_sub(feature: SeqFeature, db: gffutils.FeatureDB) -> List[SeqFeature]:
     trans_locations: List[FeatureLocation] = []
     qualifiers: Dict[str, List[str]] = {}
     mismatching_qualifiers: Set[str] = set()
-    for sub_ in db.children(feature.id, level=1):
-        sub = to_seqfeature(sub_)
-        if sub.type != 'CDS':
+    for sub in feature.sub_features:
+        if sub.type != "CDS":
             new_features.append(sub)
-        if len(list(db.children(sub.id))) > 0:  # If there are sub_features, go deeper
-            new_features.extend(check_sub(sub, db))
+        if sub.sub_features:  # If there are sub_features, go deeper
+            new_features.extend(check_sub(sub))
         elif sub.type == 'CDS':
             sub_mismatch = generate_details_from_subfeature(sub, qualifiers,
                                                             locations, trans_locations)
@@ -305,7 +271,7 @@ def check_sub(feature: SeqFeature, db: gffutils.FeatureDB) -> List[SeqFeature]:
     # Only works in tip of the tree, when there's no new_feature built yet. If there is,
     # it means the script just came out of a check_sub and it's ready to return.
     if locations:
-        new_loc: "FeatureLocation|CompoundLocation" = locations[0]
+        new_loc = locations[0]
         # construct a compound location if required
         if len(locations) > 1:
             locations = sorted(locations, key=lambda x: x.start.real)
