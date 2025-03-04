@@ -59,8 +59,16 @@ def check_gff_suitability(gff_file: str, sequences: List[SeqRecord]) -> None:
             if not record.features:
                 raise AntismashInputError(f"GFF3 record {record.id} contains no features")
 
+            is_circular = False
+            if record.features[0].type == "region":
+                region_define = record.features[0]
+                if len(record) < region_define.location.end.real:
+                    logging.error("Sequence given is not that long as defined in GFF.")
+                    raise AntismashInputError("incompatible GFF record and sequence coordinates")
+                is_circular = region_define.qualifiers.get("Is_circular", ["false"])[0]
+
             coord_max = max(n.location.end.real for n in record.features)
-            if coord_max > len(sequences[0]):
+            if coord_max > len(sequences[0]) and is_circular != "true":
                 logging.error('GFF3 record and sequence coordinates are not compatible.')
                 raise AntismashInputError('incompatible GFF record and sequence coordinates')
 
@@ -84,6 +92,36 @@ def check_gff_suitability(gff_file: str, sequences: List[SeqRecord]) -> None:
         # so strip the newline and improve the error message
         message = str(err).strip()
         raise AntismashInputError(f"parsing GFF failed with invalid format: {message!r}") from err
+
+
+def get_topology_from_gff(gff_file: str) -> set[str]:
+    """
+        Extracts the topology information from a GFF file.
+        the GFF3 specification does call for cross-origin features to be numbered like this on circular genomes:
+
+        > For a circular genome, the landmark feature should include Is_circular=true in column 9.
+        > In the example below, from bacteriophage f1, gene II extends across the origin from positions 6477-831.
+        > The feature end is given as length of the landmark feature, J02448, plus the distance from the origin to the end of gene II (6407 + 831 = 7238).
+
+        - https://github.com/the-sequence-ontology/specifications/blob/master/gff3.md#circular-genomes
+
+        Arguments:
+            gff_file: the path of the GFF file to check
+
+        Returns:
+            a set of record IDs that are circular
+    """
+    try:
+        with open(gff_file, encoding="utf-8") as handle:
+            gff_records = list(GFF.parse(handle, limit_info=dict(gff_type=['region'])))
+    except Exception as err:
+        raise AntismashInputError("could not parse records from GFF3 file") from err
+    circular_seqs = set()
+    for gff_record in gff_records:
+        is_circular = gff_record.features[0].qualifiers.get("Is_circular", ["false"])[0]
+        if is_circular == "true":
+            circular_seqs.add(gff_record.id)
+    return circular_seqs
 
 
 def get_features_from_file(handle: IO) -> Dict[str, List[SeqFeature]]:

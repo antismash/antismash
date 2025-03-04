@@ -72,3 +72,12 @@ class GffParserTest(TestCase):
         # test force correlation
         self.sequences = self.sequences[1:]  # CONTIG_2
         gff_parser.check_gff_suitability(self.gff_file, self.sequences)
+
+
+    def test_circular(self):
+        gff_file = path.get_full_path(__file__, "data", "circular.gff")
+
+        contig1 = SeqRecord(Seq("A"*6407), "J02448")
+
+        gff_parser.check_gff_suitability(gff_file, [contig1])
+        assert gff_parser.get_topology_from_gff(gff_file) == {"J02448"}

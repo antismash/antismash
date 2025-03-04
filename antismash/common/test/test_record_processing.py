@@ -391,6 +391,21 @@ class TestPreprocessRecords(unittest.TestCase):
             with self.assertRaisesRegex(AntismashInputError, "no sequence .*R2.*"):
                 record_processing.parse_input_sequence(handle.name)
 
+    def test_circular_sequence(self):
+        gff_file = path.get_full_path(__file__, "data", "circular.gff")
+
+        with NamedTemporaryFile(suffix=".fasta") as handle:
+            handle.write((">J02448_decoy\n" + ("A"*7238)).encode())
+            handle.flush()
+            record, = record_processing.parse_input_sequence(handle.name, gff_file=gff_file)
+            assert not record.is_circular()
+
+        with NamedTemporaryFile(suffix=".fasta") as handle:
+            handle.write((">J02448\n" + ("A"*6407)).encode())
+            handle.flush()
+            record, = record_processing.parse_input_sequence(handle.name, gff_file=gff_file)
+            assert record.is_circular()
+
 
 class TestUniqueID(unittest.TestCase):
     def test_bad_starts(self):
