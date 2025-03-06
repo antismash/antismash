@@ -54,7 +54,7 @@
               {% for pred in domain_preds %}
                <div>
                 <strong>Domain {{ loop.index }}</strong>
-                  ({{ "{:,d}".format(pred.start)}}  - {{ "{:,d}".format(pred.end) }}): {{ get_domain_description(pred) }}
+                  ({{ "{:,d}".format(pred.start+1)}}  - {{ "{:,d}".format(pred.end) }}): {{ get_domain_description(pred) }}
                 {% if format_subtype(pred) != "none" or pred.reactions %}
                   {{collapser_start(cds, level="cds")}}
                   <div class="domain-details">
