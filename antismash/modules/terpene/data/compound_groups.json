@@ -92,11 +92,39 @@
             ]
         },
         {
+            "name": "cyclic_polyketide_diterpenoid",
+            "extended_name": null,
+            "single_compound": false,
+            "biosynthetic_class": "diterpene",
+            "biosynthetic_subclass": "polyketide diterpenoid",
+            "chain_length": 20,
+            "initial_cyclisations": [
+                "unknown"
+            ],
+            "functional_groups": [
+                "OH"
+            ]
+        },
+        {
             "name": "cyclic_merosesquiterpenoid",
             "extended_name": null,
             "single_compound": false,
             "biosynthetic_class": "sesquiterpene",
             "biosynthetic_subclass": "merosesquiterpenoid",
+            "chain_length": 15,
+            "initial_cyclisations": [
+                "unknown"
+            ],
+            "functional_groups": [
+                "OH"
+            ]
+        },
+        {
+            "name": "cyclic_polyketide_sesquiterpenoid",
+            "extended_name": null,
+            "single_compound": false,
+            "biosynthetic_class": "sesquiterpene",
+            "biosynthetic_subclass": "polyketide sesquiterpenoid",
             "chain_length": 15,
             "initial_cyclisations": [
                 "unknown"
@@ -247,11 +275,35 @@
             ]
         },
         {
+            "name": "epoxy_polyketide_diterpenoid",
+            "extended_name": null,
+            "single_compound": false,
+            "biosynthetic_class": "diterpene",
+            "biosynthetic_subclass": "polyketide diterpenoid",
+            "chain_length": 20,
+            "initial_cyclisations": [],
+            "functional_groups": [
+                "epoxy"
+            ]
+        },
+        {
             "name": "epoxy_merosesquiterpenoid",
             "extended_name": null,
             "single_compound": false,
             "biosynthetic_class": "sesquiterpene",
             "biosynthetic_subclass": "merosesquiterpenoid",
+            "chain_length": 15,
+            "initial_cyclisations": [],
+            "functional_groups": [
+                "epoxy"
+            ]
+        },
+        {
+            "name": "epoxy_polyketide_sesquiterpenoid",
+            "extended_name": null,
+            "single_compound": false,
+            "biosynthetic_class": "sesquiterpene",
+            "biosynthetic_subclass": "polyketide sesquiterpenoid",
             "chain_length": 15,
             "initial_cyclisations": [],
             "functional_groups": [
