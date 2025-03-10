@@ -59,11 +59,6 @@ def check_gff_suitability(gff_file: str, sequences: List[SeqRecord]) -> None:
             if not record.features:
                 raise AntismashInputError(f"GFF3 record {record.id} contains no features")
 
-            coord_max = max(n.location.end.real for n in record.features)
-            if coord_max > len(sequences[0]):
-                logging.error('GFF3 record and sequence coordinates are not compatible.')
-                raise AntismashInputError('incompatible GFF record and sequence coordinates')
-
         elif not gff_ids.intersection({seq.id for seq in sequences}):
             logging.error('No GFF3 record IDs match any sequence record IDs.')
             raise AntismashInputError("GFF3 record IDs don't match sequence file record IDs.")
@@ -88,6 +83,8 @@ def check_gff_suitability(gff_file: str, sequences: List[SeqRecord]) -> None:
 
 def get_features_from_file(handle: IO) -> Dict[str, List[SeqFeature]]:
     """ Generates new SeqFeatures from a GFF file.
+        Any 'region' feature found will be placed at the beginning of each record's features,
+        and have the feature type changed to 'source' for consistency with Genbank inputs.
 
         Arguments:
             handle: a file handle/stream with the GFF contents
@@ -102,10 +99,16 @@ def get_features_from_file(handle: IO) -> Dict[str, List[SeqFeature]]:
 
     results = {}
     for gff_record in gff_records:
+        landmark: SeqFeature = None
         features = []
         for feature in gff_record.features:
+            new_features = []
             if feature.type == 'CDS':
                 new_features = [feature]
+            elif feature.type == "region":
+                if landmark:
+                    raise AntismashInputError(f"region feature already defined for: {gff_record.id}")
+                landmark = feature
             else:
                 new_features = check_sub(feature)
                 if feature.type == "gene":
@@ -134,22 +137,108 @@ def get_features_from_file(handle: IO) -> Dict[str, List[SeqFeature]]:
                 if locus_tag is not None:
                     new_feature.qualifiers["locus_tag"] = locus_tag
                 features.append(new_feature)
+
+        if landmark:
+            landmark.type = "source"  # to be consistent genbank with the rest of the codebase
+            features.insert(0, landmark)
+
         results[gff_record.id] = features
     return results
 
 
-def run(gff_file: str) -> Dict[str, List[SeqFeature]]:
-    """ The entry point of gff_parser.
-        Generates new features and adds them to the provided record.
+def any_have_circularity(features: list[SeqFeature]) -> bool:
+    """ Determines if the given features define their containing record as being circular.
 
         Arguments:
-            options: an antismash.Config object, used only for fetching the GFF path
+            features: the features for a record
 
         Returns:
-            a dictionary mapping record ID to a list of SeqFeatures in that record
+            whether the features indicate the parent record is circular
     """
+    for feature in features:
+        if feature.type != "source":
+            continue
+        return feature.qualifiers.get("Is_circular", ["false"]) == ["true"]
+    return False
+
+
+def split_cross_origin_locations(features: list[SeqFeature], length: int) -> None:
+    """ Splits any of the given features that cross the origin into multi-part locations.
+
+        Arguments:
+            features: the list of features to process
+            length: the length of the parent record
+    """
+    def split(loc: FeatureLocation) -> list[FeatureLocation]:
+        assert loc.start <= length
+        strand = loc.strand
+        parts = [
+            FeatureLocation(loc.start, length, loc.strand),
+            FeatureLocation(0, loc.end % length, loc.strand),
+        ]
+        if strand == -1:
+            parts.reverse()
+        return parts
+
+    for feature in features:
+        if feature.location.start > length:
+            raise ValueError(f"GFF location entirely outside record: {feature.location}")
+        # most circular records won't have introns, but handle it just in case
+        parts = []
+        for part in feature.location.parts:
+            if part.end < length:
+                # don't change the location, but convert to secmet for better usability
+                parts.append(FeatureLocation(part.start, part.end, part.strand))
+            elif part.start > length:
+                # the part will shift, but not be split
+                new = FeatureLocation(part.start % length, part.end % length, part.strand)
+                if part.strand == -1:
+                    parts.insert(0, new)
+                else:
+                    parts.append(new)
+            else:
+                # the part crosses the boundary, so split it
+                assert part.start < length <= part.end, str(part)
+                parts.extend(split(part))
+
+        if len(parts) > 1:
+            feature.location = CompoundLocation(parts)
+        else:
+            feature.location = parts[0]
+
+
+def update_records(gff_file: str, records: list[SeqRecord]) -> None:
+    """ Updates the provided records with features and any record-wide information
+        contained with the GFF file.
+
+        Arguments:
+            gff_file: the GFF file from which to read in features
+            records: a list of records expected to match the GFF file
+    """
+    if not records:
+        raise ValueError("no records provided")
+
     with open(gff_file, encoding="utf-8") as handle:
-        return get_features_from_file(handle)
+        features_by_record = get_features_from_file(handle)
+
+    # a single set of annotations in each, but with mismatching identifiers, is assumed to be the same
+    # catching minor cases, such as one embedding a version and not the other
+    if len(records) == 1 and len(features_by_record) == 1:
+        features_by_record[records[0].id] = features_by_record.pop(list(features_by_record)[0])
+
+    for record in records:
+        features = features_by_record.get(record.id)
+        if not features:
+            continue
+        if any_have_circularity(features):
+            existing_topology = record.annotations.get("topology")
+            if existing_topology is not None and existing_topology != "circular":
+                raise AntismashInputError(
+                    f"{record.id} marked as circular in GFF file, but has existing and incompatible topology"
+                )
+            record.annotations["topology"] = "circular"
+            split_cross_origin_locations(features, len(record))
+        record.features.extend(features)
 
 
 def generate_details_from_subfeature(sub_feature: SeqFeature,
