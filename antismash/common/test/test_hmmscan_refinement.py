@@ -307,3 +307,83 @@ class TestRefinement(unittest.TestCase):
         assert best.bitscore == 43.5
         assert best.query_start == 91
         assert best.query_end == 390
+
+    def test_preservation_mode(self):
+        # Set artificial hmm lengths to better test the merging
+        hmm_lengths = {"SMCOG1003:sensor_histidine_kinase": 200,
+                       "SMCOG1048:sensor_histidine_kinase": 400,
+                       "SMCOG1237:transposase": 400}
+        results = refinement.refine_hmmscan_results(self.results, hmm_lengths,
+                                                    preservation_mode=True)
+        assert len(results) == 1
+        assert len(results[self.gene_id]) == 2
+        first, second = results[self.gene_id]
+        assert first.hit_id == "SMCOG1048:sensor_histidine_kinase"
+        assert first.query_start == 91
+        assert first.query_end == 390
+        assert second.hit_id == "SMCOG1003:sensor_histidine_kinase"
+        assert second.query_start == 161
+        assert second.query_end == 390
+
+
+class TestFragmentMerge(unittest.TestCase):
+    def setUp(self):
+        self.hmm_lengths = {"dom1": 100, "dom2": 100}
+        self.fragment1 = DummyHMMResult(label="dom1", start=0, end=50, hit_start=0, hit_end=50)
+
+    def test_standalone_domains(self):
+        # Standalone domains - no merge
+        standalone1 = DummyHMMResult(label="dom1", start=0, end=100, hit_start=0, hit_end=100)
+        standalone2 = DummyHMMResult(label="dom1", start=100, end=200, hit_start=0, hit_end=100)
+        out = refinement._merge_domain_list([standalone1, standalone2],
+                                            self.hmm_lengths, fragments_mode=True)
+        assert len(out) == 2
+
+    def test_fragments(self):
+        # Fragments of the same type - merge
+        fragment2 = DummyHMMResult(label="dom1", start=50, end=100, hit_start=50, hit_end=100)
+        out = refinement._merge_domain_list([self.fragment1, fragment2],
+                                            self.hmm_lengths, fragments_mode=True)
+        assert len(out) == 1
+
+    def test_different_fragments(self):
+        # Fragments of different types - no merge
+        fragment_other_dom = DummyHMMResult(label="dom2", start=50, end=100, hit_start=50, hit_end=100)
+        out = refinement._merge_domain_list([self.fragment1, fragment_other_dom],
+                                            self.hmm_lengths, fragments_mode=True)
+        assert len(out) == 2
+
+    def test_disordered_fragments(self):
+        # Fragments in wrong order - no merge
+        fragment2 = DummyHMMResult(label="dom1", start=50, end=100, hit_start=50, hit_end=100)
+        out = refinement._merge_domain_list([fragment2, self.fragment1],
+                                            self.hmm_lengths, fragments_mode=True)
+        assert len(out) == 2
+
+    def test_overlapping_fragments(self):
+        # Fragments that overlap just within the allowed overlap - merge
+        fragment3 = DummyHMMResult(label="dom1", start=50, end=100, hit_start=30, hit_end=100)
+        out = refinement._merge_domain_list([self.fragment1, fragment3],
+                                            self.hmm_lengths, fragments_mode=True,
+                                            allowed_overlap_factor=0.2)
+        assert len(out) == 1
+        # Fragments that overlap too much - no merge
+        fragment4 = DummyHMMResult(label="dom1", start=50, end=100, hit_start=29, hit_end=100)
+        out = refinement._merge_domain_list([self.fragment1, fragment4],
+                                            self.hmm_lengths, fragments_mode=True)
+        assert len(out) == 2
+
+    def test_many_fragments(self):
+        fragment2 = DummyHMMResult(label="dom1", start=50, end=100, hit_start=50, hit_end=100)
+        standalone2 = DummyHMMResult(label="dom1", start=100, end=200, hit_start=0, hit_end=100)
+        out = refinement._merge_domain_list([self.fragment1, fragment2, standalone2],
+                                            self.hmm_lengths, fragments_mode=True,
+                                            allowed_overlap_factor=0.2)
+        assert len(out) == 2
+        merged, standalone = out
+        assert merged.query_start == 0
+        assert merged.query_end == 100
+        assert merged.hit_start == 0
+        assert merged.hit_end == 100
+        assert standalone.query_start == 100
+        assert standalone.query_end == 200

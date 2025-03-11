@@ -7,6 +7,7 @@
 from collections import defaultdict
 from typing import Any, Dict, Iterable, List, Set, Tuple, Union
 import logging
+import math
 
 from Bio.SearchIO import QueryResult
 from Bio.SearchIO._model.hsp import HSP
@@ -278,21 +279,51 @@ def remove_incomplete(domains: List[HMMResult], hmm_lengths: Dict[str, int],
     return []
 
 
-def _merge_domain_list(domains: List[HMMResult], hmm_lengths: Dict[str, int]) -> List[HMMResult]:
-    """ Merges domains of the same kind if they would not be too long """
+def _merge_domain_list(domains: list[HMMResult], hmm_lengths: dict[str, int], *,
+                       fragments_mode: bool = False, allowed_overlap_factor: float = 0.2,
+                       max_span_factor: float = 1.5) -> list[HMMResult]:
+    """ Merges domains of the same kind
+        In fragments mode, domain fragments are merged when they hit to different
+        consecutive parts of the same profile and they aren't overlapping
+        In default mode, domains are always merged except when the resulting domain
+        would become too big
+
+        Arguments:
+            domains: a list of HMMResults
+            hmm_lengths: a dictionary mapping hmm id to length
+            fragments_mode: if enabled, only merges fragments within the same profile
+            allowed_overlap_factor: max allowed overlap for merging, as a factor of the hmm length
+                                (only used in fragments mode)
+            max_span_factor: max total domain length, as a factor of the hmm length
+                                (only used in default mode)
+
+        Returns:
+            a list of HMMResults
+    """
     categories: Dict[str, List[HMMResult]] = defaultdict(list)
     for domain in domains:
         categories[domain.hit_id].append(domain)
     remaining = []
     for category in categories.values():
         merged = category[0]
-        max_span = 1.5 * hmm_lengths[merged.hit_id]  # TODO: use a more specific check
-        for other in category[1:]:
-            # only merge if the hit spans of the two domains are small enough
-            if other.query_end - merged.query_start < max_span:
-                merged = merged.merge(other)
-            else:
-                merged = other
+        if fragments_mode:
+            allowed_overlap = math.floor(allowed_overlap_factor * hmm_lengths[merged.hit_id])
+            for other in category[1:]:
+                # If the order of the hits is wrong, or the hit regions overlap; don't merge
+                if (other.hit_start < merged.hit_start or
+                    other.hit_overlaps_with(merged, min_overlap=allowed_overlap+1)):
+                    remaining.append(merged)
+                    merged = other
+                else:
+                    merged = merged.merge(other)
+        else:
+            max_span = max_span_factor * hmm_lengths[merged.hit_id]  # TODO: use a more specific check
+            for other in category[1:]:
+                # only merge if the hit spans of the two domains are small enough
+                if other.query_end - merged.query_start < max_span:
+                    merged = merged.merge(other)
+                else:
+                    merged = other
         remaining.append(merged)
     return sorted(remaining, key=lambda result: result.query_start)
 
@@ -332,7 +363,7 @@ def gather_by_query(results: List[HSP]) -> Dict[str, Set[HMMResult]]:
 
 
 def refine_hmmscan_results(hmmscan_results: List[QueryResult], hmm_lengths: Dict[str, int],
-                           neighbour_mode: bool = False) -> Dict[str, List[HMMResult]]:
+                           neighbour_mode: bool = False, preservation_mode: bool = False) -> Dict[str, List[HMMResult]]:
     """ Processes a list of QueryResult objects (from SearchIO.parse(..., 'hmmer3-text'))
             - merges domain fragments of the same ID
             - keeps only best hits from overlaps
@@ -343,6 +374,8 @@ def refine_hmmscan_results(hmmscan_results: List[QueryResult], hmm_lengths: Dict
             hmm_lengths: a dictionary mapping hmm id to length
             neighbour_mode: if on, does overlap removal before merge and merges
                             only when the next result has the same hit_id
+            preservation_mode: if on, merges domains only if they are fragments
+                            of the same type, and doesn't remove any overlaps
 
         Returns:
             a mapping of gene name to list of HMMResults
@@ -356,6 +389,11 @@ def refine_hmmscan_results(hmmscan_results: List[QueryResult], hmm_lengths: Dict
             refined = _remove_overlapping(refined, hmm_lengths)
             # Merge domain fragments which are really one domain
             refined = _merge_immediate_neigbours(refined, hmm_lengths)
+        elif preservation_mode:
+            # Prefiltering step to remove very small hits
+            refined = remove_incomplete(refined, hmm_lengths, threshold=0.1, fallback=0.1)
+            # Merging in fragments mode
+            refined = _merge_domain_list(refined, hmm_lengths, fragments_mode=True)
         else:
             # Merge domain fragments which are really one domain
             refined = _merge_domain_list(refined, hmm_lengths)
