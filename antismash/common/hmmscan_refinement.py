@@ -291,14 +291,21 @@ def remove_incomplete(domains: List[HMMResult], hmm_lengths: Dict[str, int],
 
 def _merge_domain_list(domains: list[HMMResult], hmm_lengths: dict[str, int],
                        *, max_length: float = 1.5,
+                       preserve_unmerged: bool = False,
+                       check_hit_overlap: bool = False, allowed_hit_overlap: int = 20,
                        ) -> list[HMMResult]:
     """ Merges domains of the same kind if they would not be too long.
 
         Arguments:
             domains: a list of HMM results
             hmm_lengths: a mapping of profile name to profile length
-            max_span: a multiplier of the profile length that specifies the maximum length
+            max_length: a multiplier of the profile length that specifies the maximum length
                       that merged fragments could form
+            preserve_unmerged: if enabled, retain domains that could not be merged, instead of
+                      discarding them
+            check_hit_overlap: if enabled, will only merge hits if they do not hit to the same
+                      region of the profile (to avoid merging duplicated domains)
+            allowed_hit_overlap: the maximum allowed profile overlap in bp for 'check_hit_overlap'
 
         Returns:
             a trimmed list of the initial results
@@ -309,12 +316,18 @@ def _merge_domain_list(domains: list[HMMResult], hmm_lengths: dict[str, int],
     remaining = []
     for category in categories.values():
         merged = category[0]
-        max_span = max_length * hmm_lengths[merged.hit_id]  # TODO: use a more specific check
+        max_span = max_length * hmm_lengths[merged.hit_id]
         for other in category[1:]:
-            # only merge if the hit spans of the two domains are small enough
-            if other.query_end - merged.query_start < max_span:
+            span_ok = other.query_end - merged.query_start < max_span
+            if check_hit_overlap:
+                overlap_ok = not other.hit_overlaps_with(merged, min_overlap=allowed_hit_overlap+1)
+            else:
+                overlap_ok = True   # Allow any overlap within the profile
+            if span_ok and overlap_ok:
                 merged = merged.merge(other)
             else:
+                if preserve_unmerged:
+                    remaining.append(merged)
                 merged = other
         remaining.append(merged)
     return sorted(remaining, key=lambda result: result.query_start)

@@ -233,6 +233,42 @@ class TestRefinement(unittest.TestCase):
         # and the original list should be untouched
         assert len(results) == 5
 
+    def test_merge_preserve_unmerged(self):
+        first = refinement.HMMResult("dummy_hit", 1, 10, 3e-10, 53.5)
+        second = refinement.HMMResult("dummy_hit", 10, 20, 3e-20, 73.5)
+        results = [first, second]
+        # Preserve_unmerged off: If domains cannot be merged, only the last one is kept
+        merged = refinement._merge_domain_list(results, {"dummy_hit": 10},
+                                               preserve_unmerged=False)
+        assert len(merged) == 1
+        assert merged[0] == second
+        # Preserve_unmerged on: If domains cannot be merged, both are kept
+        merged = refinement._merge_domain_list(results, {"dummy_hit": 10},
+                                                preserve_unmerged=True)
+        assert len(merged) == 2
+
+    def test_merge_check_hit_overlap(self):
+        first = refinement.HMMResult("dummy_hit", 1, 10, 3e-10, 53.5, hit_start=1, hit_end=20)
+        second = refinement.HMMResult("dummy_hit", 15, 25, 3e-20, 73.5, hit_start=10, hit_end=30)
+        results = [first, second]
+        # Check_hit_overlap off: Domains covering the same region of the profile are merged
+        merged = refinement._merge_domain_list(results, {"dummy_hit": 30},
+                                               preserve_unmerged=True,
+                                               check_hit_overlap=False)
+        assert len(merged) == 1
+        # Check_hit_overlap on: Domains covering the same region of the profile are not merged
+        merged = refinement._merge_domain_list(results, {"dummy_hit": 30},
+                                               preserve_unmerged=True,
+                                               check_hit_overlap=True,
+                                               allowed_hit_overlap=5)
+        assert len(merged) == 2
+        # If allowed_hit_overlap >= hit_overlap, they are merged
+        merged = refinement._merge_domain_list(results, {"dummy_hit": 30},
+                                               preserve_unmerged=True,
+                                               check_hit_overlap=True,
+                                               allowed_hit_overlap=10)
+        assert len(merged) == 1
+
     def test_incomplete_removal(self):
         results = refinement.gather_by_query(self.results)[self.gene_id]
         results = sorted(list(results), key=lambda result: result.query_start)
