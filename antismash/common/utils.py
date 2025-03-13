@@ -109,6 +109,37 @@ def extract_from_alignment(hit: QueryResult, positions: Iterable[int]) -> Option
     return extract_by_reference_positions(query, profile, [p - offset for p in positions if p >= offset])
 
 
+def get_query_positions_from_alignment(hit: QueryResult, ref_positions: list[int]) -> list[int]:
+    """ Given an alignment, outputs the query positions that match the given reference positions.
+        The positions are adjusted to account for any gaps in the reference and query.
+        Returns an empty list if not all positions are found in the query.
+
+        Arguments:
+            hit: the alignment
+            ref_positions: the positions of interest in the unaligned reference
+
+        Returns:
+            a list of positions in the query
+    """
+    reference = hit.aln[1].seq
+    query = hit.aln[0].seq
+    query_positions = []
+    ref_position = 0
+    query_position = 0
+
+    for ref_amino, query_amino in zip(reference, query):
+        if not any(aa in "-." for aa in [query_amino, ref_amino]):
+            if ref_position in ref_positions:
+                query_positions.append(query_position)
+        if not query_amino in "-.":
+            query_position += 1
+        if not ref_amino in "-.":
+            ref_position += 1
+    if len(query_positions) != len(ref_positions):
+        return []
+    return [p+hit.query_start for p in query_positions]
+
+
 def distance_to_pfam(record: Record, query: Feature, hmmer_profiles: list[str],
                      *, max_range: int = 40_000,
                      ) -> int:
