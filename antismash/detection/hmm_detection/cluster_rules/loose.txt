@@ -23,6 +23,14 @@ RULE fatty_acid
     NEIGHBOURHOOD 10
     CONDITIONS  bt1fas or ft1fas or t2fas or fabH
 
+RULE fungal-RiPP-like
+    CATEGORY RiPP
+    DESCRIPTION fungal RiPP-like clusters
+    SUPERIORS fungal-RiPP
+    CUTOFF 20
+    NEIGHBOURHOOD 30
+    CONDITIONS DUF3328
+
 RULE lysine
     CATEGORY NRPS
     DESCRIPTION Fungal lysine primary metabolism
