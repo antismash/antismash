@@ -131,6 +131,9 @@ def get_glossary_data(predictions: list[ProtoclusterPrediction]) -> dict[str, st
         for compound in compounds:
             if compound.extended_name:
                 name_mappings[compound.name] = compound.extended_name.capitalize()
+        func_groups = pred.get_functional_groups()
+        if "PP" in func_groups:
+            name_mappings["PP"] = "Diphosphate"
     return dict(sorted(name_mappings.items()))
 
 
