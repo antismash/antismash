@@ -92,11 +92,39 @@
             ]
         },
         {
+            "name": "cyclic_polyketide_diterpenoid",
+            "extended_name": null,
+            "single_compound": false,
+            "biosynthetic_class": "diterpene",
+            "biosynthetic_subclass": "polyketide diterpenoid",
+            "chain_length": 20,
+            "initial_cyclisations": [
+                "unknown"
+            ],
+            "functional_groups": [
+                "OH"
+            ]
+        },
+        {
             "name": "cyclic_merosesquiterpenoid",
             "extended_name": null,
             "single_compound": false,
             "biosynthetic_class": "sesquiterpene",
             "biosynthetic_subclass": "merosesquiterpenoid",
+            "chain_length": 15,
+            "initial_cyclisations": [
+                "unknown"
+            ],
+            "functional_groups": [
+                "OH"
+            ]
+        },
+        {
+            "name": "cyclic_polyketide_sesquiterpenoid",
+            "extended_name": null,
+            "single_compound": false,
+            "biosynthetic_class": "sesquiterpene",
+            "biosynthetic_subclass": "polyketide sesquiterpenoid",
             "chain_length": 15,
             "initial_cyclisations": [
                 "unknown"
@@ -247,6 +275,18 @@
             ]
         },
         {
+            "name": "epoxy_polyketide_diterpenoid",
+            "extended_name": null,
+            "single_compound": false,
+            "biosynthetic_class": "diterpene",
+            "biosynthetic_subclass": "polyketide diterpenoid",
+            "chain_length": 20,
+            "initial_cyclisations": [],
+            "functional_groups": [
+                "epoxy"
+            ]
+        },
+        {
             "name": "epoxy_merosesquiterpenoid",
             "extended_name": null,
             "single_compound": false,
@@ -259,11 +299,23 @@
             ]
         },
         {
+            "name": "epoxy_polyketide_sesquiterpenoid",
+            "extended_name": null,
+            "single_compound": false,
+            "biosynthetic_class": "sesquiterpene",
+            "biosynthetic_subclass": "polyketide sesquiterpenoid",
+            "chain_length": 15,
+            "initial_cyclisations": [],
+            "functional_groups": [
+                "epoxy"
+            ]
+        },
+        {
             "name": "epoxy_polypodane",
             "extended_name": null,
             "single_compound": false,
             "biosynthetic_class": "triterpene",
-            "biosynthetic_subclass": "polypodane",
+            "biosynthetic_subclass": "polypodane-type",
             "chain_length": 30,
             "initial_cyclisations": [
                 "polypodane skeleton"
@@ -411,6 +463,18 @@
             ]
         },
         {
+            "name": "kaurene_like",
+            "extended_name": null,
+            "single_compound": false,
+            "biosynthetic_class": "diterpene",
+            "biosynthetic_subclass": null,
+            "chain_length": 20,
+            "initial_cyclisations": ["kaurene skeleton"],
+            "functional_groups": [
+                "unknown"
+            ]
+        },
+        {
             "name": "monoterpene_C1-C10",
             "extended_name": null,
             "single_compound": false,
@@ -449,8 +513,8 @@
             ]
         },
         {
-            "name": "oxidosqualene",
-            "extended_name": "2,3-oxidosqualene",
+            "name": "2,3-oxidosqualene",
+            "extended_name": null,
             "single_compound": true,
             "biosynthetic_class": "triterpene",
             "biosynthetic_subclass": "steroid precursor",
@@ -469,6 +533,20 @@
             "chain_length": 40,
             "initial_cyclisations": [],
             "functional_groups": []
+        },
+        {
+            "name": "pimaradiene_like",
+            "extended_name": null,
+            "single_compound": false,
+            "biosynthetic_class": "diterpene",
+            "biosynthetic_subclass": null,
+            "chain_length": 20,
+            "initial_cyclisations": [
+                "pimaradiene skeleton"
+            ],
+            "functional_groups": [
+                "unknown"
+            ]
         },
         {
             "name": "polypodane",
@@ -533,26 +611,11 @@
             "functional_groups": []
         },
         {
-            "name": "sesquiterpene_C2-C7/C6-C11_OH",
-            "extended_name": null,
-            "single_compound": false,
-            "biosynthetic_class": "sesquiterpene",
-            "biosynthetic_subclass": null,
-            "chain_length": 15,
-            "initial_cyclisations": [
-                "C2-C7",
-                "C6-C11"
-            ],
-            "functional_groups": [
-                "OH"
-            ]
-        },
-        {
             "name": "sesquiterpene_C2-C7/C6-C11_PP",
             "extended_name": null,
             "single_compound": false,
             "biosynthetic_class": "sesquiterpene",
-            "biosynthetic_subclass": null,
+            "biosynthetic_subclass": "drimane-type",
             "chain_length": 15,
             "initial_cyclisations": [
                 "C2-C7",
@@ -560,20 +623,6 @@
             ],
             "functional_groups": [
                 "PP"
-            ]
-        },
-        {
-            "name": "sesquiterpene_C6-C11_OH",
-            "extended_name": null,
-            "single_compound": false,
-            "biosynthetic_class": "sesquiterpene",
-            "biosynthetic_subclass": null,
-            "chain_length": 15,
-            "initial_cyclisations": [
-                "C6-C11"
-            ],
-            "functional_groups": [
-                "OH"
             ]
         },
         {
