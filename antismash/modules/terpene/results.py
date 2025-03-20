@@ -6,6 +6,7 @@
 import logging
 from typing import Any, Optional, Self
 from dataclasses import asdict, dataclass
+from enum import Enum
 
 from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import Record
@@ -20,6 +21,34 @@ from .data_loader import (
 
 
 @dataclass(slots=True, eq=True)
+class MotifResult:
+    """ A search result for a motif
+    """
+    name: str
+    active: bool
+    sequence: Optional[str] = None
+    start: Optional[int] = None
+    end: Optional[int] = None
+
+    def to_json(self) -> dict[str, Any]:
+        """ Returns a JSON-friendly representation """
+        return asdict(self)
+
+    @classmethod
+    def from_json(cls, data: dict[str, Any]) -> Self:
+        """ Reconstructs an instance from a JSON representation """
+        return cls(**data)
+
+
+class Activity(Enum):
+    """ An Enum representing the activity of a domain
+    """
+    UNKNOWN = 0
+    ACTIVE = 1
+    INACTIVE = 2
+
+
+@dataclass(slots=True, eq=True)
 class DomainPrediction:
     """ A prediction for a terpene biosynthetic domain
     """
@@ -28,19 +57,27 @@ class DomainPrediction:
     start: int
     end: int
     reactions: tuple[Reaction, ...]
+    motif_results: tuple[MotifResult, ...]
+    activity: Activity
 
     def __str__(self) -> str:
         return (
             f"DomainPrediction(type={self.domain_type}, subtypes={self.subtypes}, start={self.start}, "
-            f"end={self.end}, reactions={[str(reaction) for reaction in self.reactions]})"
+            f"end={self.end}, reactions={[str(reaction) for reaction in self.reactions]}, "
+            f"motif_results={[str(result) for result in self.motif_results]}, activity={self.activity})"
         )
+
+    def get_activity(self) -> str:
+        """ Returns the activity as string """
+        return self.activity.name.capitalize()
 
     def to_json(self) -> dict[str, Any]:
         """ Returns a JSON-friendly representation """
+        reactions = [reaction.to_json() for reaction in self.reactions]
+        motif_results = [result.to_json() for result in self.motif_results]
         data = asdict(self)
-        reactions = data.pop("reactions")
-        if reactions:
-            data["reactions"] = [reaction.to_json() for reaction in reactions]
+        data["reactions"] = reactions
+        data["motif_results"] = motif_results
         return data
 
     @classmethod
@@ -49,7 +86,9 @@ class DomainPrediction:
         """ Reconstructs an instance from a JSON representation """
         reactions = tuple(Reaction.from_json(reaction, compound_groups) for reaction in data.pop("reactions", []))
         subtypes = tuple(data.pop("subtypes"))
-        return cls(**data, subtypes=subtypes, reactions=reactions)
+        motif_results = tuple(MotifResult.from_json(result) for result in data.pop("motif_results", []))
+        activity = Activity(data.pop("activity"))
+        return cls(**data, subtypes=subtypes, reactions=reactions, motif_results=motif_results, activity=activity)
 
 
 class ProtoclusterPrediction:

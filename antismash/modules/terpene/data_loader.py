@@ -6,6 +6,8 @@
 from dataclasses import asdict, dataclass
 from typing import Any, Optional, Self
 
+from Bio.Data import IUPACData
+
 from antismash.common import json, path
 
 
@@ -119,6 +121,36 @@ class Reaction:
                    tuple(compound_groups[name] for name in data["products"]))
 
 
+@dataclass(frozen=True, slots=True)
+class Motif:
+    """ A motif within an hmm profile
+    """
+    name: str
+    positions: list[int]
+    allowed_residues: list[str]
+
+    def __post_init__(self) -> None:
+        if len(self.positions) != len(self.allowed_residues):
+            raise ValueError(f"Motif {self.name}: "
+                             "Each position should have an associated string with allowed residues (and vice versa)")
+        if sorted(self.positions) != self.positions:
+            raise ValueError(f"Motif {self.name}: "
+                            "Positions should be in ascending order")
+        if any(not set(residue_string) <= set(IUPACData.protein_letters)
+               for residue_string in self.allowed_residues):
+            raise ValueError(f"Motif {self.name}: "
+                             "Contains invalid amino acid characters")
+
+    def to_json(self) -> dict[str, Any]:
+        """ Returns a JSON-friendly representation """
+        return asdict(self)
+
+    @classmethod
+    def from_json(cls, data: dict[str, Any]) -> Self:
+        """ Reconstructs an instance from a JSON representation """
+        return cls(**data)
+
+
 @dataclass
 class TerpeneHMM:
     """ Properties associated with a terpene hmm profile
@@ -130,6 +162,7 @@ class TerpeneHMM:
     cutoff: int
     subtypes: tuple["TerpeneHMM", ...]
     reactions: tuple[Reaction, ...]
+    motifs: tuple[Motif, ...]
     __is_subtype: bool = False
 
     def __post_init__(self) -> None:
@@ -157,10 +190,11 @@ class TerpeneHMM:
             subtypes = tuple(terpene_hmms[name] for name in hmm_json["subtypes"])
         except KeyError as key:
             raise MissingHmmError(f"'{hmm_json['name']}': Subtype {key} not defined yet")
+        reactions = tuple(Reaction.from_json(reaction, compound_groups) for reaction in hmm_json["reactions"])
+        motifs = tuple(Motif.from_json(motif) for motif in hmm_json["motifs"])
         return cls(str(hmm_json["name"]), str(hmm_json["description"]), str(hmm_json["type"]),
                    int(hmm_json["length"]), int(hmm_json["cutoff"]), subtypes,
-                   tuple(Reaction.from_json(reaction, compound_groups)
-                         for reaction in hmm_json["reactions"]))
+                   reactions, motifs)
 
 
 @dataclass
