@@ -32,9 +32,9 @@ CLUSTERBLAST_URL = "https://dl.secondarymetabolites.org/releases/clusterblast/cl
 CLUSTERBLAST_ARCHIVE_CHECKSUM = "dc90a171751472d88088e12f52446c49fe0efff437d92110072151f523eb3ee3"
 CLUSTERBLAST_FASTA_CHECKSUM = "55ea9e62dcc0c083b42f8209a48889f710e888db72d5433f4429d4a6ec1b946b"
 
-KCB_URL = "https://dl.secondarymetabolites.org/releases/knownclusterblast/kcb_3.1.tar.xz"
-KCB_ARCHIVE_CHECKSUM = "7149d5742280be3bb39a2abfbccab353a980289f8563bb03544df8899d31e7b4"
-KCB_FASTA_CHECKSUM = "c956906c9c5056a330e2f6fcfff19d48bff65d6608e5befd95dee69de635c140"
+KCB_URL = "https://dl.secondarymetabolites.org/releases/knownclusterblast/kcb_4.0.tar.xz"
+KCB_ARCHIVE_CHECKSUM = "be6530843877acf423e92bedf4efd6facedde422531abb895c44754bdc5ec73c"
+KCB_FASTA_CHECKSUM = "4b196343ed82d49f2b8f3babe89d512b92f0e026040fa50b15eeb97950717e8b"
 
 CLUSTERCOMPARE_DBS = {
     "mibig": {
