@@ -5,6 +5,9 @@
   </div>
   <div class="gt-scroll-container">
     <div class="tailoring-container">
+    {%- if entries | length == 0 -%}
+      <span style="padding: 0.5em;">No tailoring functions detected.</span>
+    {%- endif -%}
     {% for ec_group in entries %}
       <div class="tailoring-ec-group">
         <span class="tailoring-ec-label">{{ ec_group.name.capitalize() }}:</span>
