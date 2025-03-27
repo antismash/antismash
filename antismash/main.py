@@ -466,9 +466,10 @@ def write_outputs(results: serialiser.AntismashResults, options: ConfigType) -> 
 
     # write records to an aggregate output
     base_filename = canonical_base_filename(results.input_file, options.output_dir, options)
-    combined_filename = base_filename + ".gbk"
-    logging.debug("Writing final genbank file to '%s'", combined_filename)
-    SeqIO.write(bio_records, combined_filename, "genbank")
+    if options.summary_gbk:
+        combined_filename = base_filename + ".gbk"
+        logging.debug("Writing final genbank file to '%s'", combined_filename)
+        SeqIO.write(bio_records, combined_filename, "genbank")
 
     zipfile = base_filename + ".zip"
     if os.path.exists(zipfile):
