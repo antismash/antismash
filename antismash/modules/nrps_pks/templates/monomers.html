@@ -10,9 +10,9 @@
       <dt></dt>
       {% if gene_id in region.url_strict %}
         <dd> Search NORINE for peptide:
-          <a class="external-link" href="{{region.url_strict[gene_id]}}" target="_new">strict</a>
+          <a class="external-link" href="{{region.url_strict[gene_id]}}" target="_blank">strict</a>
             or
-          <a class="external-link" href="{{region.url_relaxed[gene_id]}}" target="_new">relaxed</a>
+          <a class="external-link" href="{{region.url_relaxed[gene_id]}}" target="_blank">relaxed</a>
         </dd>
         <br>
       {% endif %}
@@ -36,6 +36,6 @@
   </dl>
   <div class="prediction-text">
     <br>
-    <a class="external-link" href="https://paras.bioinformatics.nl" target="_new">Link to PARAS substrate predictor</a>
+    <a class="external-link" href="https://paras.bioinformatics.nl" target="_blank">Link to PARAS substrate predictor</a>
   </div>
 </div>
