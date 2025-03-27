@@ -19,12 +19,11 @@
      <span class="comparippson-similarity">{{ "%.1f" % (hit.similarity*100) }}%</span>
      <span class="comparippson-link">{{ link(hit) }}
      {%- if tail_list %}<span class="comparippson-extra-indicator">{{ tail }}</span>:{{ collapser_start("comparippson-extra-names", level="none") }}
-       <div class="comparippson-extra-names">
+       <span class="comparippson-extra-names">
         {%- for other in tail_list -%}
         <span>{{ link(other) }}</span>
-        {{ description(other) }}
+        <span>{{ description(other) }}</span>
         {%- endfor %}
-       </div>
       {{ collapser_end() }}{% else %}:{% endif %}</span>
      {{ description(hit) }}
      <div class="comparippson-alignment">
