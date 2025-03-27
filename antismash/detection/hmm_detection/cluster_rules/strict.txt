@@ -359,6 +359,7 @@ RULE lassopeptide
     CUTOFF 10
     NEIGHBOURHOOD 10
     CONDITIONS PF13471 and Asn_synthase or micJ25 or mcjC
+    EXTENDERS Stand_Alone_Lasso_RRE
 
 RULE sactipeptide
     CATEGORY RiPP
