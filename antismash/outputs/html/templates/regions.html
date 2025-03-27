@@ -51,7 +51,7 @@
         {% if show_tta %}
             {% call le.symbol_legend('legend-tta-codon', 'TTA codons') %}
                 <svg viewbox="0 0 6 6">
-                    <polyline class="svgene-tta-codon" points="3,0 0,6 6,6 3,0">
+                    <polyline class="svgene-tta-codon" points="3,0 0,6 6,6 3,0"/>
                 </svg>
             {% endcall %}
         {% endif %}
@@ -60,7 +60,8 @@
                 <svg viewbox="0 -1 8 8">
                     <g class="svgene-binding-site">
                     <line x1="4" y1="8" x2="4" y1="4"></line>
-                    <circle cx="4" cy="2" r="2"></line>
+                    <circle cx="4" cy="2" r="2"></circle>
+                    </g>
                 </svg>
             {% endcall %}
         {% endif %}
