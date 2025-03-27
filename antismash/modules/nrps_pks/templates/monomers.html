@@ -3,7 +3,7 @@
       <span>NRPS/PKS substrate predictions</span>
       {{help_tooltip(tooltip, "nrps-monomers")}}
     </div>
-  <div class="prediction-text">
+  <div class="prediction-text nrps-monomer-details">
     {% for gene_id in region.sidepanel_features if gene_id in relevant_features %}
       <strong><span class="serif">{{gene_id}}</span></strong>: {{relevant_features[gene_id] | join(" - ")}}
       {{collapser_start(target=gene_id, level="cds")}}
