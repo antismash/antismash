@@ -37,7 +37,7 @@ class MinowaPrediction(Prediction):
             " <dd>\n"
             "  <dl>\n"
         )
-        core = "\n".join(f"  <dd></dd><dt>{name}: {score:.1f}</dt>\n" for name, score in self.predictions)
+        core = "\n".join(f"  <dt>{name}: {score:.1f}</dt><dd></dd>\n" for name, score in self.predictions)
         raw_end = (
             "\n"
             "  </dl>\n"
