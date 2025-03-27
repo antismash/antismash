@@ -3,22 +3,21 @@
       <span>NRPS/PKS substrate predictions</span>
       {{help_tooltip(tooltip, "nrps-monomers")}}
     </div>
-  <dl class="prediction-text">
+  <div class="prediction-text">
     {% for gene_id in region.sidepanel_features if gene_id in relevant_features %}
       <strong><span class="serif">{{gene_id}}</span></strong>: {{relevant_features[gene_id] | join(" - ")}}
       {{collapser_start(target=gene_id, level="cds")}}
-      <dt></dt>
       {% if gene_id in region.url_strict %}
-        <dd> Search NORINE for peptide:
+        <div> Search NORINE for peptide:
           <a class="external-link" href="{{region.url_strict[gene_id]}}" target="_blank">strict</a>
             or
           <a class="external-link" href="{{region.url_relaxed[gene_id]}}" target="_blank">relaxed</a>
-        </dd>
+        </div>
         <br>
       {% endif %}
       {% for domain in record.get_cds_by_name(gene_id).nrps_pks.domains %}
         {% if domain.feature_name in results.consensus %}
-          <dd><strong>{{domain.name}} ({{domain.start}}..{{domain.end}})</strong>: {{results.consensus[domain.feature_name]}}
+          <div><strong>{{domain.name}} ({{domain.start}}..{{domain.end}})</strong>: {{results.consensus[domain.feature_name]}}
           {{collapser_start(gene_id, level="candidate")}}
           {% for prediction in results.domain_predictions.get(domain.feature_name, {}).values() %}
               {{prediction.method}}:  {{prediction.get_classification() | join(", ") or "(unknown)"}}
@@ -27,13 +26,13 @@
               {{collapser_end()}}<br>
           {% endfor %}
           {{collapser_end()}}
-          </dd>
+          </div>
         {% endif %}
       {% endfor %}
       {{collapser_end()}}
       <br>
     {% endfor %}
-  </dl>
+  </div>
   <div class="prediction-text">
     <br>
     <a class="external-link" href="https://paras.bioinformatics.nl" target="_blank">Link to PARAS substrate predictor</a>
