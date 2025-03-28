@@ -438,10 +438,10 @@ RULE redox-cofactor
 RULE darobactin
     CATEGORY RiPP
     DESCRIPTION darobactin-like compounds
-    EXAMPLE NCBI NZ_WHZZ01000001.1 1236986-1243174 darobactin  # BGC0002116
+    EXAMPLE NCBI WHZZ01000001.1 1236986-1243174 darobactin  # BGC0002116
     CUTOFF 5
     NEIGHBOURHOOD 10
-    CONDITIONS rSAM_with_SPASM and darobactin_precursor
+    CONDITIONS (rSAM_with_SPASM and darobactin_precursor) or darobactin_rSAM
 
 RULE triceptide
     CATEGORY RiPP
