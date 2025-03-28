@@ -673,11 +673,11 @@ def debug_options() -> ModuleArgs:
                      action=argparse.BooleanOptionalAction,
                      default=False,
                      help="Do not create a zip of the output")
-    group.add_option('--skip-gbk-file',
-                     dest='skip_gbk_file',
+    group.add_option('--summary-gbk',
+                     dest='summary_gbk',
                      action=argparse.BooleanOptionalAction,
-                     default=False,
-                     help="Do not create a GenBank summary file")
+                     default=True,
+                     help="Create a GenBank summary file (default: %(default)s)")
     return group
 
 

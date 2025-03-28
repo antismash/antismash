@@ -18,7 +18,7 @@
         {% if not options.skip_zip_file %}
         <li><a href="{{options.output_basename}}.zip">Download all results</a></li>
         {% endif %}
-        {% if not options.skip_gbk_file %}
+        {% if options.summary_gbk %}
           <li><a href="{{options.output_basename}}.gbk">Download GenBank summary file</a></li>
         {% endif %}
           <li><a href="{{options.output_basename}}.json">Download JSON results file</a></li>
