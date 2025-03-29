@@ -678,6 +678,11 @@ def debug_options() -> ModuleArgs:
                      action=argparse.BooleanOptionalAction,
                      default=True,
                      help="Create a GenBank summary file (default: %(default)s)")
+    group.add_option('--region-gbks',
+                     dest='region_gbks',
+                     action=argparse.BooleanOptionalAction,
+                     default=True,
+                     help="Create a GenBank file for each region (default: %(default)s)")
     return group
 
 

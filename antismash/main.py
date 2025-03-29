@@ -459,10 +459,11 @@ def write_outputs(results: serialiser.AntismashResults, options: ConfigType) -> 
     # add antismash meta-annotation to records
     add_antismash_comments(list(zip(results.records, bio_records)), options)
 
-    logging.debug("Writing cluster-specific genbank files")
-    for record, bio_record in zip(results.records, bio_records):
-        for region in record.get_regions():
-            region.write_to_genbank(directory=options.output_dir, record=bio_record)
+    if options.region_gbks:
+        logging.debug("Writing cluster-specific genbank files")
+        for record, bio_record in zip(results.records, bio_records):
+            for region in record.get_regions():
+                region.write_to_genbank(directory=options.output_dir, record=bio_record)
 
     # write records to an aggregate output
     base_filename = canonical_base_filename(results.input_file, options.output_dir, options)
