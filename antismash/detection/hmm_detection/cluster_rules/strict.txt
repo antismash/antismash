@@ -220,10 +220,10 @@ RULE atropopeptide
     EXAMPLE NCBI NZ_VCLA01000160.1 22964-24216 amyxirubin B
     EXAMPLE NCBI NZ_KB889561.1 321249-322612 scabrirubin
     EXAMPLE NCBI NZ_JOBF01000044.1 9365-10577 tryptorubin
-    RELATED atropopeptide_precursor
     CUTOFF 10
     NEIGHBOURHOOD 10
     CONDITIONS atropopeptide_p450
+    EXTENDERS atropopeptide_precursor
 
 DEFINE all_YcaO AS (YcaO or TIGR03604)
 
