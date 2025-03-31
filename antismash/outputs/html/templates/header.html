@@ -15,7 +15,7 @@
     <div class="ancillary-links">
       <div class="ancillary-link dropdown-menu" id="download-dropdown"><a href="#" id="download-dropdown-link"><img src="images/download.svg" alt="download"> &nbsp; Download</a>
         <ul class="dropdown-options">
-        {% if not options.skip_zip_file %}
+        {% if options.zip_output %}
         <li><a href="{{options.output_basename}}.zip">Download all results</a></li>
         {% endif %}
         {% if options.summary_gbk %}
