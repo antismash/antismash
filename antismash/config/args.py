@@ -668,11 +668,11 @@ def debug_options() -> ModuleArgs:
                      action=argparse.BooleanOptionalAction,
                      default=False,
                      help="Skip input record sanitisation. Use with care.")
-    group.add_option('--skip-zip-file',
-                     dest='skip_zip_file',
+    group.add_option('--zip-output',
+                     dest='zip_output',
                      action=argparse.BooleanOptionalAction,
-                     default=False,
-                     help="Do not create a zip of the output")
+                     default=True,
+                     help="Create a ZIP file of the output (default: %(default)s)")
     group.add_option('--summary-gbk',
                      dest='summary_gbk',
                      action=argparse.BooleanOptionalAction,

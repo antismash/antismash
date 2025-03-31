@@ -475,7 +475,7 @@ def write_outputs(results: serialiser.AntismashResults, options: ConfigType) -> 
     zipfile = base_filename + ".zip"
     if os.path.exists(zipfile):
         os.remove(zipfile)
-    if not options.skip_zip_file:
+    if options.zip_output:
         logging.debug("Zipping output to '%s'", zipfile)
         with tempfile.NamedTemporaryFile(prefix="as_zip_tmp", suffix=".zip") as temp:
             shutil.make_archive(temp.name.replace(".zip", ""), "zip", root_dir=options.output_dir)

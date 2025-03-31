@@ -46,7 +46,7 @@ class TestAntismash(unittest.TestCase):
 
 class TestSkipZip(TestAntismash):
     def get_args(self):
-        return ["--minimal", "--skip-zip-file"]
+        return ["--minimal", "--no-zip-output"]
 
     def check_output_files(self, filenames=None):
         super().check_output_files(filenames)
