@@ -7,7 +7,6 @@ Dynamic profile to predict triceptide precursors based on the cross-linked amino
 Based on doi: 10.1021/jacs.2c00521, the motif is AxYxDxP, HAASL, or YxRxHxxHxR
 Based on doi: 10.1021/acschembio.2c00621, WDN is another motif
 """
-from typing import Dict, List
 import re
 
 
@@ -29,7 +28,7 @@ MAX_LEN = 100
 
 def find_hits(record: Record, hmmer_hits: dict[str, list[ProfileHit]]) -> dict[str, list[DynamicHit]]:
     """Find all CDSes where the pattern is found"""
-    hits: Dict[str, List[DynamicHit]] = {}
+    hits: dict[str, list[DynamicHit]] = {}
 
     for cds in record.get_cds_features():
         if not MIN_LEN <= len(cds.translation) <= MAX_LEN:
