@@ -5,10 +5,11 @@
 # pylint: disable=use-implicit-booleaness-not-comparison,protected-access,missing-docstring,consider-using-with
 
 import unittest
+from unittest.mock import MagicMock
 
 from antismash.common.test.helpers import DummyRecord, DummyCDS
 
-from antismash.detection.hmm_detection.dynamic_profiles import triceptide_precursor
+from antismash.detection.hmm_detection.dynamic_profiles import triceptide_rsam
 
 
 def _create_cds(name: str, translation: str, offset: int = 0) -> tuple[DummyCDS, int]:
@@ -16,15 +17,12 @@ def _create_cds(name: str, translation: str, offset: int = 0) -> tuple[DummyCDS,
     return DummyCDS(start=offset, end=end_coord, strand=1, locus_tag=name, translation=translation), end_coord + 1
 
 
-class TestTriceptidePrecursor(unittest.TestCase):
+class TestTriceptideRsam(unittest.TestCase):
     def setUp(self) -> None:
+
         data = [
-            ("YxD", "MTHTYLPGQPSEAQLPDFSALPLGELASCTEHPVLSTLLPGVCERLEDSGGAVAFYDDAPPVA"),
+            ("rSAM", "MAGIC"*20),
             ("HAA", "MMPLSPASAEPTASGTAVLDRVAARVRQRLETEQAATNRVGDGTHAASLIWPWPL"),
-            ("YRD", "MLNKNHSVDQKMPINHPLLSRLIKEVENEQKTAMMFKYDRTHNRHNRGQ"),
-            ("WDN", "MTLLEGLAASDAPVVMKLVGTHGAPAPSIAGTPWDNRPTWDNWNKNPAPFDNRPTWDNWNKR"),
-            ("random_other_thing", "MAGICHATMAGICCATMAGICRAT"),
-            ("too_short", "MAGIC"),
         ]
 
         features = []
@@ -35,6 +33,18 @@ class TestTriceptidePrecursor(unittest.TestCase):
 
         self.record = DummyRecord(features=features)
 
-    def test_hits(self) -> None:
-        results = triceptide_precursor.find_hits(self.record, {})
-        assert set(results.keys()) == {"YxD", "HAA", "YRD", "WDN"}
+    def test_hits_single_profile(self) -> None:
+        results = triceptide_rsam.find_hits(self.record, {"rSAM": [MagicMock(query_id="PTHR43273")]})
+        assert set(results.keys()) == {"rSAM"}
+
+    def test_hits_two_domains(self) -> None:
+        results = triceptide_rsam.find_hits(self.record, {"rSAM": [MagicMock(query_id="PF04055"), MagicMock(query_id="SPASM")]})
+        assert set(results.keys()) == {"rSAM"}
+
+    def test_hits_one_missing(self) -> None:
+        results = triceptide_rsam.find_hits(self.record, {"rSAM": [MagicMock(query_id="PF04055")]})
+        assert not set(results.keys())
+
+    def test_hits_no_hits(self) -> None:
+        results = triceptide_rsam.find_hits(self.record, {})
+        assert not set(results.keys())

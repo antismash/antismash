@@ -447,12 +447,15 @@ RULE triceptide
     CATEGORY RiPP
     DESCRIPTION triceptides
     # see DOI: 10.1021/jacs.2c00521
+    # see DOI: 10.1021/acschembio.2c00621 for the WDN-motif compound
     EXAMPLE NCBI NZ_CP048261.1 9207808-9228995 YxD
     EXAMPLE NCBI NZ_CP016279.1 10116044-10137204 HAA
     EXAMPLE NCBI NZ_CP031253.1 933021-973170 YRDxHNRHNR
+    EXAMPLE NCBI NZ_CP029078.1 3853146-3874482 WDN
+    RELATED SAM_SPASM_FxsB, rSAM_GlyRichRpt, rSAM_XyeB, PTHR43273
     CUTOFF 5
     NEIGHBOURHOOD 10
-    CONDITIONS triceptide_precursor and (SAM_SPASM_FxsB or rSAM_GlyRichRpt or rSAM_XyeB or rSAM_with_SPASM)
+    CONDITIONS (rSAM_with_SPASM and triceptide_precursor) or triceptide_rSAM
 
 RULE archaeal-RiPP
     CATEGORY RiPP
