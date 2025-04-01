@@ -26,7 +26,7 @@ ANCHOR = re.compile(r"(A.Y.D.P|HAASL|Y.R.H..H.R|WDN)")
 MIN_LEN = 10
 MAX_LEN = 100
 
-def find_hits(record: Record, hmmer_hits: dict[str, list[ProfileHit]]) -> dict[str, list[DynamicHit]]:
+def find_hits(record: Record, _hmmer_hits: dict[str, list[ProfileHit]]) -> dict[str, list[DynamicHit]]:
     """Find all CDSes where the pattern is found"""
     hits: dict[str, list[DynamicHit]] = {}
 
