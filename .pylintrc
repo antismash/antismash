@@ -30,3 +30,5 @@ good-names=i,j,k,ex,Run,_,id,T
 [DESIGN]
 # having details provided as args is common, bump from default of 5
 max-args=7
+# some duplication between e.g. dynamic profiles is expected, bump from default of 4
+min-similarity-lines=20
