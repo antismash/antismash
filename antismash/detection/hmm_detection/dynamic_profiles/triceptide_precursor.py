@@ -5,6 +5,7 @@
 Dynamic profile to predict triceptide precursors based on the cross-linked amino acids.
 
 Based on doi: 10.1021/jacs.2c00521, the motif is AxYxDxP, HAASL, or YxRxHxxHxR
+Based on doi: 10.1021/acschembio.2c00621, WDN is another motif
 """
 from typing import Dict, List
 import re
@@ -21,7 +22,7 @@ from antismash.common.secmet import Record
 PROFILE_NAME = "triceptide_precursor"
 PROFILE_DESCRIPTION = "Pattern-based detection of triceptide precursor peptides"
 
-ANCHOR = re.compile(r"(A.Y.D.P|HAASL|Y.R.H..H.R)")
+ANCHOR = re.compile(r"(A.Y.D.P|HAASL|Y.R.H..H.R|WDN)")
 
 MIN_LEN = 10
 MAX_LEN = 100
