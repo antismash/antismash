@@ -102,7 +102,7 @@ class TestParallelPython(unittest.TestCase):
         # ensure the function works as expected when called directly
         assert local(1) == 2
         # check if it still fails within a parallel pool
-        with self.assertRaisesRegex(AttributeError, "Can't pickle local object"):
+        with self.assertRaisesRegex(AttributeError, r"Can't (\w+) local object"):
             subprocessing.parallel_function(local, [[i] for i in range(3)])
 
 
