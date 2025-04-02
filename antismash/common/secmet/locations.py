@@ -5,6 +5,7 @@
 
 import logging
 from typing import (
+    Any,
     Iterable,
     List,
     Optional,
@@ -37,6 +38,29 @@ T = TypeVar("T", bound=Location)
 
 
 class _LocationMixin(_Location):
+    def get_comparator(self: T) -> tuple[int, int]:
+        """Get a comparison helper tuple consisting of start position and length."""
+        start = self.start
+        if self.crosses_origin():
+            _, head = split_origin_bridging_location(self)
+            start = min(part.start for part in head) - max(part.end for part in head)
+        if not isinstance(start, int):
+            return (-1, id(self))
+        return (start, len(self))
+
+    def __lt__(self: T, other: Any) -> bool:
+        if isinstance(other, self.__class__):
+            other_loc = other
+        elif hasattr(other, "location") and isinstance(other.location, self.__class__):
+            other_loc = other.location
+        else:
+            raise ValueError(f"Can't compare a location to {type(other)}")
+
+        left = self.get_comparator()
+        right = other_loc.get_comparator()
+
+        return left < right
+
     def crosses_origin(self: T, *, allow_reversing: bool = False) -> bool:
         """ Determines if the location would cross the origin of a record.
 

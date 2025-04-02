@@ -15,7 +15,6 @@ from antismash.common.secmet.locations import (
     location_contains_other,
     location_from_biopython,
     locations_overlap,
-    split_origin_bridging_location,
 )
 
 from ..locations import (
@@ -242,15 +241,8 @@ class Feature:
             assert isinstance(other, Feature), type(other)
             location = other.location
 
-        def get_comparator(loc: Location) -> tuple[int, int]:
-            start = loc.start
-            if loc.crosses_origin():
-                _, head = split_origin_bridging_location(loc)
-                start = min(part.start for part in head) - max(part.end for part in head)
-            return (start, len(loc))
-
-        left = get_comparator(self.location)
-        right = get_comparator(location)
+        left = self.location.get_comparator()
+        right = location.get_comparator()
 
         # some special handling of cases where coordinates are the same
         if left == right:
