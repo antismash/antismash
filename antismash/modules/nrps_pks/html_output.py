@@ -34,6 +34,9 @@ def generate_html(region_layer: RegionLayer, results: NRPS_PKS_Results,
         if not consensus:
             continue
         domain = record_layer.get_domain_by_name(domain_name)
+        cds = record_layer.get_cds_by_name(domain.locus_tag)
+        if cds not in region_layer.cds_children:
+            continue
         features_with_domain_predictions[domain.locus_tag] = []
 
     for feature_name, monomers in features_with_domain_predictions.items():

@@ -282,7 +282,8 @@ def _gen_js_data_for_candidate(record: Record, result: CandidateClusterPredictio
             if domain in existing:
                 continue
             profile_name = hits_by_domain[domain].hit_id
-            extras.append(SimpleModule([build_domain_json(profile_name, domain, False)], False, cds_positions[name]))
+            inactive = domain.domain_id in inactive_domains
+            extras.append(SimpleModule([build_domain_json(profile_name, domain, inactive)], False, cds_positions[name]))
 
     modules = sorted(modules + extras, key=lambda x: (x.cds_position, x.domains[0]["start"]))
 

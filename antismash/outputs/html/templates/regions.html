@@ -9,9 +9,11 @@
   <div class = "content">
     <div class ="description-container">
       <div class="heading"> {{record.get_name()}} - Region {{region.get_region_number()}} - {{region.get_product_string()}} {{help_tooltip(svg_tooltip, "region_svg")}}</div>
-      <div class="region-download">
-        <a href = {{ '%s.region%03d.gbk' % (record.id, region.get_region_number()) }}>Download region GenBank file</a>
-      </div>
+      {% if options.region_gbks %}
+        <div class="region-download">
+          <a href = {{ '%s.region%03d.gbk' % (record.id, region.get_region_number()) }}>Download region GenBank file</a>
+       </div>
+      {% endif %}
       <div class="region-download">
         <div class="link-like download-svg" data-tag="{{region.anchor_id}}-svg" data-filename="{{record.id}}_{{region.anchor_id}}.svg">Download region SVG</div>
       </div>
@@ -51,7 +53,7 @@
         {% if show_tta %}
             {% call le.symbol_legend('legend-tta-codon', 'TTA codons') %}
                 <svg viewbox="0 0 6 6">
-                    <polyline class="svgene-tta-codon" points="3,0 0,6 6,6 3,0">
+                    <polyline class="svgene-tta-codon" points="3,0 0,6 6,6 3,0"/>
                 </svg>
             {% endcall %}
         {% endif %}
@@ -59,8 +61,9 @@
             {% call le.static_symbol_legend('legend-binding-site', 'binding site') %}
                 <svg viewbox="0 -1 8 8">
                     <g class="svgene-binding-site">
-                    <line x1="4" y1="8" x2="4" y1="4"></line>
-                    <circle cx="4" cy="2" r="2"></line>
+                    <line x1="4" y1="8" x2="4" y2="4"></line>
+                    <circle cx="4" cy="2" r="2"></circle>
+                    </g>
                 </svg>
             {% endcall %}
         {% endif %}

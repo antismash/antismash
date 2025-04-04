@@ -488,6 +488,41 @@ class TestLocationExtension(unittest.TestCase):
         assert result.parts[1].start == parts[1].start == 0
         assert result.parts[1].end == parts[1].end + distance
 
+    def test_extension_to_full_record(self):
+        def build(location, distance):
+            assert location.crosses_origin()  # otherwise the test doesn't test the relevant code
+            result = self.func(location, distance, self.record, force_cross_origin=False)
+            assert not result.crosses_origin()
+
+            result = self.func(location, distance, self.record, force_cross_origin=True)
+            assert len(result) == len(self.record) - 1  # because otherwise it's a point location
+            assert result.crosses_origin()
+            assert len(result.parts) == 2
+            return result
+
+        self.record.make_circular()
+        # an even midpoint
+        assert len(self.record) % 2 == 0  # the record must be even
+        parts = [
+            FeatureLocation(75, 100, 1),
+            FeatureLocation(0, 25, 1),
+        ]
+        location = CompoundLocation(parts)
+        distance = 60
+        result = build(location, distance)
+        assert result.parts[0].start == 50
+        assert result.parts[1].end == 49
+
+        # an odd midpoint
+        parts = [
+            FeatureLocation(60, 100, 1),
+            FeatureLocation(0, 19, 1),
+        ]
+        location = CompoundLocation(parts)
+        result = build(location, distance)
+        assert result.parts[0].start == 39
+        assert result.parts[1].end == 38
+
 
 class TestMergeOverOrigin(unittest.TestCase):
     def test_full_region_cores(self):

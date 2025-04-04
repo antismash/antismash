@@ -5,7 +5,7 @@
    <th>Type</th>
    <th>From</th>
    <th>To</th>
-   <th>Confidence</th>
+   <th>Similarity Confidence</th>
    <th colspan="2">Most similar known cluster</th>
   </tr>
  </thead>
@@ -18,7 +18,7 @@
 {% macro region_row(region, cycle, record_index, options, css) -%}
    <tr class="linked-row {{cycle}}" data-anchor="#{{region.anchor_id}}">
      {{region_button(region, "td", css)}}
-      <a href="#{{region.anchor_id}}">Region&nbsp{% if record_index %}{{record_index}}.{% endif %}{{region.get_region_number()}}</a>
+      <a href="#{{region.anchor_id}}">Region&nbsp;{% if record_index %}{{record_index}}.{% endif %}{{region.get_region_number()}}</a>
      </td>
      <td>
        {% set join = joiner(",") %}

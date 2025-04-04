@@ -1159,6 +1159,12 @@ ul.dropdown-options {
     justify-content: space-around;
 }
 
+.nrps-monomer-details {
+    * dl {
+        margin: 0;
+    }
+}
+
 .switch-container {
     & span.switch-desc {
         padding-right: 0.5em;

@@ -1,7 +1,7 @@
 <div class = "{{ search_type }}">
  <div class="heading">
   <span>{{ title }}</span>
-  {{help_tooltip(tooltip, "cb-{{ prefix | 'general' }}")}}
+  {{help_tooltip(tooltip, search_type)}}
   {% if references %}
   <div class="download-container">
    <div class="download-icon download-svg" data-tag="{{ search_type }}-{{region.anchor_id}}-svg" data-filename="{{record.id}}_{{region.anchor_id}}_{{ search_type }}.svg">
