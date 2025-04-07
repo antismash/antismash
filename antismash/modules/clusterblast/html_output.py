@@ -173,6 +173,8 @@ class QueryGeneJSON(_GeneJSON):
             Arguments:
                 cds: the query CDS feature
                 colour: an override colour to use for this CDS in the visualisation
+                start: an override for the start coordinate of the feature
+                start: an override for the end coordinate of the feature
         """
         return cls(
             locus_tag=cds.get_name(),
@@ -314,6 +316,13 @@ class QueryJSON(JSONBase):
                 genes.append(QueryGeneJSON.from_cds(cds, end=cds.end + origin))
             for cds in region.cds_children.post_origin:
                 genes.append(QueryGeneJSON.from_cds(cds, start=cds.start + origin, end=cds.end + origin))
+        # a region covering a full circular record may have cross-origin features
+        # those ought to be split into two for drawing to match the overview
+        elif region.cds_children.cross_origin:
+            origin = region.location.end
+            for cds in region.cds_children.cross_origin:
+                genes.append(QueryGeneJSON.from_cds(cds, end=cds.end + origin))
+            genes.extend(QueryGeneJSON.from_cds(cds) for cds in region.cds_children.post_origin)
         else:
             genes.extend(QueryGeneJSON.from_cds(cds) for cds in region.cds_children)
         return cls(
