@@ -5,8 +5,11 @@
 # pylint: disable=use-implicit-booleaness-not-comparison,protected-access,missing-docstring
 
 import unittest
+from unittest.mock import patch
 
 from antismash.common.secmet.locations import CompoundLocation, FeatureLocation
+from antismash.common.secmet.test.helpers import DummyRecord
+from antismash.support.genefinding import prodigal
 from antismash.support.genefinding.prodigal import (
     _build_location_from_prodigal,
     ProdigalGene,
@@ -43,3 +46,10 @@ class TestProdigal(unittest.TestCase):
     def test_edge(self):
         loc = build_location(5, 15, 1, length=15)  # 1-indexed start
         assert loc == FeatureLocation(5, 15, 1)
+
+    def test_too_long(self):
+        max_len = 200
+        record = DummyRecord(length=max_len + 1)
+        with patch.object(prodigal, "MAX_SEQUENCE_LENGTH", max_len):
+            with self.assertRaisesRegex(ValueError, "too long"):
+                prodigal.run_prodigal(record)

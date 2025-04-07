@@ -259,7 +259,10 @@ def ensure_cds_info(genefinding: Callable[[Record, Any], None], sequence: Record
     if not sequence.get_cds_features():
         if not options.genefinding_gff3 and options.genefinding_tool != "none":
             logging.info("No CDS features found in record %r, running gene finding.", sequence.id)
-            genefinding(sequence, options)
+            try:
+                genefinding(sequence, options)
+            except ValueError as err:
+                raise AntismashInputError(str(err)) from err
         if not sequence.get_cds_features():
             logging.info("No genes found, skipping record %r", sequence.id)
             sequence.skip = "No genes found"
