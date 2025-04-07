@@ -7,7 +7,7 @@
 import unittest
 
 from antismash.common.secmet.locations import CompoundLocation, FeatureLocation
-from antismash.support.genefinding.run_prodigal import (
+from antismash.support.genefinding.prodigal import (
     _build_location_from_prodigal,
     ProdigalGene,
 )
