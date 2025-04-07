@@ -8,7 +8,8 @@ import unittest
 from unittest.mock import Mock, patch
 
 from antismash.common.layers import OptionsLayer, RecordLayer, RegionLayer
-from antismash.common.secmet.test.helpers import DummyRecord, DummyRegion
+from antismash.common.secmet.locations import CompoundLocation, FeatureLocation
+from antismash.common.secmet.test.helpers import DummyCDS, DummyRecord, DummyRegion
 from antismash.common.test.helpers import get_simple_options
 from antismash.modules import clusterblast
 
@@ -66,3 +67,21 @@ class TestHTMLReuse(unittest.TestCase):
             "KnownClusterBlast",
             "SubClusterBlast",
         }
+
+
+class TestQueryJSON(unittest.TestCase):
+    def test_full_record_with_cross_origin(self):
+        region = DummyRegion(start=0, end=100)
+        standard = DummyCDS(start=50, end=80)
+        cross_origin = DummyCDS(location=CompoundLocation([
+            FeatureLocation(90, 100, 1),
+            FeatureLocation(0, 20, 1),
+        ]))
+        region.add_cds(standard)
+        region.add_cds(cross_origin)
+        result = clusterblast.html_output.QueryJSON.from_region(region)
+        assert len(result.genes) == 2
+        for initial, built in zip([cross_origin, standard], result.genes):
+            assert initial.get_name() == built.locus_tag
+            assert initial.start == built.start
+        assert result.genes[0].end == 120  # since it's pushed over the origin
