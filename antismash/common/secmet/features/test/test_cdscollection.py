@@ -150,6 +150,24 @@ class TestCDSCollection(unittest.TestCase):
         assert not outer.crosses_origin()
         assert inner.crosses_origin()
 
+    def test_full_record_with_cross_origin(self):
+        # in cases of a region covering a full circular record, it isn't considered as crossing the origin
+        # however, some CDS children may still cross the origin
+        area = CDSCollection(FeatureLocation(0, 100, 1), feature_type="test")
+        standard = DummyCDS(start=50, end=80)
+        cross_origin = DummyCDS(location=CompoundLocation([
+            FeatureLocation(90, 100, 1),
+            FeatureLocation(0, 20, 1),
+        ]))
+        assert not area.crosses_origin()
+        area.add_cds(standard)
+        area.add_cds(cross_origin)
+
+        assert len(area.cds_children.pre_origin) == 0
+        assert area.cds_children.cross_origin == (cross_origin, )
+        assert area.cds_children.post_origin == (standard, )
+        assert len(area.cds_children) == 2
+
 
 class DummyCored(CDSCollection, CoredCollectionMixin):
     offset = 10

@@ -319,11 +319,11 @@ class CDSCollection(Feature):
         if not cds.is_contained_by(self):
             raise ValueError("CDS added is not contained by collection")
 
-        if section is None and self.crosses_origin():
+        if section is None and (self.crosses_origin() or cds.crosses_origin()):
             section = CollectionSection.PRE_ORIGIN
             if cds.crosses_origin():
                 section = CollectionSection.CROSS_ORIGIN
-            elif cds.is_contained_by(self.location.parts[1]):
+            elif self.crosses_origin() and cds.is_contained_by(self.location.parts[1]):
                 section = CollectionSection.POST_ORIGIN
 
         kwargs = {}  # allow fallbacks per child type, if a section is even needed
