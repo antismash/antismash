@@ -446,6 +446,22 @@ class TestTranslationLength(unittest.TestCase):
         for good in ["A", "AA", "AAA"]:
             assert _is_valid_translation_length(good, location)
 
+    def test_ambiguous_coords(self):
+        translation = "A" * 10
+        for strand in (-1, 1):
+            # both ambiguous
+            location = FeatureLocation(BeforePosition(10), AfterPosition(20), strand)
+            assert _is_valid_translation_length(translation, location)
+            # start ambiguous
+            location = FeatureLocation(BeforePosition(10), 20, strand)
+            assert _is_valid_translation_length(translation, location)
+            # end ambiguous
+            location = FeatureLocation(10, AfterPosition(20), strand)
+            assert _is_valid_translation_length(translation, location)
+            # neither
+            location = FeatureLocation(10, 20, strand)
+            assert not _is_valid_translation_length(translation, location)
+
 
 class TestTranslationInRecord(unittest.TestCase):
     def setUp(self):
