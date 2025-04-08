@@ -52,9 +52,9 @@ def _is_valid_translation_length(translation: str, location: Location) -> bool:
     """
     if len(translation) * 3 <= len(location):
         return True
-    if location.strand == -1 and isinstance(location.start, BeforePosition):
-        return True
-    return location.strand != -1 and isinstance(location.end, AfterPosition)
+    ambiguous_start = isinstance(location.start, (BeforePosition, AfterPosition))
+    ambiguous_end = isinstance(location.end, (BeforePosition, AfterPosition))
+    return ambiguous_start or ambiguous_end
 
 
 def _translation_fits_in_record(translation_length: int, location: Location,
