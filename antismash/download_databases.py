@@ -32,15 +32,15 @@ CLUSTERBLAST_URL = "https://dl.secondarymetabolites.org/releases/clusterblast/cl
 CLUSTERBLAST_ARCHIVE_CHECKSUM = "dc90a171751472d88088e12f52446c49fe0efff437d92110072151f523eb3ee3"
 CLUSTERBLAST_FASTA_CHECKSUM = "55ea9e62dcc0c083b42f8209a48889f710e888db72d5433f4429d4a6ec1b946b"
 
-KCB_URL = "https://dl.secondarymetabolites.org/releases/knownclusterblast/kcb_3.1.tar.xz"
-KCB_ARCHIVE_CHECKSUM = "7149d5742280be3bb39a2abfbccab353a980289f8563bb03544df8899d31e7b4"
-KCB_FASTA_CHECKSUM = "c956906c9c5056a330e2f6fcfff19d48bff65d6608e5befd95dee69de635c140"
+KCB_URL = "https://dl.secondarymetabolites.org/releases/knownclusterblast/kcb_4.0.tar.xz"
+KCB_ARCHIVE_CHECKSUM = "80f860cf947f6b0024a0414968484ba36de321991f70a11ca87e0ec034ae3233"
+KCB_FASTA_CHECKSUM = "65b9a9bc8700d8fef54b80a2e57d88e7ca8e05f1b57a848bb6a5e8f47a3070b9"
 
 CLUSTERCOMPARE_DBS = {
     "mibig": {
-        "url": "https://dl.secondarymetabolites.org/releases/clustercompare/cc_mibig_3.1.tar.xz",
-        "archive": "1249c64edbe32be7117b642d93f218ea09396de95e5da901e4632db3de6457be",
-        "fasta": "bd4fdb5dc17f9a3c94da399928be62fc5bb1cebd29425b74059ae5aaaa47cf19",
+        "url": "https://dl.secondarymetabolites.org/releases/clustercompare/cc_mibig_4.0.tar.xz",
+        "archive": "df009291f71d313d0e98260d1e9baae42db4efe1972d4fef502fd05355062ff5",
+        "fasta": "6cad44254d8ad7e2e735fcd15eb2e40b526150db62d8dff68001e533c5aa22d2",
     },
 }
 
@@ -53,7 +53,7 @@ COMPARIPPSON_DBS = {
         "version": "4.0",
     },
     "mibig": {
-        "archive_hash": "8008762e1df0f080b2699823915b46660fb81543e01804695fe4eea9828de95d",
+        "archive_hash": "cadeb37aaea894bb68833d672a853c0ae515644b0faf9107a2b45becae9ff2e5",
         "fasta_hash": "f5ece2ed3880e40b849aa999ed76445d796a71b97681021343b2a83ccf0dfde0",
         "metadata_hash": "4c591dae7be95622870530a2d911698350fceb951eba4d13121c5dc70923e365",
         "url": "https://dl.secondarymetabolites.org/releases/comparippson/mibig_4.0.tar.xz",

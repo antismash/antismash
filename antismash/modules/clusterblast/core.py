@@ -83,8 +83,38 @@ def run_diamond_on_all_regions(regions: Sequence[secmet.Region], database: str) 
     return stdout
 
 
+def _load_cluster_data(file_path: str) -> dict[str, ReferenceCluster]:
+    """ Loads reference cluster data from the given file
+
+        Arguments:
+            file_path: the path to the data file to load
+
+        Returns:
+            a dictionary mapping reference cluster name to ReferenceCluster
+            instance
+    """
+    with open(file_path, "r", encoding="utf-8") as handle:
+        filetext = handle.read()
+    lines = [line for line in filetext.splitlines() if "\t" in line]
+    clusters = {}
+    for i in lines:
+        tabs = i.split("\t")
+        accession = tabs[0]
+        description = tabs[1]
+        cluster_number = tabs[2]
+        cluster_type = tabs[3]
+        tags = tabs[4].split(";")
+        proteins = tabs[5].split(";")
+        if not proteins[-1]:
+            proteins.pop(-1)
+        cluster = ReferenceCluster(accession, cluster_number, proteins,
+                                   description, cluster_type, tags)
+        clusters[cluster.get_name()] = cluster
+    return clusters
+
+
 def load_reference_clusters(searchtype: str) -> Dict[str, ReferenceCluster]:
-    """ Load gene cluster database
+    """ Loads reference cluster data for the given search type
 
         Arguments:
             searchtype: determines which database to use, allowable values:
@@ -109,24 +139,7 @@ def load_reference_clusters(searchtype: str) -> Dict[str, ReferenceCluster]:
         data_dir = os.path.join(kcb_root, version)
 
     reference_cluster_file = os.path.join(data_dir, "clusters.txt")
-    with open(reference_cluster_file, "r", encoding="utf-8") as handle:
-        filetext = handle.read()
-    lines = [line for line in filetext.splitlines() if "\t" in line]
-    clusters = {}
-    for i in lines:
-        tabs = i.split("\t")
-        accession = tabs[0]
-        description = tabs[1]
-        cluster_number = tabs[2]
-        cluster_type = tabs[3]
-        tags = tabs[4].split(";")
-        proteins = tabs[5].split(";")
-        if not proteins[-1]:
-            proteins.pop(-1)
-        cluster = ReferenceCluster(accession, cluster_number, proteins,
-                                   description, cluster_type, tags)
-        clusters[cluster.get_name()] = cluster
-    return clusters
+    return _load_cluster_data(reference_cluster_file)
 
 
 def load_reference_proteins(searchtype: str) -> Dict[str, Protein]:
