@@ -6,7 +6,7 @@
 
 from collections import OrderedDict
 import logging
-from typing import Dict, Iterable, List, Union
+from typing import Dict, Iterable, Iterator, List, Union
 
 from antismash.common.secmet import Record
 from antismash.common.secmet.features import CDSFeature, Domain
@@ -53,6 +53,19 @@ def get_fasta_from_record(record: Record) -> str:
     return "\n".join(all_fastas)
 
 
+def build_fasta(mapping: dict[str, str]) -> Iterator[str]:
+    """ Generates a FASTA formatted string
+
+        Arguments:
+            mapping: a mapping of identifier to sequence
+
+        Returns:
+            an iterator with each identifier/sequence pair
+    """
+    for name, seq in mapping.items():
+        yield f">{name}\n{seq}\n"
+
+
 def write_fasta(names: List[str], seqs: List[str], filename: str) -> None:
     """ Writes name/sequence pairs to file in FASTA format
 
@@ -65,8 +78,8 @@ def write_fasta(names: List[str], seqs: List[str], filename: str) -> None:
             None
     """
     with open(filename, "w", encoding="utf-8") as out_file:
-        for name, seq in zip(names, seqs):
-            out_file.write(f">{name}\n{seq}\n")
+        for chunk in build_fasta(dict(zip(names, seqs))):
+            out_file.write(chunk)
 
 
 def read_fasta(filename: str) -> Dict[str, str]:
