@@ -21,7 +21,7 @@ from .core import (
     run_diamond_on_all_regions,
     score_clusterblast_output,
 )
-from .results import RegionResult, GeneralResults, write_clusterblast_output
+from .results import RegionResult, GeneralResults
 from .data_structures import MibigEntry, ReferenceCluster, Protein
 
 
@@ -131,8 +131,6 @@ def perform_knownclusterblast(options: ConfigType, record: Record,
         region_result = RegionResult(region, ranking, proteins, "knownclusterblast")
         results.add_region_result(region_result, reference_clusters, proteins)
 
-        write_clusterblast_output(options, record, region_result, proteins,
-                                  searchtype="knownclusterblast")
     results.mibig_entries = mibig_protein_homology(blastoutput, record,
                                                    reference_clusters)
     return results
