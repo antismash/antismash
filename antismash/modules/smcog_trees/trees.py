@@ -8,15 +8,12 @@
 
 from collections import defaultdict
 from io import StringIO
-import glob
 import logging
-import os
-from typing import Dict, List
+from typing import Dict, List, Union
 
 from Bio import Phylo
 from Bio.Phylo.NewickIO import NewickError
 import brawn
-from helperlibs.wrappers.io import TemporaryDirectory
 import matplotlib
 from matplotlib import pyplot
 
@@ -28,7 +25,7 @@ from antismash.config import get_config
 logging.getLogger('matplotlib').setLevel(logging.WARNING)
 
 
-def generate_trees(smcogs_dir: str, genes_within_clusters: List[CDSFeature],
+def generate_trees(genes_within_clusters: list[CDSFeature],
                    nrpspks_genes: List[CDSFeature]) -> Dict[str, str]:
     """ smCOG phylogenetic tree construction """
     pks_nrps_cds_names = set(feature.get_name() for feature in nrpspks_genes)
@@ -43,30 +40,21 @@ def generate_trees(smcogs_dir: str, genes_within_clusters: List[CDSFeature],
             continue
         cds_features.append(cds)
 
-    with TemporaryDirectory(change=True):
-        args = []
-        for index, cds in enumerate(cds_features):
-            smcog = cds.gene_functions.get_by_tool("smcogs")[0].description.split(":")[0]
-            args.append([cds, index, smcog, smcogs_dir])
-        subprocessing.parallel_function(smcog_tree_analysis, args)
-
-    files = glob.glob("*.png")
-    tree_filenames = {}
-    for filename in files:
-        tag = filename.rsplit(".png", 1)[0]
-        tree_filenames[tag] = filename
-    return tree_filenames
+    args = []
+    for cds in cds_features:
+        smcog = cds.gene_functions.get_by_tool("smcogs")[0].description.split(":")[0]
+        args.append([cds, smcog])
+    return {name: tree for name, tree in subprocessing.parallel_function(smcog_tree_analysis, args)
+            if tree}
 
 
-def smcog_tree_analysis(cds: CDSFeature, input_number: int, smcog: str, output_dir: str) -> None:
+def smcog_tree_analysis(cds: CDSFeature, smcog: str) -> tuple[str, str]:
     "run smCOG search on all gene cluster CDS features"
     gene_id = cds.get_name()
-    seq = cds.translation
-    alignment = align_smcogs(smcog, gene_id, seq)
-    # Generate trimmed alignment
-    trim_alignment(input_number, alignment)
-    # Draw phylogenetic tree
-    draw_tree(input_number, output_dir, gene_id)
+    alignment = align_smcogs(smcog, gene_id, cds.translation)
+    trimmed = trim_alignment(alignment)
+    tree = build_tree(trimmed, gene_id)
+    return gene_id, tree
 
 
 def align_smcogs(smcog: str, name: str, sequence: str) -> Dict[str, str]:
@@ -78,7 +66,7 @@ def align_smcogs(smcog: str, name: str, sequence: str) -> Dict[str, str]:
     return brawn.combine_alignments(query, reference).to_dict()
 
 
-def trim_alignment(input_number: int, contents: dict[str, str]) -> None:
+def trim_alignment(contents: dict[str, str]) -> dict[str, str]:
     """ remove all positions before the first and after the last position shared
         by at least a third of all sequences
     """
@@ -119,29 +107,29 @@ def trim_alignment(input_number: int, contents: dict[str, str]) -> None:
 
     # Shorten sequences to detected conserved regions
     seqs = [seq[first_shared_amino:last_shared_amino] for seq in seqs]
-    seed_fasta_name = f"trimmed_alignment{input_number}.fasta"
-    fasta.write_fasta(names, seqs, seed_fasta_name)
+    return dict(zip(names, seqs))
 
 
-def draw_tree(input_number: int, output_dir: str, tag: str) -> str:
-    """ Construct a PNG for display via fasttree
+def build_tree(alignment: dict[str, str], name: str) -> str:
+    """ Builds a newick tree from the given alignment
+
+        Arguments:
+            name: the identifier of the query within the alignment
+            alignment: a mapping of identifier to aligned sequence
 
         Returns:
-            the filename of the image generated
+            a tree as a newick formatted string
     """
-    matplotlib.use('Agg')
-    command = [get_config().executables.fasttree, "-quiet", "-fastest", "-noml",
-               f"trimmed_alignment{input_number}.fasta"]
-    run_result = subprocessing.execute(command)
+    command = [get_config().executables.fasttree, "-quiet", "-fastest", "-noml"]
+    run_result = subprocessing.execute(command, stdin="".join(fasta.build_fasta(alignment)))
     if not run_result.successful():
         raise RuntimeError(f"Fasttree failed to run successfully: {run_result.stderr}")
-
     handle = StringIO(run_result.stdout)
-    tree_filename = os.path.join(output_dir, f"{tag}.png")
+
     try:
         tree = Phylo.read(handle, 'newick')
     except NewickError:
-        logging.debug('Invalid newick tree for %r', tag)
+        logging.debug('Invalid newick tree for %r', name)
         return ''
 
     # enforce a minimum distance between branches
@@ -151,14 +139,36 @@ def draw_tree(input_number: int, output_dir: str, tag: str) -> str:
             clade.branch_length = max_size / 20
         else:
             clade.branch_length = abs(clade.branch_length) + max_size / 20
-    # change the colour of the query gene
-    label_colors = {tag: 'green'}
+
+    handle = StringIO("")
+    Phylo.NewickIO.write([tree], handle)
+    return handle.getvalue()
+
+
+def draw_tree(tree: Union[str, Phylo.BaseTree], file_path: str, identifier: str = "") -> None:
+    """ Generates an image of the given tree and writes it to file
+
+        Arguments:
+            tree: the tree to draw
+            file_path: the path of the output file
+            identifier: an optional identifier to highlight within the drawn tree
+
+        Returns:
+            None
+    """
+    if isinstance(tree, str):
+        handle = StringIO(tree)
+        tree = Phylo.read(handle, "newick")
+    matplotlib.use('Agg')
+
+    label_colors = {}
+    if identifier:
+        label_colors[identifier] = "green"
 
     Phylo.draw(tree, do_show=False, label_colors=label_colors,
                label_func=lambda node: str(node).replace("|", " "))
     fig = pyplot.gcf()
     fig.set_size_inches(20, (tree.count_terminals() / 3))
     pyplot.axis('off')
-    fig.savefig(tree_filename, bbox_inches='tight')
+    fig.savefig(file_path, bbox_inches='tight')
     pyplot.close(fig)
-    return tree_filename

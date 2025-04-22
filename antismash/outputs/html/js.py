@@ -124,7 +124,7 @@ def convert_regions(record: Record, options: ConfigType, result: Dict[str, Modul
                 convert_source(Source(FeatureLocation(start, end)), region, record.id),
             ]
             js_region["sources"][-1]["regionEnd"] = len(record) + len(last_part)
-        js_region['orfs'] = convert_cds_features(record, region.cds_children, options, mibig_entries, region)
+        js_region['orfs'] = convert_cds_features(record, region.cds_children, options, mibig_entries, region, result)
         js_region["clusters"] = build_area_rows(region, len(record.seq), circular=record.is_circular())
         sites = {
             "ttaCodons": convert_tta_codons(tta_codons, record),
@@ -148,6 +148,7 @@ def convert_regions(record: Record, options: ConfigType, result: Dict[str, Modul
 
 def convert_cds_features(record: Record, features: Iterable[CDSFeature], options: ConfigType,
                          mibig_entries: dict[str, list[clusterblast.results.MibigEntry]], region: Region,
+                         results: dict[str, ModuleResults],
                          ) -> List[Dict[str, Any]]:
     """ Convert CDSFeatures to JSON """
     js_orfs = []
@@ -158,7 +159,7 @@ def convert_cds_features(record: Record, features: Iterable[CDSFeature], options
             gene_function = GeneFunction.OTHER
         mibig_hits: List[clusterblast.results.MibigEntry] = []
         mibig_hits = mibig_entries.get(feature.get_name(), [])
-        description = get_description(record, feature, str(gene_function), options, mibig_hits)
+        description = get_description(record, feature, str(gene_function), options, mibig_hits, results)
         start = feature.start + 1
         end = feature.end
         if region.crosses_origin():
@@ -307,7 +308,9 @@ def generate_tigr_tooltip(record: Record, feature: CDSFeature) -> List[str]:
 
 
 def get_description(record: Record, feature: CDSFeature, type_: str,
-                    options: ConfigType, mibig_result: List[clusterblast.results.MibigEntry]) -> str:
+                    options: ConfigType, mibig_result: List[clusterblast.results.MibigEntry],
+                    results: dict[str, ModuleResults],
+                    ) -> str:
     "Get the description text of a CDS feature"
 
     urls = {
@@ -344,11 +347,10 @@ def get_description(record: Record, feature: CDSFeature, type_: str,
                              "program=blastp;database=pub/transporter.pep;"
                              f"sequence=sequence%%0A{feature.translation}")
 
-    if smcog_trees in options.all_enabled_modules:
-        for note in feature.notes:  # TODO find a better way to store image urls
-            if note.startswith('smCOG tree PNG image:'):
-                urls["smcog_tree"] = note.split(':')[-1]
-                break
+    if smcog_trees.__name__ in results:
+        image_path = os.path.join(options.output_dir, "smcogs", f"{feature.get_name()}.png")
+        if os.path.exists(image_path):
+            urls["smcog_tree"] = os.path.relpath(image_path, options.output_dir)
 
     asf_notes = generate_asf_tooltip_section(record, feature)
     go_notes = generate_pfam2go_tooltip(record, feature)
