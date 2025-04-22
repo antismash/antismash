@@ -1167,7 +1167,7 @@ class TestExtension(unittest.TestCase):
             else:
                 location = CompoundLocation(initial_parts)
             for distance in [10, 15]:
-                new = self.record.extend_location(location, distance)
+                new = self.record.extend_location(location, distance, connect_result=False)
                 assert isinstance(new, CompoundLocation)
                 assert new.start == location.start - distance
                 assert new.end == location.end + distance
@@ -1185,7 +1185,7 @@ class TestExtension(unittest.TestCase):
             FeatureLocation(40, 60, 1),
         ])
         distance = 20
-        new = self.record.extend_location(location, distance)
+        new = self.record.extend_location(location, distance, connect_result=False)
         assert isinstance(new, CompoundLocation)
         assert new.start == 0
         assert new.end == location.end + distance
@@ -1197,15 +1197,14 @@ class TestExtension(unittest.TestCase):
         self.set_circular()
         assert self.record.is_circular()
 
-        new = self.record.extend_location(location, distance)
+        new = self.record.extend_location(location, distance, connect_result=True)
         assert isinstance(new, CompoundLocation)
         assert new.start == 0
         assert new.end == len(self.record)
         assert new.strand == location.strand
         assert new.parts == [
-            FeatureLocation(90, new.end, 1),
-            FeatureLocation(0, location.parts[0].end, 1),
-            FeatureLocation(location.parts[-1].start, location.end + distance, 1),
+            FeatureLocation(90, len(self.record), 1),
+            FeatureLocation(0, location.end + distance, 1),
         ]
         assert new.parts is not location.parts
 
@@ -1215,7 +1214,7 @@ class TestExtension(unittest.TestCase):
             FeatureLocation(70, 90, 1),
         ])
         distance = 20
-        new = self.record.extend_location(location, distance)
+        new = self.record.extend_location(location, distance, connect_result=False)
         assert isinstance(new, CompoundLocation)
         assert new.start == location.start - distance
         assert new.end == len(self.record)
@@ -1227,14 +1226,13 @@ class TestExtension(unittest.TestCase):
         self.set_circular()
         assert self.record.is_circular()
 
-        new = self.record.extend_location(location, distance)
+        new = self.record.extend_location(location, distance, connect_result=True)
         assert isinstance(new, CompoundLocation)
         assert new.start == 0
         assert new.end == len(self.record)
         assert new.strand == location.strand
         assert new.parts == [
-            FeatureLocation(20, location.parts[0].end, 1),
-            FeatureLocation(location.parts[-1].start, new.end, 1),
+            FeatureLocation(20, len(self.record), 1),
             FeatureLocation(0, 10, 1),
         ]
         assert new.parts is not location.parts
@@ -1246,7 +1244,7 @@ class TestExtension(unittest.TestCase):
             FeatureLocation(60, 70, 1),
         ])
         distance = 200  # longer than the record
-        new = self.record.extend_location(location, distance)
+        new = self.record.extend_location(location, distance, connect_result=False)
         # while they should extend to both edges, they shouldn't merge because they don't wrap
         assert new.parts[0].start == 0 and new.parts[0].end == 30
         assert new.parts[1] == location.parts[1]
@@ -1274,3 +1272,52 @@ class TestExtension(unittest.TestCase):
         ])
         result = record.extend_location(location, 100)
         assert result == FeatureLocation(0, 212, 1)
+
+
+class TestExtensionConnect(unittest.TestCase):
+    # these tests are just for connection, another class tests all the extensions over the origin and such
+    def setUp(self):
+        self.record = DummyRecord(length=100, circular=True)
+
+    def compare(self, original, expected, distance, connect=True):
+        new = self.record.extend_location(original, distance, connect_result=connect)
+        assert original.strand == expected[0][-1]
+        assert new.strand == original.strand
+        assert len(new.parts) == len(expected)
+        for i, part in enumerate(new.parts):
+            start, end, strand = expected[i]
+            assert part.start == start
+            assert part.end == end
+            assert part.strand == strand
+        if len(original.parts) > 1 and len(new.parts) > 1:
+            assert original.operator == new.operator
+
+    def test_unbounded_compound(self):
+        for strand in [1, -1]:
+            parts = [FeatureLocation(20, 30, strand), FeatureLocation(50, 60, strand)]
+            if strand == -1:
+                parts.reverse()
+            location = CompoundLocation(parts)
+            distance = 10
+            self.compare(location, [(10, 30, strand), (50, 70, strand)][::strand], distance, connect=False)
+            self.compare(location, [(10, 70, strand)][::strand], distance, connect=True)
+
+    def test_unbounded_simple(self):
+        for strand in [1, -1]:
+            location = FeatureLocation(20, 60, strand)
+            self.compare(location, [(10, 70, strand)], distance=10, connect=False)
+            self.compare(location, [(10, 70, strand)], distance=10, connect=True)
+
+    def test_cross_origin_reverse(self):
+        parts = [FeatureLocation(10, 20, -1), FeatureLocation(80, 90, -1)]
+        for operator in ["join", "order"]:
+            location = CompoundLocation(parts, operator=operator)
+            self.compare(location, [(10, 25, -1), (75, 90, -1)], distance=5, connect=False)
+            self.compare(location, [(0, 25, -1), (75, 100, -1)], distance=5, connect=True)
+
+    def test_cross_origin_forward(self):
+        parts = [FeatureLocation(80, 90, 1), FeatureLocation(10, 20, 1)]
+        for operator in ["join", "order"]:
+            location = CompoundLocation(parts, operator=operator)
+            self.compare(location, [(75, 90, 1), (10, 25, 1)], distance=5, connect=False)
+            self.compare(location, [(75, 100, 1), (0, 25, 1)], distance=5, connect=True)

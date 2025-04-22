@@ -468,7 +468,7 @@ def _extend_area_location(location: Location, distance: int, record: Record,
         result = make_forwards(location)
 
     # extend the location
-    result = record.connect_locations([record.extend_location(result, distance)])
+    result = record.extend_location(result, distance)
 
     if location.crosses_origin() and len(result) == len(record) \
             and not result.crosses_origin() and force_cross_origin:
