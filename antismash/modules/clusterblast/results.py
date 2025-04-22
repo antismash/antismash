@@ -315,6 +315,11 @@ class ClusterBlastResults(ModuleResults):
             if result is not None:
                 result.add_to_record(record)
 
+    def write_outputs(self, record: Record, options: ConfigType) -> None:
+        for subresult in [self.general, self.knowncluster, self.subcluster]:
+            if subresult:
+                subresult.write_to_file(record, options)
+
 
 def write_clusterblast_output(options: ConfigType, record: Record,
                               cluster_result: RegionResult, proteins: Dict[str, Protein],
