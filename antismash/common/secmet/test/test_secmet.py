@@ -86,6 +86,28 @@ class TestConversion(unittest.TestCase):
             Record.from_biopython(bio, "taxon", **other_values)
             patched_bio.assert_called_once_with(bio.seq, **other_values)
 
+    def test_cross_origin_feature_in_linear(self):
+        # valid locations
+        for location in [
+            FeatureLocation(0, 100, 1),
+            FeatureLocation(0, 100, -1),
+            CompoundLocation([FeatureLocation(0, 10, 1), FeatureLocation(90, 100, 1)]),
+            CompoundLocation([FeatureLocation(90, 100, -1), FeatureLocation(0, 10, -1)]),
+        ]:
+            bio = Record(seq=Seq("A" * 100)).to_biopython()
+            bio.features.append(SeqFeature(location, type="test"))
+            Record.from_biopython(bio, taxon="bacteria")
+
+        # invalid locations
+        for location in [
+            CompoundLocation([FeatureLocation(0, 10, -1), FeatureLocation(90, 100, -1)]),
+            CompoundLocation([FeatureLocation(90, 100, 1), FeatureLocation(0, 10, 1)]),
+        ]:
+            bio = Record(seq=Seq("A" * 100)).to_biopython()
+            bio.features.append(SeqFeature(location, type="test"))
+            with self.assertRaisesRegex(SecmetInvalidInputError, "origin spanning .* in a linear record"):
+                Record.from_biopython(bio, taxon="bacteria")
+
     def test_protein_sequences_caught(self):
         before = list(Bio.SeqIO.parse(get_path_to_nisin_genbank(), "genbank"))[0]
 
