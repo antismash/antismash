@@ -968,7 +968,7 @@
             "description": "Pyr4 type terpene synthase",
             "type": "TS_Pyr4",
             "length": 243,
-            "cutoff": 100,
+            "cutoff": 50,
             "subtypes": [
                 "TS_Pyr4_C15_polyketide_a",
                 "TS_Pyr4_C15_polyketide_b",
