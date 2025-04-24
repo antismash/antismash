@@ -177,6 +177,7 @@ def load_reference_proteins(searchtype: str) -> Dict[str, Protein]:
             # e.g. >x|y|1-2|-|linearised5-20|z|Urea_carboxylase_{ECO:0000313|EMBL:CCF11062.1}|CRH36422
             shift = 1 if "|linearised" in line else 0
             tabs = line.split("|", 5 + shift)
+            cluster_accession = tabs[0].lstrip(">")
             location = tabs[2]
             strand = tabs[3]
             locustag = tabs[4 + shift]
@@ -190,8 +191,10 @@ def load_reference_proteins(searchtype: str) -> Dict[str, Protein]:
                 assert len(tabs) == 7
                 assert tabs[4].startswith("linearised"), tabs[4]
                 linearised_start, linearised_end = map(int, tabs[4].replace("linearised", "").split("-"))
-            proteins[locustag] = Protein(name, locustag, location, strand, annotations,
-                                         draw_start=linearised_start, draw_end=linearised_end)
+            unique_id = f"{cluster_accession}_{locustag}"
+            assert unique_id not in proteins
+            proteins[unique_id] = Protein(unique_id, name, locustag, location, strand, annotations,
+                                          draw_start=linearised_start, draw_end=linearised_end)
     return proteins
 
 
@@ -294,6 +297,7 @@ def parse_subject(line_parts: List[str], seqlengths: Dict[str, int],
     else:
         locustag = ""
     genecluster = f"{subject_parts[0]}_{subject_parts[1]}"
+    full_name = f"{subject_parts[0]}_{subject}"
     start, end = subject_parts[2].split("-")[:2]
     strand = subject_parts[3]
     annotation = subject_parts[5 + shift]
@@ -307,7 +311,7 @@ def parse_subject(line_parts: List[str], seqlengths: Dict[str, int],
         seqlength = len(record.get_cds_by_name(cds_name).translation)
         perc_coverage = (float(line_parts[3]) / seqlength) * 100
     return Subject(subject, genecluster, int(start), int(end), strand, annotation,
-                   perc_ident, blastscore, perc_coverage, evalue, locustag)
+                   perc_ident, blastscore, perc_coverage, evalue, locustag, full_name=full_name)
 
 
 def parse_all_clusters(blasttext: str, record: secmet.Record, min_seq_coverage: float, min_perc_identity: float,

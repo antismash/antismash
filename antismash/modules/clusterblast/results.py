@@ -96,8 +96,8 @@ class RegionResult:
 
         for ref_cluster, _ in display_ranking:
             for name in ref_cluster.tags:
-                prot = reference_proteins[name]
-                self.displayed_reference_proteins[prot.locus_tag] = prot
+                prot = reference_proteins[f"{ref_cluster.accession}_{name}"]
+                self.displayed_reference_proteins[prot.full_name] = prot
 
         assert len(display_ranking) <= display_limit
 
@@ -179,7 +179,7 @@ class RegionResult:
 
 class GeneralResults(ModuleResults):
     """ A variant-agnostic results class for clusterblast variants """
-    schema_version = 4
+    schema_version = 5
 
     def __init__(self, record_id: str, search_type: str = "clusterblast",
                  data_version: str = None) -> None:
@@ -217,6 +217,7 @@ class GeneralResults(ModuleResults):
             cluster_label = cluster.get_name()
             protein_names = reference_clusters[cluster_label].tags
             for protein_name in protein_names:
+                protein_name = f"{cluster.accession}_{protein_name}"
                 self.proteins_of_interest[protein_name] = reference_proteins[protein_name]
 
     def write_to_file(self, record: Record, options: ConfigType) -> None:
@@ -251,11 +252,7 @@ class GeneralResults(ModuleResults):
 
     @staticmethod
     def from_json(json: Dict[str, Any], record: Record) -> "GeneralResults":
-        current = GeneralResults.schema_version
-        # since 2 only added an optional data version, 2 and 1 are kind of compatible
-        # so if there's a mismatch of version, but it's these two, let them through
-        special_case = current == 2 and json["schema_version"] == 1
-        if json["schema_version"] != current and not special_case:
+        if json["schema_version"] != GeneralResults.schema_version:
             raise ValueError(f"Incompatible results schema version, expected {GeneralResults.schema_version}")
         assert record.id == json["record_id"]
         data_version = json.get("data_version")
@@ -263,7 +260,7 @@ class GeneralResults(ModuleResults):
                                 data_version=data_version)
         for prot in json["proteins"]:
             protein = Protein.from_json(prot)
-            result.proteins_of_interest[protein.locus_tag] = protein
+            result.proteins_of_interest[protein.full_name] = protein
         for region_result in json["results"]:
             result.region_results.append(RegionResult.from_json(region_result,
                                          record, result.proteins_of_interest))

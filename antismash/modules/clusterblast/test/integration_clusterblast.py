@@ -19,12 +19,8 @@ from antismash.common.subprocessing.diamond import run_diamond_version
 from antismash.config import build_config, get_config, update_config, destroy_config
 from antismash.detection import hmm_detection
 from antismash.modules import clusterblast
-from antismash.modules.clusterblast import core, known
+from antismash.modules.clusterblast import core
 from antismash.outputs import html
-
-
-def known_dir(filename, *_args):
-    return path.get_full_path(__file__, "data", "known", filename)
 
 
 class Base(unittest.TestCase):
@@ -39,8 +35,7 @@ class Base(unittest.TestCase):
         update_config({"genefinding_gff3": ""})
         self.options = update_config(options)
 
-        with patch.object(known, "_get_datafile_path", side_effect=known_dir):
-            assert clusterblast.check_prereqs(self.options) == []
+        assert clusterblast.check_prereqs(self.options) == []
         assert clusterblast.check_options(self.options) == []
         assert clusterblast.is_enabled(self.options)
 
@@ -89,7 +84,6 @@ class Base(unittest.TestCase):
         return self.run_antismash(helpers.get_path_to_balhymicin_genbank(), expected)
 
 
-@patch.object(known, "_get_datafile_path", side_effect=known_dir)
 class GeneralIntegrationTest(Base):
     def get_args(self):
         return ["--cb-general", "--minimal", "--enable-html",
@@ -103,7 +97,7 @@ class GeneralIntegrationTest(Base):
         assert results.subcluster is None
         return results.general, results
 
-    def test_nisin(self, _patched_known):
+    def test_nisin(self):
         expected_hits = 3 if self.diamond_version < (2, 0, 15) else 2
         records, results = self.check_nisin(expected_hits)
         assert len(records) == 1
@@ -155,16 +149,10 @@ class GeneralIntegrationTest(Base):
         assert subject.name == "CVCAS_RS03115"
 
 
-@patch.object(known, "_get_datafile_path", side_effect=known_dir)
 class KnownIntegrationTest(Base):
-    def run_antismash(self, *args, **kwargs):
-        print(args, kwargs)
-        reference_clusters = core._load_cluster_data(known_dir("clusters.txt"))
-        with patch.object(core, "_load_cluster_data", return_value=reference_clusters):
-            return super().run_antismash(*args, **kwargs)
-
     def get_args(self):
-        return ["--cb-knowncluster", "--minimal", "--enable-html"]
+        return ["--cb-knowncluster", "--minimal", "--enable-html",
+                "--data", path.get_full_path(__file__, "data")]
 
     def get_results(self, results):
         assert isinstance(results, ModuleResults)
@@ -174,7 +162,7 @@ class KnownIntegrationTest(Base):
         assert results.subcluster is None
         return results.knowncluster, results
 
-    def test_nisin(self, _patched_dir):
+    def test_nisin(self):
         # blast scores not checked due to diamond versions having different results
         _, results = self.check_nisin(2)
         ranking = results.region_results[0].ranking
@@ -205,7 +193,7 @@ class KnownIntegrationTest(Base):
         assert query.id == "nisA"
         assert subject.name == "AEX55166.1"
 
-    def test_balhymicin(self, _patched_dir):
+    def test_balhymicin(self):
         # blast scores and derivative values not checked due to diamond versions having different results
         _, results = self.check_balhymicin(2)
         ranking = results.region_results[0].ranking
@@ -232,7 +220,7 @@ class KnownIntegrationTest(Base):
         assert query.id == "vanS"
         assert subject.name == "AGS77301.1"
 
-    def test_fusariam_scirpi(self, _patched_dir):
+    def test_fusariam_scirpi(self):
         # this is a special case where it's a single CDS cluster that matches
         # against other single CDS clusters, before this test they were all
         # discarded
@@ -278,9 +266,12 @@ class TestDatabaseValidity(unittest.TestCase):
     def _check_proteins_match_clusters(self, searchtype):
         clusters = core.load_reference_clusters(searchtype)
         proteins = core.load_reference_proteins(searchtype)
+        expected_proteins = 0
         for cluster in clusters.values():
+            expected_proteins += len(cluster.tags)
             for protein in cluster.tags:
-                assert protein in proteins, f"missing: {protein}"
+                assert f"{cluster.accession}_{protein}" in proteins, f"missing: {protein}"
+        assert len(proteins) == expected_proteins
 
     def test_general(self):
         self._check_proteins_match_clusters("clusterblast")

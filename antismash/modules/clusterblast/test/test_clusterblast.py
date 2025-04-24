@@ -168,16 +168,6 @@ class TestBlastParsing(unittest.TestCase):
         self.assertEqual(len(queries), 0)
 
 
-class TestSubject(unittest.TestCase):
-    def test_init(self):
-        expected = ["a", "b", 1, 2, "+", "c", 5., 1, 5., 1e-8, "loc"]
-        s = core.Subject(*expected)  # pylint: disable=invalid-name
-        got = [s.name, s.genecluster, s.start, s.end, s.strand, s.annotation,
-               s.perc_ident, s.blastscore, s.perc_coverage, s.evalue, s.locus_tag]
-        for exp, val in zip(expected, got):
-            self.assertEqual(exp, val)
-
-
 class TestQuery(unittest.TestCase):
     def test_init(self):
         query_line = "input|c1|0-759|-|CAG25751.1|putative"
@@ -191,7 +181,7 @@ class TestQuery(unittest.TestCase):
 
     def test_subject_tracking(self):
         query = core.Query("input|c1|0-759|-|CAG25751.1|putative", 0)
-        sub1 = core.Subject("a1", "a", 1, 2, "+", "c", 0.5, 1, 0.5, 1e-8, "loc")
+        sub1 = core.Subject("a1", "a", 1, 2, "+", "c", 0.5, 1, 0.5, 1e-8, "loc", full_name="sub_a1")
         query.add_subject(sub1)
         containers = [query.cluster_name_to_subjects, query.subjects]
         # check it was properly added to the various containers
@@ -199,7 +189,7 @@ class TestQuery(unittest.TestCase):
             self.assertEqual(len(container), 1)
         self.assertEqual(query.cluster_name_to_subjects["a"], [sub1])
         assert list(query.subjects) == ["a1"]
-        sub2 = core.Subject("a2", "b", 1, 2, "+", "c", 0.5, 1, 0.5, 1e-8, "loc")
+        sub2 = core.Subject("a2", "b", 1, 2, "+", "c", 0.5, 1, 0.5, 1e-8, "loc", full_name="sub_a1")
         query.add_subject(sub2)
         for container in containers:
             self.assertEqual(len(container), 2)
@@ -207,7 +197,7 @@ class TestQuery(unittest.TestCase):
         self.assertEqual(query.cluster_name_to_subjects["b"], [sub2])
 
         # check we don't override when cluster names overlap
-        sub3 = core.Subject("a3", "a", 1, 2, "+", "c", 0.5, 1, 0.5, 1e-8, "loc")
+        sub3 = core.Subject("a3", "a", 1, 2, "+", "c", 0.5, 1, 0.5, 1e-8, "loc", full_name="sub_a1")
         query.add_subject(sub3)
         self.assertEqual(len(query.subjects), 3)
         # check the new subject was properly added to the old list
@@ -258,15 +248,15 @@ class TestScore(unittest.TestCase):
 
 class TestProtein(unittest.TestCase):
     def test_string_conversion(self):
-        protein = core.Protein("n", "l", "5-12", "+", "anno")
+        protein = core.Protein("unique", "n", "l", "5-12", "+", "anno")
         self.assertEqual(str(protein), "l\tn\t5\t12\t+\tanno\n")
 
         # test name is used when no locus tag
-        protein = core.Protein("n", "no_locus_tag", "5-12", "+", "anno")
+        protein = core.Protein("unique", "n", "no_locus_tag", "5-12", "+", "anno")
         self.assertEqual(str(protein), "n\tn\t5\t12\t+\tanno\n")
 
     def test_members(self):
-        protein = core.Protein("n", "no_locus_tag", "5-12", "+", "anno")
+        protein = core.Protein("unique", "n", "no_locus_tag", "5-12", "+", "anno")
         protein.locus_tag = "l"
         # if this doesn't raise an exception, __slots__ was removed from Protein
         with self.assertRaises(AttributeError):
@@ -298,6 +288,7 @@ class TestSubjectParsing(unittest.TestCase):
                         "100.0", "253", "0", "0", "1", "253", "1", "253",
                         "7.2e-129", "465.0"]
         sub = self.parse_subject_wrapper(subject_line)
+        assert sub.full_name == "Y16952_CAG25751"
         self.assertEqual(sub.name, "CAG25751")
         self.assertEqual(sub.blastscore, 465)
         self.assertEqual(sub.evalue, 7.2e-129)
@@ -324,6 +315,7 @@ class TestSubjectParsing(unittest.TestCase):
                         "100.0", "253", "0", "0", "1", "253", "1", "253",
                         "7.2e-129", "465.0"]
         sub = self.parse_subject_wrapper(subject_line)
+        assert sub.full_name == "Y16952_CAG25751"
         self.assertEqual(sub.name, "CAG25751")
 
     def test_rounding(self):
@@ -559,7 +551,7 @@ class TestReferenceProteinLoading(unittest.TestCase):
         with patch("builtins.open", self.mock_with(hit)):
             proteins = core.load_reference_proteins("clusterblast")
         assert len(proteins) == 1
-        protein = proteins["BN1184_AH_00620"]
+        protein = proteins["CVNH01000008_BN1184_AH_00620"]
         assert protein.name == "CRH36422"
         assert protein.annotations == "Urea_carboxylase_{ECO:0000313}"
 
@@ -571,7 +563,7 @@ class TestReferenceProteinLoading(unittest.TestCase):
         with patch("builtins.open", self.mock_with(hit)):
             proteins = core.load_reference_proteins("clusterblast")
         assert len(proteins) == 1
-        protein = proteins["BN1184_AH_00620"]
+        protein = proteins["CVNH01000008_BN1184_AH_00620"]
         assert protein.name == "CRH36422"
         assert protein.annotations == "Urea_carboxylase_{ECO:0000313|EMBL:CCF11062.1}"
 

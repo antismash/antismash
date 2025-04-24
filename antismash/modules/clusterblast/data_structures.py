@@ -45,6 +45,7 @@ class ReferenceCluster:
 @dataclass(slots=True, repr=True)
 class Protein(JSONBase):
     """ Holds details of a protein. """
+    full_name: str
     name: str
     locus_tag: str
     location: str
@@ -98,8 +99,7 @@ class Protein(JSONBase):
             Returns:
                 the newly created instance
         """
-        return cls(data["name"], data["locus_tag"], data["location"], data["strand"], data["annotations"],
-                   data.get("draw_start", 0), data.get("draw_end", 0))
+        return cls(**data)
 
     def to_json(self) -> JSONCompatible:
         """ Returns a JSON-compatible object with the instance's data """
@@ -109,7 +109,8 @@ class Protein(JSONBase):
 class Subject:
     """ Holds details of a subject as reported by BLAST """
     def __init__(self, name: str, genecluster: str, start: int, end: int, strand: str, annotation: str,
-                 perc_ident: int, blastscore: int, perc_coverage: float, evalue: float, locus_tag: str) -> None:
+                 perc_ident: int, blastscore: int, perc_coverage: float, evalue: float, locus_tag: str,
+                 full_name: str) -> None:
         self.name = name
         self.genecluster = genecluster
         self.start = int(start)
@@ -121,6 +122,7 @@ class Subject:
         self.perc_coverage = float(perc_coverage)
         self.evalue = float(evalue)
         self.locus_tag = str(locus_tag)
+        self.full_name = full_name
 
     def __len__(self) -> int:
         return abs(int(self.start) - int(self.end))
@@ -132,14 +134,9 @@ class Subject:
                                            self.evalue]])
 
     @staticmethod
-    def from_dict(data: Dict[str, Union[str, int, float]]) -> "Subject":
+    def from_dict(data: dict[str, Any]) -> "Subject":
         """ Recreates a Subject instance from a JSON formatted subject """
-        args = []
-        for key in ["name", "genecluster", "start", "end", "strand",
-                    "annotation", "perc_ident", "blastscore", "perc_coverage",
-                    "evalue", "locus_tag"]:
-            args.append(data[key])
-        return Subject(*args)  # type: ignore # pylint: disable=no-value-for-parameter
+        return Subject(**data)
 
 
 class Query:
