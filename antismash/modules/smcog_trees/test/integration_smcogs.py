@@ -6,6 +6,7 @@
 
 import glob
 import os
+import shutil
 import unittest
 
 from helperlibs.bio import seqio
@@ -60,15 +61,12 @@ class TestTreeGeneration(Base):
         return super().get_args() + ["--smcog-trees"]
 
     def test_trees(self):
-        with TemporaryDirectory(change=True):
+        with TemporaryDirectory(change=True) as temp:
             # add the classifications to work with
             genefunctions.tools.smcogs.classify(self.record.get_cds_features(),
                                                 self.options).add_to_record(self.record)
 
             results = smcog_trees.run_on_record(self.record, None, self.options)
-            assert len(results.tree_images) == 7
-            for image in results.tree_images.values():
-                assert os.path.exists(os.path.join(results.relative_tree_path, image))
 
             # test the results function properly
             json = results.to_json()
@@ -77,29 +75,36 @@ class TestTreeGeneration(Base):
             assert isinstance(regenerated, smcog_trees.SMCOGTreeResults), json
             assert regenerated.to_json() == json
 
+            # no files should have been written
+            assert not glob.glob(os.path.join(temp, "*"))
+
         results.add_to_record(self.record)
         for cds in self.record.get_cds_features():
             if cds.gene_functions.get_by_tool("rule-based-clusters"):
                 continue  # no sense checking, because we don't do anything with it
             if not cds.gene_functions.get_by_tool("smcogs"):
                 continue
-            assert cds.get_name() in results.tree_images
-            assert len(cds.notes) == 1
+            assert cds.get_name() in results.trees
             assert cds.gene_function != secmet.qualifiers.GeneFunction.OTHER
 
     def test_trees_complete(self):
+        expected_tree_count = 7
         with TemporaryDirectory() as output_dir:
             args = ["--minimal", "--enable-genefunctions", "--smcog-trees",
                     "--output-dir", output_dir, helpers.get_path_to_nisin_genbank()]
             options = build_config(args, isolated=True, modules=antismash.get_all_modules())
+            image_path = os.path.join(output_dir, "smcogs", "*.png")
+
             antismash.run_antismash(helpers.get_path_to_nisin_genbank(), options)
 
             with open(os.path.join(output_dir, "nisin.json"), encoding="utf-8") as res_file:
                 assert "antismash.modules.smcog_trees" in res_file.read()
 
-            tree_files = list(glob.glob(os.path.join(output_dir, "smcogs", "*.png")))
-            assert len(tree_files) == 7
-            sample_tree = tree_files[0]
+            # ensure images are created
+            tree_files = glob.glob(image_path)
+            assert len(tree_files) == expected_tree_count
+            # clean them up for the next part
+            shutil.rmtree(os.path.join(output_dir, "smcogs"))
 
             # regen the results
             update_config({"reuse_results": os.path.join(output_dir, "nisin.json")})
@@ -107,17 +112,14 @@ class TestTreeGeneration(Base):
             record = prior_results.records[0]
             results = prior_results.results[0]
             tree_results = results["antismash.modules.smcog_trees"]
-
             smcogs_results = smcog_trees.regenerate_previous_results(tree_results, record, options)
-            assert len(smcogs_results.tree_images) == 7
-            assert os.path.exists(sample_tree)
+            assert len(smcogs_results.trees) == expected_tree_count
 
-            os.unlink(sample_tree)
-            assert not os.path.exists(sample_tree)
+            # while the results object is regenerated, the output images should not have been
+            tree_files = glob.glob(image_path)
+            assert len(tree_files) == 0
 
-            # attempt to regen the results, the deleted tree image will prevent it
-            prior_results = read_data(None, options)
-            record = prior_results.records[0]
-            results = prior_results.results[0]
-            smcogs_results = smcog_trees.regenerate_previous_results(tree_results, record, options)
-            assert smcogs_results is None
+            # but those images should reappear when the write function is called
+            smcogs_results.write_outputs(self.record, options)
+            tree_files = glob.glob(image_path)
+            assert len(tree_files) == expected_tree_count
