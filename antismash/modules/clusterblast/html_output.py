@@ -388,9 +388,10 @@ def generate_javascript_data(record: Record, region: Region, results: ClusterBla
             assert isinstance(ref, ReferenceCluster)
             pairs_per_ref: dict[str, list[tuple[Query, Subject]]] = defaultdict(list)
             for query, reference in score.scored_pairings:
-                pairs_per_ref[reference.name].append((query, reference))
+                pairs_per_ref[reference.full_name].append((query, reference))
             assert pairs_per_ref
-            reference_genes = [region_results.displayed_reference_proteins[tag] for tag in ref.tags]
+            reference_genes = [region_results.displayed_reference_proteins[f"{ref.accession}_{tag}"]
+                               for tag in ref.tags]
 
             start = min(gene.draw_start for gene in reference_genes)
             end = max(gene.draw_end for gene in reference_genes)
@@ -401,14 +402,13 @@ def generate_javascript_data(record: Record, region: Region, results: ClusterBla
                 ref_data.label = f"{ref_data.accession}: {ref_data.label}"
             output.append(ref_data)
             average_strand = 0
-            for locus_tag in ref.tags:
-                protein: Protein = region_results.displayed_reference_proteins[locus_tag]
-                colour = colours.get(locus_tag, "white")
+            for protein in reference_genes:
+                colour = colours.get(protein.full_name, "white")
                 ref_gene = ReferenceGeneJSON.from_protein(protein, colour=colour)
                 ref_data.genes.append(ref_gene)
                 if colour == "white":
                     continue
-                for query, subject in pairs_per_ref[locus_tag]:
+                for query, subject in pairs_per_ref[protein.full_name]:
                     average_strand += ref_gene.strand * record.get_cds_by_name(query.id).location.strand
                     record.get_cds_by_name(query.id)
                     ref_gene.matches.append(GeneMatchJSON.from_subject(query.id, subject))

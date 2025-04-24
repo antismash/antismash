@@ -131,7 +131,7 @@ def build_colour_groups(query_cds_features: Iterable[secmet.CDSFeature],
         for query, subject in score.scored_pairings:
             q_id = query.id + " QUERY"
             groups[q_id].add(query.id)
-            groups[q_id].add(subject.name)
+            groups[q_id].add(subject.full_name)
     # merge intersecting sets so only disjoint sets remain
     for i, accession in enumerate(accessions):
         groups[accession].add(accession)  # add the query name to it's group
