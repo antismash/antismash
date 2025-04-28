@@ -17,6 +17,8 @@ class AbstractRegion(Feature, AbstractClass):
         to avoid circularity with CDSFeatures. Any concrete implementation of the class will
         need to swap in the more accurate cases.
     """
+    FEATURE_TYPE = "region"
+
 
     @property
     @abstractmethod
