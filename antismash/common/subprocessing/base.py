@@ -20,6 +20,10 @@ with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     from Bio import SearchIO  # for import by others without wrapping, pylint: disable=unused-import
 
+# more modern macos system calls don't handle config serialisation, so force them to fork
+if sys.platform == "darwin":
+    multiprocessing.set_start_method("fork")
+
 
 class RunResult:
     """ A container for simplifying the results of running a command """
