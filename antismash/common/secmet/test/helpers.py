@@ -89,7 +89,9 @@ class DummyProtocluster(Protocluster):
     def __init__(self, start=None, end=None, core_start=0, core_end=1,  # pylint: disable=too-many-arguments
                  core_location=None, tool="test", product="test-product",
                  cutoff=10, neighbourhood_range=10, high_priority_product=True,
-                 product_category="TEST-CATEGORY", record_length=None):
+                 product_category="TEST-CATEGORY", record_length=None,
+                 protocluster_number=-1,
+                 ):
         if core_location is None:
             if core_start > core_end:
                 assert record_length
@@ -118,6 +120,14 @@ class DummyProtocluster(Protocluster):
         super().__init__(core_location, surrounds, tool, product, cutoff,
                          neighbourhood_range, high_priority_product,
                          product_category=product_category)
+        self._dummy_protocluster_number = protocluster_number
+
+    def get_protocluster_number(self):
+        # prevent failures when testing candidates in isolation from records
+        try:
+            return super().get_protocluster_number()
+        except ValueError:
+            return self._dummy_protocluster_number
 
 
 class DummyPFAMDomain(PFAMDomain):
@@ -208,7 +218,8 @@ class DummySubRegion(SubRegion):
 
 
 class DummyCandidateCluster(CandidateCluster):
-    def __init__(self, clusters=None, kind=None, start=0, end=100, **kwargs):
+    def __init__(self, clusters=None, kind=None, start=0, end=100,
+                 candidate_number=-1, **kwargs):
         if clusters is None:
             clusters = [DummyProtocluster(start=start, end=end, record_length=kwargs.get("circular_wrap_point"))]
         if not kind:
@@ -219,13 +230,14 @@ class DummyCandidateCluster(CandidateCluster):
         if "circular_wrap_point" not in kwargs and any(cluster.crosses_origin() for cluster in clusters):
             kwargs["circular_wrap_point"] = max(cluster.location.parts[0].end for cluster in clusters)
         super().__init__(kind, clusters, **kwargs)
+        self._dummy_candidate_number = candidate_number
 
     def get_candidate_cluster_number(self):
         # prevent failures when testing candidates in isolation from records
         try:
             return super().get_candidate_cluster_number()
         except ValueError:
-            return -1
+            return self._dummy_candidate_number
 
 
 def rotate(record: Record, cut_point: int, padding: int = 0) -> None:
