@@ -41,7 +41,7 @@ class TestParseRecords(unittest.TestCase):
     def test_cross_origin_trim(self):
         record = DummyRecord(length=20, circular=True)
         bio_record = record.to_biopython()
-        with self.assertRaisesRegex(ValueError, "cannot be used for a cross-origin"):
+        with self.assertRaisesRegex(AntismashInputError, "cannot be used for a cross-origin"):
             with mock.patch.object(record_processing, "_strict_parse", return_value=[bio_record]):
                 record_processing.parse_input_sequence("dummy_filename", start=15, end=5)
 
