@@ -17,7 +17,7 @@ from antismash import config
 from antismash.common import record_processing, path
 from antismash.common.errors import AntismashInputError
 from antismash.common.secmet import Record
-from antismash.common.secmet.test.helpers import DummyCDSMotif, DummyFeature, DummyRecord
+from antismash.common.secmet.test.helpers import DummyCDS, DummyCDSMotif, DummyFeature, DummyRecord
 from antismash.common.test import helpers
 
 
@@ -290,6 +290,18 @@ class TestPreprocessRecords(unittest.TestCase):
         records = record_processing.pre_process_sequences(records, self.options, self.genefinding)
         assert len(records) == 2
         assert records[0].id != records[1].id
+
+    def test_duplicate_record_ids_with_invalid(self):
+        config.update_config({"minlength": -1})
+        cds = DummyCDS()
+        names = ["Same", "Same" + record_processing._INVALID_ID_CHARS[0], "Same"]
+        records = [DummyRecord(record_id=name, features=[cds]) for name in names]
+        assert set(record.original_id for record in records) == {None}
+        processed = record_processing.pre_process_sequences(records, self.options, self.genefinding)
+        assert len(processed) == 3
+        assert set(record.id for record in processed) == {"Same", "Same_0", "Same_1"}
+        # only two records were renamed, so one original name will be untouched
+        assert set(record.original_id for record in processed) == {"Same!", "Same", None}
 
     def test_limit(self):
         records = self.read_double_nisin()
