@@ -8,7 +8,7 @@ import functools
 import logging
 import os
 import re
-from typing import Any, Dict, Callable, List, Set, Tuple
+from typing import Any, Dict, Callable, Iterable, List, Set, Tuple
 import warnings
 
 from Bio.Seq import Seq, UndefinedSequenceError
@@ -23,6 +23,9 @@ from antismash.config import get_config, update_config, Config, ConfigType
 from antismash.custom_typing import AntismashModule
 
 from .subprocessing import parallel_function
+
+
+_INVALID_ID_CHARS = """!"#$%&()*+,:;=>?@[]^`'{|}/ """
 
 
 def _strict_parse(filename: str) -> List[SeqRecord]:
@@ -62,6 +65,19 @@ def _strict_parse(filename: str) -> List[SeqRecord]:
     if not records:
         raise AntismashInputError(f"no valid records found in file {filename}")
     return records
+
+
+def _strip_invalid_chars_from_ids(records: Iterable[Record]) -> None:
+    def strip(value: str) -> str:
+        return "".join(v for v in value if v not in _INVALID_ID_CHARS)
+
+    for record in records:
+        stripped_id = strip(record.id)
+        # store the original name, if it hasn't already been modified
+        if stripped_id != record.id and not record.original_id:
+            record.original_id = record.id
+        record.id = stripped_id
+        record.name = strip(record.name)
 
 
 def parse_input_sequence(filename: str, taxon: str = "bacteria", minimum_length: int = -1,
@@ -118,7 +134,10 @@ def parse_input_sequence(filename: str, taxon: str = "bacteria", minimum_length:
         if len(records) > 1:
             raise AntismashInputError("--start and --end options cannot be used with multiple records")
         if start != -1 and end != -1 and start > end and records[0].annotations.get("topology") == "circular":
-            raise AntismashInputError("--start and --end cannot be used for a cross-origin section of a circular record")
+            raise AntismashInputError(
+                "--start and --end cannot be used for "
+                "a cross-origin section of a circular record"
+            )
         records[0] = trim_sequence(records[0], max(start, 0), min(len(records[0]), end))
 
     # add GFF features before conversion, if relevant
@@ -368,13 +387,15 @@ def pre_process_sequences(sequences: List[Record], options: ConfigType, genefind
     # keep sequences as clean as possible and make sure they're valid
     if checking_required:
         logging.debug("Sanitising record ids and sequences")
+        _strip_invalid_chars_from_ids(sequences)
         # Ensure all records have unique names
         all_record_ids = {seq.id for seq in sequences}
         if len(all_record_ids) < len(sequences):
             all_record_ids = set()
             for record in sequences:
                 if record.id in all_record_ids:
-                    record.original_id = record.id
+                    if not record.original_id:
+                        record.original_id = record.id
                     record.id = generate_unique_id(record.id, all_record_ids)[0]
                 all_record_ids.add(record.id)
             assert len(all_record_ids) == len(sequences), f"{len(all_record_ids)} != {len(sequences)}"
@@ -562,15 +583,6 @@ def fix_record_name_id(record: Record, all_record_ids: Set[str],
         acc = record.annotations['accession']
 
         record.annotations['accession'] = _shorten_ids(acc)
-
-    # Remove illegal characters from name: otherwise, file cannot be written
-    illegal_chars = set('''!"#$%&()*+,:;=>?@[]^`'{|}/ ''')
-    for char in record.id:
-        if char in illegal_chars:
-            record.id = record.id.replace(char, "")
-    for char in record.name:
-        if char in illegal_chars:
-            record.name = record.name.replace(char, "")
 
     if not record.original_id and old_id != record.id:
         record.original_id = old_id
