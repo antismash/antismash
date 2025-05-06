@@ -12,7 +12,7 @@ from antismash.common.hmm_rule_parser.structures import Multipliers
 from antismash.common.test.helpers import DummyCDS, DummyRecord, FakeHSPHit
 
 
-def format_as_rule(name, cutoff, neighbourhood, conditions, category="C"):
+def format_as_rule(name="A", cutoff=10, neighbourhood=10, conditions="A", category="C"):
     return f"RULE {name} CATEGORY {category} CUTOFF {cutoff} NEIGHBOURHOOD {neighbourhood} CONDITIONS {conditions}"
 
 
@@ -351,33 +351,49 @@ class RuleParserTest(unittest.TestCase):
             rules = self.parse("RULE name CATEGORY nope CUTOFF 20 NEIGHBOURHOOD 20 CONDITIONS a").rules
 
     def test_section_comments(self):
-        rules = self.parse("RULE name CATEGORY category DESCRIPTION this is a section comment CUTOFF 20"
+        description = "this is a section comment with (parens)"
+        rules = self.parse(f"RULE name CATEGORY category DESCRIPTION {description} CUTOFF 20"
                            " NEIGHBOURHOOD 20 CONDITIONS a").rules
-        assert len(rules) == 1 and rules[0].description == "this is a section comment"
+        assert len(rules) == 1
+        assert rules[0].description == description
+
+    def test_keywords_in_comments(self):
+        description = (
+            "This is not a section comment that plays nicely with keywords or with symbols, "
+            "as it contains many explicit keywords (such as cutoff)."
+        )
+        rules = self.parse(f"RULE name CATEGORY category DESCRIPTION {description} CUTOFF 20"
+                           " NEIGHBOURHOOD 20 CONDITIONS a").rules
+        assert len(rules) == 1
+        assert rules[0].description == description
 
     def test_example(self):
         rules = self.parse("RULE name CATEGORY category DESCRIPTION this is a comment"
                            " EXAMPLE NCBI Y16952.3 1-66669 balhimycin"
                            " CUTOFF 20 NEIGHBOURHOOD 20 CONDITIONS a").rules
-        assert len(rules) == 1 and len(rules[0].examples) == 1 and \
-            rules[0].examples[0].database == "NCBI" and \
-            rules[0].examples[0].accession == "Y16952" and \
-            rules[0].examples[0].version == 3 and \
-            rules[0].examples[0].start == 1 and \
-            rules[0].examples[0].end == 66669 and \
-            rules[0].examples[0].compound_name == "balhimycin"
+        assert len(rules) == 1
+        assert len(rules[0].examples) == 1
+        example = rules[0].examples[0]
+        assert example.database == "NCBI"
+        assert example.accession == "Y16952"
+        assert example.version == 3
+        assert example.start == 1
+        assert example.end == 66669
+        assert example.compound_name == "balhimycin"
 
     def test_multiple_examples(self):
         rules = self.parse("RULE name CATEGORY category DESCRIPTION this is a comment"
                            " EXAMPLE NCBI Y16952.3 1-66669 EXAMPLE NCBI EX12345.6 23-42 examplomycin dipeptide"
                            " CUTOFF 20 NEIGHBOURHOOD 20 CONDITIONS a").rules
-        assert len(rules) == 1 and len(rules[0].examples) == 2 and \
-            rules[0].examples[1].database == "NCBI" and \
-            rules[0].examples[1].accession == "EX12345" and \
-            rules[0].examples[1].version == 6 and \
-            rules[0].examples[1].start == 23 and \
-            rules[0].examples[1].end == 42 and \
-            rules[0].examples[1].compound_name == "examplomycin dipeptide"
+        assert len(rules) == 1
+        assert len(rules[0].examples) == 2
+        example = rules[0].examples[1]
+        assert example.database == "NCBI"
+        assert example.accession == "EX12345"
+        assert example.version == 6
+        assert example.start == 23
+        assert example.end == 42
+        assert example.compound_name == "examplomycin dipeptide"
 
     def test_single_superior(self):
         rules = self.parse("RULE first CATEGORY category CUTOFF 20 NEIGHBOURHOOD 20 CONDITIONS a "
@@ -659,6 +675,27 @@ class RuleParserTest(unittest.TestCase):
 
             with self.assertRaisesRegex(rule_parser.RuleSyntaxError, "after 'extenders'"):
                 _ = self.parse(f"{text} EXTENDERS {extenders}").rules[0]
+
+    def test_single_references(self):
+        references = [
+            ("doi", "10.12345/123abc.123-456", " with some text about the reference"),
+            ("doi", "some/awkward/identifier(00)1234", ""),
+        ]
+        for ref_type, identifier, comment in references:
+            rules = self.parse("RULE name CATEGORY category"
+                               f" REFERENCE {ref_type} {identifier}{comment}"
+                               " CUTOFF 20 NEIGHBOURHOOD 20 CONDITIONS a").rules
+            assert len(rules) == 1
+            rule = rules[0]
+            assert len(rule.references) == 1
+            reference = rule.references[0]
+            assert reference.reference_type == ref_type
+            assert reference.identifier == identifier
+            if comment:
+                assert reference.comment == comment.lstrip()
+            else:
+                assert reference.comment == ""
+            assert str(reference) == f"{ref_type.upper()} {identifier}{comment}"
 
 
 class TokenTest(unittest.TestCase):
