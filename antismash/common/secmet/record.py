@@ -528,7 +528,9 @@ class Record:
             for part in location.parts:
                 found = self.get_cds_features_within_location(part, with_overlapping=True)
                 features.extend(f for f in found if f not in features)
-            return [f for f in features if f.is_contained_by(location)]
+            if not with_overlapping:
+                return [f for f in features if f.is_contained_by(location)]
+            return features
 
         def find_start_in_list(location: Location, features: List[CDSFeature],
                                include_overlaps: bool) -> int:
