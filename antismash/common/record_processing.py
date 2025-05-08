@@ -121,6 +121,11 @@ def parse_input_sequence(filename: str, taxon: str = "bacteria", minimum_length:
         if minimum_length < 1 or len(record.seq) >= minimum_length:
             records.append(record)
 
+        # if requested, remove every existing annotation
+        if get_config().remove_existing_annotations:
+            record.features.clear()
+            assert not record.features
+
     # if no records are left, that's a problem
     if not records:
         raise AntismashInputError(f"all input records smaller than minimum length ({minimum_length})")
