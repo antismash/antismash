@@ -517,6 +517,18 @@ class TestCDSFetchByLocation(unittest.TestCase):
         loc = FeatureLocation(110, 140)
         assert self.func(loc, with_overlapping=False) == [inner]
 
+    def test_compound_with_overlapping(self):
+        location = CompoundLocation([
+            FeatureLocation(20, 40, 1),
+            FeatureLocation(60, 80, 1),
+        ])
+        for cds, overlap_expected in zip(self.record.get_cds_features(), [True, False]):
+            assert not cds.is_contained_by(location)
+            assert cds.overlaps_with(location) == overlap_expected
+
+        assert self.func(location, with_overlapping=False) == []
+        assert self.func(location, with_overlapping=True) == [self.record.get_cds_features()[0]]
+
 
 class TestClusterManipulation(unittest.TestCase):
     def setUp(self):
