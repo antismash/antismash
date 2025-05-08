@@ -22,6 +22,12 @@ from antismash.common.test import helpers
 
 
 class TestParseRecords(unittest.TestCase):
+    def setUp(self):
+        config.build_config([], isolated=True)
+
+    def tearDown(self):
+        config.destroy_config()
+
     def test_nisin(self):
         nisin_path = helpers.get_path_to_nisin_genbank()
         records = record_processing.parse_input_sequence(nisin_path)
@@ -94,6 +100,38 @@ class TestParseRecords(unittest.TestCase):
                         records = record_processing.parse_input_sequence("dummy file", ignore_invalid_records=value)
                         assert len(records) == 1
                         assert records[0].id == dummy_inputs[1].id
+
+    def test_removal_of_existing(self):
+        options = config.get_config()
+        assert not options.remove_existing_annotations
+
+        features =  [
+            SeqFeature(FeatureLocation(0, 1, 1), type="misc_feature"),
+            SeqFeature(FeatureLocation(10, 18, 1), type="CDS"),
+        ]
+
+        # without stripping, features should remain
+        bio = SeqRecord(Seq("ACGT" * 10))
+        bio.features = list(features)
+        assert len(bio.features) == 2
+        with mock.patch.object(record_processing, "_strict_parse", return_value=[bio]):
+            records = record_processing.parse_input_sequence("dummy")
+        assert len(records) == 1
+        to_bio = records[0].to_biopython()
+        assert len(to_bio.features) == 2, to_bio.features
+        assert len(list(records[0].all_features)) == len(features)
+        for bio_feature, secmet_feature in zip(features, records[0].all_features):
+            assert bio_feature.location == secmet_feature.location
+            assert bio_feature.type == secmet_feature.type
+
+        # with stripping, nothing should remain
+        bio.features = list(features)
+        config.build_config(["--remove-existing-annotations"], isolated=True)
+        assert options.remove_existing_annotations
+        with mock.patch.object(record_processing, "_strict_parse", return_value=[bio]):
+            records = record_processing.parse_input_sequence("dummy")
+        assert len(records) == 1
+        assert not list(records[0].all_features)
 
     def test_all_invalid_and_ignored(self):
         dummy_error = record_processing.SecmetInvalidInputError("some reason")
