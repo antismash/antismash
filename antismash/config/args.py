@@ -614,6 +614,12 @@ def advanced_options() -> ModuleArgs:
                      action=argparse.BooleanOptionalAction,
                      default=True,
                      help="Should sequence identifiers longer than 16 characters be allowed")
+    group.add_option("--remove-existing-annotations",
+                     dest="remove_existing_annotations",
+                     action=argparse.BooleanOptionalAction,
+                     default=False,
+                     help="Remove any existing features from annotation inputs",
+                     )
     return group
 
 
