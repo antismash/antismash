@@ -257,6 +257,17 @@ class TestSectioning(unittest.TestCase):
         assert area.cds_children.cross_origin == (cross,)
         assert area.cds_children.post_origin == (post,)
 
+    def test_cross_origin_reverse(self):
+        location = CompoundLocation([
+            FeatureLocation(0, 10, -1),
+            FeatureLocation(90, 100, -1),
+        ])
+        area = CDSCollection(location, feature_type="test")
+        assert area.location == CompoundLocation([
+            FeatureLocation(90, 100, 1),
+            FeatureLocation(0, 10, 1),
+        ])
+
     def test_pickleable(self):
         # due to the combination of caches and custom tuples,
         # pickling can go very wrong, leading to hangs in multiprocess/multithread sections
