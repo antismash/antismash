@@ -49,7 +49,7 @@ class _LocationMixin(_Location):
         return (start, len(self))
 
     def __lt__(self: T, other: Any) -> bool:
-        if isinstance(other, self.__class__):
+        if isinstance(other, _Location):
             other_loc = other
         elif hasattr(other, "location") and isinstance(other.location, self.__class__):
             other_loc = other.location
