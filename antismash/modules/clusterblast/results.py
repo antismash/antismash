@@ -7,7 +7,7 @@
 from collections import OrderedDict
 import logging
 import os
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, IO, List, Optional, Tuple
 
 from antismash.common.module_results import ModuleResults
 from antismash.common.layers import AbstractRelatedArea
@@ -339,15 +339,15 @@ def write_clusterblast_output(options: ConfigType, record: Record,
     filename = f"{record.id}_c{region_number}.txt"
 
     with changed_directory(_get_output_dir(options, searchtype)):
-        _write_output(filename, record, cluster_result, proteins)
+        with open(filename, "w", encoding="utf-8") as out_file:
+            _write_output(out_file, record, cluster_result, proteins)
 
 
-def _write_output(filename: str, record: Record, cluster_result: RegionResult,
+def _write_output(out_file: IO, record: Record, cluster_result: RegionResult,
                   proteins: Dict[str, Protein]) -> None:
     ranking = cluster_result.ranking
     # Output for each hit: table of genes and locations of input cluster,
     # table of genes and locations of hit cluster, table of hits between the clusters
-    out_file = open(filename, "w", encoding="utf-8")  # pylint: disable=consider-using-with
     out_file.write("ClusterBlast scores for " + record.id + "\n")
     out_file.write("\nTable of genes, locations, strands and annotations of query cluster:\n")
     for i, cds in enumerate(cluster_result.region.cds_children):
@@ -385,7 +385,6 @@ def _write_output(filename: str, record: Record, cluster_result: RegionResult,
         else:
             out_file.write("data not found\n")
         out_file.write("\n")
-    out_file.close()
 
 
 def _get_output_dir(options: ConfigType, searchtype: str) -> str:
