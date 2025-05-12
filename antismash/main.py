@@ -438,14 +438,15 @@ def write_outputs(results: serialiser.AntismashResults, options: ConfigType) -> 
     logging.debug("Writing non-HTML output files")
     # don't use results for which the module no longer exists to regenerate/calculate
     module_results_per_record = []
-    for record_results in results.results:
+    assert len(results.records) == len(results.results)
+    for record, record_results in zip(results.records, results.results):
         record_result = {}
         for module_name, result in record_results.items():
             if isinstance(result, ModuleResults):
+                assert result.record_id == record.id
                 logging.debug(" Writing relevant output files for %s", module_name)
                 record_result[module_name] = result
-                for record in results.records:
-                    result.write_outputs(record, options)
+                result.write_outputs(record, options)
         module_results_per_record.append(record_result)
 
     if html.is_enabled(options):
