@@ -914,7 +914,7 @@ class TestRegionManipulation(unittest.TestCase):
         self.record.create_regions()
         assert len(self.record.get_regions()) == 1
         region = self.record.get_regions()[0]
-        assert region.location == FeatureLocation(3, 300)
+        assert region.location == FeatureLocation(3, 300, 1)
         assert region.candidate_clusters == (extra_sup, self.candidate_cluster)
         assert region.subregions == (extra_sub, self.subregion)
 
@@ -934,12 +934,12 @@ class TestRegionManipulation(unittest.TestCase):
         assert len(self.record.get_regions()) == 2
 
         region = self.record.get_regions()[0]
-        assert region.location == FeatureLocation(3, 100)
+        assert region.location == FeatureLocation(3, 100, 1)
         assert region.candidate_clusters == (self.candidate_cluster,)
         assert region.subregions == (self.subregion,)
 
         region = self.record.get_regions()[1]
-        assert region.location == FeatureLocation(800, 870)
+        assert region.location == FeatureLocation(800, 870, 1)
         assert region.candidate_clusters == (extra_sup,)
         assert region.subregions == tuple()
 
