@@ -41,12 +41,14 @@ class _LocationMixin(_Location):
     def get_comparator(self: T) -> tuple[int, int]:
         """Get a comparison helper tuple consisting of start position and length."""
         start = self.start
+        end = self.end
         if self.crosses_origin():
             _, head = split_origin_bridging_location(self)
             start = min(part.start for part in head) - max(part.end for part in head)
+            end = len(self)
         if not isinstance(start, int):
             return (-1, id(self))
-        return (start, len(self))
+        return (start, end)
 
     def __lt__(self: T, other: Any) -> bool:
         if isinstance(other, _Location):
