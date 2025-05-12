@@ -968,3 +968,26 @@ class TestMakingStrandForwards(unittest.TestCase):
         parts = [FeatureLocation(0, 50, -1), FeatureLocation(60, 70, -1)]
         location = CompoundLocation(parts)
         assert self.func(location) == CompoundLocation([FeatureLocation(f.start, f.end, 1) for f in parts[::-1]])
+
+
+class TestComparison(unittest.TestCase):
+    def test_simple(self):
+        assert FeatureLocation(1, 5) < FeatureLocation(10, 20)
+
+    def test_longer(self):
+        assert FeatureLocation(1, 20) > FeatureLocation(1, 10)
+        # and with exons with later ends but shorter lengths
+        first = CompoundLocation([
+            FeatureLocation(1, 10),
+            FeatureLocation(15, 30),
+        ])
+        second = CompoundLocation([
+            FeatureLocation(1, 5),
+            FeatureLocation(15, 20),
+            FeatureLocation(45, 50),
+        ])
+        assert first < second
+
+    def test_cross_origin(self):
+        location = CompoundLocation([FeatureLocation(15, 20), FeatureLocation(0, 5)])
+        assert location < FeatureLocation(0, 5)
