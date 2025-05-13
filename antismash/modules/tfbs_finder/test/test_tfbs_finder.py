@@ -305,6 +305,24 @@ class TestFinder(unittest.TestCase):
             "strand": -1,
         }
 
+    def test_fully_within_gene(self):
+        hit = {"start": 5, "end": 15}
+        left = DummyCDS(start=0, end=30)
+        mid = None
+        right = DummyCDS(start=35, end=40, strand=-1)
+        results = add_neighbouring_genes(hit, left, mid, right)
+        assert results["left"] == {
+            "location": left.start,
+            "name": left.get_name(),
+            "strand": 1,
+        }
+        assert "mid" not in results
+        assert results["right"] == {
+            "location": left.end,
+            "name": left.get_name(),
+            "strand": 1,
+        }
+
 
 class TestFindingNeighbours(unittest.TestCase):
     def test_finding_cross_origin_neighbours(self):
