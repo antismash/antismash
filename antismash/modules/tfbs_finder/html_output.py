@@ -228,6 +228,13 @@ def add_neighbouring_genes(hit: dict[str, Any], left: Optional[CDSFeature], mid:
         }
         if location_contains_other(left.location, location):
             hit["contained_by_left"] = True
+            hit["left"]["location"] = int(left.start)
+            hit["right"] = {
+                "name": left.get_name(),
+                "location": int(left.end),
+                "strand": left.location.strand
+            }
+            return hit
 
     if mid:
         length = mid.end - mid.start
