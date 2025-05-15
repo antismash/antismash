@@ -182,7 +182,7 @@ def split_cross_origin_locations(features: list[SeqFeature], length: int) -> Non
 
     for feature in features:
         if feature.location.start > length:
-            raise ValueError(f"GFF location entirely outside record: {feature.location}")
+            raise AntismashInputError(f"GFF location entirely outside record ({length=}): {feature.location}")
         # most circular records won't have introns, but handle it just in case
         parts = []
         for part in feature.location.parts:

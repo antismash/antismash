@@ -161,10 +161,10 @@ class TestSplitLocation(TestCase):
 
     def test_all_after_point(self):
         self.feature.location = FeatureLocation(20, 30, 1)
-        with self.assertRaisesRegex(ValueError, "entirely outside record"):
+        with self.assertRaisesRegex(errors.AntismashInputError, "entirely outside record"):
             self.split(10)
         self.feature.location = CompoundLocation([FeatureLocation(20, 30, 1), FeatureLocation(40, 50, 1)])
-        with self.assertRaisesRegex(ValueError, "entirely outside record"):
+        with self.assertRaisesRegex(errors.AntismashInputError, "entirely outside record"):
             self.split(10)
 
     def test_simple_all_before_point(self):
