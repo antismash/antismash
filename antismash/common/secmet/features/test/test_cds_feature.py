@@ -69,6 +69,16 @@ class TestCDSFeature(unittest.TestCase):
         cds.translation = translation
         assert cds.translation == expected
 
+    def test_methionine_starts_when_ambiguous(self):
+        # ambiguous start coordinates should not be adjusted to methionines
+        translation = "LAGIC"
+        for location in [
+                FeatureLocation(BeforePosition(10), 25, 1),
+                FeatureLocation(10, AfterPosition(25), -1),
+        ]:
+            cds = CDSFeature(location, locus_tag="test", translation=translation)
+            assert cds.translation == translation, location
+
 
 class TestCDSBiopythonConversion(unittest.TestCase):
     def setUp(self):
