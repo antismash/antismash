@@ -369,7 +369,7 @@ def find_subtypes(target: str, database_path: str, existing_domains: Dict[str, L
         relevant_domains = [hit for hit in existing_domains[cds_name] if hit.hit_id == target]
         for domain in relevant_domains:
             # filter to relevant hits
-            hits = [hit for hit in all_hits if hit.overlaps_with(domain)]
+            hits = [hit for hit in all_hits if hit.query_overlaps_with(domain)]
             # and use the callback if it exists
             if modifier_callback is not None:
                 hits = [modifier_callback(hit) for hit in hits]
