@@ -12,6 +12,7 @@
 # pylint: disable=too-few-public-methods
 
 import os
+import stat
 
 from helperlibs.wrappers.io import TemporaryDirectory
 
@@ -102,6 +103,15 @@ def get_path_to_balhymicin_genbank():
     return os.path.join(file_path, 'test/integration/data/Y16952.gbk')
 
 
+def _make_dir_deletable(base):
+    # +rwx for all directories
+    mode = stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR
+    os.chmod(base, mode)
+    for root, dirs, _files in os.walk(base):
+        for subdir in dirs:
+            os.chmod(os.path.join(root, subdir), mode)
+
+
 def run_and_regenerate_results_for_module(input_file, module, options,
                                           expected_record_count=1, callback=None):
     """ Runs antismash end to end over the given file with the given options
@@ -131,6 +141,11 @@ def run_and_regenerate_results_for_module(input_file, module, options,
             callback(tempdir)
         # and while the genbank output still exists, grab that and check it's readable
         assert len(Record.from_genbank(base_filename + ".gbk")) == expected_record_count
+        # for cases where sections of the source tree have no owner write permissions,
+        # any directories that are copied from the source tree will also have no write permissions,
+        # in which case the removal of the tempdir will fail unless those are changed
+        _make_dir_deletable(tempdir)
+
     # not the responsibility of modules, but if it's wrong then everything is
     assert len(results.results) == expected_record_count
     assert len(results.records) == expected_record_count
