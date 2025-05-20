@@ -11,6 +11,7 @@ import logging
 import os
 import re
 import shutil
+import stat
 from typing import Dict, List, Optional
 import warnings
 
@@ -151,3 +152,12 @@ def copy_template_dir(template: str, output_dir: str, pattern: Optional[str] = N
                 shutil.copy2(filename, target_dir)
     else:
         shutil.copytree(path.get_full_path(__file__, template), target_dir)
+
+    # if the source tree has some directories without write permissions
+    # then the output directories will also have no write permissions, which
+    # will error out when any extra files are written
+    mode = stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR
+    os.chmod(output_dir, mode)
+    for root, dirs, _files in os.walk(output_dir):
+        for subdir in dirs:
+            os.chmod(os.path.join(root, subdir), mode)
