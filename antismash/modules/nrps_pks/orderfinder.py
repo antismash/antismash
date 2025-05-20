@@ -5,6 +5,7 @@
 
 import itertools
 import logging
+import os
 from typing import Dict, List, Optional, Tuple
 
 from antismash.common import brawn, path, utils
@@ -443,7 +444,7 @@ def perform_docking_domain_analysis(cds_features: List[CDSFeature], chains: Dict
             a list of CDSFeatures in estimated order
     """
     start_cds, end_cds = find_first_and_last_cds(cds_features)
-    data_dir = path.get_full_path(__file__, "data")
+    data_dir = os.path.dirname(C_TERMINAL_PATH)
 
     n_terminal_residues = extract_nterminus(data_dir, cds_features, start_cds)
     c_terminal_residues = extract_cterminus(data_dir, cds_features, end_cds)
