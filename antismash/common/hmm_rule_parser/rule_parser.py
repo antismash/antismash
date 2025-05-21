@@ -86,10 +86,11 @@ The grammar itself:
     GROUP_CLOSE = ')'
     INT = [1-9]{[0-9]}*
     ID = [a-zA-Z]{[a-zA-Z0-9_-]}*
-    TEXT = {[a-zA-Z0-9_-.]}*
+    TEXT = {[a-zA-Z0-9_-.()]}
     MINIMUM_LABEL = 'minimum'
     CDS_LABEL = 'cds'
     SCORE_LABEL = 'minscore'
+    REFERENCE_IDENTIFIER = {a-zA-Z0-9_-.()]}+
 
     BINARY_OP = ('and' | 'or')
     UNARY_OP = 'not'
@@ -98,6 +99,7 @@ The grammar itself:
     RULE_MARKER = "RULE"
     DESCRIPTION_MARKER = "DESCRIPTION"
     EXAMPLE_MARKER = "EXAMPLE"
+    REFERENCE_MARKER = "REFERENCE"
     RELATED_MARKER = "RELATED"
     CUTOFF_MARKER = "CUTOFF"
     NEIGHBOURHOOD_MARKER = "NEIGHBOURHOOD"
@@ -108,10 +110,14 @@ The grammar itself:
     EXTENDERS_MARKER = "EXTENDERS"
     AS_MARKER = 'AS'
 
+    REFERENCE_TYPE = ("doi" | "pubmed")
+
+    REFERENCE_OR_EXAMPLE = EXAMPLE_MARKER:EXAMPLE | REFERENCE_MARKER:REFERENCE
+
     RULE = RULE_MARKER classification:ID
             CATEGORY_MARKER category:ID
             [DESCRIPTION_MARKER:DESCRIPTIONS]
-            [EXAMPLE_MARKER:EXAMPLE [EXAMPLE_MARKER:EXAMPLE ...]]
+            [REFERENCE_OR_EXAMPLE [REFERENCE_OR_EXAMPLE ...]]
             [RELATED_MARKER related_profiles:COMMA_SEPARATED_IDS]
             [SUPERIORS_MARKER superiors:COMMA_SEPARATED_IDS]
             CUTOFF_MARKER cutoff:INT NEIGHBOURHOOD_MARKER neighbourhood:INT
@@ -134,7 +140,7 @@ The grammar itself:
     COMMA_SEPARATED_IDS = ID {COMMA ID}*;
     CDS = GROUP_OPEN [UNARY_OP] ID BINARY_OP CDS_CONDITION GROUP_CLOSE;
     EXAMPLE = ID ID DOT INT INT-INT [compound_name:TEXT]
-
+    REFERENCE = REFERENCE_TYPE REFERENCE_IDENTIFIER comment:TEXT
     ALIAS = DEFINE_MARKER label:ID AS_MARKER value:TEXT
 
 Condition examples:
@@ -177,7 +183,8 @@ Complete examples:
 """
 
 from collections import defaultdict
-from enum import IntEnum
+from dataclasses import dataclass
+from enum import IntEnum, StrEnum, auto
 from operator import xor  # so type hints can be bool and not int
 import string
 from typing import Any, Dict, List, Optional, Set, Tuple, Type, Union
@@ -214,6 +221,7 @@ class TokenTypes(IntEnum):
     SCORE = 14
     DOT = 15
     RULE = 100
+    AS = 110
     DESCRIPTION = 101
     CUTOFF = 102
     NEIGHBOURHOOD = 103
@@ -223,9 +231,9 @@ class TokenTypes(IntEnum):
     TEXT = 107  # covers words that aren't valid identifiers for use in rule DESCRIPTION fields
     CATEGORY = 108  # assigns the rule to a category, allowing to group related rules
     DEFINE = 109
-    AS = 110
     EXAMPLE = 111
     EXTENDERS = 112
+    REFERENCE = 113
 
     def __repr__(self) -> str:
         return self.__str__()
@@ -258,6 +266,16 @@ class TokenTypes(IntEnum):
         """
         return self.RULE <= self.value and self.value != self.TEXT
 
+    def is_text_like(self) -> bool:
+        return self in {
+            TokenTypes.IDENTIFIER,
+            TokenTypes.AND,
+            TokenTypes.CDS,
+            TokenTypes.NOT,
+            TokenTypes.OR,
+            TokenTypes.TEXT,
+        }
+
 
 class Tokeniser:  # pylint: disable=too-few-public-methods
     """ Converts a text block into a list of tokens
@@ -274,7 +292,7 @@ class Tokeniser:  # pylint: disable=too-few-public-methods
                "NEIGHBOURHOOD": TokenTypes.NEIGHBOURHOOD, "SUPERIORS": TokenTypes.SUPERIORS,
                "RELATED": TokenTypes.RELATED, "CATEGORY": TokenTypes.CATEGORY,
                "DEFINE": TokenTypes.DEFINE, "AS": TokenTypes.AS, "EXAMPLE": TokenTypes.EXAMPLE,
-               "EXTENDERS": TokenTypes.EXTENDERS,
+               "EXTENDERS": TokenTypes.EXTENDERS, "REFERENCE": TokenTypes.REFERENCE,
                }
 
     def __init__(self, text: str) -> None:
@@ -789,7 +807,9 @@ class DetectionRule:
         """
     def __init__(self, name: str, category: str, cutoff: int, neighbourhood: int, conditions: Conditions,
                  description: str = "", examples: List["ExampleRecord"] = None, superiors: List[str] = None,
-                 related: list[str] = None, extenders: Union[CDSCondition, SingleCondition] = None) -> None:
+                 related: list[str] = None, extenders: Union[CDSCondition, SingleCondition] = None,
+                 references: list["Reference"] = None,
+                 ) -> None:
         self.name = name
         self.category = category
         self.cutoff = cutoff
@@ -802,6 +822,7 @@ class DetectionRule:
             examples = []
         assert isinstance(examples, list)
         self.examples = examples
+        self.references = references
         self.hits = 0
         if superiors is None:
             superiors = []
@@ -909,6 +930,25 @@ class ExampleRecord:
         if self.compound_name:
             compound = f" {self.compound_name}"
         return f"{self.database} {self.accession}.{self.version} {self.start}-{self.end}{compound}"
+
+
+class ReferenceType(StrEnum):
+    DOI = auto()
+    PUBMED = auto()
+
+    def __str__(self) -> str:
+        return super().upper()
+
+
+
+@dataclass
+class Reference:
+    reference_type: ReferenceType
+    identifier: str
+    comment: Optional[str]
+
+    def __str__(self) -> str:
+        return f"{self.reference_type.upper()} {self.identifier}{' ' + self.comment if self.comment else ''}"
 
 
 # a typedef, even positions will be a Conditions instance, odd will be TokenTypes
@@ -1087,10 +1127,16 @@ class Parser:  # pylint: disable=too-few-public-methods
             description = self._parse_description()
             prev = TokenTypes.DESCRIPTION
         examples: List["ExampleRecord"] = []
-        while self.current_token.type == TokenTypes.EXAMPLE:
-            example = self._parse_example()
-            examples.append(example)
-            prev = TokenTypes.EXAMPLE
+        references: list[Reference] = []
+        while self.current_token.type in [TokenTypes.EXAMPLE, TokenTypes.REFERENCE]:
+            if self.current_token.type == TokenTypes.EXAMPLE:
+                example = self._parse_example()
+                examples.append(example)
+                prev = TokenTypes.EXAMPLE
+            elif self.current_token.type == TokenTypes.REFERENCE:
+                reference = self._parse_reference()
+                references.append(reference)
+                prev = TokenTypes.REFERENCE
         related: List[str] = []
         if self.current_token.type == TokenTypes.RELATED:
             related = self._parse_related()
@@ -1129,24 +1175,73 @@ class Parser:  # pylint: disable=too-few-public-methods
             raise self._build_syntax_error(f"Unexpected symbol {self.current_token.type}", context_lines=5)
         return DetectionRule(rule_name, category, cutoff, neighbourhood, conditions,
                              description=description, examples=examples, superiors=superiors, related=related,
-                             extenders=extenders,
+                             extenders=extenders, references=references,
                              )
+
+    def _parse_free_text(self, parent_keyword: TokenTypes,
+                         *, mergeable_types: set[TokenTypes] = None) -> str:
+        if mergeable_types is None:
+            mergeable_types = set()
+
+        mergeable_types.update({
+            TokenTypes.GROUP_OPEN,
+            TokenTypes.GROUP_CLOSE,
+            TokenTypes.DOT,
+            TokenTypes.COMMA,
+        })
+
+        tokens: list[Token] = []
+
+        def check(token: Token | None) -> bool:
+            if not token:
+                return False
+            if token.type.is_text_like() or token.type in mergeable_types:
+                return True
+            if token.type.is_a_rule_keyword():
+                return not token.token_text.isupper()
+            return False
+
+        while check(self.current_token):
+            assert self.current_token
+            tokens.append(self.current_token)
+            try:
+                self.current_token = next(self.tokens)
+            except StopIteration:
+                raise RuleSyntaxError(f"Unexpected end of input in {parent_keyword} block")
+
+        if not tokens:
+            return ""
+
+        previous_token = tokens[0]
+        text_chunks = [tokens[0].token_text]
+        previous_mergeable = previous_token.type in mergeable_types
+        previous_end_position = previous_token.position + len(previous_token.token_text)
+        for token in tokens[1:]:
+            if token.type in mergeable_types or previous_mergeable:
+                previous_mergeable = True
+                if previous_end_position == token.position:
+                    text_chunks[-1] += token.token_text
+                    previous_end_position = token.position + len(token.token_text)
+                    continue  # don't update previous token
+                else:
+                    previous_end_position = token.position + len(token.token_text)
+                    text_chunks.append(token.token_text)
+            elif previous_mergeable and previous_end_position == token.position - 1:
+                text_chunks[-1] += token.token_text
+                previous_end_position = token.position + len(token.token_text)
+                continue  # don't update previous token
+            else:
+                text_chunks.append(token.token_text)
+            previous_end_position = token.position + len(token.token_text)
+            previous_token = token
+
+        return " ".join(text_chunks)
 
     def _parse_description(self) -> str:
         """ DESCRIPTION = DESCRIPTION_MARKER description
         """
-        description_tokens = []
         self._consume(TokenTypes.DESCRIPTION)
-        err = RuleSyntaxError(f"Unexpected end of input in {TokenTypes.DESCRIPTION} block")
-        if not self.current_token:
-            raise err
-        while not self.current_token.type.is_a_rule_keyword():
-            description_tokens.append(self.current_token)
-            try:
-                self.current_token = next(self.tokens)
-            except StopIteration:
-                raise err
-        return " ".join([token.token_text for token in description_tokens])
+        return self._parse_free_text(TokenTypes.DESCRIPTION)
 
     def _parse_example(self) -> "ExampleRecord":
         """ EXAMPLE = EXAMPLE_MARKER ID ID DOT INT INT-INT [compound_name:TEXT]"""
@@ -1157,16 +1252,7 @@ class Parser:  # pylint: disable=too-few-public-methods
         version = self._consume_int()
         range_str = self._consume(TokenTypes.TEXT).token_text
         parts = range_str.split("-")
-        compound_name = None
-        compound_tokens = []
-        while self.current_token and not self.current_token.type.is_a_rule_keyword():
-            compound_tokens.append(self.current_token)
-            try:
-                self.current_token = next(self.tokens)
-            except StopIteration:
-                raise RuleSyntaxError(f"Unexpected end of input in {TokenTypes.EXAMPLE} block")
-        if compound_tokens:
-            compound_name = " ".join([token.token_text for token in compound_tokens])
+        compound_name: Optional[str] = self._parse_free_text(TokenTypes.EXAMPLE) or None
 
         if len(parts) != 2:
             raise RuleSyntaxError(f"Invalid range in {TokenTypes.EXAMPLE}: {range_str}")
@@ -1182,6 +1268,34 @@ class Parser:  # pylint: disable=too-few-public-methods
             raise RuleSyntaxError(f"Invalid range end {parts[1]} in {TokenTypes.EXAMPLE}")
 
         return ExampleRecord(database, accession, version, start, end, compound_name)
+
+    def _parse_until_whitespace(self) -> list[Token]:
+        if not self.current_token:
+            return []
+
+        tokens = [self.current_token]
+        end_position = self.current_token.position + len(self.current_token.token_text)
+        self.current_token = next(self.tokens)
+        while self.current_token and self.current_token.position == end_position:
+            tokens.append(self.current_token)
+            end_position = self.current_token.position + len(self.current_token.token_text)
+            self.current_token = next(self.tokens)
+        return tokens
+
+    def _parse_reference(self) -> Reference:
+        """ REFERENCE = REFERENCE_TYPE REFERENCE_IDENTIFIER comment:TEXT """
+        self._consume(TokenTypes.REFERENCE)
+        reference_type = self._consume(TokenTypes.IDENTIFIER)
+        try:
+            reference_source = ReferenceType[reference_type.token_text.upper()]
+        except KeyError:
+            raise RuleSyntaxError(f"Unknown reference type {reference_type.token_text}")
+
+        reference_tokens = self._parse_until_whitespace()
+        reference_text = "".join(token.token_text for token in reference_tokens)
+        comment = self._parse_free_text(TokenTypes.REFERENCE)
+
+        return Reference(reference_source, reference_text, comment)
 
     def _parse_related(self) -> List[str]:
         """ RELATED = RELATED_MARKER related:COMMA_SEPARATED_IDS
