@@ -173,6 +173,8 @@ class QueryGeneJSON(_GeneJSON):
             Arguments:
                 cds: the query CDS feature
                 colour: an override colour to use for this CDS in the visualisation
+                start: an override for the start coordinate of the feature
+                start: an override for the end coordinate of the feature
         """
         return cls(
             locus_tag=cds.get_name(),
@@ -314,6 +316,13 @@ class QueryJSON(JSONBase):
                 genes.append(QueryGeneJSON.from_cds(cds, end=cds.end + origin))
             for cds in region.cds_children.post_origin:
                 genes.append(QueryGeneJSON.from_cds(cds, start=cds.start + origin, end=cds.end + origin))
+        # a region covering a full circular record may have cross-origin features
+        # those ought to be split into two for drawing to match the overview
+        elif region.cds_children.cross_origin:
+            origin = region.location.end
+            for cds in region.cds_children.cross_origin:
+                genes.append(QueryGeneJSON.from_cds(cds, end=cds.end + origin))
+            genes.extend(QueryGeneJSON.from_cds(cds) for cds in region.cds_children.post_origin)
         else:
             genes.extend(QueryGeneJSON.from_cds(cds) for cds in region.cds_children)
         return cls(
@@ -379,9 +388,10 @@ def generate_javascript_data(record: Record, region: Region, results: ClusterBla
             assert isinstance(ref, ReferenceCluster)
             pairs_per_ref: dict[str, list[tuple[Query, Subject]]] = defaultdict(list)
             for query, reference in score.scored_pairings:
-                pairs_per_ref[reference.name].append((query, reference))
+                pairs_per_ref[reference.full_name].append((query, reference))
             assert pairs_per_ref
-            reference_genes = [region_results.displayed_reference_proteins[tag] for tag in ref.tags]
+            reference_genes = [region_results.displayed_reference_proteins[f"{ref.accession}_{tag}"]
+                               for tag in ref.tags]
 
             start = min(gene.draw_start for gene in reference_genes)
             end = max(gene.draw_end for gene in reference_genes)
@@ -392,14 +402,13 @@ def generate_javascript_data(record: Record, region: Region, results: ClusterBla
                 ref_data.label = f"{ref_data.accession}: {ref_data.label}"
             output.append(ref_data)
             average_strand = 0
-            for locus_tag in ref.tags:
-                protein: Protein = region_results.displayed_reference_proteins[locus_tag]
-                colour = colours.get(locus_tag, "white")
+            for protein in reference_genes:
+                colour = colours.get(protein.full_name, "white")
                 ref_gene = ReferenceGeneJSON.from_protein(protein, colour=colour)
                 ref_data.genes.append(ref_gene)
                 if colour == "white":
                     continue
-                for query, subject in pairs_per_ref[locus_tag]:
+                for query, subject in pairs_per_ref[protein.full_name]:
                     average_strand += ref_gene.strand * record.get_cds_by_name(query.id).location.strand
                     record.get_cds_by_name(query.id)
                     ref_gene.matches.append(GeneMatchJSON.from_subject(query.id, subject))

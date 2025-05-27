@@ -1,6 +1,6 @@
 <div class="terpene-details">
     <div class="heading">
-      <span>Detailed domain annotation</span> {{ help_tooltip(tooltip, "terpene-body") }}
+      <span>Detailed terpene predictions</span> {{ help_tooltip(tooltip, "terpene-body") }}
     </div>
     {% for cluster, prediction in preds_by_cluster.items() %}
       <div class="protocluster-pred">
@@ -43,10 +43,10 @@
         {% endif %}
           </div>
         </div>
-        {% if prediction.cds_predictions %}
         <div class="domains">
         <span class="section-header"> Genes with terpene domains: </span>
           <div class="domain-list">
+            {% if prediction.cds_predictions.items() %}
             {% for cds, domain_preds in prediction.cds_predictions.items() %}
               <div>
               {{ cds_selector_span(cds, ["section-header"]) }}: {{ format_domain_types(domain_preds) }}
@@ -54,7 +54,7 @@
               {% for pred in domain_preds %}
                <div>
                 <strong>Domain {{ loop.index }}</strong>
-                  ({{ "{:,d}".format(pred.start)}}  - {{ "{:,d}".format(pred.end) }}): {{ get_domain_description(pred) }}
+                  ({{ "{:,d}".format(pred.start+1)}}  - {{ "{:,d}".format(pred.end) }}): {{ get_domain_description(pred) }}
                 {% if format_subtype(pred) != "none" or pred.reactions %}
                   {{collapser_start(cds, level="cds")}}
                   <div class="domain-details">
@@ -75,9 +75,11 @@
               {{collapser_end()}}
              </div>
             {% endfor %}
+            {% else %}
+              No domains found
+            {% endif %}
           </div>
           </div>
-        {% endif %}
       </div>
     {% endfor %}
 </div>

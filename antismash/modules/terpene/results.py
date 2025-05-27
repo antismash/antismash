@@ -73,6 +73,13 @@ class ProtoclusterPrediction:
                     compounds.update(reaction.substrates + reaction.products)
         return compounds
 
+    def get_functional_groups(self) -> set[str]:
+        """ Retrieve functional groups of the products """
+        func_groups: set[str] = set()
+        for product in self.products:
+            func_groups.update(product.functional_groups)
+        return func_groups
+
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, ProtoclusterPrediction):
             return False

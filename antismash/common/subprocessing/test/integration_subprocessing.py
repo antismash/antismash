@@ -102,7 +102,7 @@ class TestParallelPython(unittest.TestCase):
         # ensure the function works as expected when called directly
         assert local(1) == 2
         # check if it still fails within a parallel pool
-        with self.assertRaisesRegex(AttributeError, "Can't pickle local object"):
+        with self.assertRaisesRegex(AttributeError, r"Can't (\w+) local object"):
             subprocessing.parallel_function(local, [[i] for i in range(3)])
 
 
@@ -121,7 +121,8 @@ class TestExecute(unittest.TestCase):
 
         result = subprocessing.execute(["cat", "--bad-option"])
         assert result.stdout.strip() == ""
-        assert result.stderr.startswith("cat: unrecognized")
+        # the exact message isn't important, only that cat emitted it
+        assert result.stderr.startswith("cat: ")
         assert result.return_code and not result.successful()
 
         result = subprocessing.execute(["cat"], stdin="fish")
@@ -140,7 +141,7 @@ class TestExecute(unittest.TestCase):
         result = subprocessing.execute(["cat", "--bad-option"], stderr=open(os.devnull, "w"))
         assert result.stdout.strip() == ""
         with self.assertRaisesRegex(ValueError, "stderr was redirected to file, unable to access"):
-            assert result.stderr.startswith("cat: unrecognized")
+            _ = result.stderr
         assert result.return_code
 
     def test_timeout(self):

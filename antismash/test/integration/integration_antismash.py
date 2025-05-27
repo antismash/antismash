@@ -46,7 +46,7 @@ class TestAntismash(unittest.TestCase):
 
 class TestSkipZip(TestAntismash):
     def get_args(self):
-        return ["--minimal", "--skip-zip-file"]
+        return ["--minimal", "--no-zip-output"]
 
     def check_output_files(self, filenames=None):
         super().check_output_files(filenames)
@@ -175,7 +175,7 @@ class TestModuleData(unittest.TestCase):
         # there should be no errors for missing databases
         prepare_module_data()
 
-    def test_prepare_module_data(self):
+    def test_prepare_module_data(self):  # pragma: no cover
         # make sure there's some to start with
         search = path.get_full_path(antismash.__file__, '**', "*.h3?")
         existing_press_files = glob.glob(search, recursive=True)
@@ -183,7 +183,11 @@ class TestModuleData(unittest.TestCase):
 
         # then remove them all
         for pressed in existing_press_files:
-            os.unlink(pressed)
+            try:
+                os.unlink(pressed)
+            except PermissionError:
+                # if the source is locked, don't test any further
+                return
         current_press_files = glob.glob(search, recursive=True)
         assert not current_press_files
 

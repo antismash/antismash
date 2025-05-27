@@ -144,7 +144,7 @@ def filter_meme_results(meme_dir: str, promoter_sets: List[Motif], anchor: str) 
             if anchor_seq_id in map(lambda site: site.attrib["sequence_id"], contributing_sites):
                 # save motif score
                 node = root.find("motifs/motif")
-                if not node:
+                if node is None:
                     raise ValueError("unknown MEME output format")
                 motif.score = float(node.attrib["e_value"])  # one motif, didn't ask MEME for more
 

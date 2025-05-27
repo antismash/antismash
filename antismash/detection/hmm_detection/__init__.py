@@ -46,6 +46,8 @@ def _get_dynamic_profiles() -> Dict[str, DynamicProfile]:
     """ Gather all the dynamic profiles """
     profiles = {}
     for module_data in pkgutil.walk_packages([path.get_full_path(__file__, "dynamic_profiles")]):
+        if module_data.name.startswith("_"):
+            continue
         module = importlib.import_module(f"antismash.detection.hmm_detection.dynamic_profiles.{module_data.name}")
         contains_profiles = False
         for name, profile in vars(module).items():

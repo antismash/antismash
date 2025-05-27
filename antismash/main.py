@@ -435,13 +435,18 @@ def write_outputs(results: serialiser.AntismashResults, options: ConfigType) -> 
         Returns:
             None
     """
+    logging.debug("Writing non-HTML output files")
     # don't use results for which the module no longer exists to regenerate/calculate
     module_results_per_record = []
-    for record_results in results.results:
+    assert len(results.records) == len(results.results)
+    for record, record_results in zip(results.records, results.results):
         record_result = {}
         for module_name, result in record_results.items():
             if isinstance(result, ModuleResults):
+                assert result.record_id == record.id
+                logging.debug(" Writing relevant output files for %s", module_name)
                 record_result[module_name] = result
+                result.write_outputs(record, options)
         module_results_per_record.append(record_result)
 
     if html.is_enabled(options):
@@ -459,21 +464,23 @@ def write_outputs(results: serialiser.AntismashResults, options: ConfigType) -> 
     # add antismash meta-annotation to records
     add_antismash_comments(list(zip(results.records, bio_records)), options)
 
-    logging.debug("Writing cluster-specific genbank files")
-    for record, bio_record in zip(results.records, bio_records):
-        for region in record.get_regions():
-            region.write_to_genbank(directory=options.output_dir, record=bio_record)
+    if options.region_gbks:
+        logging.debug("Writing cluster-specific genbank files")
+        for record, bio_record in zip(results.records, bio_records):
+            for region in record.get_regions():
+                region.write_to_genbank(directory=options.output_dir, record=bio_record)
 
     # write records to an aggregate output
     base_filename = canonical_base_filename(results.input_file, options.output_dir, options)
-    combined_filename = base_filename + ".gbk"
-    logging.debug("Writing final genbank file to '%s'", combined_filename)
-    SeqIO.write(bio_records, combined_filename, "genbank")
+    if options.summary_gbk:
+        combined_filename = base_filename + ".gbk"
+        logging.debug("Writing final genbank file to '%s'", combined_filename)
+        SeqIO.write(bio_records, combined_filename, "genbank")
 
     zipfile = base_filename + ".zip"
     if os.path.exists(zipfile):
         os.remove(zipfile)
-    if not options.skip_zip_file:
+    if options.zip_output:
         logging.debug("Zipping output to '%s'", zipfile)
         with tempfile.NamedTemporaryFile(prefix="as_zip_tmp", suffix=".zip") as temp:
             shutil.make_archive(temp.name.replace(".zip", ""), "zip", root_dir=options.output_dir)

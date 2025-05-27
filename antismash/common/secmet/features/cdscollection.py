@@ -31,6 +31,7 @@ from ..locations import (
     FeatureLocation,
     Location,
     Position,
+    make_forwards,
     location_bridges_origin,
     split_origin_bridging_location,
 )
@@ -196,6 +197,7 @@ class CDSCollection(Feature):
 
     def __init__(self, location: Location, feature_type: str,
                  child_collections: Sequence["CDSCollection"] = None) -> None:
+        location = make_forwards(location)
         # it's fine to have two parts if crossing the origin
         if len(location.parts) > 1:
             # but it must only be the two halves, more indicates a problem of some kind
@@ -205,8 +207,6 @@ class CDSCollection(Feature):
                 raise ValueError("Collections cannot have compound locations without crossing the origin")
         assert len(set(part.strand for part in location.parts)) == 1, f"mixed strands for collection: {location=}"
         super().__init__(location, feature_type, created_by_antismash=True)
-        if len(location.parts) > 1 and location.strand != 1:
-            raise ValueError("CDS collections spanning the origin must be in the forward strand")
         self._parent_record: Any = None  # should be Record but will cause circular dependencies
         self._contig_edge = False
         self._cdses = _SectionedCDSCache()
@@ -319,11 +319,11 @@ class CDSCollection(Feature):
         if not cds.is_contained_by(self):
             raise ValueError("CDS added is not contained by collection")
 
-        if section is None and self.crosses_origin():
+        if section is None and (self.crosses_origin() or cds.crosses_origin()):
             section = CollectionSection.PRE_ORIGIN
             if cds.crosses_origin():
                 section = CollectionSection.CROSS_ORIGIN
-            elif cds.is_contained_by(self.location.parts[1]):
+            elif self.crosses_origin() and cds.is_contained_by(self.location.parts[1]):
                 section = CollectionSection.POST_ORIGIN
 
         kwargs = {}  # allow fallbacks per child type, if a section is even needed

@@ -29,9 +29,9 @@
                 {% endif %}
               </dl>
               <br>Direct lookup in NORINE database:
-              <a class="external-link" href="{{candidate.get_norine_url()}}" target="_new">strict</a>
+              <a class="external-link" href="{{candidate.get_norine_url()}}" target="_blank">strict</a>
                 or
-              <a class="external-link" href="{{candidate.get_norine_url(be_strict = False)}}" target="_new">relaxed</a><br>
+              <a class="external-link" href="{{candidate.get_norine_url(be_strict = False)}}" target="_blank">relaxed</a><br>
             </div>
             {% endif %}
             {{collapser_end()}}
@@ -51,7 +51,7 @@
     {% endfor %}
     <div class="prediction-text">
       <br>
-      <a class="external-link" href="{{ norine_base }}/form2.jsp" target="_new">Link to NORINE database query form</a>
+      <a class="external-link" href="{{ norine_base }}/form2.jsp" target="_blank">Link to NORINE database query form</a>
     </div>
   {% endif %}
 </div>

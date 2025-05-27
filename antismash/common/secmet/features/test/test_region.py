@@ -8,10 +8,12 @@ from tempfile import NamedTemporaryFile
 import unittest
 
 from Bio.Seq import Seq
+from Bio.SeqRecord import SeqRecord
 from helperlibs.bio import seqio
 
 from antismash.common.secmet import FeatureLocation, Record
 from antismash.common.secmet.features import CandidateCluster, SubRegion, Region, Prepeptide
+from antismash.common.secmet.features.region import helpers as region_helpers
 from antismash.common.secmet.features.subregion import SideloadedSubRegion
 from antismash.common.secmet.features.protocluster import SideloadedProtocluster
 from antismash.common.secmet.locations import offset_location
@@ -19,6 +21,8 @@ from antismash.common.secmet.test.helpers import (
     DummyCandidateCluster,
     DummyCDS,
     DummyProtocluster,
+    DummyRecord,
+    DummyRegion,
     DummySubRegion,
 )
 
@@ -225,3 +229,45 @@ class TestRegion(unittest.TestCase):
         assert len(sideloaded) == 2
         assert sideloaded[0] is clusters[1]
         assert sideloaded[1] is subregions[1]
+
+
+class TestHelpers(unittest.TestCase):
+    def test_candidate_adjustment(self):
+        bio_record = SeqRecord(seq=Seq("ACGT"))
+        bio_region = SeqRecord(seq=Seq("ACGT"))
+        candidates = [DummyCandidateCluster(candidate_number=i+1) for i in range(5)]
+        contained_candidates = candidates[1:4]
+        region = DummyRegion(candidate_clusters=contained_candidates)
+        bio_region.features.extend(region.to_biopython())
+        # force a fake parent record for full qualifier generation in biopython conversion
+        record = DummyRecord()
+        for candidate in candidates:
+            candidate._parent_record = record
+            for protocluster in candidate.protoclusters:
+                protocluster._parent_record = record
+
+        data = region_helpers.RegionData(
+            start=0,
+            end=10000,
+            candidate_clusters=contained_candidates,
+            subregions=[],
+        )
+        assert set(cand.get_candidate_cluster_number() for cand in data.candidate_clusters) == {2, 3, 4}
+        bio_candidates = [cand.to_biopython()[0] for cand in candidates]
+        as_quals = (int(cand.qualifiers["candidate_cluster_number"][0]) for cand in bio_candidates)
+        assert set(as_quals) == {1, 2, 3, 4, 5}
+
+        bio_record.features.extend(bio_candidates)
+        bio_region.features.extend(bio_candidates[1:4])
+
+        region_helpers._adjust_features(data, bio_region, bio_record)
+
+        result_cands = [f for f in bio_region.features if f.type == DummyCandidateCluster.FEATURE_TYPE]
+        assert len(result_cands) == 3
+        print(bio_region.features)
+        expected = {1, 2, 3}
+        # the candidate features themselves must be adjusted
+        assert set(int(cand.qualifiers["candidate_cluster_number"][0]) for cand in result_cands) == expected
+        # as well as the region feature referencing those candidates
+        bio_region_feature = [f for f in bio_region.features if f.type == Region.FEATURE_TYPE][0]
+        assert set(map(int, bio_region_feature.qualifiers["candidate_cluster_numbers"])) == expected

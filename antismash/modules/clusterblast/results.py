@@ -7,7 +7,7 @@
 from collections import OrderedDict
 import logging
 import os
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, IO, List, Optional, Tuple
 
 from antismash.common.module_results import ModuleResults
 from antismash.common.layers import AbstractRelatedArea
@@ -96,8 +96,8 @@ class RegionResult:
 
         for ref_cluster, _ in display_ranking:
             for name in ref_cluster.tags:
-                prot = reference_proteins[name]
-                self.displayed_reference_proteins[prot.locus_tag] = prot
+                prot = reference_proteins[f"{ref_cluster.accession}_{name}"]
+                self.displayed_reference_proteins[prot.full_name] = prot
 
         assert len(display_ranking) <= display_limit
 
@@ -179,7 +179,7 @@ class RegionResult:
 
 class GeneralResults(ModuleResults):
     """ A variant-agnostic results class for clusterblast variants """
-    schema_version = 4
+    schema_version = 5
 
     def __init__(self, record_id: str, search_type: str = "clusterblast",
                  data_version: str = None) -> None:
@@ -217,6 +217,7 @@ class GeneralResults(ModuleResults):
             cluster_label = cluster.get_name()
             protein_names = reference_clusters[cluster_label].tags
             for protein_name in protein_names:
+                protein_name = f"{cluster.accession}_{protein_name}"
                 self.proteins_of_interest[protein_name] = reference_proteins[protein_name]
 
     def write_to_file(self, record: Record, options: ConfigType) -> None:
@@ -251,11 +252,7 @@ class GeneralResults(ModuleResults):
 
     @staticmethod
     def from_json(json: Dict[str, Any], record: Record) -> "GeneralResults":
-        current = GeneralResults.schema_version
-        # since 2 only added an optional data version, 2 and 1 are kind of compatible
-        # so if there's a mismatch of version, but it's these two, let them through
-        special_case = current == 2 and json["schema_version"] == 1
-        if json["schema_version"] != current and not special_case:
+        if json["schema_version"] != GeneralResults.schema_version:
             raise ValueError(f"Incompatible results schema version, expected {GeneralResults.schema_version}")
         assert record.id == json["record_id"]
         data_version = json.get("data_version")
@@ -263,7 +260,7 @@ class GeneralResults(ModuleResults):
                                 data_version=data_version)
         for prot in json["proteins"]:
             protein = Protein.from_json(prot)
-            result.proteins_of_interest[protein.locus_tag] = protein
+            result.proteins_of_interest[protein.full_name] = protein
         for region_result in json["results"]:
             result.region_results.append(RegionResult.from_json(region_result,
                                          record, result.proteins_of_interest))
@@ -315,6 +312,11 @@ class ClusterBlastResults(ModuleResults):
             if result is not None:
                 result.add_to_record(record)
 
+    def write_outputs(self, record: Record, options: ConfigType) -> None:
+        for subresult in [self.general, self.knowncluster, self.subcluster]:
+            if subresult:
+                subresult.write_to_file(record, options)
+
 
 def write_clusterblast_output(options: ConfigType, record: Record,
                               cluster_result: RegionResult, proteins: Dict[str, Protein],
@@ -337,15 +339,15 @@ def write_clusterblast_output(options: ConfigType, record: Record,
     filename = f"{record.id}_c{region_number}.txt"
 
     with changed_directory(_get_output_dir(options, searchtype)):
-        _write_output(filename, record, cluster_result, proteins)
+        with open(filename, "w", encoding="utf-8") as out_file:
+            _write_output(out_file, record, cluster_result, proteins)
 
 
-def _write_output(filename: str, record: Record, cluster_result: RegionResult,
+def _write_output(out_file: IO, record: Record, cluster_result: RegionResult,
                   proteins: Dict[str, Protein]) -> None:
     ranking = cluster_result.ranking
     # Output for each hit: table of genes and locations of input cluster,
     # table of genes and locations of hit cluster, table of hits between the clusters
-    out_file = open(filename, "w", encoding="utf-8")  # pylint: disable=consider-using-with
     out_file.write("ClusterBlast scores for " + record.id + "\n")
     out_file.write("\nTable of genes, locations, strands and annotations of query cluster:\n")
     for i, cds in enumerate(cluster_result.region.cds_children):
@@ -383,7 +385,6 @@ def _write_output(filename: str, record: Record, cluster_result: RegionResult,
         else:
             out_file.write("data not found\n")
         out_file.write("\n")
-    out_file.close()
 
 
 def _get_output_dir(options: ConfigType, searchtype: str) -> str:

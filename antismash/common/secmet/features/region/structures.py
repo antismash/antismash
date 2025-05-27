@@ -35,7 +35,6 @@ class Region(AbstractRegion, CDSCollection):
     __slots__ = ["_subregions", "_candidate_clusters",
                  "_pre_origin_children", "_post_origin_children",
                  ]
-    FEATURE_TYPE = "region"
 
     def __init__(self, candidate_clusters: List[CandidateCluster] = None,
                  subregions: List[SubRegion] = None) -> None:

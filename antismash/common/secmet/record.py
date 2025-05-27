@@ -528,7 +528,9 @@ class Record:
             for part in location.parts:
                 found = self.get_cds_features_within_location(part, with_overlapping=True)
                 features.extend(f for f in found if f not in features)
-            return [f for f in features if f.is_contained_by(location)]
+            if not with_overlapping:
+                return [f for f in features if f.is_contained_by(location)]
+            return features
 
         def find_start_in_list(location: Location, features: List[CDSFeature],
                                include_overlaps: bool) -> int:
@@ -829,6 +831,11 @@ class Record:
             raise SecmetInvalidInputError(f"{seq_record.id}: {err}") from err
 
         for feature in seq_record.features:
+            if feature.location.crosses_origin() and not record.is_circular():
+                raise SecmetInvalidInputError(
+                    "feature contains an origin spanning exon while in a linear record: "
+                    f"{record.id} {feature.type} {feature.location}"
+                )
             if feature.location.ref or feature.location.ref_db:
                 for ref in [feature.location.ref, feature.location.ref_db]:
                     if ref and ref != seq_record.id:
@@ -1034,7 +1041,9 @@ class Record:
 
         return regions_added
 
-    def extend_location(self, location: Location, distance: int) -> Location:
+
+    def extend_location(self, location: Location, distance: int, connect_result: bool = True,
+                        ) -> Location:
         """ Constructs a new location which covers the given distance from the
             given location, capped at record limits unless the record is circular,
             in which case it wraps around.
@@ -1042,10 +1051,42 @@ class Record:
             Arguments:
                 location: the location to create an extended version of
                 distance: the distance to extend the location, applies in both directions
+                connect_result: whether to connect all sub parts of a location, where possible
 
             Returns:
                 a new location, covering the requested area(s)
         """
+        # handle the very simplest case without further calls
+        if not self.is_circular() and connect_result:
+            return FeatureLocation(
+                max(0, location.start - distance),
+                min(location.end + distance, len(self)),
+                location.strand
+            )
+        # extend the outer coordinates
+        new = self._extend_location(location, distance)
+
+        if not connect_result:
+            return new
+
+        operator = "join"
+        if len(location.parts) > 1:
+            operator = location.operator
+
+        new = self.connect_locations([new])
+        # now reconstruct with the strands back to original, since connect changes that
+        parts = list(new.parts)
+        for i, part in enumerate(parts):
+            parts[i] = FeatureLocation(part.start, part.end, location.strand)
+        if location.strand == -1:
+            parts.reverse()
+
+        if len(parts) > 1:
+            new = CompoundLocation(parts, operator=operator)
+
+        return new
+
+    def _extend_location(self, location: Location, distance: int) -> Location:
 
         parts = list(location.parts)  # the original location must not be changed
         maximum = len(self)

@@ -73,16 +73,16 @@
  {{build_blastp_link(feature.get_name(), "NCBI BlastP on this gene")}}<br>
  <span class="asdb-linkout link-like wildcard-container" data-locus="{{feature.get_name()}}" data-wildcard-attrs="data-seq" data-seq="{{replace_with('translation')}}">Blast against antiSMASH-database</span><br>
  {%- if add_ncbi_context and not feature.crosses_origin() -%}
- <a href="{{urls['context']}}" target="_new">View genomic context</a><br>
+ <a href="{{urls['context']}}" target="_blank">View genomic context</a><br>
  {%- endif -%}
  {%- if urls['mibig'] -%}
-  <a href="{{urls['mibig']}}" target="_new">MIBiG Hits</a><br>
+  <a href="{{urls['mibig']}}" target="_blank">MIBiG Hits</a><br>
  {%- endif -%}
  {%- if urls['transport'] -%}
-  <a href="{{urls['transport']}}" target="_new">TransportDB BLAST on this gene</a><br>
+  <a href="{{urls['transport']}}" target="_blank">TransportDB BLAST on this gene</a><br>
  {%- endif -%}
  {%- if urls['smcog_tree'] -%}
-  <a href="{{urls['smcog_tree']}}" target="_new">View smCOG seed phylogenetic tree with this gene</a><br>
+  <a href="{{urls['smcog_tree']}}" target="_blank">View smCOG seed phylogenetic tree with this gene</a><br>
  {%- endif -%}
 </div>
 <div class="focus-clipboard">

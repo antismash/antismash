@@ -5,6 +5,7 @@
 
 import logging
 from typing import (
+    Any,
     Iterable,
     List,
     Optional,
@@ -37,6 +38,31 @@ T = TypeVar("T", bound=Location)
 
 
 class _LocationMixin(_Location):
+    def get_comparator(self: T) -> tuple[int, int]:
+        """Get a comparison helper tuple consisting of start position and length."""
+        start = self.start
+        end = self.end
+        if self.crosses_origin():
+            _, head = split_origin_bridging_location(self)
+            start = min(part.start for part in head) - max(part.end for part in head)
+            end = len(self)
+        if not isinstance(start, int):
+            return (-1, id(self))
+        return (start, end)
+
+    def __lt__(self: T, other: Any) -> bool:
+        if isinstance(other, _Location):
+            other_loc = other
+        elif hasattr(other, "location") and isinstance(other.location, self.__class__):
+            other_loc = other.location
+        else:
+            raise ValueError(f"Can't compare a location to {type(other)}")
+
+        left = self.get_comparator()
+        right = other_loc.get_comparator()
+
+        return left < right
+
     def crosses_origin(self: T, *, allow_reversing: bool = False) -> bool:
         """ Determines if the location would cross the origin of a record.
 
@@ -367,11 +393,12 @@ def connect_locations(locations: list[Location], wrap_point: int = None) -> Loca
 
 
 def convert_protein_position_to_dna(start: int, end: int, location: Location) -> Tuple[int, int]:
-    """ Convert a protein position to a nucleotide sequence position for use in generating
+    """ Convert protein coordinates to a nucleotide sequence position for use in generating
         new FeatureLocations from existing FeatureLocations and/or CompoundLocations.
 
         Arguments:
-            position: the position in question, must be contained by the location
+            start: the start coordinate
+            end: the start coordinate
             location: the location of the related feature, for handling introns/split locations
 
         Returns:
@@ -393,7 +420,7 @@ def convert_protein_position_to_dna(start: int, end: int, location: Location) ->
                 f"Converted coordinates {dna_start}..{dna_end} "
                 f"out of bounds for location {location}"
             )
-        return dna_start, dna_end
+        return int(dna_start), int(dna_end)
 
     parts = sorted(location.parts, key=lambda x: x.start)
     gap = 0
@@ -421,7 +448,7 @@ def convert_protein_position_to_dna(start: int, end: int, location: Location) ->
             f"Converted coordinates {dna_start}..{dna_end} "
             f"out of bounds for location {location}"
         )
-    return dna_start, dna_end
+    return int(dna_start), int(dna_end)
 
 
 def build_location_from_others(locations: list[Location]) -> Location:

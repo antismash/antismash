@@ -116,6 +116,10 @@ LmbU	LmbU-like protein	50	LmbU.hmm
 mmyO	MmyO-like protein	500	mmyO.hmm
 AvrD	Pseudomonas avriulence D protein	50	PF05655.hmm
 goadsporin_like	Goadsporin-like protein	500	goadsporin_like.hmm
+LeupA	leupeptin A	580	LeupA.hmm
+LeupB	leupeptin B	800	LeupB.hmm
+LeupC	leupeptin C	450	LeupC.hmm
+LeupD	leupeptin D	225	LeupD.hmm
 TIGR03602	Bacteriocin protoxin, streptolysin S family	50	TIGR03602.hmm
 TIGR03603	Bacteriocin biosynthesis cyclodehydratase	150	TIGR03603.hmm
 TIGR03604	Bacteriocin biosynthesis docking scaffold	219	TIGR03604.hmm
@@ -279,6 +283,7 @@ rSAM_GlyRichRpt	GRRM system radical SAM/SPASM domain protein	310	TIGR04261.hmm
 SAM_SPASM_FxsB	FxsB family radical SAM/SPASM domain protein	370	TIGR04269.hmm
 rSAM_XyeB	XyeB family radical SAM/SPASM peptide maturase	450	TIGR04496.hmm
 rSAM_pep_methan	TIGR04083 family peptide-modifying radical SAM enzyme	100	TIGR04083.hmm
+PTHR43273	radical SAM/SPASM domain protein, sulfatase-maturase type	100	PTHR43273.hmm
 methano_modCys	TIGR04165 family Cys-rich peptide	60	TIGR04165.hmm
 yydH	Epipeptide metalloprotease yydH	400	yydH.hmm
 TIGR04223	cyclic lactone autoinducer peptide	19	TIGR04223.hmm
@@ -374,17 +379,18 @@ FAAL_cd05931	FAAL	20	FAAL_cd05931.hmm
 PP-binding_2	Acyl-carrier	10	PF14573.hmm
 Thioesterase	Thioesterase domain	26	PF00975.hmm
 LPG_synthase_C	Phosphatidylglycerol lysyltransferase, C-terminal	27	PF09924.hmm
-azdH_alignment	azdH	50	azdh.hmm
+azdH	azdH	50	azdh.hmm
 azdO	azdO/vlmO	50	azdO.hmm
 Ketoacyl-synt_2	Ketoacyl-synt_2	25	PF13723.hmm
 PT_phytoene_like	Prenyltransferase; Phytoene synthase like	20	PT_phytoene_like.hmm
 PT_FPPS_like	Prenyltransferase; Farnesyl diphosphate synthase like	56	PT_FPPS_like.hmm
+PT_HPP	Prenyltransferase; involved in isoprenoid quinone biosynthesis	139	PT_HPP.hmm
 T1TS	Type 1 terpene synthase	15	T1TS.hmm
 T1TS_KS	Type 1 terpene synthase; Ent-kaurene synthase type	200	T1TS_KS.hmm
 T2TS	Type 2 terpene synthase	45	T2TS.hmm
 TS_UbiA	UbiA type terpene synthase	117	TS_UbiA.hmm
 HAD_2	Haloacid dehalogenase-like hydrolase	15	PF13419.hmm
-TS_Pyr4	Pyr4 type terpene synthase	100	TS_Pyr4.hmm
+TS_Pyr4	Pyr4 type terpene synthase	50	TS_Pyr4.hmm
 Lycopene_cycl_fung	Lycopene cyclase domain; fungal	40	TIGR03462.hmm
 IPPT	IPP transferase	24	PF01715.hmm
 Lysine_decarbox	Possible lysine decarboxylase	27	PF03641.hmm

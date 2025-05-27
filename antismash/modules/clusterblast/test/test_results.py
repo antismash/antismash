@@ -23,23 +23,33 @@ def create_reference(accession, proteins):
     )
 
 
-def create_protein(name, tag):
-    return Protein(name, tag, "1234-5678", "1", "annots")
+def create_protein(name, tag, unique_id=None):
+    unique_id = unique_id or name
+    return Protein(unique_id, name, tag, "1234-5678", "1", "annots")
 
 
 class TestRegionResults(unittest.TestCase):
     def test_reference_protein_filtering(self):
-        proteins = {f"t{c}": create_protein(c, f"t{c}") for c in "ABCDEFX"}
+        proteins = {}
+        for cluster, suffixes in [
+            ("acc1", "A"),
+            ("acc2", "BC"),
+            ("acc3", "DEF"),
+            ("same_accession", "X"),
+        ]:
+            for suffix in suffixes:
+                unique_id = f"{cluster}_t{suffix}"
+                proteins[unique_id] = create_protein(suffix, f"t{suffix}", unique_id=unique_id)
         scores = []
         for i in range(4, 1, -1):
             scores.append(results.Score())
             scores[-1].hits = i
 
         ranking = [
-            (create_reference("same_accession", proteins=[proteins["tX"]]), scores[0]),
-            (create_reference("acc1", proteins=[proteins["tA"]]), scores[0]),
-            (create_reference("acc2", proteins=[proteins[f"t{c}"] for c in "BC"]), scores[2]),
-            (create_reference("acc3", proteins=[proteins[f"t{c}"] for c in "DEF"]), scores[2]),
+            (create_reference("same_accession", proteins=[proteins["same_accession_tX"]]), scores[0]),
+            (create_reference("acc1", proteins=[proteins["acc1_tA"]]), scores[0]),
+            (create_reference("acc2", proteins=[proteins[f"acc2_t{c}"] for c in "BC"]), scores[2]),
+            (create_reference("acc3", proteins=[proteins[f"acc3_t{c}"] for c in "DEF"]), scores[2]),
         ]
 
         region = DummyRegion()

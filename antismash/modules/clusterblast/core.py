@@ -83,8 +83,38 @@ def run_diamond_on_all_regions(regions: Sequence[secmet.Region], database: str) 
     return stdout
 
 
+def _load_cluster_data(file_path: str) -> dict[str, ReferenceCluster]:
+    """ Loads reference cluster data from the given file
+
+        Arguments:
+            file_path: the path to the data file to load
+
+        Returns:
+            a dictionary mapping reference cluster name to ReferenceCluster
+            instance
+    """
+    with open(file_path, "r", encoding="utf-8") as handle:
+        filetext = handle.read()
+    lines = [line for line in filetext.splitlines() if "\t" in line]
+    clusters = {}
+    for i in lines:
+        tabs = i.split("\t")
+        accession = tabs[0]
+        description = tabs[1]
+        cluster_number = tabs[2]
+        cluster_type = tabs[3]
+        tags = tabs[4].split(";")
+        proteins = tabs[5].split(";")
+        if not proteins[-1]:
+            proteins.pop(-1)
+        cluster = ReferenceCluster(accession, cluster_number, proteins,
+                                   description, cluster_type, tags)
+        clusters[cluster.get_name()] = cluster
+    return clusters
+
+
 def load_reference_clusters(searchtype: str) -> Dict[str, ReferenceCluster]:
-    """ Load gene cluster database
+    """ Loads reference cluster data for the given search type
 
         Arguments:
             searchtype: determines which database to use, allowable values:
@@ -109,24 +139,7 @@ def load_reference_clusters(searchtype: str) -> Dict[str, ReferenceCluster]:
         data_dir = os.path.join(kcb_root, version)
 
     reference_cluster_file = os.path.join(data_dir, "clusters.txt")
-    with open(reference_cluster_file, "r", encoding="utf-8") as handle:
-        filetext = handle.read()
-    lines = [line for line in filetext.splitlines() if "\t" in line]
-    clusters = {}
-    for i in lines:
-        tabs = i.split("\t")
-        accession = tabs[0]
-        description = tabs[1]
-        cluster_number = tabs[2]
-        cluster_type = tabs[3]
-        tags = tabs[4].split(";")
-        proteins = tabs[5].split(";")
-        if not proteins[-1]:
-            proteins.pop(-1)
-        cluster = ReferenceCluster(accession, cluster_number, proteins,
-                                   description, cluster_type, tags)
-        clusters[cluster.get_name()] = cluster
-    return clusters
+    return _load_cluster_data(reference_cluster_file)
 
 
 def load_reference_proteins(searchtype: str) -> Dict[str, Protein]:
@@ -164,6 +177,7 @@ def load_reference_proteins(searchtype: str) -> Dict[str, Protein]:
             # e.g. >x|y|1-2|-|linearised5-20|z|Urea_carboxylase_{ECO:0000313|EMBL:CCF11062.1}|CRH36422
             shift = 1 if "|linearised" in line else 0
             tabs = line.split("|", 5 + shift)
+            cluster_accession = tabs[0].lstrip(">")
             location = tabs[2]
             strand = tabs[3]
             locustag = tabs[4 + shift]
@@ -177,8 +191,10 @@ def load_reference_proteins(searchtype: str) -> Dict[str, Protein]:
                 assert len(tabs) == 7
                 assert tabs[4].startswith("linearised"), tabs[4]
                 linearised_start, linearised_end = map(int, tabs[4].replace("linearised", "").split("-"))
-            proteins[locustag] = Protein(name, locustag, location, strand, annotations,
-                                         draw_start=linearised_start, draw_end=linearised_end)
+            unique_id = f"{cluster_accession}_{locustag}"
+            assert unique_id not in proteins
+            proteins[unique_id] = Protein(unique_id, name, locustag, location, strand, annotations,
+                                          draw_start=linearised_start, draw_end=linearised_end)
     return proteins
 
 
@@ -281,6 +297,7 @@ def parse_subject(line_parts: List[str], seqlengths: Dict[str, int],
     else:
         locustag = ""
     genecluster = f"{subject_parts[0]}_{subject_parts[1]}"
+    full_name = f"{subject_parts[0]}_{subject}"
     start, end = subject_parts[2].split("-")[:2]
     strand = subject_parts[3]
     annotation = subject_parts[5 + shift]
@@ -294,7 +311,7 @@ def parse_subject(line_parts: List[str], seqlengths: Dict[str, int],
         seqlength = len(record.get_cds_by_name(cds_name).translation)
         perc_coverage = (float(line_parts[3]) / seqlength) * 100
     return Subject(subject, genecluster, int(start), int(end), strand, annotation,
-                   perc_ident, blastscore, perc_coverage, evalue, locustag)
+                   perc_ident, blastscore, perc_coverage, evalue, locustag, full_name=full_name)
 
 
 def parse_all_clusters(blasttext: str, record: secmet.Record, min_seq_coverage: float, min_perc_identity: float,

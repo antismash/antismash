@@ -5,8 +5,8 @@
 Dynamic profile to predict triceptide precursors based on the cross-linked amino acids.
 
 Based on doi: 10.1021/jacs.2c00521, the motif is AxYxDxP, HAASL, or YxRxHxxHxR
+Based on doi: 10.1021/acschembio.2c00621, WDN is another motif
 """
-from typing import Dict, List
 import re
 
 
@@ -21,14 +21,14 @@ from antismash.common.secmet import Record
 PROFILE_NAME = "triceptide_precursor"
 PROFILE_DESCRIPTION = "Pattern-based detection of triceptide precursor peptides"
 
-ANCHOR = re.compile(r"(A.Y.D.P|HAASL|Y.R.H..H.R)")
+ANCHOR = re.compile(r"(A.Y.D.P|HAASL|Y.R.H..H.R|WDN)")
 
 MIN_LEN = 10
 MAX_LEN = 100
 
-def find_hits(record: Record, hmmer_hits: dict[str, list[ProfileHit]]) -> dict[str, list[DynamicHit]]:
+def find_hits(record: Record, _hmmer_hits: dict[str, list[ProfileHit]]) -> dict[str, list[DynamicHit]]:
     """Find all CDSes where the pattern is found"""
-    hits: Dict[str, List[DynamicHit]] = {}
+    hits: dict[str, list[DynamicHit]] = {}
 
     for cds in record.get_cds_features():
         if not MIN_LEN <= len(cds.translation) <= MAX_LEN:

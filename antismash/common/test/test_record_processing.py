@@ -17,11 +17,17 @@ from antismash import config
 from antismash.common import record_processing, path
 from antismash.common.errors import AntismashInputError
 from antismash.common.secmet import Record
-from antismash.common.secmet.test.helpers import DummyCDSMotif, DummyFeature, DummyRecord
+from antismash.common.secmet.test.helpers import DummyCDS, DummyCDSMotif, DummyFeature, DummyRecord
 from antismash.common.test import helpers
 
 
 class TestParseRecords(unittest.TestCase):
+    def setUp(self):
+        config.build_config([], isolated=True)
+
+    def tearDown(self):
+        config.destroy_config()
+
     def test_nisin(self):
         nisin_path = helpers.get_path_to_nisin_genbank()
         records = record_processing.parse_input_sequence(nisin_path)
@@ -41,7 +47,7 @@ class TestParseRecords(unittest.TestCase):
     def test_cross_origin_trim(self):
         record = DummyRecord(length=20, circular=True)
         bio_record = record.to_biopython()
-        with self.assertRaisesRegex(ValueError, "cannot be used for a cross-origin"):
+        with self.assertRaisesRegex(AntismashInputError, "cannot be used for a cross-origin"):
             with mock.patch.object(record_processing, "_strict_parse", return_value=[bio_record]):
                 record_processing.parse_input_sequence("dummy_filename", start=15, end=5)
 
@@ -94,6 +100,38 @@ class TestParseRecords(unittest.TestCase):
                         records = record_processing.parse_input_sequence("dummy file", ignore_invalid_records=value)
                         assert len(records) == 1
                         assert records[0].id == dummy_inputs[1].id
+
+    def test_removal_of_existing(self):
+        options = config.get_config()
+        assert not options.remove_existing_annotations
+
+        features =  [
+            SeqFeature(FeatureLocation(0, 1, 1), type="misc_feature"),
+            SeqFeature(FeatureLocation(10, 18, 1), type="CDS"),
+        ]
+
+        # without stripping, features should remain
+        bio = SeqRecord(Seq("ACGT" * 10))
+        bio.features = list(features)
+        assert len(bio.features) == 2
+        with mock.patch.object(record_processing, "_strict_parse", return_value=[bio]):
+            records = record_processing.parse_input_sequence("dummy")
+        assert len(records) == 1
+        to_bio = records[0].to_biopython()
+        assert len(to_bio.features) == 2, to_bio.features
+        assert len(list(records[0].all_features)) == len(features)
+        for bio_feature, secmet_feature in zip(features, records[0].all_features):
+            assert bio_feature.location == secmet_feature.location
+            assert bio_feature.type == secmet_feature.type
+
+        # with stripping, nothing should remain
+        bio.features = list(features)
+        config.build_config(["--remove-existing-annotations"], isolated=True)
+        assert options.remove_existing_annotations
+        with mock.patch.object(record_processing, "_strict_parse", return_value=[bio]):
+            records = record_processing.parse_input_sequence("dummy")
+        assert len(records) == 1
+        assert not list(records[0].all_features)
 
     def test_all_invalid_and_ignored(self):
         dummy_error = record_processing.SecmetInvalidInputError("some reason")
@@ -291,6 +329,18 @@ class TestPreprocessRecords(unittest.TestCase):
         assert len(records) == 2
         assert records[0].id != records[1].id
 
+    def test_duplicate_record_ids_with_invalid(self):
+        config.update_config({"minlength": -1})
+        cds = DummyCDS()
+        names = ["Same", "Same" + record_processing._INVALID_ID_CHARS[0], "Same"]
+        records = [DummyRecord(record_id=name, features=[cds]) for name in names]
+        assert set(record.original_id for record in records) == {None}
+        processed = record_processing.pre_process_sequences(records, self.options, self.genefinding)
+        assert len(processed) == 3
+        assert set(record.id for record in processed) == {"Same", "Same_0", "Same_1"}
+        # only two records were renamed, so one original name will be untouched
+        assert set(record.original_id for record in processed) == {"Same!", "Same", None}
+
     def test_limit(self):
         records = self.read_double_nisin()
         assert all(rec.skip is None for rec in records)
@@ -381,6 +431,15 @@ class TestPreprocessRecords(unittest.TestCase):
             self.run_on_records(records)
         # then ensure genefinding would have run normally
         assert self.genefinding.was_run
+
+    def test_missing_sequence(self):
+        # a record missing a sequence shouldn't crash in WGS testing
+        # and shouldn't report as a WGS
+        with NamedTemporaryFile(suffix=".fasta") as handle:
+            handle.write(">R1\nACGT\n>R2\n\n>R3\nACGT\n".encode())
+            handle.flush()
+            with self.assertRaisesRegex(AntismashInputError, "no sequence .*R2.*"):
+                record_processing.parse_input_sequence(handle.name)
 
 
 class TestUniqueID(unittest.TestCase):

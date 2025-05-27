@@ -79,7 +79,7 @@ def prepare_data(logging_only: bool = False) -> list[str]:
         failure_messages.append(str(err))
 
     # the hmm files that need to be present in data
-    hmm_names = ["main", "PT_FPPS_like", "PT_phytoene_like", "T1TS", "T2TS"]
+    hmm_names = ["main", "PT_FPPS_like", "PT_phytoene_like", "T1TS", "T2TS", "TS_Pyr4"]
     hmm_files = [path.get_full_path(__file__, "data", name + "_profiles.hmm") for name in hmm_names]
 
     # the path to the combined data file of all hmms

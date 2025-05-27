@@ -22,6 +22,7 @@ class TestTriceptidePrecursor(unittest.TestCase):
             ("YxD", "MTHTYLPGQPSEAQLPDFSALPLGELASCTEHPVLSTLLPGVCERLEDSGGAVAFYDDAPPVA"),
             ("HAA", "MMPLSPASAEPTASGTAVLDRVAARVRQRLETEQAATNRVGDGTHAASLIWPWPL"),
             ("YRD", "MLNKNHSVDQKMPINHPLLSRLIKEVENEQKTAMMFKYDRTHNRHNRGQ"),
+            ("WDN", "MTLLEGLAASDAPVVMKLVGTHGAPAPSIAGTPWDNRPTWDNWNKNPAPFDNRPTWDNWNKR"),
             ("random_other_thing", "MAGICHATMAGICCATMAGICRAT"),
             ("too_short", "MAGIC"),
         ]
@@ -36,4 +37,4 @@ class TestTriceptidePrecursor(unittest.TestCase):
 
     def test_hits(self) -> None:
         results = triceptide_precursor.find_hits(self.record, {})
-        assert set(results.keys()) == {"YxD", "HAA", "YRD"}
+        assert set(results.keys()) == {"YxD", "HAA", "YRD", "WDN"}

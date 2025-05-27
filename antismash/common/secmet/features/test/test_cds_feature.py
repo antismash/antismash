@@ -69,6 +69,16 @@ class TestCDSFeature(unittest.TestCase):
         cds.translation = translation
         assert cds.translation == expected
 
+    def test_methionine_starts_when_ambiguous(self):
+        # ambiguous start coordinates should not be adjusted to methionines
+        translation = "LAGIC"
+        for location in [
+                FeatureLocation(BeforePosition(10), 25, 1),
+                FeatureLocation(10, AfterPosition(25), -1),
+        ]:
+            cds = CDSFeature(location, locus_tag="test", translation=translation)
+            assert cds.translation == translation, location
+
 
 class TestCDSBiopythonConversion(unittest.TestCase):
     def setUp(self):
@@ -445,6 +455,22 @@ class TestTranslationLength(unittest.TestCase):
         location = CompoundLocation([FeatureLocation(BeforePosition(0), 3, -1), FeatureLocation(6, 9, -1)])
         for good in ["A", "AA", "AAA"]:
             assert _is_valid_translation_length(good, location)
+
+    def test_ambiguous_coords(self):
+        translation = "A" * 10
+        for strand in (-1, 1):
+            # both ambiguous
+            location = FeatureLocation(BeforePosition(10), AfterPosition(20), strand)
+            assert _is_valid_translation_length(translation, location)
+            # start ambiguous
+            location = FeatureLocation(BeforePosition(10), 20, strand)
+            assert _is_valid_translation_length(translation, location)
+            # end ambiguous
+            location = FeatureLocation(10, AfterPosition(20), strand)
+            assert _is_valid_translation_length(translation, location)
+            # neither
+            location = FeatureLocation(10, 20, strand)
+            assert not _is_valid_translation_length(translation, location)
 
 
 class TestTranslationInRecord(unittest.TestCase):

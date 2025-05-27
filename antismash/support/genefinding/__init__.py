@@ -11,7 +11,7 @@ from antismash.common.secmet import Record
 from antismash.config import ConfigType
 from antismash.config.args import ModuleArgs, ReadableFullPathAction
 
-from .run_prodigal import run_prodigal
+from .prodigal import run_prodigal
 
 
 NAME = "genefinding"

@@ -23,10 +23,10 @@ PROFILE_DESCRIPTION = "Pattern-based detection of darobactin precursor peptides"
 
 ANCHOR = re.compile(r"W.W.K..")
 
-MIN_LEN = 10  # The final compound core is 7 AAs, 
+MIN_LEN = 10  # The final compound core is 7 AAs
 MAX_LEN = 80
 
-def find_hits(record: Record, hmmer_hits: dict[str, list[ProfileHit]]) -> dict[str, list[DynamicHit]]:
+def find_hits(record: Record, _hmmer_hits: dict[str, list[ProfileHit]]) -> dict[str, list[DynamicHit]]:
     """Find all CDSes where the pattern is found"""
     hits: Dict[str, List[DynamicHit]] = {}
 

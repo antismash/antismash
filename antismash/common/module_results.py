@@ -7,6 +7,8 @@
 
 from typing import Any, Dict, List, Optional
 
+from antismash.config import ConfigType
+
 from .secmet import Record
 from .secmet.features import Protocluster, SubRegion
 
@@ -49,6 +51,15 @@ class ModuleResults:
             Stores relevant information from the results in the given record
         """
         raise NotImplementedError()
+
+    def write_outputs(self, record: Record, options: ConfigType) -> None:
+        """ Writes output files specific to this module
+
+            Arguments:
+                record: the record the results belong to
+                options: the options for the run
+        """
+        pass
 
 
 class DetectionResults(ModuleResults):

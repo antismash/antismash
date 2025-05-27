@@ -12,7 +12,7 @@
     {% for score in proto_results %}
      {% set ref = score.reference %}
      <tr class="cc-heat-row heat-row-{{class_name}}" data-accession="{{ref.get_identifier()}}">
-      <td>{% if url %}<a href="{{url.format(accession=ref.accession.split('.')[0], version=ref.accession.split('.')[1], start=ref.start, end=ref.end)}}" target="_new">{{ref.accession if class_name == "MIBiG" else ref.get_identifier()}}</a>{% else %} {{ref.get_identifier()}} {% endif %}</td>
+      <td>{% if url %}<a href="{{url.format(accession=ref.accession.split('.')[0], version=ref.accession.split('.')[1], start=ref.start, end=ref.end)}}" target="_blank">{{ref.accession if class_name == "MIBiG" else ref.get_identifier()}}</a>{% else %} {{ref.get_identifier()}} {% endif %}</td>
       {% set perc = "{:.0f}".format(score.final_score*100) %}
       {% set colour = "rgb(0, 0, 0, {:.2f})".format(score.final_score) %}
       <td class="cc-heat-cell" title="{{score.table_string()}}" style="background-image: linear-gradient(to top, {{colour}}, {{colour}} {{perc}}%, white {{perc}}%)"></td>

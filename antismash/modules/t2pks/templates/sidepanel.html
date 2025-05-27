@@ -16,7 +16,6 @@
 				{{pred.__str__()}}<br>
 			{% endfor %}
 	    <dd>
-		</tr>
 		{% endif %}
 		{% if prediction.malonyl_elongations %}
 		<dt><strong>Malonyl elongations:</strong></dt>
@@ -27,7 +26,7 @@
     	</dd>
 		{% endif %}
 		{% if prediction.product_classes %}
-		<dt><strong>Product class(es):</strong></td>
+		<dt><strong>Product class(es):</strong></dt>
         <dd>
 				{% for class in prediction.product_classes | sort %}
 				{{ class }}<br>

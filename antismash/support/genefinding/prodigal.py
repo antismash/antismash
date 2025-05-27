@@ -20,6 +20,8 @@ from antismash.common.subprocessing.prodigal import (
     ProdigalGene,
 )
 
+MAX_SEQUENCE_LENGTH = 32_000_000  # prodigal will fail if given more than this
+
 
 def _build_location_from_prodigal(gene: ProdigalGene, max_length: int) -> Location:
     start = gene.start
@@ -66,6 +68,12 @@ def _filter_genes(genes_found: Iterable[ProdigalGene], record: Record) -> Iterab
 def run_prodigal(record: Record) -> None:
     """ Run progidal to annotate prokaryotic sequences
     """
+
+    if len(record) > MAX_SEQUENCE_LENGTH:
+        raise ValueError(
+            f"sequence too long for prodigal ({MAX_SEQUENCE_LENGTH:,d}): {record.id}: {len(record):,d}"
+        )
+
     seq = str(record.seq)
     if record.is_circular():
         # add a buffer in which to find genes that cross the origin

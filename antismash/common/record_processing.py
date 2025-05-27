@@ -8,7 +8,7 @@ import functools
 import logging
 import os
 import re
-from typing import Any, Dict, Callable, List, Set, Tuple
+from typing import Any, Dict, Callable, Iterable, List, Set, Tuple
 import warnings
 
 from Bio.Seq import Seq, UndefinedSequenceError
@@ -23,6 +23,9 @@ from antismash.config import get_config, update_config, Config, ConfigType
 from antismash.custom_typing import AntismashModule
 
 from .subprocessing import parallel_function
+
+
+_INVALID_ID_CHARS = """!"#$%&()*+,:;=>?@[]^`'{|}/ """
 
 
 def _strict_parse(filename: str) -> List[SeqRecord]:
@@ -62,6 +65,19 @@ def _strict_parse(filename: str) -> List[SeqRecord]:
     if not records:
         raise AntismashInputError(f"no valid records found in file {filename}")
     return records
+
+
+def _strip_invalid_chars_from_ids(records: Iterable[Record]) -> None:
+    def strip(value: str) -> str:
+        return "".join(v for v in value if v not in _INVALID_ID_CHARS)
+
+    for record in records:
+        stripped_id = strip(record.id)
+        # store the original name, if it hasn't already been modified
+        if stripped_id != record.id and not record.original_id:
+            record.original_id = record.id
+        record.id = stripped_id
+        record.name = strip(record.name)
 
 
 def parse_input_sequence(filename: str, taxon: str = "bacteria", minimum_length: int = -1,
@@ -105,6 +121,11 @@ def parse_input_sequence(filename: str, taxon: str = "bacteria", minimum_length:
         if minimum_length < 1 or len(record.seq) >= minimum_length:
             records.append(record)
 
+        # if requested, remove every existing annotation
+        if get_config().remove_existing_annotations:
+            record.features.clear()
+            assert not record.features
+
     # if no records are left, that's a problem
     if not records:
         raise AntismashInputError(f"all input records smaller than minimum length ({minimum_length})")
@@ -116,9 +137,12 @@ def parse_input_sequence(filename: str, taxon: str = "bacteria", minimum_length:
     # before conversion to secmet records, trim if required
     if start > -1 or end > -1:
         if len(records) > 1:
-            raise ValueError("--start and --end options cannot be used with multiple records")
+            raise AntismashInputError("--start and --end options cannot be used with multiple records")
         if start != -1 and end != -1 and start > end and records[0].annotations.get("topology") == "circular":
-            raise ValueError("--start and --end cannot be used for a cross-origin section of a circular record")
+            raise AntismashInputError(
+                "--start and --end cannot be used for "
+                "a cross-origin section of a circular record"
+            )
         records[0] = trim_sequence(records[0], max(start, 0), min(len(records[0]), end))
 
     # add GFF features before conversion, if relevant
@@ -134,11 +158,7 @@ def parse_input_sequence(filename: str, taxon: str = "bacteria", minimum_length:
             if str(err):
                 logging.error(err)
             raise AntismashInputError("could not parse records from GFF3 file") from err
-        gff_features = gff_parser.run(gff_file)
-        for record in records:
-            if any(feature.type == "CDS" for feature in record.features):
-                continue
-            record.features.extend(gff_features.get(record.id, []))
+        gff_parser.update_records(gff_file, records)
 
     # remove any previous or obselete antiSMASH annotations to minimise incompatabilities
     for record in records:
@@ -263,7 +283,10 @@ def ensure_cds_info(genefinding: Callable[[Record, Any], None], sequence: Record
     if not sequence.get_cds_features():
         if not options.genefinding_gff3 and options.genefinding_tool != "none":
             logging.info("No CDS features found in record %r, running gene finding.", sequence.id)
-            genefinding(sequence, options)
+            try:
+                genefinding(sequence, options)
+            except ValueError as err:
+                raise AntismashInputError(str(err)) from err
         if not sequence.get_cds_features():
             logging.info("No genes found, skipping record %r", sequence.id)
             sequence.skip = "No genes found"
@@ -369,13 +392,15 @@ def pre_process_sequences(sequences: List[Record], options: ConfigType, genefind
     # keep sequences as clean as possible and make sure they're valid
     if checking_required:
         logging.debug("Sanitising record ids and sequences")
+        _strip_invalid_chars_from_ids(sequences)
         # Ensure all records have unique names
         all_record_ids = {seq.id for seq in sequences}
         if len(all_record_ids) < len(sequences):
             all_record_ids = set()
             for record in sequences:
                 if record.id in all_record_ids:
-                    record.original_id = record.id
+                    if not record.original_id:
+                        record.original_id = record.id
                     record.id = generate_unique_id(record.id, all_record_ids)[0]
                 all_record_ids.add(record.id)
             assert len(all_record_ids) == len(sequences), f"{len(all_record_ids)} != {len(sequences)}"
@@ -490,6 +515,8 @@ def records_contain_shotgun_scaffolds(records: List[Record]) -> bool:
             record.seq[0]
         except UndefinedSequenceError:
             defined = False
+        except IndexError:
+            raise AntismashInputError(f"record contains no sequence information: {record.id}")
         if not defined and any(key in record.annotations for key in [
             "wgs_scafld",
             "wgs",
@@ -561,15 +588,6 @@ def fix_record_name_id(record: Record, all_record_ids: Set[str],
         acc = record.annotations['accession']
 
         record.annotations['accession'] = _shorten_ids(acc)
-
-    # Remove illegal characters from name: otherwise, file cannot be written
-    illegal_chars = set('''!"#$%&()*+,:;=>?@[]^`'{|}/ ''')
-    for char in record.id:
-        if char in illegal_chars:
-            record.id = record.id.replace(char, "")
-    for char in record.name:
-        if char in illegal_chars:
-            record.name = record.name.replace(char, "")
 
     if not record.original_id and old_id != record.id:
         record.original_id = old_id
