@@ -34,7 +34,7 @@ RULE fungal-RiPP-like
 RULE lysine
     CATEGORY NRPS
     DESCRIPTION Fungal lysine primary metabolism
-    EXAMPLE NCBI NP_009673.1 1-1392 lysine
+    EXAMPLE NCBI NC_001134.1 469000-474000 lysine
     CUTOFF 5
     NEIGHBOURHOOD 20
     CONDITIONS alpha_am_amid
