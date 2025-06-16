@@ -70,14 +70,23 @@ def get_trimmed_orf(orf: CDSFeature, record: Record, include: int = None,
         return None
 
     # otherwise, use the start which gives the smallest possible ORF
+    start = orf.start
+    end = orf.end
     if orf.location.strand == 1:
-        start = orf.location.start + starts[-1]
-        end = orf.location.end
+        start += starts[-1]
+        start %= len(record)
     else:
-        start = orf.location.start
-        end = orf.location.end - starts[-1]
+        end -= starts[-1]
 
-    location = FeatureLocation(start, end, orf.location.strand)
+    if start > end:
+        location = CompoundLocation([
+            FeatureLocation(start, orf.location.end, orf.location.strand),
+            FeatureLocation(orf.location.start, end, orf.location.strand),
+        ])
+        if location.strand == -1:
+            location.parts.reverse()
+    else:
+        location = FeatureLocation(start, end, orf.location.strand)
     return create_feature_from_location(record, location, label=label)
 
 
