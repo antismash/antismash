@@ -20,6 +20,7 @@ from antismash.common.secmet.locations import (
     FeatureLocation,
 )
 from antismash.common.secmet.features import SubRegion
+from antismash.common.secmet.record import Seq
 from antismash.common.secmet.test.helpers import DummySubRegion
 
 from .helpers import DummyCDS, DummyRecord
@@ -277,6 +278,54 @@ class TestOrfTrimming(unittest.TestCase):
 
         # max length falls before the include coordinate
         assert get_trimmed_orf(self.cds, self.record, include=0, max_length=6) is None
+
+
+class TestCircularTrimming(unittest.TestCase):
+    def setUp(self):
+        self.shortest = "ATGnnnTGA"
+        self.extra = "ATGnnnATGnnn"
+        self.initial = self.extra + self.shortest
+        self.seq = "N" * 30 + self.initial
+
+    def rotate(self, midpoint):
+        self.seq = self.seq[midpoint:] + self.seq[:midpoint]
+
+    def check(self, location):
+        record = DummyRecord(seq=self.seq, circular=True)
+        assert location.extract(record.seq) == self.initial
+        # trim it and ensure it's only the shortest section
+        new = get_trimmed_orf(DummyCDS(location=location), record)
+        assert new
+        assert new.location.extract(record.seq) == self.shortest
+        return new
+
+    def test_shortest_crosses_origin(self):
+        self.rotate(-len(self.shortest) // 2)
+        location = CompoundLocation([
+            FeatureLocation(35, len(self.seq), 1),
+            FeatureLocation(0, 5, 1),
+        ])
+        new = self.check(location)
+        assert new.location.crosses_origin()
+
+    def test_shortest_crosses_origin_reverse(self):
+        self.rotate(-len(self.shortest) // 2)
+        self.seq = Seq(self.seq).reverse_complement()
+        location = CompoundLocation([
+            FeatureLocation(0, 16, -1),
+            FeatureLocation(len(self.seq) - 5, len(self.seq), -1),
+        ])
+        new = self.check(location)
+        assert new.location.crosses_origin()
+
+    def test_shortest_simple(self):
+        self.rotate(-len(self.shortest) - 1)
+        assert self.seq.startswith("n" + self.shortest)
+        location = CompoundLocation([
+            FeatureLocation(len(self.seq) - 11, len(self.seq), 1),
+            FeatureLocation(0, len(self.shortest) + 1, 1),
+        ])
+        self.check(location)
 
 
 def test_minimum_passthrough():
