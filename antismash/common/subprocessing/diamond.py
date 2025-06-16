@@ -54,6 +54,9 @@ def run_diamond(subcommand: str,
             params.extend([
                 "--threads", str(config.cpus),
                 "--tmpdir", temp_dir,
+                # diamond will fail if a translation happens to be a subset of GCTA, so ignore those
+                # as of diamond 2.1.3, the above case is the only case where this option is relevant
+                "--ignore-warnings",
             ])
             return run(params)
 
