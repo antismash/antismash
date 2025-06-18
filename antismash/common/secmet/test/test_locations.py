@@ -733,6 +733,15 @@ class TestLocationAdjustment(unittest.TestCase):
                 for old_part, new_part in zip(old.parts[1:], new.parts[1:]):
                     assert old_part is new_part
 
+    def test_cross_origin(self):
+        old = CompoundLocation([
+            FeatureLocation(80, 100, 1),
+            FeatureLocation(0, 20, 1),
+        ])
+        offset = 2
+        new = adjust(old, offset)
+        assert new.parts[0].start == old.parts[0].start + offset
+
 
 def offset_location(location, offset, **kwargs):
     static = _offset_location(location, offset, **kwargs)
