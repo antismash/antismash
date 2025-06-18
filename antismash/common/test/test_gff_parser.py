@@ -218,6 +218,20 @@ class TestSplitLocation(TestCase):
         self.split(100)
         assert self.feature.location == expected
 
+    def test_point_at_exon_start(self):
+        # catches off by one in feature length check
+        original = CompoundLocation([
+            FeatureLocation(15, 20, 1),
+            FeatureLocation(30, 40, 1),
+        ])
+        expected = CompoundLocation([
+            FeatureLocation(15, 20, 1),
+            FeatureLocation(0, 10, 1),
+        ])
+        self.feature.location = original
+        self.split(30)
+        assert self.feature.location == expected
+
 
 class TestUpdateRecords(TestCase):
     def setUp(self):
