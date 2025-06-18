@@ -529,6 +529,23 @@ class TestCDSFetchByLocation(unittest.TestCase):
         assert self.func(location, with_overlapping=False) == []
         assert self.func(location, with_overlapping=True) == [self.record.get_cds_features()[0]]
 
+    def test_cross_origin_exact(self):
+        record = Record(Seq("A" * 100))
+        edge = DummyCDS(0, 20)
+        record.add_cds_feature(edge)
+        cross_origin = DummyCDS(location=CompoundLocation([
+            FeatureLocation(90, 100, 1),
+            FeatureLocation(0, 8, 1),
+        ]))
+        record.add_cds_feature(cross_origin)
+
+        query = edge.location
+
+        without_overlap = record.get_cds_features_within_location(query, with_overlapping=False)
+        assert without_overlap == [edge]
+        with_overlap = record.get_cds_features_within_location(query, with_overlapping=True)
+        assert with_overlap == [cross_origin, edge]
+
 
 class TestClusterManipulation(unittest.TestCase):
     def setUp(self):
