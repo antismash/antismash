@@ -4,22 +4,18 @@
 """ The base class of all secmet features """
 
 from collections import OrderedDict
-import logging
 from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar, Union
 
 from Bio.SeqFeature import SeqFeature
 from Bio.Seq import Seq
 
 from antismash.common.secmet.locations import (
-    convert_protein_position_to_dna,
     location_contains_other,
     location_from_biopython,
     locations_overlap,
 )
 
 from ..locations import (
-    AfterPosition,
-    BeforePosition,
     CompoundLocation,
     FeatureLocation,
     Location,
@@ -40,8 +36,6 @@ class Feature:
     def __init__(self, location: Location, feature_type: str,
                  created_by_antismash: bool = False) -> None:
         assert isinstance(location, (FeatureLocation, CompoundLocation)), type(location)
-        if location.contains_overlapping_exons():
-            raise ValueError(f"location contains overlapping exons: {location}")
         assert location.start <= location.end, f"Feature location invalid: {location}"
         if location.start < 0:
             raise ValueError(f"location contains negative coordinate: {location}")
@@ -84,7 +78,9 @@ class Feature:
         assert isinstance(sequence, Seq)
         return self.location.extract(sequence)
 
-    def get_sub_location_from_protein_coordinates(self, start: int, end: int) -> Location:
+    def get_sub_location_from_protein_coordinates(self, start: int, end: int,
+                                                  *, protein_length: int = 0,
+                                                  ) -> Location:
         """ Generates a FeatureLocation for a protein sequence based on the start
             and end positions within the features protein sequence.
 
@@ -94,68 +90,7 @@ class Feature:
                 start: a position between 0 and len(feature.location) // 3 - 1, inclusive
                 end: a position between 1 and len(feature.location) // 3, inclusive
         """
-        if not 0 <= start <= len(self.location) // 3 - 1:
-            raise ValueError("Protein start coordinate must be contained by the feature")
-
-        if not 1 <= end <= len(self.location) // 3:
-            if end > 0 and (self.location.strand != -1 and isinstance(self.location.end, AfterPosition)
-                            or self.location.strand == -1 and isinstance(self.location.start, BeforePosition)):
-                # since some NCBI records (e.g. CP006567.1 and AWEV00000000.1) infer
-                # an amino from a partial but don't increase the location to match
-                logging.warning("%s protein coordinate %d truncated to match ambiguous end", str(self), end)
-                end = len(self.location) // 3
-            else:
-                raise ValueError("Protein end coordinate must be contained by the feature")
-
-        if start >= end:
-            raise ValueError("Protein start coordinate must be less than the end coordinate")
-
-        dna_start, dna_end = convert_protein_position_to_dna(start, end, self.location)
-        if not dna_start < dna_end:
-            raise ValueError(f"Invalid protein coordinate conversion (start {dna_start}, end {dna_end})")
-        if dna_start not in self.location:
-            raise ValueError(f"Protein coordinate start {start} (nucl {dna_start}) is outside feature {self}")
-        # end check is more complicated as 'in' is inclusive and end is exclusive
-        end_contained = dna_end in self.location or dna_end == self.location.end
-        for part in self.location.parts:
-            if dna_end in part or dna_end == part.end:
-                end_contained = True
-                break
-        if not end_contained:
-            raise ValueError(f"Protein coordinate end {end} (nucl {dna_end}) is outside feature {self}")
-
-        if not isinstance(self.location, CompoundLocation):
-            return FeatureLocation(dna_start, dna_end, self.location.strand)
-
-        new_locations = []
-        for location in sorted(self.location.parts, key=lambda x: x.start):
-            if dna_start in location:
-                new = FeatureLocation(dna_start, location.end, self.location.strand)
-                # the end could also be in this part
-                if dna_end - 1 in location:
-                    # can't be a compound location with only one, so return a simple one
-                    return FeatureLocation(new.start, dna_end, new.strand)
-                new_locations.append(new)
-            elif dna_end - 1 in location:  # 'in' uses start <= value < end
-                new = FeatureLocation(location.start, dna_end, self.location.strand)
-                new_locations.append(new)
-                break
-            elif new_locations:  # found a start, but haven't yet found an end
-                new_locations.append(location)
-
-        if not new_locations:
-            raise ValueError(
-                "Could not create compound location from"
-                f" {self.location} and internal protein coordinates {start}..{end}"
-                f" (dna {dna_start}..{dna_end})"
-            )
-        if self.location.strand == -1:
-            new_locations.reverse()
-
-        if len(new_locations) == 1:
-            return new_locations[0]
-
-        return CompoundLocation(new_locations)
+        return self.location.convert_protein_position_to_dna(start, end, protein_length=protein_length)
 
     def get_qualifier(self, key: str) -> Union[None, Tuple[str, ...], bool]:
         """ Fetches a qualifier by key and returns
