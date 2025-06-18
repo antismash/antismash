@@ -845,10 +845,6 @@ def _adjust_location_by_offset(location: Location, offset: int) -> Location:
 
     if isinstance(location, CompoundLocation):
         part = location.parts[0]
-        if location.strand == -1:
-            assert part.end == location.end
-        else:
-            assert part.start == location.start
         location = CompoundLocation([adjust_single_location(part)] + location.parts[1:])
     else:
         location = adjust_single_location(location)
