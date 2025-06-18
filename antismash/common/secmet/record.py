@@ -831,7 +831,8 @@ class Record:
         record = cls(seq=seq_record.seq, transl_table=transl_table, **kwargs)
         record._record = seq_record
         # because is_circular() can't be used reliably at this stage due to fasta files
-        can_be_circular = taxon == "bacteria"
+        # unfortunately, circular records can also exist in fungal inputs, i.e. NC_027416, a mitochondrion
+        can_be_circular = True
         try:
             ensure_valid_locations(seq_record.features, can_be_circular, len(seq_record.seq))
         except ValueError as err:
