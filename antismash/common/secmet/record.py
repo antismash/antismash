@@ -551,12 +551,19 @@ class Record:
             location = FeatureLocation(0, max(1, location.end))
 
         index = find_start_in_list(location, self._cds_features, with_overlapping)
+        # in case of cross-origin features, the first few might only overlap,
+        # so those need to be passed over, but once the first fully contained feature
+        # is found, no further excluded overlaps can be skipped
+        has_yet_to_be_contained = True
         while index < len(self._cds_features):
             feature = self._cds_features[index]
             if feature.is_contained_by(location):
+                has_yet_to_be_contained = False
                 results.append(feature)
             elif with_overlapping and feature.overlaps_with(location):
                 results.append(feature)
+            elif has_yet_to_be_contained:
+                pass
             elif index + 1 < len(self._cds_features) and self._cds_features[index + 1].is_contained_by(feature):
                 pass
             else:
@@ -824,7 +831,8 @@ class Record:
         record = cls(seq=seq_record.seq, transl_table=transl_table, **kwargs)
         record._record = seq_record
         # because is_circular() can't be used reliably at this stage due to fasta files
-        can_be_circular = taxon == "bacteria"
+        # unfortunately, circular records can also exist in fungal inputs, i.e. NC_027416, a mitochondrion
+        can_be_circular = True
         try:
             ensure_valid_locations(seq_record.features, can_be_circular, len(seq_record.seq))
         except ValueError as err:
