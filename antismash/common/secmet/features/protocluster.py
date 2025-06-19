@@ -173,6 +173,11 @@ class Protocluster(CDSCollection, CoredCollectionMixin):
         assert isinstance(updated, Protocluster)
         return updated
 
+    def __lt__(self, other: Feature | Location) -> bool:
+        if isinstance(other, Protocluster) and other.location == self.location:
+            return self.product < other.product
+        return super().__lt__(other)
+
 
 class SideloadedProtocluster(Protocluster):
     """ A variant of Protocluster specifically for sideloaded features
