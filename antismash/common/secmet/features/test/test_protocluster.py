@@ -80,6 +80,20 @@ class TestProtocluster(unittest.TestCase):
         assert cluster.location.start < len(record.seq) < cluster.core_location.end + cluster.cutoff
         assert cluster.contig_edge is True
 
+    def test_sorting(self):
+        location = FeatureLocation(1, 4, 1)
+
+        def create(loc, product):
+            return Protocluster(loc, loc, tool="test", cutoff=3, neighbourhood_range=5,
+                                product=product, detection_rule="text", product_category="cat")
+
+        first = create(location, "A")
+        second = create(location, "B")
+        different = create(FeatureLocation(3, 5, 1), "A")
+        assert first < second
+        assert second < different
+        assert second > first
+
 
 class TestSideloaded(unittest.TestCase):
     def test_conversion(self):
