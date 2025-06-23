@@ -9,7 +9,7 @@ from typing import Iterable
 from collections import defaultdict
 
 from antismash.common import fasta, path
-from antismash.common.hmmscan_refinement import HMMResult, QueryResult, gather_by_query, remove_incomplete
+from antismash.common.hmmscan_refinement import HMMResult, QueryResult, refine_hmmscan_results
 from antismash.common.secmet import Protocluster, CDSFeature
 from antismash.common.subprocessing.hmmscan import run_hmmscan
 
@@ -44,27 +44,6 @@ def run_terpene_hmmscan(cds_features: Iterable[CDSFeature]) -> list[QueryResult]
     hmmscan_results = run_hmmscan(target_hmmfile=hmm_file, query_sequence=cluster_fasta)
 
     return hmmscan_results
-
-
-def filter_incomplete(hmmscan_results: list[QueryResult], hmm_lengths: dict[str, int]
-                      ) -> dict[str, list[HMMResult]]:
-    """ Removes incomplete fragments
-
-        Arguments:
-            hmmscan_results: a list of QueryResult objects from Bio's SearchIO
-            hmm_lengths: a dictionary of hmm names to hmm lengths
-
-        Returns:
-            refined_results: a dictionary of cds names to HMMResult objects
-    """
-    results_by_id = gather_by_query(hmmscan_results)
-    refined_results = {}
-    for cds, results in results_by_id.items():
-        refined = sorted(list(results), key=lambda result: result.query_start)
-        refined = remove_incomplete(refined, hmm_lengths)
-        if refined:
-            refined_results[cds] = refined
-    return refined_results
 
 
 def filter_by_score(hmm_results_per_cds: dict[str, list[HMMResult]],
@@ -255,9 +234,9 @@ def analyse_cluster(cluster: Protocluster) -> ProtoclusterPrediction:
     assert cluster.product_category == "terpene"
     hmm_properties = load_hmm_properties()
     hmm_lengths = load_hmm_lengths(hmm_properties)
-
     hmmscan_results = run_terpene_hmmscan(cluster.cds_children)
-    refined_results = filter_incomplete(hmmscan_results, hmm_lengths)
+    refined_results = refine_hmmscan_results(hmmscan_results, hmm_lengths,
+                                             preservation_mode=True)
     refined_results = filter_by_score(refined_results, hmm_properties)
     cds_predictions = get_cds_predictions(refined_results, hmm_properties)
     return get_cluster_prediction(cds_predictions)
