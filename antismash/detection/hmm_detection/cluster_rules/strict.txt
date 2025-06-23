@@ -877,7 +877,7 @@ RULE deazapurine
     DESCRIPTION deazapurine containing secondary metabolites
     # see DOIs: 10.1016/j.bioorg.2012.01.001 and 10.3390/biom10071074 and
     # 10.1016/j.chembiol.2008.07.012 and 10.1128/mmbr.00199-23
-    EXAMPLE NCBI KY022432.1 1-10381 toyocamycin # BGC0001808
+    EXAMPLE NCBI KY022432.1 1-10450 toyocamycin # BGC0001808
     EXAMPLE NCBI CP007155.1 4592550-4600486 huimycin # BGC0002354
     CUTOFF 20
     NEIGHBOURHOOD 10
