@@ -186,7 +186,7 @@ RULE NAPAA
     CATEGORY NRPS
     DESCRIPTION non-alpha poly-amino acids
     # see (https://doi.org/10.1101/2020.07.24.220772)
-    EXAMPLE NCBI NC_015859.1 135101-140457 e-Polylysin
+    EXAMPLE NCBI CP002917.1 135090-140460 e-Polylysin
     RELATED PP-binding
     CUTOFF 5
     NEIGHBOURHOOD 15
