@@ -827,7 +827,7 @@ RULE aminopolycarboxylic-acid
     CATEGORY other
     DESCRIPTION Aminopolycarboxylic acid metallophores
     # see DOI: 10.1039/C8MT00009C
-    EXAMPLE NCBI OLMK01000008.1 45415-56279 ethylenediaminesuccinic acid hydroxyarginine  # BGC0002567
+    EXAMPLE NCBI OLMK01000008.1 44300-56279 ethylenediaminesuccinic acid hydroxyarginine  # BGC0002567
     CUTOFF 10
     NEIGHBOURHOOD 5
     CONDITIONS AesA and AesB and AesC
