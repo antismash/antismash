@@ -88,6 +88,7 @@ The grammar itself:
     ID = [a-zA-Z]{[a-zA-Z0-9_-]}*
     TEXT = {[a-zA-Z0-9_-.]}*
     MINIMUM_LABEL = 'minimum'
+    REPEATABLE_LABEL = 'repeatable'
     CDS_LABEL = 'cds'
     SCORE_LABEL = 'minscore'
 
@@ -122,10 +123,12 @@ The grammar itself:
     CONDITION =  [UNARY_OP] ( ID | CDS | MINIMUM | CONDITION_GROUP );
     CDS_CONDITION = [UNARY_OP] ID {BINARY_OP [UNARY_OP] ID}*;
     CONDITION_GROUP = GROUP_OPEN CONDITIONS GROUP_CLOSE;
-    MINIMUM = MINIMUM_LABEL GROUP_OPEN
-                count:INT COMMA
-                LIST
-              GROUP_CLOSE;
+    OPTION_GROUP = GROUP_OPEN
+                    count:INT COMMA
+                    LIST
+                   GROUP_CLOSE;
+    MINIMUM = MINIMUM_LABEL OPTION_GROUP;
+    REPEATABLE = REPEATABLE_LABEL OPTION_GROUP;
     SCORE = SCORE_LABEL GROUP_OPEN
                 ID COMMA
                 score:INT
@@ -226,6 +229,7 @@ class TokenTypes(IntEnum):
     AS = 110
     EXAMPLE = 111
     EXTENDERS = 112
+    REPEATABLE = 113
 
     def __repr__(self) -> str:
         return self.__str__()
@@ -274,7 +278,7 @@ class Tokeniser:  # pylint: disable=too-few-public-methods
                "NEIGHBOURHOOD": TokenTypes.NEIGHBOURHOOD, "SUPERIORS": TokenTypes.SUPERIORS,
                "RELATED": TokenTypes.RELATED, "CATEGORY": TokenTypes.CATEGORY,
                "DEFINE": TokenTypes.DEFINE, "AS": TokenTypes.AS, "EXAMPLE": TokenTypes.EXAMPLE,
-               "EXTENDERS": TokenTypes.EXTENDERS,
+               "EXTENDERS": TokenTypes.EXTENDERS, "repeatable": TokenTypes.REPEATABLE,
                }
 
     def __init__(self, text: str) -> None:
@@ -585,21 +589,26 @@ class AndCondition(Conditions):
         return " and ".join(map(str, self.operands))
 
 
-class MinimumCondition(Conditions):
-    """ Represents the minimum() condition type"""
-    def __init__(self, negated: bool, count: int, options: List[str]) -> None:
+class _OptionCollectionValidationError(ValueError):
+    pass
+
+
+class _OptionCollectionCondition(Conditions):
+    """ A base class for conditions which have multiple options and only require a subset of them.
+    """
+    def __init__(self, negated: bool, count: int, options: list[str]) -> None:
         self.count = count
         self.options = set(options)
         if len(self.options) != len(options):
-            raise ValueError("Minimum conditions cannot have repeated options")
+            raise _OptionCollectionValidationError("conditions cannot have repeated options")
         if count < 1:
-            raise ValueError("Minimum conditions must have a required count > 0")
+            raise _OptionCollectionValidationError("conditions must have a required count > 0")
         super().__init__(negated)
 
-    def is_satisfied(self, details: Details, local_only: bool = False) -> ConditionMet:
-        """ local_only is ignored here, since a MinimumCondition can't be inside
-            a CDSCondition
-        """
+    # local_only is ignored here, since a condition of this type can't be inside a CDSCondition
+    def _is_satisfied(self, details: Details, local_only: bool = False,  # pylint: disable=unused-argument
+                      *, require_distinct: bool = False,
+                      ) -> ConditionMet:
         hits = self.options.intersection(set(details.possibilities))
         hit_count = len(hits)
         if hit_count >= self.count:
@@ -611,6 +620,9 @@ class MinimumCondition(Conditions):
         # that would extend the search distance
         other_cds_hits: Dict[str, Set[str]] = defaultdict(set)
 
+        # keep distinct profiles that are hit
+        unique_ids = set(details.possibilities)
+
         # check to see if the remaining hits are in nearby CDSs
         for other_id, other_feature in details.features_by_id.items():
             if other_id == details.cds:
@@ -619,11 +631,14 @@ class MinimumCondition(Conditions):
                 continue
             other_options = {r.query_id for r in details.results_by_id.get(other_id, [])}
             other_hits = self.options.intersection(other_options)
+            unique_ids.update(other_hits)
             if other_hits:
                 other_cds_hits[other_id] = other_hits
                 hit_count += len(other_hits)
-
-        if hit_count >= self.count:
+        if require_distinct:
+            if len(unique_ids.intersection(self.options)) >= self.count:
+                return ConditionMet(not self.negated, hits, other_cds_hits)
+        elif hit_count >= self.count:
             return ConditionMet(not self.negated, hits, other_cds_hits)
 
         return ConditionMet(self.negated, hits)
@@ -635,9 +650,37 @@ class MinimumCondition(Conditions):
     def profiles(self) -> Set[str]:
         return self.options
 
+
+class MinimumCondition(_OptionCollectionCondition):
+    """ Represents the minimum() condition type"""
+    def __init__(self, negated: bool, count: int, options: List[str]) -> None:
+        try:
+            super().__init__(negated, count, options)
+        except _OptionCollectionValidationError as err:
+            raise ValueError(f"Minimum {str(err)}")
+
+    def is_satisfied(self, details: Details, local_only: bool = False) -> ConditionMet:
+        return super()._is_satisfied(details, local_only=local_only, require_distinct=True)
+
     def __str__(self) -> str:
         prefix = "not " if self.negated else ""
         return f"{prefix}minimum({self.count}, [{', '.join(sorted(self.options))}])"
+
+
+class RepeatableMinimumCondition(_OptionCollectionCondition):
+    """ Represents the repeatable() condition type"""
+    def __init__(self, negated: bool, count: int, options: list[str]) -> None:
+        try:
+            super().__init__(negated, count, options)
+        except _OptionCollectionValidationError as err:
+            raise ValueError(f"Repeatable {str(err)}")
+
+    def is_satisfied(self, details: Details, local_only: bool = False) -> ConditionMet:
+        return super()._is_satisfied(details, local_only=local_only, require_distinct=False)
+
+    def __str__(self) -> str:
+        prefix = "not " if self.negated else ""
+        return f"{prefix}repeatable({self.count}, [{', '.join(sorted(self.options))}])"
 
 
 class CDSCondition(Conditions):
@@ -1259,6 +1302,8 @@ class Parser:  # pylint: disable=too-few-public-methods
             return Conditions(negated, self._parse_group(allow_cds))
         if allow_cds and self.current_token.type == TokenTypes.MINIMUM:
             return self._parse_minimum(negated=negated)
+        if allow_cds and self.current_token.type == TokenTypes.REPEATABLE:
+            return self._parse_repeatable(negated=negated)
         if allow_cds and self.current_token.type == TokenTypes.CDS:
             return CDSCondition(negated, self._parse_cds())
         if self.current_token.type == TokenTypes.SCORE:
@@ -1305,24 +1350,41 @@ class Parser:  # pylint: disable=too-few-public-methods
         self._consume(TokenTypes.GROUP_CLOSE)
         return conditions
 
-    def _parse_minimum(self, negated: bool = False) -> MinimumCondition:
+    def _parse_option_collection(self) -> tuple[int, list[str]]:
         """
-            MINIMUM = MINIMUM_LABEL GROUP_OPEN
-                  count:INT COMMA
-                  LIST COMMA
-                  GROUP_CLOSE;
+            OPTION_GROUP = GROUP_OPEN
+                             INT:count COMMA
+                             LIST
+                           GROUP_CLOSE;
         """
-        initial_token = self.current_token
-        assert initial_token and initial_token.type == TokenTypes.MINIMUM
-        self._consume(TokenTypes.MINIMUM)
         self._consume(TokenTypes.GROUP_OPEN)
         count = self._consume_int()
         self._consume(TokenTypes.COMMA)
         options = self._parse_list()
         self._consume(TokenTypes.GROUP_CLOSE)
         if count < 0:
-            raise self._build_syntax_error("minimum count must be greater than zero")
+            raise self._build_syntax_error("group count must be greater than zero")
+        return count, options
+
+    def _parse_minimum(self, negated: bool = False) -> MinimumCondition:
+        """
+            MINIMUM = MINIMUM_LABEL GROUP_CONDITION;
+        """
+        initial_token = self.current_token
+        assert initial_token and initial_token.type == TokenTypes.MINIMUM
+        self._consume(TokenTypes.MINIMUM)
+        count, options = self._parse_option_collection()
         return MinimumCondition(negated, count, options)
+
+    def _parse_repeatable(self, negated: bool = False) -> RepeatableMinimumCondition:
+        """
+            REPEATABLE = REPEATABLE_LABEL GROUP_CONDITION;
+        """
+        initial_token = self.current_token
+        assert initial_token and initial_token.type == TokenTypes.REPEATABLE
+        self._consume(TokenTypes.REPEATABLE)
+        count, options = self._parse_option_collection()
+        return RepeatableMinimumCondition(negated, count, options)
 
     def _parse_list(self) -> List[str]:
         """
