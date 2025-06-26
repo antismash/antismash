@@ -656,7 +656,7 @@ RULE oligosaccharide
     DESCRIPTION Oligosaccharide
     CUTOFF 20
     NEIGHBOURHOOD 10
-    CONDITIONS minimum(3,[Glycos_transf_1,Glycos_transf_2,Glyco_transf_28,MGT,DUF1205])
+    CONDITIONS repeatable(3,[Glycos_transf_1,Glycos_transf_2,Glyco_transf_28,MGT,DUF1205])
                and minscore(MGT, 150)
 
 RULE furan

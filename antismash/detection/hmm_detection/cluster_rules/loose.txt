@@ -8,7 +8,7 @@ RULE saccharide
     DESCRIPTION Saccharide cluster definition from clusterfinder
     CUTOFF 20
     NEIGHBOURHOOD 10
-    CONDITIONS minimum(2,[Alpha-amylase, Alpha-amylase_C, Bac_transf,
+    CONDITIONS repeatable(2,[Alpha-amylase, Alpha-amylase_C, Bac_transf,
                           Capsule_synth, CBM_48, DegT_DnrJ_EryC1, dTDP_sugar_isom,
                           Epimerase_2, Glycos_transf_1, Glycos_transf_2,
                           Glycos_transf_4, Glyco_tran_28_C, Glyco_transf_28,
