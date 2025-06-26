@@ -145,6 +145,10 @@ class DetectionTest(unittest.TestCase):
         results = self.run_test("A", 100, 20, "minimum(2, [b, e])")
         self.expect(results, ["GENE_1", "GENE_3", "GENE_4"])
 
+        # but two hits of the same profile shouldn't count as satisfied
+        results = self.run_test("A", 10, 20, "minimum(2, [a, g])")
+        self.expect(results, [])
+
     def test_minimum_in_and(self):
         # ensures cluster rules using a MinimumCondition inside an AndCondition
         # report the minimum hits properly if another condition is the one
@@ -169,6 +173,17 @@ class DetectionTest(unittest.TestCase):
         # (or no hit, if minimums have to internally obey cutoff checks)
         results = self.run_test("A", 40, 10, "e and minimum(2, [g, c])")
         self.expect(results, ["GENE_3", "GENE_4", "GENE_5"])
+
+    def test_simple_repeatable(self):
+        results = self.run_test("A", 10, 20, "repeatable(2, [a, b])")
+        self.expect(results, ["GENE_1", "GENE_2"])
+
+        results = self.run_test("A", 100, 20, "repeatable(2, [b, e])")
+        self.expect(results, ["GENE_1", "GENE_3", "GENE_4"])
+
+        # two should hit "a", while "g" should be too far away
+        results = self.run_test("A", 10, 20, "repeatable(2, [a, g])")
+        self.expect(results, ["GENE_1", "GENE_2"])
 
     def test_single_gene(self):
         self.results_by_id = {
