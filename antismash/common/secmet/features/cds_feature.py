@@ -261,6 +261,12 @@ class CDSFeature(Feature):
                 return val
         raise ValueError(f"{self} altered to contain no identifiers")
 
+    def get_sub_location_from_protein_coordinates(self, start: int, end: int,
+                                                  *, protein_length: int = 0,
+                                                  ) -> Location:
+        protein_length = protein_length or len(self.translation)
+        return self.location.convert_protein_position_to_dna(start, end, protein_length=protein_length)
+
     @classmethod
     def from_biopython(cls: Type[T], bio_feature: SeqFeature, feature: T = None,
                        leftovers: Optional[Dict] = None, record: Any = None) -> T:

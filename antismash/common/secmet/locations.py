@@ -9,7 +9,6 @@ from typing import (
     Iterable,
     List,
     Optional,
-    Tuple,
     Type,
     TypeVar,
     Union,
@@ -121,18 +120,22 @@ class _LocationMixin(_Location):
         """ Returns True if this location contains the given location """
         return location_contains_other(self, other)
 
-    def convert_protein_position_to_dna(self: T, start: int, end: int) -> tuple[int, int]:
+    def convert_protein_position_to_dna(self: T, start: int, end: int,
+                                        *, protein_length: int = 0,
+                                        ) -> Location:
         """ Convert a protein position to a nucleotide sequence position for use in generating
             new FeatureLocations from existing FeatureLocations and/or CompoundLocations.
 
             Arguments:
-                position: the position in question, must be contained by the location
-                location: the location of the related feature, for handling introns/split locations
+                start: the protein start coordinate
+                end: the protein end coordinate
+                protein_length: the length of the protein in question,
+                                required for locations with ambiguous start coordinates
 
             Returns:
                 an int representing the calculated DNA location
         """
-        return convert_protein_position_to_dna(start, end, self)
+        return convert_protein_position_to_dna(start, end, self, protein_length=protein_length)
 
     def get_distance_to(self: T, other: T, wrap_point: int = None) -> int:
         """ Finds the shortest distance between the two given features, crossing
@@ -392,63 +395,136 @@ def connect_locations(locations: list[Location], wrap_point: int = None) -> Loca
     return result
 
 
-def convert_protein_position_to_dna(start: int, end: int, location: Location) -> Tuple[int, int]:
+def _convert_protein_from_front(old_parts: list[FeatureLocation], start: int, length: int,
+                                ) -> list[FeatureLocation]:
+    assert start >= 0, start
+    old_parts = list(old_parts)
+    new_parts = []
+    # get start and following
+    for i, part in enumerate(old_parts):
+        if start < len(part):
+            part = FeatureLocation(part.start + start, part.end, part.strand)
+            if len(part) != 0:
+                new_parts.append(part)
+            new_parts.extend(old_parts[i + 1:])
+            break
+        start -= len(part)
+
+    # trim to end
+    old_parts = new_parts
+    new_parts = []
+    for part in old_parts:
+        if length < len(part):
+            part = FeatureLocation(part.start, part.start + length, part.strand)
+            if len(part) != 0:
+                new_parts.append(part)
+            break
+        new_parts.append(part)
+        length -= len(part)
+    assert new_parts
+    return new_parts
+
+
+def _convert_protein_from_back(old_parts: list[FeatureLocation], start: int, length: int,
+                               ) -> list[FeatureLocation]:
+    assert start >= 0, start
+    old_parts = list(old_parts)
+    new_parts = []
+    # get start and following
+    for i, part in enumerate(old_parts):
+        if start < len(part):
+            part = FeatureLocation(part.start, part.end - start, part.strand)
+            if len(part) != 0:
+                new_parts.append(part)
+            new_parts.extend(old_parts[i + 1:])
+            break
+        start -= len(part)
+
+    # trim to end
+    old_parts = new_parts
+    new_parts = []
+    for part in old_parts:
+        if length < len(part):
+            part = FeatureLocation(part.end - length, part.end, part.strand)
+            if len(part) != 0:
+                new_parts.append(part)
+            break
+        new_parts.append(part)
+        length -= len(part)
+    assert new_parts
+    return new_parts
+
+
+def convert_protein_position_to_dna(start: int, end: int, location: Location,
+                                    *, protein_length: int = 0) -> Location:
     """ Convert protein coordinates to a nucleotide sequence position for use in generating
         new FeatureLocations from existing FeatureLocations and/or CompoundLocations.
 
         Arguments:
             start: the start coordinate
-            end: the start coordinate
+            end: the end coordinate
             location: the location of the related feature, for handling introns/split locations
-
+            protein_length: the length of the protein in question,
+                            required for locations with ambiguous start coordinates
         Returns:
-            an int representing the calculated DNA location
+            a new Location
     """
-    if not 0 <= start < end <= len(location) // 3:
-        raise ValueError(f"Protein positions {start} and {end} must be contained by {location}")
+    if protein_length and protein_length < end:
+        raise ValueError(f"Protein coordinates {start=}, {end=}, outside given protein length ({protein_length})")
     if location.strand == -1:
-        dna_start = location.start + len(location) - end * 3
-        dna_end = location.start + len(location) - start * 3
+        ambiguous_start = isinstance(location.parts[0].end, AfterPosition)
+        ambiguous_end = isinstance(location.parts[-1].start, BeforePosition)
     else:
-        dna_start = location.start + start * 3
-        dna_end = location.start + end * 3
+        ambiguous_start = isinstance(location.parts[0].start, BeforePosition)
+        ambiguous_end = isinstance(location.parts[-1].end, AfterPosition)
 
-    # only CompoundLocations are complicated
-    if not isinstance(location, CompoundLocation):
-        if not location.start <= dna_start < dna_end <= location.end:
-            raise ValueError(
-                f"Converted coordinates {dna_start}..{dna_end} "
-                f"out of bounds for location {location}"
-            )
-        return int(dna_start), int(dna_end)
-
-    parts = sorted(location.parts, key=lambda x: x.start)
-    gap = 0
-    last_end = parts[0].start
-    start_found = False
-    end_found = False
-    for part in parts:
-        if start_found and end_found:
-            break
-        gap += part.start - last_end
-        if not start_found and dna_start + gap in part:
-            start_found = True
-            dna_start = dna_start + gap
-        if not end_found and dna_end + gap - 1 in part:
-            end_found = True
-            dna_end = dna_end + gap
-
-        last_end = part.end
-
-    assert start_found
-    assert end_found
-
-    if not location.start <= dna_start < dna_end <= location.end:
+    if ambiguous_start and not protein_length:
         raise ValueError(
-            f"Converted coordinates {dna_start}..{dna_end} "
-            f"out of bounds for location {location}"
+            "Cannot convert protein positions without protein length"
+            " when sequence start coordinate is ambiguous"
         )
-    return int(dna_start), int(dna_end)
+
+    if ambiguous_start and ambiguous_end:
+        # this is recoverable if, and only if, the translation was truncated to match
+        if protein_length != len(location) // 3:
+            raise ValueError(
+                "Cannot convert protein positions to DNA when location is completely"
+                f" ambiguous {start=} {end=} within {location=}"
+            )
+        # if so, then pretend the location is exact and not ambiguous
+        ambiguous_start = False
+        ambiguous_end = False
+        parts = [FeatureLocation(int(part.start), int(part.end), part.strand) for part in location.parts]
+        if len(parts) > 1:
+            location = CompoundLocation(parts)
+        else:
+            location = parts[0]
+
+    if not (ambiguous_start or ambiguous_end or 0 <= start < end <= len(location) // 3):
+        raise ValueError(f"Protein positions {start} and {end} must be contained by {location}")
+
+    start *= 3
+    end *= 3
+    length = end - start
+    protein_length_as_nt = protein_length * 3
+
+    if location.strand == -1:
+        if ambiguous_start:
+            effective_start = protein_length_as_nt - end
+            new_parts = _convert_protein_from_front(location.parts[::-1], effective_start, length)[::-1]
+        else:
+            new_parts = _convert_protein_from_back(location.parts, start, length)
+    else:
+        if ambiguous_start:
+            effective_start = protein_length_as_nt - end
+            new_parts = _convert_protein_from_back(location.parts[::-1], effective_start, length)[::-1]
+        else:  # ambiguous ends and exact ends don't vary
+            new_parts = _convert_protein_from_front(location.parts, start, length)
+
+    assert new_parts
+    if len(new_parts) == 1:
+        return new_parts[0]
+    return CompoundLocation(new_parts)
 
 
 def build_location_from_others(locations: list[Location]) -> Location:
@@ -845,10 +921,6 @@ def _adjust_location_by_offset(location: Location, offset: int) -> Location:
 
     if isinstance(location, CompoundLocation):
         part = location.parts[0]
-        if location.strand == -1:
-            assert part.end == location.end
-        else:
-            assert part.start == location.start
         location = CompoundLocation([adjust_single_location(part)] + location.parts[1:])
     else:
         location = adjust_single_location(location)

@@ -218,7 +218,8 @@ class TestCDSProteinLocation(unittest.TestCase):
                               FeatureLocation(12, 15, strand=1),
                               FeatureLocation(21, 27, strand=1)]
         self.location = CompoundLocation(self.sub_locations)
-        self.cds = CDSFeature(self.location, locus_tag="compound", translation="A")
+        translation = "A" * (len(self.location) // 3)
+        self.cds = CDSFeature(self.location, locus_tag="compound", translation=translation)
 
     def reverse_strand(self):
         self.magic = self.magic.reverse_complement()
@@ -228,14 +229,14 @@ class TestCDSProteinLocation(unittest.TestCase):
         self.cds = CDSFeature(self.location, locus_tag="compound", translation="A")
 
     def test_simple_location_forward_complete(self):
-        cds = CDSFeature(FeatureLocation(0, 15, 1), locus_tag="simple", translation="A")
+        cds = CDSFeature(FeatureLocation(0, 15, 1), locus_tag="simple", translation="A" * 5)
         new = cds.get_sub_location_from_protein_coordinates(0, 5)
         extracted = new.extract(self.magic)
         assert extracted == self.magic
         assert extracted.translate() == self.translation
 
     def test_simple_location_forward_partial(self):
-        cds = CDSFeature(FeatureLocation(0, 15, 1), locus_tag="simple", translation="A")
+        cds = CDSFeature(FeatureLocation(0, 15, 1), locus_tag="simple", translation="A" * 5)
         for start, end in [(1, 5), (0, 3), (2, 3), (1, 4)]:
             print("testing", start, end)
             new = cds.get_sub_location_from_protein_coordinates(start, end)
@@ -274,8 +275,6 @@ class TestCDSProteinLocation(unittest.TestCase):
     def test_compound_forward_over_multiple(self):
         new = self.cds.get_sub_location_from_protein_coordinates(2, 4)
         assert isinstance(new, CompoundLocation)
-        print(list(map(str, self.cds.location.parts)))
-        print(list(map(str, new.parts)))
         assert len(new.parts) == 2
         assert len(new) == 6
         assert new.parts[0].start == 12
@@ -286,7 +285,7 @@ class TestCDSProteinLocation(unittest.TestCase):
 
     def test_compound_location_reverse_full(self):
         self.reverse_strand()
-        cds = CDSFeature(self.location, locus_tag="compound", translation="A")
+        cds = CDSFeature(self.location, locus_tag="compound", translation="A" * (len(self.location) // 3))
         new = cds.get_sub_location_from_protein_coordinates(0, 5)
         assert isinstance(new, CompoundLocation)
         assert len(new.parts) == 3
@@ -297,7 +296,7 @@ class TestCDSProteinLocation(unittest.TestCase):
 
     def test_compound_location_reverse_single(self):
         self.reverse_strand()
-        cds = CDSFeature(self.location, locus_tag="compound", translation="A")
+        cds = CDSFeature(self.location, locus_tag="compound", translation=self.translation)
 
         new = cds.get_sub_location_from_protein_coordinates(0, 2)
         assert isinstance(new, FeatureLocation)
@@ -315,12 +314,10 @@ class TestCDSProteinLocation(unittest.TestCase):
 
     def test_compound_location_reverse_multiple(self):
         self.reverse_strand()
-        cds = CDSFeature(self.location, locus_tag="compound", translation="A")
+        cds = CDSFeature(self.location, locus_tag="compound", translation=self.translation)
 
         new = cds.get_sub_location_from_protein_coordinates(2, 4)
         assert isinstance(new, CompoundLocation)
-        print(list(map(str, cds.location.parts)))
-        print(list(map(str, new.parts)))
         assert len(new.parts) == 2
         assert len(new) == 6
         assert new.parts[0].start == 12
@@ -353,7 +350,6 @@ class TestCDSProteinLocation(unittest.TestCase):
                  FeatureLocation(123809, 124032, 1), FeatureLocation(124091, 124193, 1),
                  FeatureLocation(124236, 124401, 1), FeatureLocation(124684, 124724, 1)]
         location = CompoundLocation(parts, operator="join")
-        cds = CDSFeature(location, locus_tag="complicated", translation="A")
         seq = ("ATGAGCCCTCGTCTAGACTACAATGAAGGATACGATTCCGAAGACGAGGAGATCCCCCGTTACGTACACCAT"
                "TCTAGAGGAAAGAGTCATAGATCCGTGAGGACGTCAGGTCGCTCACGCACGTTGGATTACGACGGGGATGAT"
                "GAAGCTAGTGACCACGCTGCCCCCTCCGGGATTGATCGGGACGCTCGAGCCTGTCCAACATCTCGCAGATAT"
@@ -417,6 +413,7 @@ class TestCDSProteinLocation(unittest.TestCase):
                        "HPADIIDAGGELSPSTEAGGRAATAMIMIYSVFWSFGLNGIPWIVSAEIFPGALRNLTGTWAAL"
                        "VQWLIQFVITKALPYIFNSLGYGTWFFFASWMLLAIIWSFFFLPETKGKTLDEMHTIFLSKDGT"
                        "HTITLR")
+        cds = CDSFeature(location, locus_tag="complicated", translation=translation)
         new = cds.get_sub_location_from_protein_coordinates(353, 412)
         # pad the beginning to match the location
         assert new.extract(Seq("x" * location.start + seq)).translate() == translation[353:412]
@@ -424,16 +421,17 @@ class TestCDSProteinLocation(unittest.TestCase):
     def test_extends_past_after(self):
         self.sub_locations[-1] = FeatureLocation(21, AfterPosition(29), strand=1)
         self.cds.location = CompoundLocation(self.sub_locations)
-
+        self.cds.translation = "A" * 10
         new = self.cds.get_sub_location_from_protein_coordinates(0, 7)
-        assert new.end == 27
+        assert new.end == self.cds.location.parts[-1].end
 
     def test_extends_past_before(self):
         self.reverse_strand()
         self.sub_locations[0] = FeatureLocation(BeforePosition(2), self.sub_locations[0].end, strand=-1)
         self.cds.location = CompoundLocation(self.sub_locations[::-1])
+        self.cds.translation = "A" * 10
         new = self.cds.get_sub_location_from_protein_coordinates(0, 7)
-        assert new.start == 3
+        assert new.start == BeforePosition(2)
 
 
 class TestTranslationLength(unittest.TestCase):

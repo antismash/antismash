@@ -175,115 +175,159 @@ class TestConnectLocations(unittest.TestCase):
 
 
 class TestProteinPositionConversion(unittest.TestCase):
-    def func(self, start, end, location):
-        static = convert_protein_position_to_dna(start, end, location)
-        dynamic = location.convert_protein_position_to_dna(start, end)
+    def func(self, start, end, location, **kwargs):
+        static = convert_protein_position_to_dna(start, end, location, **kwargs)
+        dynamic = location.convert_protein_position_to_dna(start, end, **kwargs)
         assert static == dynamic
         return static
+
+    def test_ambiguous_end_forward(self):
+        original = CompoundLocation([
+            FeatureLocation(20, 35, 1),
+            FeatureLocation(40, AfterPosition(50), 1),
+        ])
+        expected = CompoundLocation([
+            FeatureLocation(26, 35, 1),
+            FeatureLocation(40, AfterPosition(50), 1),
+        ])
+        length = 30
+        new = self.func(2, 2 + length, original)
+        assert new == expected
+        assert len(new) < length * 3
+
+    def test_ambiguous_end_reverse(self):
+        original = CompoundLocation([
+            FeatureLocation(40, 50, -1),
+            FeatureLocation(BeforePosition(20), 35, -1),
+        ])
+        expected = CompoundLocation([
+            FeatureLocation(40, 44, -1),
+            FeatureLocation(BeforePosition(20), 35, -1),
+        ])
+        length = 30
+        new = self.func(2, 2 + length, original)
+        assert new == expected
+        assert len(new) < length * 3
+
+    def test_ambiguous_start_forward(self):
+        full_protein_length = 60
+        original = CompoundLocation([
+            FeatureLocation(BeforePosition(20), 35, 1),
+            FeatureLocation(40, 50, 1),
+        ])
+        assert len(original) < full_protein_length * 3
+
+        end = full_protein_length - 1
+        # fully contained
+        length = 6
+        expected = CompoundLocation([
+            FeatureLocation(24, 35, 1),
+            FeatureLocation(40, 47, 1),
+        ])
+        with self.assertRaisesRegex(ValueError, "without protein length"):
+            self.func(end - length, end, original)
+        new = self.func(end - length, end, original, protein_length=full_protein_length)
+        assert new == expected
+        assert len(new) == length * 3
+
+        # extending into unknown
+        length = 12
+        expected = CompoundLocation([
+            original.parts[0],
+            FeatureLocation(40, 47, 1),
+        ])
+        new = self.func(end - length, end, original, protein_length=full_protein_length)
+        assert new == expected
+        assert len(new) < length * 3
+
+    def test_ambiguous_start_reverse(self):
+        full_protein_length = 60
+        original = CompoundLocation([
+            FeatureLocation(40, AfterPosition(50), -1),
+            FeatureLocation(20, 35, -1),
+        ])
+        assert len(original) < full_protein_length * 3
+
+        end = full_protein_length - 1
+        # fully contained
+        length = 6
+        expected = CompoundLocation([
+            FeatureLocation(40, 46, -1),
+            FeatureLocation(23, 35, -1),
+        ])
+        with self.assertRaisesRegex(ValueError, "without protein length"):
+            self.func(end - length, end, original)
+        new = self.func(end - length, end, original, protein_length=full_protein_length)
+        assert new == expected
+        assert len(new) == length * 3
+
+        # extending into unknown
+        length = 12
+        expected = CompoundLocation([
+            original.parts[0],
+            FeatureLocation(23, 35, -1),
+        ])
+        new = self.func(end - length, end, original, protein_length=full_protein_length)
+        assert new == expected
+        assert len(new) < length * 3
+
+    def test_border(self):
+        location = CompoundLocation([
+            FeatureLocation(21, 27, -1),
+            FeatureLocation(12, 15, -1),
+            FeatureLocation(0, 6, -1),
+        ])
+        assert self.func(2, 3, location) == FeatureLocation(12, 15, -1)
+
+    def test_both_ambiguous(self):
+        original = FeatureLocation(BeforePosition(50), AfterPosition(110), 1)
+        overly_long = 2 * len(original) // 3
+        incomplete = len(original) // 6
+        for length in [overly_long, incomplete]:
+            with self.assertRaisesRegex(ValueError, "completely ambiguous"):
+                new = self.func(1, 3, original, protein_length=length)
+        recoverable = len(original) // 3
+        new = self.func(1, 3, original, protein_length=recoverable)
+        assert new == FeatureLocation(53, 59, 1)
+
+    def test_compound_forward(self):
+        original = CompoundLocation([
+            FeatureLocation(94, 97, 1),
+            FeatureLocation(100, 120, 1),
+            FeatureLocation(117, 127, 1),  # overlaps with previous exon
+            FeatureLocation(130, 133, 1),
+        ])
+        expected = CompoundLocation([
+            FeatureLocation(106, 120, 1),
+            FeatureLocation(117, 124, 1),
+        ])
+        length = 7
+        new = self.func(3, 3 + length, original)
+        assert new == expected
+        assert len(new) == length * 3
 
     def test_position_conversion_simple_forward(self):
         location = FeatureLocation(0, 15, strand=1)
         assert len(location) == 15
-        assert self.func(0, 2, location) == (0, 6)
-        assert self.func(1, 4, location) == (3, 12)
+        assert self.func(0, 2, location) == FeatureLocation(0, 6, 1)
+        assert self.func(1, 4, location) == FeatureLocation(3, 12, 1)
 
     def test_position_conversion_simple_reverse(self):
         location = FeatureLocation(0, 15, strand=-1)
         assert len(location) == 15
-        assert self.func(0, 2, location) == (9, 15)
-        assert self.func(1, 4, location) == (3, 12)
+        assert self.func(0, 2, location) == FeatureLocation(9, 15, -1)
+        assert self.func(1, 4, location) == FeatureLocation(3, 12, -1)
 
     def test_position_conversion_nonzero_start(self):
         location = FeatureLocation(6, 21, strand=1)
         assert len(location) == 15
-        assert self.func(0, 2, location) == (6, 12)
-        assert self.func(1, 4, location) == (9, 18)
+        assert self.func(0, 2, location) == FeatureLocation(6, 12, 1)
+        assert self.func(1, 4, location) == FeatureLocation(9, 18, 1)
 
         location = FeatureLocation(6, 21, strand=-1)
         assert len(location) == 15
-        assert self.func(0, 2, location) == (15, 21)
-        assert self.func(1, 4, location) == (9, 18)
-
-    def test_position_conversion_nonzero_compound(self):
-        location = CompoundLocation([FeatureLocation(6, 18, strand=1),
-                                     FeatureLocation(24, 27, strand=1)])
-        assert len(location) == 15
-        assert self.func(0, 2, location) == (6, 12)
-        assert self.func(1, 4, location) == (9, 18)
-        assert self.func(3, 5, location) == (15, 27)
-
-        location = CompoundLocation([FeatureLocation(6, 15, strand=-1),
-                                     FeatureLocation(21, 27, strand=-1)])
-        assert len(location) == 15
-        assert self.func(0, 2, location) == (21, 27)
-        assert self.func(1, 4, location) == (9, 24)
-        assert self.func(3, 5, location) == (6, 12)
-
-    def test_position_conversion_compound_forward(self):
-        location = CompoundLocation([FeatureLocation(0, 6, strand=1),
-                                     FeatureLocation(9, 18, strand=1)])
-        assert len(location) == 15
-        assert self.func(0, 4, location) == (0, 15)
-        assert self.func(1, 5, location) == (3, 18)
-
-        location = CompoundLocation([FeatureLocation(0, 6, strand=1),
-                                     FeatureLocation(12, 15, strand=1),
-                                     FeatureLocation(21, 27, strand=1)])
-        assert len(location) == 15
-        assert self.func(0, 4, location) == (0, 24)
-        assert self.func(1, 5, location) == (3, 27)
-        assert self.func(2, 3, location) == (12, 15)
-
-    def test_position_conversion_compound_reverse(self):
-        location = CompoundLocation([FeatureLocation(0, 6, strand=-1),
-                                     FeatureLocation(9, 18, strand=-1)])
-        assert len(location) == 15
-        assert self.func(0, 4, location) == (3, 18)
-        assert self.func(1, 5, location) == (0, 15)
-
-        location = CompoundLocation([FeatureLocation(0, 6, strand=-1),
-                                     FeatureLocation(12, 15, strand=-1),
-                                     FeatureLocation(21, 27, strand=-1)])
-        assert len(location) == 15
-        assert self.func(0, 4, location) == (3, 27)
-        assert self.func(1, 5, location) == (0, 24)
-        assert self.func(2, 3, location) == (12, 15)
-
-    def test_other(self):
-        location = CompoundLocation([FeatureLocation(5922, 6190, strand=1),
-                                     FeatureLocation(5741, 5877, strand=1),
-                                     FeatureLocation(4952, 5682, strand=1)])
-        assert self.func(97, 336, location) == (5243, 6064)
-
-        location = CompoundLocation([FeatureLocation(5922, 6190, strand=-1),
-                                     FeatureLocation(5741, 5877, strand=-1),
-                                     FeatureLocation(4952, 5682, strand=-1)])
-        assert self.func(97, 336, location) == (5078, 5854)
-
-    def test_ambiguous_starts(self):
-        # DNA coordinates of a domain should never be ambiguous
-        # when the initial feature's DNA coordinate is ambiguous
-        location = FeatureLocation(BeforePosition(10), 40, 1)
-        # sanity check that ambiguous positions convert as such
-        assert str(location.start) == "<10"
-        start, end = convert_protein_position_to_dna(2, 4, location)
-        assert start == 16
-        assert end == 22
-        # ensure no ambiguity remains
-        assert not isinstance(start, BeforePosition)
-        assert not isinstance(end, BeforePosition)
-
-        # and for good measure, compound locations
-        location = CompoundLocation([
-            FeatureLocation(BeforePosition(10), 40, 1),
-            FeatureLocation(60, 80, 1),
-        ])
-        assert str(location.start) == "<10"
-        start, end = convert_protein_position_to_dna(2, 14, location)
-        assert start == 16
-        assert end == 72
-        assert not isinstance(start, BeforePosition)
-        assert not isinstance(end, BeforePosition)
+        assert self.func(0, 2, location) == FeatureLocation(15, 21, -1)
+        assert self.func(1, 4, location) == FeatureLocation(9, 18, -1)
 
 
 class TestCompoundCombination(unittest.TestCase):
@@ -732,6 +776,15 @@ class TestLocationAdjustment(unittest.TestCase):
                 assert new.parts[0].start is old.parts[0].start
                 for old_part, new_part in zip(old.parts[1:], new.parts[1:]):
                     assert old_part is new_part
+
+    def test_cross_origin(self):
+        old = CompoundLocation([
+            FeatureLocation(80, 100, 1),
+            FeatureLocation(0, 20, 1),
+        ])
+        offset = 2
+        new = adjust(old, offset)
+        assert new.parts[0].start == old.parts[0].start + offset
 
 
 def offset_location(location, offset, **kwargs):

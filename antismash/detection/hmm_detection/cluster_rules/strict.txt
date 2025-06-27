@@ -186,7 +186,7 @@ RULE NAPAA
     CATEGORY NRPS
     DESCRIPTION non-alpha poly-amino acids
     # see (https://doi.org/10.1101/2020.07.24.220772)
-    EXAMPLE NCBI NC_015859.1 135101-140457 e-Polylysin
+    EXAMPLE NCBI CP002917.1 135090-140460 e-Polylysin
     RELATED PP-binding
     CUTOFF 5
     NEIGHBOURHOOD 15
@@ -827,7 +827,7 @@ RULE aminopolycarboxylic-acid
     CATEGORY other
     DESCRIPTION Aminopolycarboxylic acid metallophores
     # see DOI: 10.1039/C8MT00009C
-    EXAMPLE NCBI OLMK01000008.1 45415-56279 ethylenediaminesuccinic acid hydroxyarginine  # BGC0002567
+    EXAMPLE NCBI OLMK01000008.1 44300-56279 ethylenediaminesuccinic acid hydroxyarginine  # BGC0002567
     CUTOFF 10
     NEIGHBOURHOOD 5
     CONDITIONS AesA and AesB and AesC
@@ -877,7 +877,7 @@ RULE deazapurine
     DESCRIPTION deazapurine containing secondary metabolites
     # see DOIs: 10.1016/j.bioorg.2012.01.001 and 10.3390/biom10071074 and
     # 10.1016/j.chembiol.2008.07.012 and 10.1128/mmbr.00199-23
-    EXAMPLE NCBI KY022432.1 1-10381 toyocamycin # BGC0001808
+    EXAMPLE NCBI KY022432.1 1-10450 toyocamycin # BGC0001808
     EXAMPLE NCBI CP007155.1 4592550-4600486 huimycin # BGC0002354
     CUTOFF 20
     NEIGHBOURHOOD 10

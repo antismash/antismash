@@ -189,7 +189,7 @@ def split_cross_origin_locations(features: list[SeqFeature], length: int) -> Non
             if part.end < length:
                 # don't change the location, but convert to secmet for better usability
                 parts.append(FeatureLocation(part.start, part.end, part.strand))
-            elif part.start > length:
+            elif part.start >= length:
                 # the part will shift, but not be split
                 new = FeatureLocation(part.start % length, part.end % length, part.strand)
                 if part.strand == -1:

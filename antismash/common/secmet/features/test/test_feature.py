@@ -5,7 +5,6 @@
 # pylint: disable=use-implicit-booleaness-not-comparison,protected-access,missing-docstring
 
 import unittest
-from unittest.mock import patch
 
 from antismash.common.test import helpers
 
@@ -16,7 +15,6 @@ from antismash.common.secmet.features.feature import (
     pop_locus_qualifier as pop_locus,
     SeqFeature,
 )
-from antismash.common.secmet import features
 from antismash.common.secmet.locations import (
     BeforePosition,
     AfterPosition,
@@ -210,31 +208,6 @@ class TestSubLocation(unittest.TestCase):
     def setUp(self):
         self.feature = Feature(FeatureLocation(10, 40, 1), feature_type="test")
         self.get_sub = self.feature.get_sub_location_from_protein_coordinates
-
-    def test_invalid(self):
-        for bad_start, bad_end in [(-1, 1), (1, -1), (1, 11)]:
-            with self.assertRaisesRegex(ValueError, "must be contained by the feature"):
-                self.get_sub(bad_start, bad_end)
-        for bad_start, bad_end in [("test", 5), (5, "test"), (None, 5)]:
-            with self.assertRaisesRegex(TypeError, "(unorderable types|not supported)"):
-                self.get_sub(bad_start, bad_end)
-        with self.assertRaisesRegex(ValueError, "must be less than the end"):
-            self.get_sub(5, 1)
-
-    @patch.object(features.feature, "convert_protein_position_to_dna", return_value=(9, 15))
-    def test_start_outside(self, _mocked):
-        with self.assertRaisesRegex(ValueError, "Protein coordinate start .* is outside feature"):
-            self.get_sub(1, 5)
-
-    @patch.object(features.feature, "convert_protein_position_to_dna", return_value=(15, 41))
-    def test_end_outside(self, _mocked):
-        with self.assertRaisesRegex(ValueError, "Protein coordinate end .* is outside feature"):
-            self.get_sub(1, 5)
-
-    @patch.object(features.feature, "convert_protein_position_to_dna", return_value=(10, 3))
-    def test_inverted(self, _mocked):
-        with self.assertRaisesRegex(ValueError, "Invalid protein coordinate conversion"):
-            self.get_sub(1, 5)
 
     def test_simple_forward(self):
         assert self.get_sub(0, 1) == FeatureLocation(10, 13, 1)
