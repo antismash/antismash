@@ -44,10 +44,12 @@ from antismash.custom_typing import AntismashModule
 __version__ = "8.dev"
 
 
-def _gather_analysis_modules() -> List[AntismashModule]:
+def _gather_modules_in_section(section_name: str) -> list[AntismashModule]:
     modules = []
-    for module_data in pkgutil.walk_packages([get_full_path(__file__, "modules")]):
-        module = importlib.import_module(f"antismash.modules.{module_data.name}")
+    for module_data in pkgutil.walk_packages([get_full_path(__file__, section_name)]):
+        if not module_data.ispkg:  # avoids stdlib inclusions when names match
+            continue
+        module = importlib.import_module(f"antismash.{section_name}.{module_data.name}")
         modules.append(cast(AntismashModule, module))
     return modules
 
@@ -73,7 +75,7 @@ def _gather_detection_modules() -> Dict[DetectionStage, List[AntismashModule]]:
     return modules
 
 
-_ANALYSIS_MODULES = _gather_analysis_modules()
+_ANALYSIS_MODULES = _gather_modules_in_section("modules")
 _DETECTION_MODULES = _gather_detection_modules()
 
 
