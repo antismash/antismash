@@ -14,11 +14,12 @@ Detection modules are run in three stages:
 already formed.
 """
 
-import enum
+from enum import StrEnum, auto
 
-DetectionStage = enum.Enum("DetectionStage", [
-    "FULL_GENOME",
-    "AREA_FORMATION",
-    "AREA_REFINEMENT",
-    "PER_AREA",
-])
+
+class DetectionStage(StrEnum):
+    """ The valid stages of the detection process """
+    FULL_GENOME = auto()
+    AREA_FORMATION = auto()
+    AREA_REFINEMENT = auto()
+    PER_AREA = auto()
