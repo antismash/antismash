@@ -37,7 +37,6 @@ from antismash.common.path import get_full_path
 from antismash.common.secmet import Record
 from antismash.common import subprocessing
 from antismash.detection import DetectionStage
-from antismash.outputs import html
 from antismash.support import genefinding
 from antismash.custom_typing import AntismashModule
 
@@ -77,6 +76,7 @@ def _gather_detection_modules() -> Dict[DetectionStage, List[AntismashModule]]:
 
 _ANALYSIS_MODULES = _gather_modules_in_section("modules")
 _DETECTION_MODULES = _gather_detection_modules()
+_OUTPUT_MODULES = _gather_modules_in_section("outputs")
 
 
 def replace_analysis_modules(modules: Iterable[AntismashModule]) -> None:
@@ -112,17 +112,19 @@ def replace_detection_modules(modules: list[AntismashModule]) -> None:
                 values.append(module)
 
 
-def replace_html_module(module: AntismashModule) -> None:
-    """ Replaces default antiSMASH HTML output module with the provided module.
+def replace_output_modules(modules: list[AntismashModule]) -> None:
+    """ Replaces default antiSMASH output modules with the provided modules.
+        The replacement modules may include existing antiSMASH modules as
+        well as custom modules.
 
         Arguments:
-            module: the replacement module
+            module: the replacement modules
 
         Returns:
             None
     """
-    global html
-    html = module
+    _OUTPUT_MODULES.clear()
+    _OUTPUT_MODULES.extend(modules)
 
 
 def get_all_modules() -> List[AntismashModule]:
@@ -177,7 +179,7 @@ def get_output_modules() -> List[AntismashModule]:
         Returns:
             a list of modules
     """
-    return [html]  # type: ignore  # a lot of casting avoided
+    return list(_OUTPUT_MODULES)
 
 
 def get_support_modules() -> List[AntismashModule]:
@@ -484,7 +486,7 @@ def write_outputs(results: serialiser.AntismashResults, options: ConfigType) -> 
         Returns:
             None
     """
-    logging.debug("Writing non-HTML output files")
+    logging.debug("Writing analysis module results files")
     # don't use results for which the module no longer exists to regenerate/calculate
     module_results_per_record = []
     assert len(results.records) == len(results.results)
@@ -498,14 +500,16 @@ def write_outputs(results: serialiser.AntismashResults, options: ConfigType) -> 
                 result.write_outputs(record, options)
         module_results_per_record.append(record_result)
 
-    if html.is_enabled(options):
-        logging.debug("Creating results page")
+    for module in get_output_modules():
+        if not module.is_enabled(options):
+            continue
+        logging.debug(" Writing relevant output files for %s ", module.__name__)
         start = time.time()
-        html.write(results.records, module_results_per_record, options, get_all_modules())
+        module.write(results.records, module_results_per_record, options, get_all_modules())
         # use an average of times for html
         duration = (time.time() - start) / len(results.records)
         for val in results.timings_by_record.values():
-            val[html.__name__] = duration
+            val[module.__name__] = duration
 
     # convert records to biopython
     bio_records = [record.to_biopython() for record in results.records]
