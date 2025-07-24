@@ -62,10 +62,11 @@ def _gather_detection_modules() -> Dict[DetectionStage, List[AntismashModule]]:
     for module_data in pkgutil.walk_packages([get_full_path(__file__, "detection")]):
         name = f"antismash.detection.{module_data.name}"
         module = cast(AntismashModule, importlib.import_module(name))
-        stage = getattr(module, "DETECTION_STAGE", "")
-        if not stage:
+        stage = getattr(module, "DETECTION_STAGE", None)
+        if stage is None:
             raise ValueError(f"detection module missing DETECTION_STAGE attribute: {name}")
-        assert isinstance(stage, DetectionStage)
+        if not isinstance(stage, DetectionStage):
+            raise TypeError(f"detection module {name} has invalid DETECTION_STAGE attribute: {stage}")
         if stage not in modules:
             raise ValueError(f"detection module with unknown detection stage: {stage}")
         modules[stage].append(module)
@@ -675,7 +676,7 @@ def list_plugins() -> None:
     print("Available plugins")
     print("  Detection modules")
     for stage, modules in _DETECTION_MODULES.items():
-        simple_stage = str(stage).split(".")[1].replace("_", " ").capitalize()
+        simple_stage = stage.replace("_", " ").capitalize()
         print(f"    {simple_stage}")
         print_modules(modules, indent=6)
     for title, modules in [
