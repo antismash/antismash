@@ -9,7 +9,7 @@ import logging
 import os
 from tempfile import NamedTemporaryFile
 import unittest
-from unittest.mock import call, patch
+from unittest.mock import Mock, call, patch
 
 import pytest
 
@@ -199,6 +199,35 @@ class TestErrorsInLogfile(unittest.TestCase):
         check_message(printed.err.strip())
         # and nothing should have gone to stdout
         assert not printed.out
+
+
+class TestModuleReplacement(unittest.TestCase):
+    def setUp(self):
+        self.original_modules = main._MODULES
+
+    def tearDown(self):
+        main._MODULES = self.original_modules
+
+    def test_detection(self):
+        new = [Mock(), Mock()]
+        new[0].DETECTION_STAGE = main.DetectionStage.FULL_GENOME
+        new[1].DETECTION_STAGE = main.DetectionStage.PER_AREA
+
+        main.replace_detection_modules(list(new))
+        fetched = main.get_detection_modules()
+        assert fetched == new
+
+    def test_analysis(self):
+        new = [Mock(), Mock()]
+        main.replace_analysis_modules(list(new))
+        fetched = main.get_analysis_modules()
+        assert fetched == new
+
+    def test_output(self):
+        new = [Mock()]
+        main.replace_output_modules(list(new))
+        fetched = main.get_output_modules()
+        assert fetched == new
 
 
 @patch.object(logging, 'debug')
