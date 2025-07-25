@@ -28,7 +28,12 @@ $kind-protoclusters: white;
     font-family: "Courier New", serif;
 }
 
+html {
+    height: 100%;
+}
+
 body {
+    height: 100%;
     font-family: Helvetica, Verdana, Tahoma, Sans-Serif;
     color: #555;
     background-color: $body-background;
@@ -249,6 +254,7 @@ nav {
 }
 
 .page {
+    height: 100%;
     overflow: hidden;
     h3, .heading {
         font-size: 90%;
@@ -1547,7 +1553,7 @@ ul.dropdown-options {
     }
     .gt-scroll-container {
         overflow-y: scroll;
-        max-height: 350px;
+        max-height: 30%;
     }
     * .gt {
         padding: 1em;
