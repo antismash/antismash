@@ -2,6 +2,15 @@
 
 # Cutoffs and neighbourhoods are given in kilobases
 
+RULE aureonuclemycin
+  CATEGORY other
+  DESCRIPTION Aureonuclemycins
+  # as described for herbicidin biosynthesis https://doi.org/10.1021/jacs.2c05728
+  EXAMPLE NCBI PHRF01000090.1 0-24560 herbicidin
+  CUTOFF 10
+  NEIGHBOURHOOD 10
+  CONDITIONS her4 and her5 and her6 and her7
+
 RULE benzoxazole
     CATEGORY PKS
     DESCRIPTION Benzoxazoles

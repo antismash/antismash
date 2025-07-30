@@ -398,3 +398,7 @@ Amidohydro_1	Amidohydrolase family	25	PF01979.hmm
 GFO_IDH_MocA	Oxidoreductase family, NAD-binding Rossmann fold	24	PF01408.hmm
 GFO_IDH_MocA_C3	GFO/IDH/MocA C-terminal domain	27	PF22725.hmm
 SIS_2	SIS domain	27	PF13580.hmm
+her4	NAD-dependent S-adenosylhomocysteine (SAH) hydrolase	400	her4.hmm
+her5	NAD-binding oxidoreductase	200	her5.hmm
+her6	B12-dependent radical S-adenosyl-l-methionine enzyme	400	her6.hmm
+her7	NAD-binding oxidoreductase	550	her7.hmm
