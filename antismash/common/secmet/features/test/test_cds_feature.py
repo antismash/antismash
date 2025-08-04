@@ -447,19 +447,27 @@ class TestTranslationLength(unittest.TestCase):
             assert _is_valid_translation_length(good, location)
         assert not _is_valid_translation_length("AAA", location)
         # and with an ambiguous end, that becomes ok
-        location = CompoundLocation([FeatureLocation(0, 3), FeatureLocation(6, AfterPosition(11))])
+        location = CompoundLocation([FeatureLocation(6, 9, 1), FeatureLocation(12, AfterPosition(14), 1)])
         assert _is_valid_translation_length("AAA", location)
-        # and reversed ambiguous end
-        location = CompoundLocation([FeatureLocation(BeforePosition(0), 3, -1), FeatureLocation(6, 9, -1)])
+        # an ambiguous start
+        location = CompoundLocation([FeatureLocation(BeforePosition(0), 3, 1), FeatureLocation(6, 9, 1)])
         for good in ["A", "AA", "AAA"]:
             assert _is_valid_translation_length(good, location)
+        # but not a doubly ambiguous location
+        location = CompoundLocation([
+            FeatureLocation(BeforePosition(0), 3, 1),
+            FeatureLocation(6, AfterPosition(9), 1),
+        ])
+        for translation in ["A", "AA"]:
+            assert _is_valid_translation_length(translation, location)
+        assert not _is_valid_translation_length("AAA", location)
 
     def test_ambiguous_coords(self):
         translation = "A" * 10
         for strand in (-1, 1):
             # both ambiguous
             location = FeatureLocation(BeforePosition(10), AfterPosition(20), strand)
-            assert _is_valid_translation_length(translation, location)
+            assert not _is_valid_translation_length(translation, location)
             # start ambiguous
             location = FeatureLocation(BeforePosition(10), 20, strand)
             assert _is_valid_translation_length(translation, location)
