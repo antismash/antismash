@@ -112,6 +112,31 @@ class _LocationMixin(_Location):
         """
         return offset_location(self, offset, wrap_point=wrap_point)
 
+    def clone_without_ambiguity(self: T, *, keep_start: bool = False, keep_end: bool = False) -> T:
+        """ Creates a new location with the outer coordinates disambiguated.
+
+            Arguments:
+                keep_start: whether to keep the start ambiguous
+                keep_end: whether to keep the end ambiguous
+
+            Returns:
+                a new location instance
+        """
+        parts = list(self.parts)
+        if self.strand == -1:
+            if self.has_ambiguous_start() and not keep_start:
+                parts[0] = FeatureLocation(parts[0].start, ExactPosition(int(parts[0].end)), parts[0].strand)
+            if isinstance(parts[-1].start, BeforePosition) and not keep_end:
+                parts[-1] = FeatureLocation(ExactPosition(int(parts[-1].start)), parts[-1].end, parts[-1].strand)
+        else:
+            if self.has_ambiguous_start() and not keep_start:
+                parts[0] = FeatureLocation(ExactPosition(int(parts[0].start)), parts[0].end, parts[0].strand)
+            if self.has_ambiguous_end() and not keep_end:
+                parts[-1] = FeatureLocation(parts[-1].start, ExactPosition(int(parts[-1].end)), parts[-1].strand)
+        if len(parts) > 1:
+            return CompoundLocation(parts, operator=self.operator)
+        return parts[0]
+
     def contains_overlapping_exons(self: T) -> bool:
         """ Returns True if the location contains multiple exons sharing the same stop codon """
         return location_contains_overlapping_exons(self)
