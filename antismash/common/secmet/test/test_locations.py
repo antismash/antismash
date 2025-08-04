@@ -40,6 +40,66 @@ from antismash.common.secmet.locations import (
 )
 
 
+class TestAmbiguity(unittest.TestCase):
+    def test_compound(self):
+        CL = CompoundLocation
+        FL = FeatureLocation
+
+        location = CL([FL(BeforePosition(5), 7, 1), FL(10, 13, 1)])
+        assert location.has_ambiguous_start()
+        assert not location.has_ambiguous_end()
+
+        location = CL([FL(4, 7, 1), FL(10, AfterPosition(12), 1)])
+        assert not location.has_ambiguous_start()
+        assert location.has_ambiguous_end()
+
+        location = CL([FL(10, 13, -1), FL(BeforePosition(5), 7, -1)])
+        assert not location.has_ambiguous_start()
+        assert location.has_ambiguous_end()
+
+        location = CL([FL(10, AfterPosition(12), -1), FL(4, 7, -1),])
+        assert location.has_ambiguous_start()
+        assert not location.has_ambiguous_end()
+
+    def test_forward_simple(self):
+        FL = FeatureLocation
+
+        location = FL(4, 7, 1)
+        assert not location.has_ambiguous_start()
+        assert not location.has_ambiguous_end()
+
+        location = FL(BeforePosition(5), 7, 1)
+        assert location.has_ambiguous_start()
+        assert not location.has_ambiguous_end()
+
+        location = FL(4, AfterPosition(6), 1)
+        assert not location.has_ambiguous_start()
+        assert location.has_ambiguous_end()
+
+        location = FL(BeforePosition(5), AfterPosition(6), 1)
+        assert location.has_ambiguous_start()
+        assert location.has_ambiguous_end()
+
+    def test_reverse_simple(self):
+        FL = FeatureLocation
+
+        location = FL(4, 7, -1)
+        assert not location.has_ambiguous_start()
+        assert not location.has_ambiguous_end()
+
+        location = FL(4, AfterPosition(6), -1)
+        assert location.has_ambiguous_start()
+        assert not location.has_ambiguous_end()
+
+        location = FL(BeforePosition(5), 7, -1)
+        assert not location.has_ambiguous_start()
+        assert location.has_ambiguous_end()
+
+        location = FL(BeforePosition(5), AfterPosition(6), -1)
+        assert location.has_ambiguous_start()
+        assert location.has_ambiguous_end()
+
+
 class TestConnectLocations(unittest.TestCase):
     def setUp(self):
         self.func = connect_locations

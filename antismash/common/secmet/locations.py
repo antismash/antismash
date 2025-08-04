@@ -152,6 +152,27 @@ class _LocationMixin(_Location):
         """
         return get_distance_between_locations(self, other, wrap_point)
 
+    def has_ambiguous_end(self) -> bool:
+        """ Checks if the location has an ambiguous end.
+
+            Returns:
+                whether the end is ambiguous
+        """
+
+        if self.strand == -1:
+            return isinstance(self.parts[-1].start, BeforePosition)
+        return isinstance(self.parts[-1].end, AfterPosition)
+
+    def has_ambiguous_start(self) -> bool:
+        """ Checks if the location has an ambiguous start.
+
+            Returns:
+                whether the start is ambiguous
+        """
+        if self.strand == -1:
+            return isinstance(self.parts[0].end, AfterPosition)
+        return isinstance(self.parts[0].start, BeforePosition)
+
 
 class FeatureLocation(_LocationMixin, _SimpleLocation):
     """ A wrapper of biopython's SimpleLocation (previously FeatureLocation) to add extra
