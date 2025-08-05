@@ -186,7 +186,7 @@ def split_cross_origin_locations(features: list[SeqFeature], length: int) -> Non
         # most circular records won't have introns, but handle it just in case
         parts = []
         for part in feature.location.parts:
-            if part.end < length:
+            if part.end <= length:
                 # don't change the location, but convert to secmet for better usability
                 parts.append(FeatureLocation(part.start, part.end, part.strand))
             elif part.start >= length:
