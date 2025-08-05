@@ -52,11 +52,11 @@ class RobustProteinAnalysis(ProteinAnalysis):
                                        self.original_sequence))
         super().__init__(prot_sequence, monoisotopic)
 
-    def molecular_weight(self) -> float:
+    def molecular_weight(self, *, weighting_multiplier: float = 110) -> float:
         weight = super().molecular_weight()
         if not self._ignore_invalid:
             aa_difference = len(self.original_sequence) - len(self.sequence)
-            weight += 110 * aa_difference
+            weight += weighting_multiplier * aa_difference
         return weight
 
 
@@ -109,7 +109,9 @@ def extract_from_alignment(hit: QueryResult, positions: Iterable[int]) -> Option
     return extract_by_reference_positions(query, profile, [p - offset for p in positions if p >= offset])
 
 
-def distance_to_pfam(record: Record, query: Feature, hmmer_profiles: List[str]) -> int:
+def distance_to_pfam(record: Record, query: Feature, hmmer_profiles: list[str],
+                     *, max_range: int = 40_000,
+                     ) -> int:
     """ Checks how many nucleotides a gene is away from another gene with one
         of the given Pfams.
 
@@ -118,12 +120,12 @@ def distance_to_pfam(record: Record, query: Feature, hmmer_profiles: List[str]) 
             query: a secmet.Feature to use the location of
             hmmer_profiles: a list of profile names to search for in CDSFeature
                             domain lists
+            max_range: the maximum search range in nucleotides
 
         Returns:
             the distance (in bases) to the closest gene with one of the profiles
             or -1 if no gene matching was found
     """
-    max_range = 40000
     if record.is_circular():
         max_range = min(max_range, len(record) // 2)
     search_range = record.extend_location(query.location, max_range)
