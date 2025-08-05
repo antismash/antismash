@@ -92,19 +92,20 @@ def filter_by_score(hmm_results_per_cds: dict[str, list[HMMResult]],
     return results_by_id
 
 
-def group_hmm_results(hmm_results: list[HMMResult]) -> list[list[HMMResult]]:
+def group_hmm_results(hmm_results: list[HMMResult],
+                      *, allowed_overlap: int = 20) -> list[list[HMMResult]]:
     """ Groups overlapping hmm results, if the overlap is larger than
         the allowed overlap
 
         Arguments:
             hmm_results: a list of HMMResult objects
+            allowed_overlap: the maximum overlap of hits before creating a new group
 
         Returns:
             grouped_results: a list of lists of HMMResult objects
 
     """
     hmm_results = sorted(hmm_results, key=lambda result: result.query_start)
-    allowed_overlap = 20
     groups = [[hmm_results[0]]]
     end = hmm_results[0].query_end
     for hmm_result in hmm_results[1:]:
