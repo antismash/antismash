@@ -20,6 +20,7 @@ from antismash.modules import clusterblast, smcog_trees, tfbs_finder as tfbs, tt
 from antismash.outputs.html.area_packing import build_area_rows
 from antismash.outputs.html.generate_html_table import generate_html_table
 
+CDS_TEMPLATE_PATH = path.get_full_path(__file__, "templates", "cds_detail.html")
 GO_URL = 'http://amigo.geneontology.org/amigo/term/'
 
 
@@ -357,7 +358,7 @@ def get_description(record: Record, feature: CDSFeature, type_: str,
     pfam_notes = generate_pfam_tooltip(record, feature)
     tigr_notes = generate_tigr_tooltip(record, feature)
 
-    template = html_renderer.FileTemplate(path.get_full_path(__file__, "templates", "cds_detail.html"))
+    template = html_renderer.FileTemplate(CDS_TEMPLATE_PATH)
     ec_numbers = ""
     ec_number_qual = feature.get_qualifier("EC_number")
     if isinstance(ec_number_qual, list):
