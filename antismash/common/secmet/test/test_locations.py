@@ -40,6 +40,139 @@ from antismash.common.secmet.locations import (
 )
 
 
+class TestAmbiguity(unittest.TestCase):
+    def test_compound(self):
+        CL = CompoundLocation
+        FL = FeatureLocation
+
+        location = CL([FL(BeforePosition(5), 7, 1), FL(10, 13, 1)])
+        assert location.has_ambiguous_start()
+        assert not location.has_ambiguous_end()
+
+        location = CL([FL(4, 7, 1), FL(10, AfterPosition(12), 1)])
+        assert not location.has_ambiguous_start()
+        assert location.has_ambiguous_end()
+
+        location = CL([FL(10, 13, -1), FL(BeforePosition(5), 7, -1)])
+        assert not location.has_ambiguous_start()
+        assert location.has_ambiguous_end()
+
+        location = CL([FL(10, AfterPosition(12), -1), FL(4, 7, -1),])
+        assert location.has_ambiguous_start()
+        assert not location.has_ambiguous_end()
+
+    def test_forward_simple(self):
+        FL = FeatureLocation
+
+        location = FL(4, 7, 1)
+        assert not location.has_ambiguous_start()
+        assert not location.has_ambiguous_end()
+
+        location = FL(BeforePosition(5), 7, 1)
+        assert location.has_ambiguous_start()
+        assert not location.has_ambiguous_end()
+
+        location = FL(4, AfterPosition(6), 1)
+        assert not location.has_ambiguous_start()
+        assert location.has_ambiguous_end()
+
+        location = FL(BeforePosition(5), AfterPosition(6), 1)
+        assert location.has_ambiguous_start()
+        assert location.has_ambiguous_end()
+
+    def test_reverse_simple(self):
+        FL = FeatureLocation
+
+        location = FL(4, 7, -1)
+        assert not location.has_ambiguous_start()
+        assert not location.has_ambiguous_end()
+
+        location = FL(4, AfterPosition(6), -1)
+        assert location.has_ambiguous_start()
+        assert not location.has_ambiguous_end()
+
+        location = FL(BeforePosition(5), 7, -1)
+        assert not location.has_ambiguous_start()
+        assert location.has_ambiguous_end()
+
+        location = FL(BeforePosition(5), AfterPosition(6), -1)
+        assert location.has_ambiguous_start()
+        assert location.has_ambiguous_end()
+
+
+class TestCloningWithoutAmbiguity(unittest.TestCase):
+    def compare(self, first, second):
+        assert first.parts is not second.parts
+        assert len(first.parts) == len(second.parts)
+        for f, s in zip(first.parts, second.parts):
+            assert isinstance(s.start, type(f.start))
+            assert f.start == s.start
+            assert isinstance(s.end, type(f.end))
+            assert f.end == s.end
+            assert f.strand == s.strand
+
+    def test_simple(self):
+        before = FeatureLocation(BeforePosition(5), AfterPosition(7), 1)
+        cloned = before.clone_without_ambiguity()
+        self.compare(cloned, FeatureLocation(5, 7, 1))
+        cloned = before.clone_without_ambiguity(keep_start=True)
+        self.compare(cloned, FeatureLocation(before.start, 7, 1))
+        cloned = before.clone_without_ambiguity(keep_end=True)
+        self.compare(cloned, FeatureLocation(5, before.end, 1))
+        cloned = before.clone_without_ambiguity(keep_start=True, keep_end=True)
+        self.compare(cloned, before)
+
+    def test_simple_reverse(self):
+        before = FeatureLocation(BeforePosition(5), AfterPosition(7), -1)
+        cloned = before.clone_without_ambiguity()
+        self.compare(cloned, FeatureLocation(5, 7, -1))
+        cloned = before.clone_without_ambiguity(keep_start=True)
+        self.compare(cloned, FeatureLocation(5, AfterPosition(7), -1))
+        cloned = before.clone_without_ambiguity(keep_end=True)
+        self.compare(cloned, FeatureLocation(BeforePosition(5), 7, -1))
+        cloned = before.clone_without_ambiguity(keep_start=True, keep_end=True)
+        self.compare(cloned, before)
+
+    def test_compound(self):
+        before = CompoundLocation([
+            FeatureLocation(BeforePosition(5), 7, 1),
+            FeatureLocation(10, AfterPosition(12), 1),
+        ])
+        cloned = before.clone_without_ambiguity()
+        self.compare(cloned, CompoundLocation([
+            FeatureLocation(5, 7, 1),
+            FeatureLocation(10, 12, 1),
+        ]))
+        cloned = before.clone_without_ambiguity(keep_start=True)
+        self.compare(cloned, CompoundLocation([
+            before.parts[0],
+            FeatureLocation(10, 12, 1),
+        ]))
+        cloned = before.clone_without_ambiguity(keep_end=True)
+        self.compare(cloned, CompoundLocation([
+            FeatureLocation(5, 7, 1),
+            before.parts[1],
+        ]))
+        cloned = before.clone_without_ambiguity(keep_start=True, keep_end=True)
+        self.compare(cloned, before)
+
+        # and checking reverse strand still detects the correct coordinates
+        before = CompoundLocation([
+            FeatureLocation(10, AfterPosition(12), -1),
+            FeatureLocation(BeforePosition(5), 7, -1),
+        ])
+        cloned = before.clone_without_ambiguity(keep_start=True)
+        self.compare(cloned, CompoundLocation([
+            before.parts[0],
+            FeatureLocation(5, 7, -1),
+        ]))
+        cloned = before.clone_without_ambiguity(keep_end=True)
+        self.compare(cloned, CompoundLocation([
+            FeatureLocation(10, 12, -1),
+            before.parts[1],
+        ]))
+
+
 class TestConnectLocations(unittest.TestCase):
     def setUp(self):
         self.func = connect_locations
