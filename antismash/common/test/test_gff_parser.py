@@ -167,6 +167,13 @@ class TestSplitLocation(TestCase):
         with self.assertRaisesRegex(errors.AntismashInputError, "entirely outside record"):
             self.split(10)
 
+    def test_at_edge(self):
+        original = FeatureLocation(20, 30, 1)
+        self.feature.location = original
+        self.split(30)
+        assert self.feature.location is not original
+        assert self.feature.location == original
+
     def test_simple_all_before_point(self):
         original = FeatureLocation(1, 5, 1)
         self.feature.location = original
