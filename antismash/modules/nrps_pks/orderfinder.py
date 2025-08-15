@@ -464,17 +464,46 @@ def find_colinear_order(cds_features: List[CDSFeature]) -> List[CDSFeature]:
         Returns:
             a list of CDSFeatures in estimated order
     """
+    if not cds_features:
+        return []
+
+    # groups of genes with cross-CDS modules should not have their order altered,
+    # only the overall set
+    subgroups = [[cds_features[0]]]
+    current_subgroup = subgroups[-1]
+
     direction = 0
-    for gene in cds_features:
+    for gene in cds_features[1:]:
         direction += gene.strand
-    geneorder = list(cds_features)
-    if not geneorder:
-        return geneorder
+        # if the first module of a cds has a cross-cds module, then
+        # the previous CDS' last module is also cross-cds module, regardless of direction
+        if gene.modules and len(gene.modules[0].parent_cds_names) > 1:
+            current_subgroup.append(gene)
+        else:  # no need to check the end, since the next CDS will be found at the start
+            subgroups.append([gene])
+            current_subgroup = subgroups[-1]
+
+    # each subgroup should be ordered to match the module direction
+    for subgroup in subgroups:
+        if len(subgroup) < 2:
+            continue
+        first = subgroup[0]
+        second = subgroup[1]
+        module = first.modules[-1]
+        assert module is second.modules[0]
+        if module.parent_cds_names == (second.get_name(), first.get_name()):
+            subgroup.reverse()
+
     # Reverse if first gene encodes a multidomain protein with a TE/TD domain
     if direction < 0:
-        geneorder.reverse()
-    gene_domains = geneorder[0].nrps_pks.domain_names
+        subgroups.reverse()
+    gene_domains = subgroups[0][0].nrps_pks.domain_names
     if "Thioesterase" in gene_domains or "TD" in gene_domains:
         if len(gene_domains) > 1:
-            geneorder.reverse()
+            subgroups.reverse()
+
+    # flatten the subgroups
+    geneorder = []
+    for subgroup in subgroups:
+        geneorder.extend(subgroup)
     return geneorder

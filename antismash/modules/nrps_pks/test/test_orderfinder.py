@@ -7,6 +7,8 @@
 import unittest
 
 from antismash.common import secmet
+from antismash.common.secmet.features.module import ModuleType
+from antismash.common.secmet.locations import FeatureLocation
 from antismash.common.test.helpers import DummyAntismashDomain, DummyCDS
 from antismash.modules.nrps_pks import orderfinder
 
@@ -25,10 +27,10 @@ class DummyNRPSQualfier(secmet.qualifiers.NRPSPKSQualifier):  # pylint: disable=
 
 
 class DummyModule(secmet.features.Module):
-    def __init__(self, **kwargs):
+    def __init__(self, module_type=ModuleType.PKS, location=None, **kwargs):
         domains = [DummyAntismashDomain(domain=dom) for dom in kwargs.pop("domains")]
-        location = secmet.locations.connect_locations([dom.location for dom in domains])
-        super().__init__(location, domains, module_type=secmet.features.module.ModuleType.PKS, **kwargs)
+        location = location or secmet.locations.connect_locations([dom.location for dom in domains])
+        super().__init__(location, domains, module_type=module_type, **kwargs)
 
 
 class TestOrdering(unittest.TestCase):
@@ -317,6 +319,86 @@ class TestOrdering(unittest.TestCase):
         order = orders[0]
         assert len(order) == len(set(order))
         assert order == cdses
+
+    def test_colinear_chains_with_terminals(self):
+        # if a group of genes A, B, and C are all in the forward strand and
+        # tightly bound by cross-CDS modules, *and* a gene in the reverse strand
+        # exists with a terminal domain, then the order (in general) should be reversed,
+        # but the group A,B,C still has to remain in the same order
+        # E.g. CP102510 70,000-140,000
+        def set_qualifier(cds, names):
+            cds.nrps_pks = DummyNRPSQualfier()
+            cds.nrps_pks.domain_names = names
+
+        pks = ["PKS_KS", "PKS_AT", "ACP"]
+        nrps = ["Condensation", "AMP-binding", "PP-binding"]
+
+        terminal = DummyCDS(1, 200, locus_tag="Terminal", strand=-1)
+        terminal.add_module(DummyModule(domains=pks, complete=True))
+        terminal.add_module(DummyModule(module_type=ModuleType.NRPS,
+                                        domains=nrps + ["Thioesterase"], complete=True))
+        set_qualifier(terminal, pks + nrps + ["Thioesterase"])
+
+        other = DummyCDS(201, 400, locus_tag="Other")
+        other.add_module(DummyModule(location=FeatureLocation(201, 400, 1), domains=pks, complete=True))
+        set_qualifier(other, pks)
+
+        chain_a = DummyCDS(401, 600, locus_tag="A")
+        chain_b = DummyCDS(601, 800, locus_tag="B")
+        chain_c = DummyCDS(801, 1000, locus_tag="C")
+
+        chain_a.add_module(DummyModule(domains=nrps[1:], complete=True,
+                                       location=FeatureLocation(400, 480, 1)))
+        chain_a.add_module(DummyModule(domains=nrps, complete=True,
+                                       location=FeatureLocation(500, 560, 1)))
+        # the A+B cross-cds module
+        domains = [DummyAntismashDomain(domain=nrps[0], locus_tag=chain_a.get_name())]
+        domains.extend(DummyAntismashDomain(domain=dom, locus_tag=chain_b.get_name()) for dom in nrps[1:])
+        a_b = secmet.features.Module(FeatureLocation(580, 620, 1), domains, module_type=ModuleType.NRPS)
+        chain_a.add_module(a_b)
+        chain_b.add_module(a_b)
+
+        # then those only in B
+        chain_b.add_module(DummyModule(domains=[nrps[0], nrps[-1]], complete=False,
+                                       location=FeatureLocation(620, 680, 1)))
+        # then the B+C merge
+        domains = [DummyAntismashDomain(domain=nrps[0], locus_tag=chain_b.get_name())]
+        domains.extend(DummyAntismashDomain(domain=dom, locus_tag=chain_c.get_name()) for dom in nrps[1:])
+        b_c = secmet.features.Module(FeatureLocation(780, 820, 1), domains, module_type=ModuleType.NRPS)
+        chain_b.add_module(b_c)
+        chain_c.add_module(b_c)
+        # then those only in C
+        chain_c.add_module(DummyModule(domains=nrps[:1], complete=False, location=FeatureLocation(920, 950, 1)))
+
+        set_qualifier(chain_a, nrps[1:] + nrps + nrps[:1])  # fragment, complete, cross-CDS
+        set_qualifier(chain_b, nrps[1:] + [nrps[0], nrps[-1]] + nrps[:1])  # cross-CDS, incomplete, cross-CDS
+        set_qualifier(chain_c, nrps[1:] + nrps[:1])  # cross-CDS, fragment
+
+        cdses = [
+            terminal,
+            other,
+            chain_a,
+            chain_b,
+            chain_c
+        ]
+        # expected ordering would be ABC-Other-Terminal
+        expected = [cds.get_name() for cds in [chain_a, chain_b, chain_c, other, terminal]]
+        assert [cds.get_name() for cds in orderfinder.find_colinear_order(cdses)] == expected
+
+        # and then repeat it all with the reverse strand
+        # moving all the domains won't be necessary if the module registers the order as flipped
+        a_b._parent_cds_names.reverse()
+        b_c._parent_cds_names.reverse()
+        for cds in [chain_a, chain_b, chain_c]:
+            for module in cds.modules:
+                module.location = FeatureLocation(module.location.start, module.location.end,
+                                                  module.location.strand * -1)
+            cds.location = FeatureLocation(cds.location.start, cds.location.end,
+                                           cds.location.strand * -1)
+
+        # the expected case now is CBA-Other-Terimanl
+        expected = [cds.get_name() for cds in [chain_c, chain_b, chain_a, other, terminal]]
+        assert [cds.get_name() for cds in orderfinder.find_colinear_order(cdses)] == expected
 
 
 class TestEnzymeCounter(unittest.TestCase):
