@@ -141,28 +141,15 @@ def load_reference_clusters(searchtype: str) -> Dict[str, ReferenceCluster]:
     return load_reference_clusters_from_dir(data_dir)
 
 
-def load_reference_proteins(searchtype: str) -> Dict[str, Protein]:
-    """ Load protein database
+def load_reference_proteins_from_dir(data_dir: str) -> dict[str, Protein]:
+    """ Loads a protein database from the given directory.
 
         Arguments:
-            searchtype: determines which database to use, allowable values:
-                            clusterblast, subclusterblast, knownclusterblast
-        Returns:
-            a dictionary mapping protein name to Protein instance
-    """
-    options = get_config()
-    if searchtype == "clusterblast":
-        logging.info("ClusterBlast: Loading gene cluster database proteins into memory...")
-        data_dir = os.path.join(options.database_dir, 'clusterblast')
-    elif searchtype == "subclusterblast":
-        logging.info("SubClusterBlast: Loading gene cluster database proteins into memory...")
-        data_dir = os.path.join(_SHIPPED_DATA_DIR, "sub")
-    elif searchtype == "knownclusterblast":
-        logging.info("KnownClusterBlast: Loading gene cluster database proteins into memory...")
-        kcb_root = os.path.join(options.database_dir, "knownclusterblast")
-        version = path.find_latest_database_version(kcb_root)
-        data_dir = os.path.join(kcb_root, version)
+            data_dir: the path to the directory containing the database
 
+        Returns:
+            a mapping of protein name to Protein instance
+    """
     protein_file = os.path.join(data_dir, "proteins.fasta")
     proteins = {}
     with open(protein_file, "r", encoding="utf-8") as handle:
@@ -195,6 +182,31 @@ def load_reference_proteins(searchtype: str) -> Dict[str, Protein]:
             proteins[unique_id] = Protein(unique_id, name, locustag, location, strand, annotations,
                                           draw_start=linearised_start, draw_end=linearised_end)
     return proteins
+
+
+def load_reference_proteins(searchtype: str) -> Dict[str, Protein]:
+    """ Load protein database
+
+        Arguments:
+            searchtype: determines which database to use, allowable values:
+                            clusterblast, subclusterblast, knownclusterblast
+        Returns:
+            a dictionary mapping protein name to Protein instance
+    """
+    options = get_config()
+    if searchtype == "clusterblast":
+        logging.info("ClusterBlast: Loading gene cluster database proteins into memory...")
+        data_dir = os.path.join(options.database_dir, 'clusterblast')
+    elif searchtype == "subclusterblast":
+        logging.info("SubClusterBlast: Loading gene cluster database proteins into memory...")
+        data_dir = os.path.join(_SHIPPED_DATA_DIR, "sub")
+    elif searchtype == "knownclusterblast":
+        logging.info("KnownClusterBlast: Loading gene cluster database proteins into memory...")
+        kcb_root = os.path.join(options.database_dir, "knownclusterblast")
+        version = path.find_latest_database_version(kcb_root)
+        data_dir = os.path.join(kcb_root, version)
+
+    return load_reference_proteins_from_dir(data_dir)
 
 
 def load_clusterblast_database(searchtype: str = "clusterblast"
