@@ -203,7 +203,6 @@ def load_clusterblast_database(searchtype: str = "clusterblast"
     """ Load clusterblast database
 
         Arguments:
-            record: the current record (to pull CDS names from to avoid collisions)
             searchtype: determines which database to use, allowable values:
                             clusterblast, subclusterblast, knownclusterblast
         Returns:
