@@ -83,16 +83,16 @@ def run_diamond_on_all_regions(regions: Sequence[secmet.Region], database: str) 
     return stdout
 
 
-def _load_cluster_data(file_path: str) -> dict[str, ReferenceCluster]:
-    """ Loads reference cluster data from the given file
+def load_reference_clusters_from_dir(data_dir: str) -> dict[str, ReferenceCluster]:
+    """ Loads reference cluster data from the given directory.
 
         Arguments:
-            file_path: the path to the data file to load
+            data_dir: the path to the directory containing the database
 
         Returns:
-            a dictionary mapping reference cluster name to ReferenceCluster
-            instance
+            a mapping of reference cluster name to ReferenceCluster instance
     """
+    file_path = os.path.join(data_dir, "clusters.txt")
     with open(file_path, "r", encoding="utf-8") as handle:
         filetext = handle.read()
     lines = [line for line in filetext.splitlines() if "\t" in line]
@@ -138,8 +138,7 @@ def load_reference_clusters(searchtype: str) -> Dict[str, ReferenceCluster]:
         version = path.find_latest_database_version(kcb_root)
         data_dir = os.path.join(kcb_root, version)
 
-    reference_cluster_file = os.path.join(data_dir, "clusters.txt")
-    return _load_cluster_data(reference_cluster_file)
+    return load_reference_clusters_from_dir(data_dir)
 
 
 def load_reference_proteins(searchtype: str) -> Dict[str, Protein]:
