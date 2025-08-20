@@ -28,10 +28,12 @@ from .core import (
 from .results import RegionResult, GeneralResults
 from .data_structures import ProteinDB, ReferenceCluster
 
+SUB_DATA = os.path.join(_SHIPPED_DATA_DIR, "sub")
+
 
 def _get_datafile_path(filename: str) -> str:
     """ A simple helper to get the full path of subclusterblast datafile """
-    return os.path.join(_SHIPPED_DATA_DIR, 'sub', filename)
+    return os.path.join(SUB_DATA, filename)
 
 
 def prepare_sub_data(*, logging_only: bool = False) -> list[str]:
@@ -91,7 +93,7 @@ def run_subclusterblast_on_record(record: Record, options: ConfigType) -> Genera
             a GeneralResults with results for each cluster in the record
     """
     logging.info('Running subcluster search')
-    clusters, proteins = load_clusterblast_database("subclusterblast")
+    clusters, proteins = load_clusterblast_database(data_dir=SUB_DATA)
     return perform_subclusterblast(options, record, clusters, proteins)
 
 
