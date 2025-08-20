@@ -212,6 +212,15 @@ RULE mycosporine
     CONDITIONS DHQ_synthase and Methyltransf_3 and ATP-grasp_3
     EXTENDERS cds(Dala_Dala_lig_C or Dala_Dala_lig_N or AMP-binding)
 
+RULE t3nrps-iterative
+    CATEGORY NRPS
+    DESCRIPTION Iterative NRPS type III
+    # see DOI: 10.1021/jacs.5c04167
+    EXAMPLE NCBI CP000960.1 529030-582437 AFC-BC11
+    CUTOFF 20
+    NEIGHBOURHOOD 20
+    CONDITIONS AMP-binding and PP-binding and (DUF98 or Orn_Arg_deC_N or Orn_DAP_Arg_deC)
+
 RULE terpene
     CATEGORY terpene
     DESCRIPTION Terpene
