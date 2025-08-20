@@ -113,30 +113,45 @@ def check_prereqs(options: ConfigType) -> List[str]:
     return failure_messages
 
 
-def prepare_data(logging_only: bool = False) -> List[str]:
-    """ Prepare the databases. """
-    failure_messages = []
-    # known
-    failure_messages.extend(prepare_known_data(logging_only))
+def prepare_single_database(db_dir: str, raise_exceptions: bool = False) -> list[str]:
+    """ Prepares a single clusterblast-formatted database.
+
+        Arguments:
+            db_dir: the directory containing the database
+            raise_exceptions: whether to raise exceptions on first error instead
+                              of returning a list of errors
+
+        Returns:
+            a list of error messages
+    """
+    failure_messages: list[str] = []
 
     # general
-    clusterblastdir = os.path.join(get_config().database_dir, "clusterblast")
-    if "mounted_at_runtime" in clusterblastdir:  # can't prepare these
+    if "mounted_at_runtime" in db_dir:  # can't prepare these
         return failure_messages
-    cluster_defs = os.path.join(clusterblastdir, 'clusters.txt')
-    protein_seqs = os.path.join(clusterblastdir, "proteins.fasta")
-    db_file = os.path.join(clusterblastdir, "proteins.dmnd")
+    cluster_defs = os.path.join(db_dir, 'clusters.txt')
+    protein_seqs = os.path.join(db_dir, "proteins.fasta")
+    db_file = os.path.join(db_dir, "proteins.dmnd")
 
-    # check the DBv3 region info exists instead of single cluster numbers
+    # check the database is not in previous formats
     with open(protein_seqs, encoding="utf-8") as handle:
         sample = handle.readline()
     if "-" not in sample.split("|", 3)[1]:
         failure_messages.append("clusterblast database out of date, update with download-databases")
         # and don't bother pressing them
         return failure_messages
+    failure_messages.extend(check_clusterblast_files(cluster_defs, protein_seqs, db_file,
+                                                     logging_only=not raise_exceptions))
+    return failure_messages
 
-    failure_messages.extend(check_clusterblast_files(cluster_defs, protein_seqs, db_file, logging_only=logging_only))
 
+def prepare_data(logging_only: bool = False) -> List[str]:
+    """ Prepare all clusterblast databases. """
+    clusterblastdir = os.path.join(get_config().database_dir, "clusterblast")
+    failure_messages = []
+    failure_messages.extend(prepare_known_data(logging_only))
+    failure_messages.extend(prepare_single_database(clusterblastdir,
+                                                    raise_exceptions=not logging_only))
     return failure_messages
 
 
