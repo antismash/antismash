@@ -472,12 +472,13 @@ def find_colinear_order(cds_features: List[CDSFeature]) -> List[CDSFeature]:
     subgroups = [[cds_features[0]]]
     current_subgroup = subgroups[-1]
 
-    direction = 0
+    direction = cds_features[0].strand
     for gene in cds_features[1:]:
         direction += gene.strand
         # if the first module of a cds has a cross-cds module, then
         # the previous CDS' last module is also cross-cds module, regardless of direction
-        if gene.modules and len(gene.modules[0].parent_cds_names) > 1:
+        cross_cds = gene.modules and gene.modules[0].is_multigene_module()
+        if cross_cds and gene.modules[0] is current_subgroup[-1].modules[-1]:
             current_subgroup.append(gene)
         else:  # no need to check the end, since the next CDS will be found at the start
             subgroups.append([gene])
