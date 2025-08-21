@@ -400,6 +400,51 @@ class TestOrdering(unittest.TestCase):
         expected = [cds.get_name() for cds in [chain_c, chain_b, chain_a, other, terminal]]
         assert [cds.get_name() for cds in orderfinder.find_colinear_order(cdses)] == expected
 
+    def test_colinear_chain_single_multigene(self):
+        # if a gene has a single module which is multi-gene, it must connect to the correct subgroup
+
+        def set_qualifier(cds, names):
+            cds.nrps_pks = DummyNRPSQualfier()
+            cds.nrps_pks.domain_names = names
+
+        pks = ["PKS_KS", "PKS_AT", "KR", "ACP"]
+        nrps = ["Condensation", "AMP-binding", "PP-binding"]
+
+        other_names = [f"simple_{i}" for i in range(3)]
+        others = []
+        for i, name in enumerate(other_names):
+            simple = DummyCDS(30 * i, 30 * (i  + 1), strand=-1, locus_tag=name)
+            for _ in range(2):
+                module = DummyModule(domains=nrps, complete=True,
+                                     location=simple.location.clone_with_offset(5))
+                simple.add_module(module)
+                simple.modules[-1]._parent_cds_names = [name]
+            set_qualifier(simple, nrps * 2)
+            others.append(simple)
+
+        first_half = DummyCDS(201, 400, locus_tag="A")
+        module = DummyModule(location=FeatureLocation(300, 500, 1),
+                             domains=pks, complete=True, iterative=True)
+        module._parent_cds_names = ["A", "B"]
+        first_half.add_module(module)
+        set_qualifier(first_half, pks[:2])
+
+        second_half = DummyCDS(401, 600, locus_tag="B")
+        second_half.add_module(module)
+        set_qualifier(second_half, pks[2:])
+
+        cdses = others + [first_half, second_half]
+
+        expected = ["A", "B"] + list(reversed(other_names))
+        assert [cds.get_name() for cds in orderfinder.find_colinear_order(cdses)] == expected
+
+        # and the reverse strand for the multigene module
+        first_half.location = FeatureLocation(201, 400, -1)
+        second_half.location = FeatureLocation(401, 600, -1)
+        module._parent_cds_names.reverse()
+        expected = ["B", "A"] + list(reversed(other_names))
+        assert [cds.get_name() for cds in orderfinder.find_colinear_order(cdses)] == expected
+
 
 class TestEnzymeCounter(unittest.TestCase):
     def run_finder(self, names, modules_by_cds):
