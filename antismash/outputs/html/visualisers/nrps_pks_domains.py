@@ -177,6 +177,7 @@ def _parse_domain(record: Record, domain: NRPSPKSQualifier.Domain,
             record: the Record containing the domain
             domain: the NRPSPKSQualifier.Domain in question
             feature: the CDSFeature that the domain belongs to
+            signature: the extracted signature of the domain, if any, for linking out
 
         Returns:
             a populated JSONDomain instance
