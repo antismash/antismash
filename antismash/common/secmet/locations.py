@@ -455,6 +455,10 @@ def _convert_protein_from_front(old_parts: list[FeatureLocation], start: int, le
             new_parts.extend(old_parts[i + 1:])
             break
         start -= len(part)
+    # if no parts included the protein location, then it's outside the sequence
+    if not new_parts:
+        part = old_parts[-1]
+        return [FeatureLocation(part.end - 1, part.end, part.strand)]
 
     # trim to end
     old_parts = new_parts
@@ -485,6 +489,11 @@ def _convert_protein_from_back(old_parts: list[FeatureLocation], start: int, len
             new_parts.extend(old_parts[i + 1:])
             break
         start -= len(part)
+    # if no parts included the protein location, then it's completely outside the sequence
+    if not new_parts:
+        part = old_parts[-1]
+        return [FeatureLocation(part.start, part.start + 1, part.strand)]
+    assert new_parts
 
     # trim to end
     old_parts = new_parts

@@ -328,6 +328,31 @@ class TestProteinPositionConversion(unittest.TestCase):
         assert new == expected
         assert len(new) < length * 3
 
+    def test_ambiguous_completely_outside_forward(self):
+        original = CompoundLocation([
+            FeatureLocation(BeforePosition(0), 2, 1),
+            FeatureLocation(3, 6, 1),
+        ])
+        # the protein start and end are both in the truncated/ambiguous section
+        protein_start = 3
+        protein_end = 7
+        protein_length = 10
+        expected = FeatureLocation(BeforePosition(0), BeforePosition(1), 1)
+        new = self.func(protein_start, protein_end, original, protein_length=protein_length)
+        assert new == expected
+
+    def test_ambiguous_completely_outside_reverse(self):
+        original = CompoundLocation([
+            FeatureLocation(8, AfterPosition(10), -1),
+            FeatureLocation(3, 6, -1),
+        ])
+        protein_start = 1
+        protein_end = 2
+        protein_length = 10
+        expected = FeatureLocation(AfterPosition(9), AfterPosition(10), -1)
+        new = self.func(protein_start, protein_end, original, protein_length=protein_length)
+        assert new == expected
+
     def test_ambiguous_end_reverse(self):
         original = CompoundLocation([
             FeatureLocation(40, 50, -1),
