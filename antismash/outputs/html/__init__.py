@@ -28,6 +28,11 @@ from antismash.outputs.html.generator import generate_webpage, find_local_antism
 NAME = "html"
 SHORT_DESCRIPTION = "HTML output"
 
+CSS_DIR = path.get_full_path(__file__, "css")
+IMAGE_DIR = path.get_full_path(__file__, "images")
+JS_DIR = path.get_full_path(__file__, "js")
+TEMPLATE_DIR = path.get_full_path(__file__, "templates")
+
 
 def get_arguments() -> ModuleArgs:
     """ Builds the arguments for the HMTL output module """
@@ -60,7 +65,7 @@ def prepare_data(_logging_only: bool = False) -> List[str]:
     """ Rebuild any dynamically buildable data """
     flavours = ["bacteria", "fungi", "plants"]
 
-    with path.changed_directory(path.get_full_path(__file__, "css")):
+    with path.changed_directory(CSS_DIR):
         built_files = [os.path.abspath(f"{flavour}.css") for flavour in flavours]
 
         if path.is_outdated(built_files, glob.glob("*.scss")):
@@ -105,8 +110,8 @@ def write(records: List[Record], results: List[Dict[str, ModuleResults]],
     """
     output_dir = options.output_dir
 
-    copy_template_dir('css', output_dir, pattern=f"{options.taxon}.css")
-    copy_template_dir('js', output_dir)
+    copy_template_dir(CSS_DIR, output_dir, pattern=f"{options.taxon}.css")
+    copy_template_dir(JS_DIR, output_dir)
     # if there wasn't an antismash.js in the JS dir, fall back to one in databases
     local_path = os.path.join(output_dir, "js", "antismash.js")
     if not os.path.exists(local_path):
@@ -118,7 +123,7 @@ def write(records: List[Record], results: List[Dict[str, ModuleResults]],
     if not os.path.exists(local_path):
         logging.debug("Results page using antismash.js from remote host")
 
-    copy_template_dir('images', output_dir)
+    copy_template_dir(IMAGE_DIR, output_dir)
 
     with open(os.path.join(options.output_dir, "index.html"), "w", encoding="utf-8") as result_file:
         content = generate_webpage(records, results, options, all_modules)
@@ -127,7 +132,9 @@ def write(records: List[Record], results: List[Dict[str, ModuleResults]],
         result_file.write(content)
 
 
-def copy_template_dir(template: str, output_dir: str, pattern: Optional[str] = None) -> None:
+def copy_template_dir(template: str, output_dir: str, pattern: Optional[str] = None,
+                      keep_existing_content: bool = False,
+                      ) -> None:
     """ Copy files from a template directory to the output directory, removes
         any existing directory first. If pattern is supplied, only files within
         the template directory that match the template will be copied.
@@ -136,22 +143,24 @@ def copy_template_dir(template: str, output_dir: str, pattern: Optional[str] = N
             template: the source directory
             output_dir: the target directory
             pattern: a pattern to restrict to, if given
+            keep_existing_content: if false, existing content won't be removed
 
         Returns:
             None
     """
-    target_dir = os.path.join(output_dir, template)
-    if os.path.exists(target_dir):
+    target_dir = os.path.join(output_dir, os.path.basename(template))
+    if not keep_existing_content and os.path.exists(target_dir):
         shutil.rmtree(target_dir)
     if pattern:
         os.makedirs(target_dir)
-        for filename in glob.glob(path.get_full_path(__file__, template, pattern)):
+        for filename in glob.glob(os.path.join(template, pattern)):
             if os.path.isdir(filename):
-                shutil.copytree(filename, target_dir)
+                shutil.copytree(filename, target_dir, dirs_exist_ok=keep_existing_content)
             else:
                 shutil.copy2(filename, target_dir)
     else:
-        shutil.copytree(path.get_full_path(__file__, template), target_dir)
+        shutil.copytree(template, target_dir,
+                        dirs_exist_ok=keep_existing_content)
 
     # if the source tree has some directories without write permissions
     # then the output directories will also have no write permissions, which

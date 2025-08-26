@@ -143,17 +143,28 @@ class HMMResult:
         return hash((self._hit_id, self._query_start, self._query_end, self._evalue, self._bitscore))
 
 
-def _remove_overlapping(results: List[HMMResult], hmm_lengths: Dict[str, int]) -> List[HMMResult]:
-    """ Strip domain list of overlapping domains,
-        only keeping those with the highest scores
+def _remove_overlapping(results: list[HMMResult], hmm_lengths: Dict[str, int],
+                        *, max_overlap: float = 0.2,
+                        ) -> list[HMMResult]:
+    """ Strip domain list of overlapping domains, only keeping those with the highest scores.
 
-        Domains with an overlap of 20% or less aren't considered to be overlapping
+        Arguments:
+            results: a list of HMM results
+            hmm_lengths: a mapping of profile name to profile length
+            max_overlap: the allowable overlap, as a proportion of
+                                    the longest length of two hits, before those
+                                    hits are considered as overlapping
+
+        Returns:
+            a trimmed list of the initial results
     """
     non_overlapping = [results[0]]
     for result in results[1:]:
         previous = non_overlapping[-1]
-        maxoverlap = 0.20 * max([hmm_lengths[result.hit_id],
-                                 hmm_lengths[previous.hit_id]])
+        maxoverlap = max_overlap * max([
+            hmm_lengths[result.hit_id],
+            hmm_lengths[previous.hit_id],
+        ])
         if result.query_start < (previous.query_end - maxoverlap):
             # if the current result scores higher, replace the previous one
             if result.bitscore > previous.bitscore:
@@ -201,15 +212,27 @@ def remove_incomplete(domains: List[HMMResult], hmm_lengths: Dict[str, int],
     return []
 
 
-def _merge_domain_list(domains: List[HMMResult], hmm_lengths: Dict[str, int]) -> List[HMMResult]:
-    """ Merges domains of the same kind if they would not be too long """
+def _merge_domain_list(domains: list[HMMResult], hmm_lengths: dict[str, int],
+                       *, max_length: float = 1.5,
+                       ) -> list[HMMResult]:
+    """ Merges domains of the same kind if they would not be too long.
+
+        Arguments:
+            domains: a list of HMM results
+            hmm_lengths: a mapping of profile name to profile length
+            max_span: a multiplier of the profile length that specifies the maximum length
+                      that merged fragments could form
+
+        Returns:
+            a trimmed list of the initial results
+    """
     categories: Dict[str, List[HMMResult]] = defaultdict(list)
     for domain in domains:
         categories[domain.hit_id].append(domain)
     remaining = []
     for category in categories.values():
         merged = category[0]
-        max_span = 1.5 * hmm_lengths[merged.hit_id]  # TODO: use a more specific check
+        max_span = max_length * hmm_lengths[merged.hit_id]  # TODO: use a more specific check
         for other in category[1:]:
             # only merge if the hit spans of the two domains are small enough
             if other.query_end - merged.query_start < max_span:

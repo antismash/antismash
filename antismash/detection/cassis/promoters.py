@@ -96,14 +96,26 @@ class CombinedPromoter(Promoter):
 
 
 def get_promoters(record: Record, genes: List[Gene],
-                  upstream_tss: int, downstream_tss: int) -> List[Promoter]:
+                  upstream_tss: int, downstream_tss: int,
+                  *, min_promoter_length: int = 6,
+                  ) -> list[Promoter]:
     """Compute promoter sequences for each gene in the sequence record.
 
        For explanation of these numbers see file promoterregions.png
+
+        Arguments:
+            record: the record to get promoters from
+            genes: a list of genes near which to find promoters
+            upstream_tss: the distance upstream in which to search for promoters
+            downstream_tss: the distance downstream in which to search for promoters
+            min_promoter_length: the minimum size of a promoter, in nucleotides,
+                                 for it to be included in results
+
+        Returns:
+            a list of ther promoters that were found
     """
     logging.debug("Computing promoter sequences")
 
-    min_promoter_length = 6
     max_promoter_length = (upstream_tss + downstream_tss) * 2 + 1
 
     record_seq_length = len(record.seq)

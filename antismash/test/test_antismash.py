@@ -66,6 +66,7 @@ class TestAntismash(unittest.TestCase):
         options.start = -1
         options.end = -1
         options.version = "5.dummy"
+        options.branding = "antiSMASH"
         bio = rec.to_biopython()
 
         main.add_antismash_comments([(rec, bio)], options)
@@ -96,6 +97,16 @@ class TestAntismash(unittest.TestCase):
         main.add_antismash_comments([(rec, bio)], options)
         comment = bio.annotations["structured_comment"]["antiSMASH-Data"]
         assert comment["Original ID"] == rec.original_id
+
+        # ensure that alternate branding uses the correct entry
+        rec = DummyRecord()
+        alt_bio = rec.to_biopython()
+        options.branding = "alternate_branding"
+        main.add_antismash_comments([(rec, alt_bio)], options)
+        alt_structured = alt_bio.annotations["structured_comment"]
+        assert len(alt_structured) == 1, list(alt_structured)
+        comment = alt_structured[f"{options.branding}-Data"]
+        assert {"Version", "Run date"}.issubset(set(comment))
 
     def test_canonical_base_filename(self):
         options = build_parser(modules=self.all_modules).parse_args([])
