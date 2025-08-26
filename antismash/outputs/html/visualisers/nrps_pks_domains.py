@@ -168,13 +168,12 @@ def _build_paras_link(cds: CDSFeature, domain: NRPSPKSQualifier.Domain, signatur
     return f'<a class="external-link" href="{ link }" target="_blank">Repredict substrate with PARAS</a>'
 
 
-def _parse_domain(record: Record, domain: NRPSPKSQualifier.Domain,
+def _parse_domain(domain: NRPSPKSQualifier.Domain,
                   feature: CDSFeature, signature: str = "",
                   ) -> JSONDomain:
     """ Convert a NRPS/PKS domain string to a dict useable by json.dumps
 
         Arguments:
-            record: the Record containing the domain
             domain: the NRPSPKSQualifier.Domain in question
             feature: the CDSFeature that the domain belongs to
             signature: the extracted signature of the domain, if any, for linking out
@@ -203,11 +202,6 @@ def _parse_domain(record: Record, domain: NRPSPKSQualifier.Domain,
         extra_links.append(_build_paras_link(feature, domain, signature))
 
     dna_sequence = ""
-    for as_domain in record.get_antismash_domains_in_cds(feature):
-        if as_domain.get_name() == domain.feature_name:
-            dna_sequence = as_domain.extract(record.seq)
-            break
-    assert dna_sequence
     css, abbreviation = get_css_class_and_abbreviation(domain.name)
     return JSONDomain.from_domain(
         domain, predictions, napdoslink, blastlink, domainseq, dna_sequence,
@@ -261,7 +255,7 @@ def domains_have_predictions(region: Union[Region, RegionLayer]) -> bool:
     return False
 
 
-def generate_javascript_data(record: Record, region: Region,
+def generate_javascript_data(record: Record, region: Region,  # standard interface, so pylint: disable=unused-argument
                              results: dict[str, ModuleResults]) -> dict[str, Any]:
     """ Generate the javascript data required for interactive visualisation """
     orfs: list[JSONOrf] = []
@@ -292,7 +286,7 @@ def generate_javascript_data(record: Record, region: Region,
             if signatures:
                 assert isinstance(signatures, nrps_pks.results.PredictorSVMResult)
                 signature = signatures.aa34
-            parsed = _parse_domain(record, domain, feature, signature)
+            parsed = _parse_domain(domain, feature, signature)
             js_orf.add_domain(parsed)
 
         for module in feature.modules:
