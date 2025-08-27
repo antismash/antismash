@@ -255,6 +255,33 @@ class HmmDetectionTest(unittest.TestCase):
         assert new == [first, second]
         assert by_id == {"A": [first], "B": [second]}
 
+    def test_filter_bin_packing(self):
+        # given three profile hits of the form:
+        # AAAAAAA  X    BBBBBBB
+        #     YYYYYYYYYYYY
+        # where:
+        # - X and Y are in an equivalence group
+        # - the scores of both A and C are higher than X and Y
+        # - Y scores higher than X
+        # then both A and B and Y should be kept, rather than just the
+        # highest score of all the overlaps
+
+        first = FakeHSPHit("A", "cds", 500, 1000, 100., None)
+        last = FakeHSPHit("B", "cds", 1500, 2000, 200., None)
+        small = FakeHSPHit("X", "cds", 1150, 1300, 20., None)
+        large = FakeHSPHit("Y", "cds", 850, 1850, 50., None)
+
+        hits = [first, large, small, last]
+
+        filtered, by_id = hmm_detection.filter_results(
+            results=list(hits),
+            results_by_id={"cds": list(hits)},
+            equivalence_groups=[{"X", "Y"}],
+        )
+
+        assert by_id == {"cds": [first, large, last]}, [h.query_id for h in by_id["cds"]]
+        assert filtered == [first, large, last]
+
     def test_filter_multiple(self):
         # all in one CDS no overlap and the same query_ids -> cull all but the best score
 

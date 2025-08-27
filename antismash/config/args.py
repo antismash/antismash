@@ -11,7 +11,11 @@ import argparse
 from collections import defaultdict
 import multiprocessing
 import os
-from typing import Any, AnyStr, Dict, IO, List, Optional, Set, Tuple
+from typing import Any, AnyStr, Dict, IO, List, Optional, Set, Tuple, TYPE_CHECKING
+if TYPE_CHECKING:
+    from _typeshed import SupportsWrite
+else:
+    SupportsWrite = IO
 
 from antismash.custom_typing import AntismashModule
 
@@ -73,7 +77,7 @@ class AntismashParser(argparse.ArgumentParser):
         return super().add_argument_group(title, description, **kwargs)
 # pylint: enable=arguments-differ
 
-    def print_help(self, file: IO = None, show_all: bool = False
+    def print_help(self, file: SupportsWrite[str] = None, show_all: bool = False
                    ) -> None:
         """ Overrides parent print_help() to be able to pass through whether all
             help should be shown or not.

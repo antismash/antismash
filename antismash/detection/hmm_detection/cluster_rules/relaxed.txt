@@ -27,7 +27,7 @@ RULE transAT-PKS-like
     SUPERIORS transAT-PKS
     CUTOFF 45
     NEIGHBOURHOOD 20
-    CONDITIONS cds(ATd and (PKS_KS or ene_KS or mod_KS or hyb_KS or itr_KS or tra_KS) and not PKS_AT)
+    CONDITIONS cds(ATd and ANY_KS and not PKS_AT)
 
 RULE RiPP-like
     CATEGORY RiPP

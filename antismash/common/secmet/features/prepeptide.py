@@ -70,7 +70,7 @@ class Prepeptide(CDSMotif):  # pylint: disable=too-many-instance-attributes
         return self._leader + self._core + self._tail
 
     @translation.setter
-    def translation(self) -> None:
+    def translation(self, translation: str) -> None:
         raise AttributeError("Cannot assign to translation in a Prepeptide")
 
     @property

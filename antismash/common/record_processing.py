@@ -17,6 +17,7 @@ from helperlibs.bio import seqio
 
 from antismash.common import gff_parser
 from antismash.common.errors import AntismashInputError
+from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import Record
 from antismash.common.secmet.errors import SecmetInvalidInputError
 from antismash.config import get_config, update_config, Config, ConfigType
@@ -257,7 +258,8 @@ def strip_record(record: SeqRecord) -> SeqRecord:
     return record
 
 
-def ensure_cds_info(genefinding: Callable[[Record, Any], None], sequence: Record,
+def ensure_cds_info(genefinding: Callable[[Record, ConfigType], None],
+                    sequence: Record,
                     **kwargs: Dict[str, Any]) -> Record:
     """ Ensures the given record has CDS features with unique locus tags.
         CDS features are retrieved from GFF file or via genefinding, depending
@@ -266,7 +268,7 @@ def ensure_cds_info(genefinding: Callable[[Record, Any], None], sequence: Record
         Records without CDS features will have their skip flag marked.
 
         Arguments:
-            genefinding: the relevant run_on_record(record, options) function to
+            genefinding: the relevant run_on_record() module function to
                          use for finding genes if no GFF file being used
             record: the Record instance to ensure CDS features for
 
@@ -439,7 +441,11 @@ def pre_process_sequences(sequences: List[Record], options: ConfigType, genefind
         assert hasattr(genefinding, "run_on_record")
         genefinding_opts = {key: val for key, val in options if key.startswith("genefinding")}
         genefinding_opts["taxon"] = options.taxon
-        partial = functools.partial(ensure_cds_info, genefinding.run_on_record, **genefinding_opts)
+        base_function: Callable[[Record, ModuleResults | None, ConfigType],
+                                ModuleResults] = genefinding.run_on_record
+        # as of writing, the genefinding run_on_record() API doesn't follow the same pattern as it should,
+        # silence mypy until a minor/major version where those changes can be brought in
+        partial = functools.partial(ensure_cds_info, base_function, **genefinding_opts)  # type: ignore
         sequences = parallel_function(partial, ([sequence] for sequence in sequences))
 
     if all(sequence.skip for sequence in sequences):

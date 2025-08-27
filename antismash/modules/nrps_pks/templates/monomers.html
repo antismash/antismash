@@ -18,14 +18,19 @@
       {% for domain in record.get_cds_by_name(gene_id).nrps_pks.domains %}
         {% if domain.feature_name in results.consensus %}
           <div><strong>{{domain.name}} ({{domain.start}}..{{domain.end}})</strong>: {{results.consensus[domain.feature_name]}}
+          {%- set predictions = results.domain_predictions.get(domain.feature_name, {}).values() -%}
           {{collapser_start(gene_id, level="candidate")}}
-          {% for prediction in results.domain_predictions.get(domain.feature_name, {}).values() %}
+          {%- if not predictions -%}
+          No predictions made
+          {%- else -%}
+          {% for prediction in predictions %}
               {{prediction.method}}:  {{prediction.get_classification() | join(", ") or "(unknown)"}}
               {{collapser_start(gene_id + "-" + prediction.method, level="none")}}
                 {{prediction.as_html()}}
               {{collapser_end()}}<br>
           {% endfor %}
           {{collapser_end()}}
+          {%- endif -%}
           </div>
         {% endif %}
       {% endfor %}

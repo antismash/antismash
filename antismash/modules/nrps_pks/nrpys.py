@@ -65,10 +65,16 @@ def check_prereqs(options: ConfigType) -> list[str]:
     failure_messages: list[str] = []
     if "mounted_at_runtime" in options.database_dir:  # can't prepare this one
         return failure_messages
-    datafile_path = _get_signature_path(options, minimum_version=MINIMUM_VERSION)
+    try:
+        datafile_path = _get_signature_path(options, minimum_version=MINIMUM_VERSION)
+    except ValueError:
+        datafile_path = ""
     if not os.path.exists(datafile_path):
         failure_messages.append(f"Failed to locate {datafile_path}")
-    model_dir = _get_model_dir(options)
+    try:
+        model_dir = _get_model_dir(options)
+    except ValueError:
+        model_dir = ""
     if not os.path.exists(model_dir):
         failure_messages.append(f"Failed to locate {model_dir}")
     return failure_messages

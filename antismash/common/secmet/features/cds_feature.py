@@ -52,8 +52,11 @@ def _is_valid_translation_length(translation: str, location: Location) -> bool:
     """
     if len(translation) * 3 <= len(location):
         return True
-    ambiguous_start = isinstance(location.start, (BeforePosition, AfterPosition))
-    ambiguous_end = isinstance(location.end, (BeforePosition, AfterPosition))
+    ambiguous_start = location.has_ambiguous_start()
+    ambiguous_end = location.has_ambiguous_end()
+    # doubly ambiguous locations with overly long translations are problematic
+    if ambiguous_start and ambiguous_end:
+        return False
     return ambiguous_start or ambiguous_end
 
 
@@ -133,6 +136,8 @@ def _verify_location(location: Location) -> None:
         if len(location.parts) > 1 and location.parts[0].strand in [1, -1]:
             raise ValueError("compound locations with mixed strands are not supported")
         raise ValueError(f"invalid strand: {location.strand}")
+    if location.has_ambiguous_start() and location.has_ambiguous_end():
+        raise ValueError("CDS features require at least one unambiguous coordinate")
 
 
 class CDSFeature(Feature):
@@ -146,7 +151,6 @@ class CDSFeature(Feature):
                  protein_id: str = None, product: str = "", gene: str = None,
                  translation_table: int = 1) -> None:
         super().__init__(location, feature_type=self.FEATURE_TYPE)
-        _verify_location(location)
         # mandatory
         self._gene_functions = GeneFunctionAnnotations()
 
@@ -156,6 +160,12 @@ class CDSFeature(Feature):
         self.protein_id = _sanitise_id_value(protein_id)
         self.locus_tag = _sanitise_id_value(locus_tag)
         self.gene = _sanitise_id_value(gene)
+        # valid locations are mandatory, but embed the name for better error information
+        try:
+            _verify_location(location)
+        except ValueError as err:
+            raise type(err)(f"invalid location for {self.get_name()} ({location}): {err}")
+
         self.translation = str(translation)
 
         # optional
@@ -296,24 +306,27 @@ class CDSFeature(Feature):
             except ValueError:
                 raise SecmetInvalidInputError(f"invalid translation table {raw_table!r} for CDS {name!r}")
 
-        try:
-            _verify_location(bio_feature.location)
-        except Exception as err:
-            message = f"invalid location for {name}: {err}"
-            raise SecmetInvalidInputError(message) from err
-
+        location = bio_feature.location
         try:
             # before extracting a new translation, ensure that the location used
             # is correctly adjusted to account for a "codon_start" qualifier
-            location = bio_feature.location
             if "codon_start" in leftovers:
                 location = frameshift_location_by_qualifier(location, leftovers["codon_start"][0])
-            translation = _ensure_valid_translation(leftovers.pop("translation", [""])[0],
+            # ensure that all pseudo genes with ambiguous starts *and* ends are usable
+            # by disambiguating one end
+            if location.has_ambiguous_start() and location.has_ambiguous_end():
+                location = location.clone_without_ambiguity(keep_start=False, keep_end=True)
+            _verify_location(location)
+        except Exception as err:
+            message = f"invalid location for {name}: {err}"
+            raise SecmetInvalidInputError(message) from err
+        try:
+            translation = leftovers.pop("translation", [""])[0]
+            translation = _ensure_valid_translation(translation,
                                                     location, transl_table, record)
         except ValueError as err:
             raise SecmetInvalidInputError(f"{err}: {name}") from err
-
-        feature = cls(bio_feature.location, translation, gene=gene,
+        feature = cls(location, translation, gene=gene,
                       locus_tag=locus_tag, protein_id=protein_id,
                       translation_table=transl_table)
 

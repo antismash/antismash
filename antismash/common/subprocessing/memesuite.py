@@ -32,7 +32,7 @@ class FIMOMotif:
         kwargs: dict[str, Union[str, int, float]] = {}
         for part, field in zip(parts, fields(cls)):
             if field.type in (int, float):
-                part = field.type(part or 0)
+                part = field.type(part or 0)  # type: ignore  # mypy still thinks field.type can be 'str'
             kwargs[field.name] = part
         try:
             return cls(**kwargs)  # type: ignore  # this is validated above and mypy can't handle it

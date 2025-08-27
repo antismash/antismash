@@ -583,6 +583,8 @@ def hsp_overlap_size(first: HSP, second: HSP) -> int:
 
 def filter_results(results: list[HSP], results_by_id: Dict[str, list[HSP]],
                    equivalence_groups: GenericSets,
+                   *,
+                   maximum_overlap: int = 20,
                    ) -> tuple[list[HSP], dict[str, list[HSP]]]:
     """ Filter results by comparing scores of different models """
     for equivalence_group in equivalence_groups:
@@ -595,8 +597,14 @@ def filter_results(results: list[HSP], results_by_id: Dict[str, list[HSP]],
             # Identify overlapping hits
             overlapping_groups: List[Set[HSP]] = []
             for hit in cdsresults:
+                if hit.query_id not in equivalence_group:
+                    continue
                 for otherhit in cdsresults:
-                    if hit == otherhit or hsp_overlap_size(hit, otherhit) <= 20:
+                    if hit is otherhit:
+                        continue
+                    if otherhit.query_id not in equivalence_group:
+                        continue
+                    if hsp_overlap_size(hit, otherhit) <= maximum_overlap:
                         continue
                     new_group_needed = True
                     pairing = {hit, otherhit}

@@ -4,6 +4,7 @@
 """ Results classes for the sideloader module
 """
 
+from abc import ABC as AbstractBaseClass, abstractmethod
 import dataclasses
 from typing import Any, Dict, List, Union
 
@@ -68,7 +69,14 @@ class Tool:
         )
 
 
-class SubRegionAnnotation:
+class _AreaAnnotation(AbstractBaseClass):
+    @abstractmethod
+    def build_location(self) -> Location:
+        """ Constructs a location object from the sideloaded details """
+        raise NotImplementedError
+
+
+class SubRegionAnnotation(_AreaAnnotation):
     """ A class for containing arbitrary data about a sideloaded subregion annotation """
     kind = "subregion"
 
@@ -143,7 +151,7 @@ class SubRegionAnnotation:
         return f"Subregion({self.tool.name}, {self.start}-{self.end}, {self.label})"
 
 
-class ProtoclusterAnnotation:
+class ProtoclusterAnnotation(_AreaAnnotation):
     """ A class for containing arbitrary data about a sideloaded protocluster annotation """
     kind = "protocluster"
 
