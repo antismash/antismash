@@ -19,7 +19,7 @@ install_requires = [
     'brawn',
     'numpy',
     'biopython == 1.81',
-    'helperlibs',
+    'helperlibs >=0.2.2',
     'jinja2',
     'joblib',
     'jsonschema==4.25.1',

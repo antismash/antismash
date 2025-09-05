@@ -688,6 +688,11 @@ def debug_options() -> ModuleArgs:
                      action=argparse.BooleanOptionalAction,
                      default=True,
                      help="Create a GenBank summary file (default: %(default)s)")
+    group.add_option('--compress-summary',
+                     dest='compress_summary',
+                     action=argparse.BooleanOptionalAction,
+                     default=False,
+                     help="Use gzip to compress the GenBank summary file (default: %(default)s)")
     group.add_option('--region-gbks',
                      dest='region_gbks',
                      action=argparse.BooleanOptionalAction,
