@@ -183,7 +183,7 @@ def run(files: list[str], output_dir: str) -> None:
     regions: list[AsdbRegion] = []
 
     for filename in files:
-        for record in secmet.Record.from_genbank(filename):
+        for record in secmet.Record.from_file(filename):
             for secmet_region in record.get_regions():
                 if secmet_region.contig_edge:
                     continue
@@ -220,10 +220,10 @@ def main() -> int:
     if args.dir is not None:
         for root, _, files in os.walk(args.dir):
             for filename in files:
-                if filename.endswith(".gbk") and "region" not in filename:
+                if (filename.endswith(".gbk") or filename.endswith(".gbk.gz")) and "region" not in filename:
                     full_name = os.path.join(root, filename)
                     file_list.append(full_name)
-                    print("found", full_name)
+                    print("found", full_name, file=sys.stderr)
     else:
         with open(args.lof, "r", encoding="utf-8") as handle:
             file_list = list(map(str.strip, handle.readlines()))
