@@ -34,6 +34,7 @@ from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature
 from Bio.SeqRecord import SeqRecord, UndefinedSequenceError
+from helperlibs.bio import seqio as hl_seqio
 
 from .errors import SecmetInvalidInputError
 from .features import (
@@ -890,6 +891,17 @@ class Record:
         for bio in SeqIO.parse(filepath, "genbank"):
             records.append(Record.from_biopython(bio, taxon))
         return records
+
+    @staticmethod
+    def from_file(filepath: str, taxon: str = "bacteria") -> list["Record"]:
+        """ Reads any sequence file supported by helperlibs.bio and creates a
+            Record instance for each record contained in the file.
+        """
+        records = []
+        for bio in hl_seqio.parse(filepath):
+            records.append(Record.from_biopython(bio, taxon))
+        return records
+
 
     def _link_cds_to_parent(self, cds: CDSFeature) -> None:
         """ connect the given CDS to any collection that contains it, if any """

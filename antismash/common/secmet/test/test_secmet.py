@@ -401,6 +401,15 @@ class TestRecord(unittest.TestCase):
         assert len(rec.get_cds_features()) == 11
         assert isinstance(rec.get_cds_by_name("nisB"), CDSFeature)
 
+    def test_record_from_file(self):
+        # very basic testing to ensure that the file IO itself functions
+        recs = Record.from_file(get_path_to_nisin_genbank())
+        assert len(recs) == 1
+        rec = recs[0]
+        assert rec.get_feature_count() == 24
+        assert len(rec.get_cds_features()) == 11
+        assert isinstance(rec.get_cds_by_name("nisB"), CDSFeature)
+
     def test_multiple_colocated_non_as_motifs(self):
         rec = Record(Seq("A" * 100))
         assert not rec.get_cds_motifs()
