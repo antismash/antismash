@@ -13,6 +13,7 @@ from datetime import datetime
 import importlib
 from io import StringIO
 import glob
+import gzip
 import logging
 import os
 import pkgutil
@@ -757,8 +758,14 @@ def _run_antismash(sequence_file: Optional[str], options: ConfigType) -> int:
     logging.info("Writing results")
     json_filename = canonical_base_filename(results.input_file, options.output_dir, options)
     json_filename += ".json"
+    if options.compress_json:
+        json_filename += ".gz"
     logging.debug("Writing json results to '%s'", json_filename)
-    results.write_to_file(json_filename)
+    if options.compress_json:
+        with gzip.open(json_filename, mode='wt', encoding="utf-8") as compressed:
+            results.write_to_file(compressed)
+    else:
+        results.write_to_file(json_filename)
 
     # now that the json is out of the way, annotate the record
     # otherwise we could double annotate some areas
