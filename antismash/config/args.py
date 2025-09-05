@@ -698,6 +698,11 @@ def debug_options() -> ModuleArgs:
                      action=argparse.BooleanOptionalAction,
                      default=True,
                      help="Create a GenBank file for each region (default: %(default)s)")
+    group.add_option('--compress-json',
+                     dest='compress_json',
+                     action=argparse.BooleanOptionalAction,
+                     default=False,
+                     help="Use gzip to compress the JSON output file (default: %(default)s)")
     return group
 
 
