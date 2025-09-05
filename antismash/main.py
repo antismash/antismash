@@ -22,8 +22,8 @@ import time
 import tempfile
 from typing import cast, Any, Dict, List, Optional, Tuple, Union
 
-from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
+from helperlibs.bio import seqio as hl_seqio
 
 from antismash.config import (
     ConfigType,
@@ -474,8 +474,10 @@ def write_outputs(results: serialiser.AntismashResults, options: ConfigType) -> 
     base_filename = canonical_base_filename(results.input_file, options.output_dir, options)
     if options.summary_gbk:
         combined_filename = base_filename + ".gbk"
+        if options.compress_summary:
+            combined_filename += ".gz"
         logging.debug("Writing final genbank file to '%s'", combined_filename)
-        SeqIO.write(bio_records, combined_filename, "genbank")
+        hl_seqio.write(bio_records, combined_filename)
 
     zipfile = base_filename + ".zip"
     if os.path.exists(zipfile):
