@@ -5,6 +5,7 @@
 # pylint: disable=use-implicit-booleaness-not-comparison,protected-access,missing-docstring,consider-using-with
 
 from collections import OrderedDict
+import gzip
 from io import StringIO
 import unittest
 
@@ -68,6 +69,21 @@ class TestResultsJSON(unittest.TestCase):
             open("new.json", "w", encoding="utf-8").write(newvalue)
             for oldline, newline in zip(oldvalue.split('\n'), newvalue.split('\n')):
                 assert oldline == newline
+
+    def test_record_to_json_and_back_gzipped(self):
+        filename = get_path_to_nisin_genbank()
+        records = list(seqio.parse(open(filename, encoding="utf-8"), "genbank"))
+        records = [Record.from_biopython(rec, taxon="bacteria") for rec in records]
+        rec_results = [{}, {}, {}]
+        results = serialiser.AntismashResults(filename, records, rec_results, "dummy", taxon="dummytaxon")
+        assert results.taxon == "dummytaxon"
+        with TemporaryDirectory(change=True):
+            output = "dummy.json.gz"
+            with gzip.open(output, mode="wt", encoding="utf-8") as compressed:
+                results.write_to_file(compressed)
+            new_results = serialiser.AntismashResults.from_file(output)
+        assert new_results.taxon == results.taxon
+        assert results.to_json() == new_results.to_json()
 
     def test_invalid_file_raises_error(self):
         filename = get_path_to_nisin_genbank()
