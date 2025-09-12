@@ -8,6 +8,7 @@
 import bz2
 from collections import defaultdict, OrderedDict
 from dataclasses import dataclass, field
+import gzip
 import logging
 import os
 from typing import Any, Dict, IO, List, Union
@@ -64,6 +65,8 @@ class AntismashResults:
             _, ext = os.path.splitext(handle)
             if ext == ".bz2":
                 handle = bz2.open(handle, "rt", encoding="utf-8")
+            elif ext == ".gz":
+                handle = gzip.open(handle, "rt", encoding="utf-8")
             else:
                 handle = open(handle, "r", encoding="utf-8")  # pylint: disable=consider-using-with
         try:
