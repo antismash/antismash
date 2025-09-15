@@ -108,6 +108,16 @@ class TestCDSBiopythonConversion(unittest.TestCase):
         assert regen.gene == self.cds.gene
         assert regen.protein_id == self.cds.protein_id
 
+    def test_codon_start_round_trip(self):
+        bio = self.convert()
+        bio.qualifiers["codon_start"] = ["2"]
+        original_location = FeatureLocation(0, AfterPosition(11), 1)
+        bio.location = original_location
+        new = CDSFeature.from_biopython(bio)
+        assert new.location == FeatureLocation(2, AfterPosition(11), 1)
+        regen = new.to_biopython()[0]
+        assert regen.location == original_location
+
     def test_without_genefunctions(self):
         bio = self.convert()
         assert "gene_functions" not in bio.qualifiers

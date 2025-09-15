@@ -365,7 +365,13 @@ class CDSFeature(Feature):
         # respect qualifiers given to us
         if qualifiers:
             mine.update(qualifiers)
-        return super().to_biopython(mine)
+        feature = super().to_biopython(mine)
+        # if the original location was adjusted due to a modified codon start,
+        # undo that change
+        codon_start = int(feature[0].qualifiers.get("codon_start", [0])[0])
+        if codon_start > 1:
+            feature[0].location = frameshift_location_by_qualifier(feature[0].location, codon_start, undo=True)
+        return feature
 
     def __repr__(self) -> str:
         return str(self)
