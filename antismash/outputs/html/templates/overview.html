@@ -8,7 +8,7 @@
   <link rel="stylesheet" type="text/css" href="css/{{options.taxon}}.css">
   <meta property="og:title" content="{{page_title}} - {{records | length}} record(s) - {{regions_written}} region(s)" />
   <meta property="og:description" content="{{options.html_description}}">
-  <meta property="og:image" content="https://antismash.secondarymetabolites.org/images/{{options.taxon}}_logo.png" />
+  <meta property="og:image" content="{{ options.urls.bacteria_baseurl }}/images/{{options.taxon}}_logo.png" />
   <meta property="og:image:alt" content="antiSMASH logo" />
   <meta property="og:image:width" content="600" />
   <meta property="og:image:height" content="600" />
@@ -43,7 +43,11 @@
   <!-- overview page -->
   {% if records %}
   <div class="page" id="overview">
-   {% set intro = "Identified secondary metabolite regions using strictness '{}'".format(options.hmmdetection_strictness) %}
+   {%- if options.hmmdetection_strictness is defined -%}
+       {%- set intro = "Identified secondary metabolite regions using strictness '{}'".format(options.hmmdetection_strictness) -%}
+   {%- else -%}
+       {%- set intro = "" -%}
+   {%- endif -%}
    {% if options.triggered_limit %}
      <h3>{{intro}} (truncated to the first {{options.limit}} record(s)) <span id="truncated"></span></h3>
    {% else %}

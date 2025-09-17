@@ -108,20 +108,24 @@ def get_antismash_js_url() -> str:
     return f"https://dl.secondarymetabolites.org/releases/as-js/{_ANTISMASH_JS_VERSION}/antismash.js"
 
 
-def cds_selector_span(identifier: str, additional_classes: list[str] = None) -> Markup:
+def cds_selector_span(identifier: str, additional_classes: list[str] = None,
+                      *, display_name: str = None) -> Markup:
     """ Builds an HTML span that will, when clicked, select the matching CDS
         in the javascript cluster viewer.
 
         Arguments:
             identifier: the name of the CDS
             additional_classes: any additional classes to add to the created span
+            display_name: the name to display, if different from the identifier
 
         Returns:
             a Markup instance, containing the created span
     """
+    if not display_name:
+        display_name = identifier
     return Markup(
         f'<span class="cds-selector{" " if additional_classes else ""}{" ".join(additional_classes or [])}" '
-        f'data-locus="{identifier}">{identifier}</span>'
+        f'data-locus="{identifier}">{display_name}</span>'
     )
 
 

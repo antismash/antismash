@@ -315,10 +315,10 @@ def prepare_data(logging_only: bool = False) -> List[str]:
             raise
         return [str(err)]
 
-    seeds_hmm = path.get_full_path(__file__, 'data', 'bgc_seeds.hmm')
-    hmm_files = [path.get_full_path(__file__, "data", sig.hmm_file) for sig in profiles]
+    seeds_hmm = HMM_FILE
+    hmm_files = [os.path.join("data", sig.hmm_file) for sig in profiles]
 
-    description_file = path.get_full_path(__file__, 'data', 'hmmdetails.txt')
+    description_file = SIGNATURE_FILE
     force_replace = not (path.locate_file(seeds_hmm)
                          and os.path.getmtime(description_file) < os.path.getmtime(seeds_hmm))
 
