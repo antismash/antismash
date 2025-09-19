@@ -284,10 +284,6 @@ def _calculate_genome_codon_frequencies(genome_cds_features: List[CDSFeature]) -
         except Exception:
             continue
     
-    if cache_hits + cache_misses > 0:
-        cache_hit_rate = cache_hits / (cache_hits + cache_misses) * 100
-        logging.info("Codoff: Genome codon freq cache hit rate: %.1f%% (%d hits, %d misses, total cache size: %d)", 
-                    cache_hit_rate, cache_hits, cache_misses, len(_codon_extraction_cache))
     
     # Vectorized counting is much faster than manual loops
     return dict(Counter(all_codons))
@@ -340,6 +336,17 @@ def _run_final_analysis_for_region(bgc_info: Dict[str, Any], region_codon_freqs:
 def _finalize_analysis_for_all_records(options: ConfigType) -> None:
     """ Finalize the codoff analysis for all records """
     global _codoff_global_state
+    
+    # Check genome size requirements using total genome size
+    total_genome_size = _codoff_global_state['total_genome_size']
+    if total_genome_size < options.codoff_min_genome_size:
+        logging.warning("Total genome size too small for codoff analysis (%d bp < %d bp). Skipping analysis.", 
+                       total_genome_size, options.codoff_min_genome_size)
+        return
+    if total_genome_size > options.codoff_max_genome_size:
+        logging.warning("Total genome size too large for codoff analysis (%d bp > %d bp). Skipping analysis.", 
+                       total_genome_size, options.codoff_max_genome_size)
+        return
     
     if not _codoff_global_state.get('all_cds_features'):
         logging.warning("No CDS features collected, nothing to finalize")
@@ -396,7 +403,6 @@ def _collect_global_cds_info(record: Record, options: ConfigType) -> None:
     record_cds_features = record.get_cds_features()
     valid_cds_features = record_cds_features  # No pre-filtering, let codon extraction handle it
     
-    
     # Store CDS features with their record ID for later identification
     for cds in valid_cds_features:
         _codoff_global_state['cds_to_record_map'][id(cds)] = record.id
@@ -421,23 +427,12 @@ def run_on_record(record: Record, results: Optional[CodoffResults],
     # Collect genome-wide CDS information from this record
     _collect_global_cds_info(record, options)
     
-    # Check genome size requirements using total genome size
-    total_genome_size = _codoff_global_state['total_genome_size']
-    if total_genome_size < options.codoff_min_genome_size:
-        logging.warning("Total genome size too small for codoff analysis (%d bp < %d bp). Skipping.", 
-                       total_genome_size, options.codoff_min_genome_size)
-        return results
-    if total_genome_size > options.codoff_max_genome_size:
-        logging.warning("Total genome size too large for codoff analysis (%d bp > %d bp). Skipping.", 
-                       total_genome_size, options.codoff_max_genome_size)
-        return results
-    
     # Store BGC region information for later analysis
     all_cds_features = _codoff_global_state['all_cds_features']
     cds_to_record_map = _codoff_global_state['cds_to_record_map']
     
     if not all_cds_features:
-        logging.warning("No CDS features found that meet minimum length requirement")
+        logging.warning("No CDS features found")
         return results
 
     for region in record.get_regions():
@@ -452,11 +447,7 @@ def run_on_record(record: Record, results: Optional[CodoffResults],
             
         # Get CDS features in this region
         # Use region.cds_children to get CDS features (found this works in debug logs)
-        
-        # Use region.get_cds_features() if available, otherwise fall back to overlap detection
-        if hasattr(region, 'get_cds_features'):
-            region_cds_features = region.get_cds_features()
-        elif hasattr(region, 'cds_children'):
+        if hasattr(region, 'cds_children'):
             region_cds_features = region.cds_children
         else:
             # Fall back to overlap detection with stricter criteria

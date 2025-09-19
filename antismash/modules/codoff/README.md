@@ -13,7 +13,7 @@ This module implements the core functionality from the [codoff repository](https
 - **HTML visualization**: Generates histograms and detailed reports in the antiSMASH output
 
 > [!NOTE] 
-> The antiSMASH codoff module may find slightly fewer CDS features compared to the standalone codoff program because antiSMASH applies additional CDS validation during GenBank file processing that filters out some CDS features that the standalone program includes. 
+> The antiSMASH codoff module may find fewer total CDS features compared to the standalone codoff program because only records with BGC regions are considered. This should usually be valid, but be cautious of the results if many scaffolds lack BGC regions as the total codon usage of the genome might not be properly inferred. 
 
 ## Usage
 
@@ -120,7 +120,6 @@ The codoff module follows antiSMASH's standard module patterns:
 - **Minimal logging**: Essential warnings and errors only, no verbose debug output
 - **Consistent naming**: All module references use lowercase "codoff"
 - **Standardized test format**: Test docstrings and structure match antiSMASH conventions
-- **Production-ready**: Debug utilities and development files removed
 
 ## Dependencies
 
