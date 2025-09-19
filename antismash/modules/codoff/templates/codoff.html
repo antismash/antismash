@@ -1,0 +1,266 @@
+<div class="codoff-analysis">
+    <h3>Codon Usage Analysis Results</h3>
+    
+    <!-- Important Notice -->
+    <div class="codoff-notice">
+        <h4>⚠️ Important Notice</h4>
+        <p><strong>This analysis is designed for individual bacterial or fungal genomes only.</strong> Results may not be meaningful for:</p>
+        <ul>
+            <li>Metagenomes or metagenomic assemblies</li>
+            <li>Mobile genetic elements (plasmids, phages/viruses)</li>
+            <li>Incomplete genomes</li>
+        </ul>
+        <p>For accurate results, ensure your input represents a complete or near-complete single bacterial or fungal genome.</p>
+        <p><strong>Multiple Testing Consideration:</strong> If you are assessing multiple BGC regions in your genome, consider applying multiple testing correction (e.g., Bonferroni or FDR) to the reported P-values to control for false discovery rates.</p>
+    </div>
+    
+    <!-- Results & Interpretation -->
+    <div class="results-section">
+        <h4>Results & Interpretation</h4>
+        <div class="results-grid">
+            <div class="result-item">
+                <strong>Empirical P-value:</strong> {{ "%.4f"|format(results.empirical_pvalue) }}
+            </div>
+            <div class="result-item">
+                <strong>Cosine Distance:</strong> {{ "%.3f"|format(results.cosine_distance) }}
+            </div>
+            <div class="result-item">
+                <strong>Spearman Correlation:</strong> {{ "%.3f"|format(results.spearman_rho) }}
+            </div>
+            <div class="result-item">
+                <strong>Region CDS Count:</strong> {{ results.region_cds_count }}
+            </div>
+            <div class="result-item">
+                <strong>Genome CDS Count (excl. region):</strong> {{ results.genome_cds_count_excluding_region }}
+            </div>
+            <div class="result-item">
+                <strong>Total CDS Count:</strong> {{ results.total_cds_count }}
+            </div>
+        </div>
+        
+        <!-- Interpretation within same section -->
+        <div class="interpretation-content">
+            <p class="histogram-caption">
+                <strong>Interpretation:</strong> 
+                {% if results.empirical_pvalue < 0.05 %}
+                    <span class="significance-high">Significant difference (p < 0.05):</span> The BGC has significantly different codon usage from its genomic context, potentially indicating horizontal gene transfer or atypical expression/translation frequency.
+                {% else %}
+                    <span class="significance-none">No significant difference (p ≥ 0.05):</span> The BGC has similar codon usage to its genomic context.
+                {% endif %}
+            </p>
+        </div>
+    </div>
+    
+    <!-- Interpretation Guide -->
+    <div class="interpretation-guide">
+        <h4>Understanding the Results</h4>
+        <div class="guide-grid">
+            <div class="interpretation-item">
+                <h6>Statistical Significance</h6>
+                <p>Low P-values (< 0.05) suggest the BGC has significantly different codon usage from its genomic context, potentially indicating horizontal gene transfer or atypical expression/translation frequency. High P-values (≥ 0.05) suggest the BGC has similar codon usage to its genomic context.</p>
+            </div>
+            <div class="interpretation-item">
+                <h6>Cosine Distance</h6>
+                <p>Measures the angular distance between codon frequency vectors. Values closer to 0 indicate more similar codon usage patterns, while values closer to 1 indicate more different patterns.</p>
+            </div>
+            <div class="interpretation-item">
+                <h6>Spearman Correlation</h6>
+                <p>Measures the rank correlation between codon frequencies. Values closer to 1 indicate similar ranking of codon preferences, while values closer to -1 indicate opposite rankings.</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Histogram -->
+    {% if results.histogram_path %}
+    <div class="histogram-section">
+        <h4>Simulation Results</h4>
+        <div class="histogram-container">
+            <img src="{{ results.histogram_path }}" alt="codoff Histogram" class="codoff-histogram">
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Codon Frequency Table -->
+    <div class="frequency-section">
+        <h4>Codon Frequencies</h4>
+        <div class="table-container">
+            <table class="codon-table">
+                <thead>
+                    <tr>
+                        <th>Codon</th>
+                        <th>Region Proportion</th>
+                        <th>Genome Proportion</th>
+                        <th>Difference</th>
+                        <th>Raw Counts</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for i in range(results.codon_order|length) %}
+                    <tr>
+                        <td>{{ results.codon_order[i] }}</td>
+                        <td>{{ "%.4f"|format(results.region_codon_frequencies_standardized[i]) }}</td>
+                        <td>{{ "%.4f"|format(results.genome_codon_frequencies_standardized[i]) }}</td>
+                        <td>{{ "%.4f"|format(results.region_codon_frequencies_standardized[i] - results.genome_codon_frequencies_standardized[i]) }}</td>
+                        <td>{{ results.region_codon_frequencies[i] }} / {{ results.genome_codon_frequencies[i] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+.codoff-analysis {
+    font-family: Arial, sans-serif;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.codoff-notice {
+    margin-bottom: 25px;
+    padding: 20px;
+    border: 2px solid #f39c12;
+    border-radius: 8px;
+    background-color: #fef9e7;
+    border-left: 5px solid #f39c12;
+}
+
+.codoff-notice h4 {
+    margin-top: 0;
+    color: #e67e22;
+    font-size: 1.1em;
+}
+
+.codoff-notice ul {
+    margin: 10px 0;
+    padding-left: 20px;
+}
+
+.codoff-notice li {
+    margin-bottom: 5px;
+}
+
+.results-section, .histogram-section, .frequency-section, .interpretation-guide {
+    margin-bottom: 30px;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+}
+
+.results-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.result-item {
+    padding: 10px;
+    background-color: white;
+    border-radius: 5px;
+    border-left: 4px solid #007acc;
+}
+
+.interpretation-content {
+    margin-top: 20px;
+}
+
+.significance-high {
+    color: #d32f2f;
+    font-weight: bold;
+}
+
+.significance-none {
+    color: #388e3c;
+    font-weight: bold;
+}
+
+.histogram-container {
+    text-align: center;
+    margin: 20px 0;
+    padding: 20px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.codoff-histogram {
+    width: 100% !important;
+    max-width: 800px;
+    height: auto !important;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    display: block;
+    margin: 0 auto;
+}
+
+.table-container {
+    overflow-x: auto;
+    margin-top: 15px;
+}
+
+.codon-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: white;
+}
+
+.codon-table th, .codon-table td {
+    padding: 8px 12px;
+    text-align: center;
+    border: 1px solid #ddd;
+}
+
+.codon-table th {
+    background-color: #007acc;
+    color: white;
+    font-weight: bold;
+}
+
+.codon-table tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+.summary-stats {
+    margin-top: 15px;
+    padding: 10px;
+    background-color: #e3f2fd;
+    border-radius: 5px;
+}
+
+.guide-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin-top: 15px;
+}
+
+.interpretation-item {
+    padding: 15px;
+    background-color: white;
+    border-radius: 5px;
+    border-left: 4px solid #4caf50;
+}
+
+.interpretation-item h6 {
+    margin: 0 0 10px 0;
+    color: #2e7d32;
+    font-size: 16px;
+}
+
+.interpretation-item p {
+    margin: 0;
+    line-height: 1.5;
+}
+
+.histogram-caption {
+    padding: 15px;
+    background-color: #fff3e0;
+    border-radius: 5px;
+    border-left: 4px solid #ff9800;
+    margin: 15px 0;
+}
+</style>
