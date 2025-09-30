@@ -22,6 +22,8 @@ antismash/detection/genefunctions/tools/halogenases/data/FDH.hmm
 antismash/databases/*
 antismash/modules/*/data/*.classifier.pkl
 antismash/modules/*/data/*.scaler.pkl
+antismash/modules/clusterblast/data/sub/proteins.json
+antismash/modules/clusterblast/test/data/**/proteins.json
 antismash/modules/terpene/data/all_profiles.hmm
 antismash/outputs/html/js/antismash.js
 antismash.egg-info/*

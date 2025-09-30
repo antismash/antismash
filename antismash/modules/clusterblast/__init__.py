@@ -19,7 +19,7 @@ from .clusterblast import perform_clusterblast
 from .html_output import generate_html, generate_javascript_data, will_handle
 from .known import run_knownclusterblast_on_record, check_known_prereqs, prepare_known_data
 from .results import ClusterBlastResults, get_result_limit
-from .sub import run_subclusterblast_on_record, check_sub_prereqs
+from .sub import check_sub_prereqs, prepare_sub_data, run_subclusterblast_on_record
 
 NAME = "clusterblast"
 SHORT_DESCRIPTION = "comparative gene cluster analysis"
@@ -118,6 +118,9 @@ def prepare_data(logging_only: bool = False) -> List[str]:
     failure_messages = []
     # known
     failure_messages.extend(prepare_known_data(logging_only))
+
+    # sub
+    failure_messages.extend(prepare_sub_data(logging_only=logging_only))
 
     # general
     clusterblastdir = os.path.join(get_config().database_dir, "clusterblast")

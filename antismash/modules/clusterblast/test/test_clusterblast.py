@@ -20,6 +20,7 @@ from antismash.common.secmet.test.helpers import (
 )
 from antismash.modules import clusterblast
 from antismash.modules.clusterblast import core
+from antismash.modules.clusterblast.data_structures import Protein
 
 
 class TestBlastParsing(unittest.TestCase):
@@ -248,15 +249,15 @@ class TestScore(unittest.TestCase):
 
 class TestProtein(unittest.TestCase):
     def test_string_conversion(self):
-        protein = core.Protein("unique", "n", "l", "5-12", "+", "anno")
+        protein = Protein("unique", "n", "l", "5-12", "+", "anno")
         self.assertEqual(str(protein), "l\tn\t5\t12\t+\tanno\n")
 
         # test name is used when no locus tag
-        protein = core.Protein("unique", "n", "no_locus_tag", "5-12", "+", "anno")
+        protein = Protein("unique", "n", "no_locus_tag", "5-12", "+", "anno")
         self.assertEqual(str(protein), "n\tn\t5\t12\t+\tanno\n")
 
     def test_members(self):
-        protein = core.Protein("unique", "n", "no_locus_tag", "5-12", "+", "anno")
+        protein = Protein("unique", "n", "no_locus_tag", "5-12", "+", "anno")
         protein.locus_tag = "l"
         # if this doesn't raise an exception, __slots__ was removed from Protein
         with self.assertRaises(AttributeError):
@@ -548,10 +549,9 @@ class TestReferenceProteinLoading(unittest.TestCase):
             ">CVNH01000008|c1|65549-69166|-|linearised65549-69166"
             "|BN1184_AH_00620|Urea_carboxylase_{ECO:0000313}|CRH36422"
         )
-        with patch("builtins.open", self.mock_with(hit)):
-            proteins = core.load_reference_proteins("clusterblast")
-        assert len(proteins) == 1
-        protein = proteins["CVNH01000008_BN1184_AH_00620"]
+        unique_id, raw = core._extract_protein_from_line(hit)
+        assert unique_id == "CVNH01000008_BN1184_AH_00620"
+        protein = Protein(**raw)
         assert protein.name == "CRH36422"
         assert protein.annotations == "Urea_carboxylase_{ECO:0000313}"
 
@@ -560,10 +560,9 @@ class TestReferenceProteinLoading(unittest.TestCase):
             ">CVNH01000008|c1|65549-69166|-|linearised65549-69166"
             "|BN1184_AH_00620|Urea_carboxylase_{ECO:0000313|EMBL:CCF11062.1}|CRH36422"
         )
-        with patch("builtins.open", self.mock_with(hit)):
-            proteins = core.load_reference_proteins("clusterblast")
-        assert len(proteins) == 1
-        protein = proteins["CVNH01000008_BN1184_AH_00620"]
+        unique_id, raw = core._extract_protein_from_line(hit)
+        assert unique_id == "CVNH01000008_BN1184_AH_00620"
+        protein = Protein(**raw)
         assert protein.name == "CRH36422"
         assert protein.annotations == "Urea_carboxylase_{ECO:0000313|EMBL:CCF11062.1}"
 
@@ -596,3 +595,30 @@ class TestDataPreparation(unittest.TestCase):
         with patch.object(clusterblast, "check_clusterblast_files", returns=[]) as check:
             clusterblast.check_prereqs(options)
             check.assert_called_once()
+
+
+class TestProteinDB(unittest.TestCase):
+    def setUp(self):
+        text = (
+            ">CVNH01000008|c1|65549-69166|-|linearised65549-69166"
+            "|BN1184_AH_00620|Urea_carboxylase_{ECO:0000313|EMBL:CCF11062.1}|CRH36422"
+        )
+        self.unique_id, self.raw = core._extract_protein_from_line(text)
+        self.protein = Protein(**self.raw)
+
+    def test_initial_protein(self):
+        prots = core.ProteinDB(raw_json=None, constructed={self.unique_id: self.protein})
+        assert prots.get_protein(self.unique_id) is self.protein
+        assert prots[self.unique_id] is self.protein
+
+    def test_initial_raw(self):
+        prots = core.ProteinDB(raw_json={self.unique_id: self.raw}, constructed=None)
+        assert len(prots._raw) == 1
+        assert len(prots._rebuilt) == 0
+        first = prots.get_protein(self.unique_id)
+        assert isinstance(first, Protein)
+        assert len(prots._raw) == 0
+        assert len(prots._rebuilt) == 1
+
+        second = prots[self.unique_id]
+        assert second is first
