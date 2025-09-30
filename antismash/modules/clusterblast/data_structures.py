@@ -7,7 +7,7 @@ from collections import OrderedDict
 from dataclasses import dataclass
 from typing import Any, Dict, List, Self, Tuple, Union
 
-from antismash.common.json import JSONBase, JSONCompatible
+from antismash.common.json import JSONBase, JSONCompatible, load
 
 
 @dataclass(slots=True)
@@ -104,6 +104,47 @@ class Protein(JSONBase):
     def to_json(self) -> JSONCompatible:
         """ Returns a JSON-compatible object with the instance's data """
         return self
+
+
+@dataclass(kw_only=True)
+class ProteinDB:
+    """ A database of proteins capable of lazily converting from raw format to instances
+        when accessed.
+    """
+    def __init__(self, *,
+                 raw_json: dict[str, Any] | None = None,
+                 constructed: dict[str, Protein] | None = None,
+                 ) -> None:
+        self._raw = raw_json if raw_json is not None else {}
+        self._rebuilt = constructed if constructed is not None else {}
+
+    def get_protein(self, identifier: str) -> Protein:
+        """ Returns the protein entry with the given identifier """
+        protein = self._rebuilt.get(identifier)
+        if protein is None:
+            raw = self._raw.pop(identifier, None)
+            if raw is None:
+                raise ValueError(f"no protein exists with identifier: '{identifier}'")
+            protein = Protein(**raw)
+            self._rebuilt[identifier] = protein
+        return protein
+
+    @classmethod
+    def from_file(cls, file_path: str) -> Self:
+        """ Constructs a database from the given file """
+        with open(file_path, "rb") as handle:
+            proteins = cls(raw_json=load(handle))
+        return proteins
+
+    def __getitem__(self, identifier: Any) -> Protein:
+        try:
+            protein = self.get_protein(identifier)
+        except ValueError as err:
+            raise KeyError(identifier) from err
+        return protein
+
+    def __len__(self) -> int:
+        return len(self._raw) + len(self._rebuilt)
 
 
 class Subject:
@@ -232,3 +273,6 @@ class MibigEntry:
 
     def __str__(self) -> str:
         return "%s\n" % "\t".join(str(val) for val in self.values)
+
+
+ProteinMapping = ProteinDB | dict[str, Protein]

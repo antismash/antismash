@@ -17,6 +17,7 @@ from antismash.config import ConfigType
 
 from .core import (
     _SHIPPED_DATA_DIR,
+    build_protein_cache,
     blastparse,
     get_core_gene_ids,
     load_clusterblast_database,
@@ -25,12 +26,33 @@ from .core import (
     write_fastas_with_all_genes,
 )
 from .results import RegionResult, GeneralResults
-from .data_structures import ReferenceCluster, Protein
+from .data_structures import ProteinDB, ReferenceCluster
 
 
 def _get_datafile_path(filename: str) -> str:
     """ A simple helper to get the full path of subclusterblast datafile """
     return os.path.join(_SHIPPED_DATA_DIR, 'sub', filename)
+
+
+def prepare_sub_data(*, logging_only: bool = False) -> list[str]:
+    """ Prepares the relevant data files.
+
+        Arguments:
+            logging_only: return error messages instead of raising exceptions
+
+        Returns:
+            a list of error messages
+    """
+    failure_messages = []
+    try:
+        build_protein_cache(_get_datafile_path("proteins.fasta"))
+    except OSError as err:
+        if logging_only:
+            failure_messages.append(str(err))
+        else:
+            raise
+
+    return failure_messages
 
 
 def check_sub_prereqs(options: ConfigType) -> List[str]:
@@ -135,7 +157,7 @@ def read_clusterblast_output(options: ConfigType) -> str:
 
 
 def perform_subclusterblast(options: ConfigType, record: Record, clusters: Dict[str, ReferenceCluster],
-                            proteins: Dict[str, Protein]) -> GeneralResults:
+                            proteins: ProteinDB) -> GeneralResults:
     """ Run BLAST on gene cluster proteins of each cluster, parse output and
         return result rankings for each cluster
 
@@ -143,7 +165,7 @@ def perform_subclusterblast(options: ConfigType, record: Record, clusters: Dict[
             options: antismash Config
             record: the Record to analyse
             clusters: a dictionary mapping reference cluster name to ReferenceCluster
-            proteins: a dictionary mapping reference protein name to Protein
+            proteins: the protein database
 
         Returns:
             a GeneralResults instance storing results for all clusters in the

@@ -17,13 +17,13 @@ from .core import (
     run_diamond_on_all_regions,
     score_clusterblast_output,
 )
-from .data_structures import ReferenceCluster, Protein
+from .data_structures import ProteinDB, ReferenceCluster
 from .results import RegionResult, GeneralResults
 
 
 def perform_clusterblast(options: ConfigType, record: Record,
                          db_clusters: Dict[str, ReferenceCluster],
-                         db_proteins: Dict[str, Protein]) -> GeneralResults:
+                         db_proteins: ProteinDB) -> GeneralResults:
     """ Run BLAST on gene cluster proteins for each cluster, parse output and
         return result rankings for each cluster
 
@@ -31,7 +31,7 @@ def perform_clusterblast(options: ConfigType, record: Record,
             options: antismash Config
             record: the Record to analyse
             db_clusters: a dict mapping reference cluster name to ReferenceCluster
-            db_proteins: a dict mapping reference protein name to Protein
+            db_proteins: the protein database
 
         Returns:
             a GeneralResults instance with results for each cluster in the record

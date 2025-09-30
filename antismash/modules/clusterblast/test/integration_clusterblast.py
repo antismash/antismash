@@ -16,24 +16,22 @@ from antismash.common import json, path, secmet
 from antismash.common.module_results import ModuleResults
 from antismash.common.test import helpers
 from antismash.common.subprocessing.diamond import run_diamond_version
-from antismash.config import build_config, get_config, update_config, destroy_config
+from antismash.config import build_config, destroy_config, update_config
 from antismash.detection import hmm_detection
 from antismash.modules import clusterblast
-from antismash.modules.clusterblast import core
+from antismash.modules.clusterblast import core, sub
 from antismash.outputs import html
 
 
 class Base(unittest.TestCase):
     def setUp(self):
-        options = build_config(self.get_args(), isolated=True, modules=[clusterblast, html, hmm_detection])
+        self.options = build_config(self.get_args(), isolated=True, modules=[clusterblast, html, hmm_detection])
         _major, _minor, _patch = map(int, run_diamond_version().split("."))
         self.diamond_ver_major = _major
         self.diamond_ver_minor = _minor
         self.diamond_ver_patch = _patch
         self.diamond_version = (_major, _minor, _patch)
-        self.old_config = get_config().__dict__
         update_config({"genefinding_gff3": ""})
-        self.options = update_config(options)
 
         assert clusterblast.check_prereqs(self.options) == []
         assert clusterblast.check_options(self.options) == []
@@ -47,7 +45,6 @@ class Base(unittest.TestCase):
 
     def tearDown(self):
         destroy_config()
-        update_config(self.old_config)
 
     def get_results(self, results):
         """ override with a function that fetches specific results instance
@@ -235,6 +232,10 @@ class KnownIntegrationTest(Base):
 
 
 class SubIntegrationTest(Base):
+    def setUp(self):
+        super().setUp()
+        sub.prepare_sub_data()
+
     def get_args(self):
         return ["--cb-subcluster", "--minimal", "--enable-html"]
 
@@ -255,23 +256,23 @@ class SubIntegrationTest(Base):
 
 class TestDatabaseValidity(unittest.TestCase):
     def setUp(self):
-        options = build_config([], isolated=True, modules=[clusterblast])
-        self.old_config = get_config().__dict__
-        self.options = update_config(options)
+        build_config([], isolated=True, modules=[clusterblast])
+        clusterblast.prepare_data(logging_only=False)
 
     def tearDown(self):
         destroy_config()
-        update_config(self.old_config)
 
     def _check_proteins_match_clusters(self, searchtype):
         clusters = core.load_reference_clusters(searchtype)
         proteins = core.load_reference_proteins(searchtype)
+        original_count = len(proteins)
         expected_proteins = 0
         for cluster in clusters.values():
             expected_proteins += len(cluster.tags)
             for protein in cluster.tags:
-                assert f"{cluster.accession}_{protein}" in proteins, f"missing: {protein}"
+                assert proteins.get_protein(f"{cluster.accession}_{protein}")
         assert len(proteins) == expected_proteins
+        assert len(proteins) == original_count  # no extras should be created during lazy conversion
 
     def test_general(self):
         self._check_proteins_match_clusters("clusterblast")

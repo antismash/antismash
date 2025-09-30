@@ -7,17 +7,115 @@ from collections import defaultdict, OrderedDict
 import logging
 import os
 from tempfile import NamedTemporaryFile
-from typing import Dict, Iterable, List, Set, Sequence, Tuple
+from typing import Any, Dict, Iterable, List, Set, Sequence, Tuple
 
-from antismash.common import path, subprocessing, fasta, secmet
-from antismash.common.subprocessing.diamond import \
-    check_diamond_files as check_clusterblast_files  # used by other components # pylint: disable=unused-import
+from antismash.common import fasta, json, path, secmet, subprocessing
+from antismash.common.subprocessing.diamond import check_diamond_files
 
 from antismash.config import get_config
 
-from .data_structures import Subject, Query, Protein, ReferenceCluster, Score
+from .data_structures import Subject, Query, ProteinDB, ReferenceCluster, Score
 
 _SHIPPED_DATA_DIR = path.get_full_path(__file__, "data")
+CACHE_FILE = "proteins.json"
+
+
+def _extract_protein_from_line(line: str) -> tuple[str, dict[str, Any]]:
+    # some lines are malformed, so always split the name off the annotation
+    # e.g. >x|y|1-2|-|z|Urea_carboxylase_{ECO:0000313|EMBL:CCF11062.1}|CRH36422
+    # linearised coordinates can also be inserted for some databases
+    # e.g. >x|y|1-2|-|linearised5-20|z|Urea_carboxylase_{ECO:0000313|EMBL:CCF11062.1}|CRH36422
+    shift = 1 if "|linearised" in line else 0
+    tabs = line.split("|", 5 + shift)
+    cluster_accession = tabs[0].lstrip(">")
+    location = tabs[2]
+    strand = tabs[3]
+    locustag = tabs[4 + shift]
+    annotations, name = tabs[5 + shift].rsplit("|", 1)
+    assert not locustag.startswith("linearised")
+    assert not name.startswith("linearised")
+    # handle linearised coordinates, if present
+    linearised_start = 0
+    linearised_end = 0
+    if shift == 1:
+        assert len(tabs) == 7
+        assert tabs[4].startswith("linearised"), tabs[4]
+        linearised_start, linearised_end = map(int, tabs[4].replace("linearised", "").split("-"))
+    unique_id = f"{cluster_accession}_{locustag}"
+    return unique_id, {
+        "full_name": unique_id,
+        "name": name,
+        "locus_tag": locustag,
+        "location": location,
+        "strand": strand,
+        "annotations": annotations,
+        "draw_start": linearised_start,
+        "draw_end": linearised_end,
+    }
+
+
+def _extract_proteins_from_fasta(fasta_path: str) -> dict[str, Any]:
+    proteins = {}
+
+    with open(fasta_path, "r", encoding="utf-8") as handle:
+        for line in handle:
+            line = line.rstrip("\n")
+            if not line or line[0] != ">":
+                continue
+            identifier, protein = _extract_protein_from_line(line)
+            proteins[identifier] = protein
+
+    return proteins
+
+
+def build_protein_cache(fasta_path: str, json_path: str | None = None) -> str:
+    """ Builds the protein cache file from a raw FASTA file, but only if the cache file,
+        is missing or out of date.
+
+        Arguments:
+            fasta_path: the path to the FASTA file
+            json_path: the path to the output file, defaults to the same directory as the input
+
+        Returns:
+            the path to the cache file
+    """
+    if not json_path:
+        json_path = os.path.join(os.path.dirname(fasta_path), CACHE_FILE)
+    if not os.path.exists(json_path):
+        os.makedirs(os.path.dirname(json_path), exist_ok=True)
+    if path.is_outdated([json_path], fasta_path):
+        with open(json_path, "w", encoding="utf-8") as handle:
+            json.dump(_extract_proteins_from_fasta(fasta_path), handle)
+    return json_path
+
+
+def check_clusterblast_files(cluster_path: str, fasta_path: str, diamond_path: str,
+                             logging_only: bool = False,
+                             *,
+                             cache_path: str | None = None,
+                             ) -> list[str]:
+    """ Check if the database files exist.
+        Also generates cached files if not present or outdated.
+
+        Arguments:
+            cluster_path: the path to the database cluster metadata file
+            fasta_file: the path to a fasta file of query sequences
+            db_file: the path to the diamond database file
+            logging_only: return a list of errors messages instead of raising errors
+            cache_path: the path to the protein cache file
+
+        Returns:
+            a list of error strings
+    """
+    failures = check_diamond_files(cluster_path, fasta_path, diamond_path, logging_only=logging_only)
+    try:
+        build_protein_cache(fasta_path, json_path=cache_path)
+    except OSError as err:
+        if logging_only:
+            failures.append(str(err))
+        else:
+            raise
+    return failures
 
 
 def get_core_gene_ids(record: secmet.Record) -> Set[str]:  # TODO: consider moving into secmet
@@ -142,14 +240,16 @@ def load_reference_clusters(searchtype: str) -> Dict[str, ReferenceCluster]:
     return _load_cluster_data(reference_cluster_file)
 
 
-def load_reference_proteins(searchtype: str) -> Dict[str, Protein]:
-    """ Load protein database
+def load_reference_proteins(searchtype: str, *, cache_path: str | None = None) -> ProteinDB:
+    """ Extracts protein description information from a protein FASTA database
+        and places it into a JSON dataset for faster load times.
 
         Arguments:
             searchtype: determines which database to use, allowable values:
                             clusterblast, subclusterblast, knownclusterblast
+            cache_path: an override for the path to the protein cache file
         Returns:
-            a dictionary mapping protein name to Protein instance
+            the built protein description database
     """
     options = get_config()
     if searchtype == "clusterblast":
@@ -164,42 +264,14 @@ def load_reference_proteins(searchtype: str) -> Dict[str, Protein]:
         version = path.find_latest_database_version(kcb_root)
         data_dir = os.path.join(kcb_root, version)
 
-    protein_file = os.path.join(data_dir, "proteins.fasta")
-    proteins = {}
-    with open(protein_file, "r", encoding="utf-8") as handle:
-        for line in handle:
-            line = line.rstrip("\n")
-            if not line or line[0] != ">":
-                continue
-            # some lines are malformed, so always split the name off the annotation
-            # e.g. >x|y|1-2|-|z|Urea_carboxylase_{ECO:0000313|EMBL:CCF11062.1}|CRH36422
-            # linearised coordinates can also be inserted for some databases
-            # e.g. >x|y|1-2|-|linearised5-20|z|Urea_carboxylase_{ECO:0000313|EMBL:CCF11062.1}|CRH36422
-            shift = 1 if "|linearised" in line else 0
-            tabs = line.split("|", 5 + shift)
-            cluster_accession = tabs[0].lstrip(">")
-            location = tabs[2]
-            strand = tabs[3]
-            locustag = tabs[4 + shift]
-            annotations, name = tabs[5 + shift].rsplit("|", 1)
-            assert not locustag.startswith("linearised")
-            assert not name.startswith("linearised")
-            # handle linearised coordinates, if present
-            linearised_start = 0
-            linearised_end = 0
-            if shift == 1:
-                assert len(tabs) == 7
-                assert tabs[4].startswith("linearised"), tabs[4]
-                linearised_start, linearised_end = map(int, tabs[4].replace("linearised", "").split("-"))
-            unique_id = f"{cluster_accession}_{locustag}"
-            assert unique_id not in proteins
-            proteins[unique_id] = Protein(unique_id, name, locustag, location, strand, annotations,
-                                          draw_start=linearised_start, draw_end=linearised_end)
-    return proteins
+    if cache_path is None:
+        cache_path = os.path.join(data_dir, CACHE_FILE)
+
+    return ProteinDB.from_file(cache_path)
 
 
 def load_clusterblast_database(searchtype: str = "clusterblast"
-                               ) -> Tuple[Dict[str, ReferenceCluster], Dict[str, Protein]]:
+                               ) -> Tuple[Dict[str, ReferenceCluster], ProteinDB]:
     """ Load clusterblast database
 
         Arguments:
@@ -209,7 +281,7 @@ def load_clusterblast_database(searchtype: str = "clusterblast"
         Returns:
             a tuple of:
                 a dictionary mapping cluster name to Cluster instance
-                a dictionary mapping protein name to Protein instance
+                the protein database
     """
     clusters = load_reference_clusters(searchtype)
     proteins = load_reference_proteins(searchtype)

@@ -22,7 +22,7 @@ from .core import (
     score_clusterblast_output,
 )
 from .results import RegionResult, GeneralResults
-from .data_structures import MibigEntry, ReferenceCluster, Protein
+from .data_structures import MibigEntry, ProteinDB, ReferenceCluster
 
 
 def _get_datafile_path(filename: str, config: ConfigType) -> str:
@@ -95,7 +95,7 @@ def run_knownclusterblast_on_record(record: Record, options: ConfigType) -> Gene
 
 def perform_knownclusterblast(options: ConfigType, record: Record,
                               reference_clusters: Dict[str, ReferenceCluster],
-                              proteins: Dict[str, Protein]) -> GeneralResults:
+                              proteins: ProteinDB) -> GeneralResults:
     """ Run BLAST on gene cluster proteins of each cluster, parse output and
         return result rankings for each cluster
 

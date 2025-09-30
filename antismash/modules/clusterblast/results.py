@@ -15,7 +15,16 @@ from antismash.common.path import changed_directory
 from antismash.common.secmet import Record, Region
 from antismash.config import ConfigType, get_config
 
-from .data_structures import Score, Query, Subject, ReferenceCluster, Protein, MibigEntry
+from .data_structures import (
+    MibigEntry,
+    Protein,
+    ProteinDB,
+    ProteinMapping,
+    Query,
+    ReferenceCluster,
+    Score,
+    Subject,
+)
 
 _CLUSTER_LIMIT = 50
 
@@ -70,7 +79,7 @@ class RegionResult:
     __slots__ = ["region", "ranking", "total_hits", "prefix", "displayed_reference_proteins"]
 
     def __init__(self, region: Region, ranking: List[Tuple[ReferenceCluster, Score]],
-                 reference_proteins: Dict[str, Protein], prefix: str) -> None:
+                 reference_proteins: ProteinMapping, prefix: str) -> None:
         """ Arguments:
                 cluster: the cluster feature
                 ranking: a list of tuples in the form (ReferenceCluster, Score)
@@ -196,7 +205,7 @@ class GeneralResults(ModuleResults):
         self.data_version: Optional[str] = data_version
 
     def add_region_result(self, result: RegionResult, reference_clusters: Dict[str, ReferenceCluster],
-                          reference_proteins: Dict[str, Protein]) -> None:
+                          reference_proteins: ProteinDB) -> None:
         """ Add a result for a specific cluster. Reference proteins and clusters
             required in order to write the relevant information. Only those used
             are required.
@@ -204,7 +213,7 @@ class GeneralResults(ModuleResults):
             Arguments:
                 result: the RegionResult to add
                 reference_clusters: a dictionary mapping reference cluster name to ReferenceCluster
-                reference_proteins: a dictionary mapping reference protein name to Protein
+                reference_proteins: a protein database
 
             Returns:
                 None
