@@ -5,6 +5,7 @@
 # pylint: disable=use-implicit-booleaness-not-comparison,protected-access,missing-docstring
 
 import os
+import pickle
 import time
 import unittest
 from unittest.mock import patch
@@ -102,8 +103,16 @@ class TestParallelPython(unittest.TestCase):
         # ensure the function works as expected when called directly
         assert local(1) == 2
         # check if it still fails within a parallel pool
-        with self.assertRaisesRegex(AttributeError, r"Can't (\w+) local object"):
+        failed = False
+        try:
             subprocessing.parallel_function(local, [[i] for i in range(3)])
+        except (
+            AttributeError, # python <=3.13
+            pickle.PicklingError, # python 3.14
+        ) as err:
+            self.assertRegex(str(err), r"Can't (\w+) local object")
+            failed = True
+        assert failed
 
 
 class TestExecute(unittest.TestCase):
