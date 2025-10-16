@@ -22,7 +22,7 @@ install_requires = [
     'helperlibs',
     'jinja2',
     'joblib',
-    'jsonschema==4.11.0',
+    'jsonschema==4.25.1',
     'markupsafe >= 2.0',
     'nrpys >= 0.1.1',
     'bcbio-gff == 0.7.1',
