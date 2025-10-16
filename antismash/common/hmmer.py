@@ -317,6 +317,8 @@ def run_hmmer(record: Record, features: Iterable[CDSFeature], max_evalue: float,
     """
     if not os.path.exists(database):
         raise ValueError(f"Given database does not exist: {database}")
+    if not features:
+        return HmmerResults(record.id, max_evalue, min_score, database, tool, hits=[])
     query_sequence = fasta.get_fasta_from_features(features)
     opts: List[str] = []
     if use_cut_tc:

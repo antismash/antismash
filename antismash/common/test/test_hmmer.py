@@ -11,7 +11,7 @@ from tempfile import NamedTemporaryFile
 import unittest
 from unittest.mock import patch
 
-from antismash.common import hmmer, json
+from antismash.common import hmmer, json, subprocessing
 from antismash.common.hmmer import (
     ensure_database_pressed,
     HmmerHit,
@@ -246,3 +246,14 @@ class TestPressed(unittest.TestCase):
     def test_caught(self):
         with self.assertRaisesRegex(ValueError, "set to mount at runtime"):
             ensure_database_pressed("/path/mounted_at_runtime/pfam")
+
+
+class TestRunner(unittest.TestCase):
+    def test_empty_features(self):
+        record = DummyRecord()
+        with patch.object(subprocessing.hmmscan, "run_hmmscan") as patched:
+            with patch.object(os.path, "exists", return_value=True):
+                results = hmmer.run_hmmer(record, features=[], max_evalue=1.,
+                                          min_score=0, database="", tool="dummy")
+            patched.assert_not_called()
+        assert not results.hits
