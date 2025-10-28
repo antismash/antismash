@@ -20,9 +20,11 @@ with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     from Bio import SearchIO  # for import by others without wrapping, pylint: disable=unused-import
 
-# more modern macos system calls don't handle config serialisation, so force them to fork
-if sys.platform == "darwin":
-    multiprocessing.set_start_method("fork")
+# force a start method of 'fork' for two reasons:
+# - modern macos system calls don't handle config serialisation with 'spawn'
+# - 3.14 swapped out 'fork' to 'forkserver' by default in POSIX,
+#     which doesn't necessarily run in parallel
+multiprocessing.set_start_method("fork")
 
 
 class RunResult:
