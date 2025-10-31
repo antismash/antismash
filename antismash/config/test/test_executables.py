@@ -52,3 +52,20 @@ class TestGetPaths(unittest.TestCase):
         defaults = executables.get_default_paths()
         assert "missing" not in defaults
         assert defaults["found"] == "/found"
+
+
+class TestFindExecutablePath(unittest.TestCase):
+    @patch("os.path.isfile", return_value=True)
+    @patch("os.access", return_value=True)
+    def test_first_path_full(self, _mocked_isfile, _mocked_access):
+        name = "/this/totally/exists"
+        ret = executables.find_executable_path(name)
+        assert name == ret
+
+    def test_invalid(self):
+        name = ""
+        assert not executables.find_executable_path(name)
+
+    def test_no_names(self):
+        with self.assertRaisesRegex(ValueError, "at least one name"):
+            executables.find_executable_path()
