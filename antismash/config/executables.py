@@ -59,11 +59,7 @@ def get_default_paths() -> Dict[str, str]:
     for name, alternates in _ALTERNATE_EXECUTABLE_NAMES.items():
         if name in binaries:
             continue
-        path = ""
-        for alternate in alternates:
-            path = find_executable_path(alternate)
-            if path:
-                break
+        path = find_executable_path(*alternates)
         if path:
             binaries[name] = path
     return binaries
@@ -103,20 +99,24 @@ def get_executable_paths(binaries_arg: str) -> Dict[str, str]:
     return binaries
 
 
-def find_executable_path(name: str) -> str:
-    """ Finds the full path for an executable and checks that read permissions exist
+def find_executable_path(*names: str) -> str:
+    """ Finds the full path for an executable under any of the given names
+        and checks that executable permissions exist
 
         Arguments:
-            name: the file path to check
+            one or more strings representing executable names/file paths to find
 
         Returns:
-            The path if it was valid or an empty string if not
+            The first of the paths that was valid or an empty string if not
     """
-    if os.path.split(name)[0]:
-        if os.path.isfile(name) and os.access(name, os.X_OK):
+    if not names:
+        raise ValueError("need to provide at least one name")
+    for name in names:
+        if os.path.split(name)[0] and os.path.isfile(name) and os.access(name, os.X_OK):
             return name
     for path in os.environ["PATH"].split(os.pathsep):
-        full_path = os.path.join(path, name)
-        if os.path.isfile(full_path) and os.access(full_path, os.X_OK):
-            return full_path
+        for name in names:
+            full_path = os.path.join(path, name)
+            if os.path.isfile(full_path) and os.access(full_path, os.X_OK):
+                return full_path
     return ""
