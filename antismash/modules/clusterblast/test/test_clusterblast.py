@@ -4,7 +4,6 @@
 # for test files, silence irrelevant and noisy pylint warnings
 # pylint: disable=use-implicit-booleaness-not-comparison,protected-access,missing-docstring
 
-from collections import OrderedDict
 import os
 import unittest
 from unittest.mock import patch, mock_open
@@ -452,83 +451,6 @@ class TestInputGeneration(unittest.TestCase):
                     positions = (i + index * chunk_size for i in range(chunk_size))
                     expected = "".join(f">L{position}\nS{position}\n" for position in positions)
                     assert contents == expected
-
-
-class TestOrthologousGroups(unittest.TestCase):
-    def setUp(self):
-        self.query_lines = ["input|c1|0-759|-|CAG25751.1|putative",
-                            "input|c1|0-759|-|CAG25751.2|putative",
-                            "input|c1|0-759|-|CAG25751.3|putative"]
-        self.queries = OrderedDict()
-        for line in self.query_lines:
-            self.queries[line] = core.Query(line, 0)
-            assert not self.queries[line].subjects
-
-    def run_base_comparison(self, clusters):
-        groups = core.find_internal_orthologous_groups(self.queries, clusters)
-        assert groups and len(groups) <= len(clusters)
-        return groups
-
-    def set_query_subjects(self, index, subjects):
-        self.queries[self.query_lines[index]].subjects = subjects
-
-    def set_independent_subjects(self):
-        self.set_query_subjects(0, ["a1", "a2", "a3"])
-        self.set_query_subjects(1, ["b1", "b2", "b3"])
-        self.set_query_subjects(2, ["c1", "c2", "c3"])
-
-    def test_no_subjects_and_single_not_present(self):
-        groups = self.run_base_comparison(["other|c1|0-759|-|other_1|putative"])
-        assert groups == [["other_1"]]
-
-    def test_no_subjects_and_multiple_not_present(self):
-        groups = self.run_base_comparison(["other|c1|0-759|-|other_1|putative",
-                                           "other|c1|0-759|-|other_2|putative"])
-        assert groups == [["other_1"], ["other_2"]]
-
-    def test_no_subjects_and_clusters_present(self):
-        groups = self.run_base_comparison(self.query_lines[::2])
-        assert groups == [["CAG25751.1"], ["CAG25751.3"]]
-
-    def test_independent_subjects_and_not_present(self):
-        self.set_independent_subjects()
-        clusters = ["other|c1|0-759|-|other_1|putative", "other|c1|0-759|-|other_2|putative"]
-        groups = self.run_base_comparison(clusters)
-        assert groups == [["other_1"], ["other_2"]]
-
-    def test_independent_subjects_and_clusters_present(self):  # pylint: disable=invalid-name
-        self.set_independent_subjects()
-        groups = self.run_base_comparison(self.query_lines)
-        assert groups == [['CAG25751.1', 'a1', 'a2', 'a3'],
-                          ['CAG25751.2', 'b1', 'b2', 'b3'],
-                          ['CAG25751.3', 'c1', 'c2', 'c3']]
-
-    def test_partial_overlapping_subjects_and_not_present(self):  # pylint: disable=invalid-name
-        self.set_independent_subjects()
-        self.set_query_subjects(1, ["b1", "a2", "b3"])
-        clusters = ["other|c1|0-759|-|other_1|putative", "other|c1|0-759|-|other_2|putative"]
-        groups = self.run_base_comparison(clusters)
-        assert groups == [["other_1"], ["other_2"]]
-
-    def test_partial_overlapping_subjects_and_present(self):  # pylint: disable=invalid-name
-        self.set_independent_subjects()
-        self.set_query_subjects(1, ["b1", "a2", "b3"])
-        groups = self.run_base_comparison(self.query_lines)
-        assert groups == [['CAG25751.1', 'CAG25751.2', 'a1', 'a2', 'a3', 'b1', 'b3'],
-                          ['CAG25751.3', 'c1', 'c2', 'c3']]
-
-    def test_multiple_overlapping_and_not_present(self):
-        self.set_independent_subjects()
-        self.set_query_subjects(1, ["b1", "a2", "b3"])
-        clusters = ["other|c1|0-759|-|other_1|putative", "other|c1|0-759|-|other_2|putative"]
-        groups = self.run_base_comparison(clusters)
-        assert groups == [["other_1"], ["other_2"]]
-
-    def test_multiple_overlapping_and_present(self):
-        self.set_independent_subjects()
-        self.set_query_subjects(1, ["b1", "a2", "c3"])
-        groups = self.run_base_comparison(self.query_lines)
-        assert groups == [['CAG25751.1', 'CAG25751.2', 'CAG25751.3', 'a1', 'a2', 'a3', 'b1', 'c1', 'c2', 'c3']]
 
 
 class TestReferenceProteinLoading(unittest.TestCase):

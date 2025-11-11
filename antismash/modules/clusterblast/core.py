@@ -527,40 +527,6 @@ def get_cds_lengths(record: secmet.Record) -> Dict[str, int]:
     return lengths
 
 
-def find_internal_orthologous_groups(queries: Dict[str, Query], cluster_names: List[str]) -> List[List[str]]:
-    """ Finds internal orthologous groups from blast queries, each cluster
-        being a distinct group
-
-        Arguments:
-            queries: the queries to build groups from
-            cluster_names: the names of the clusters used to construct the queries,
-                           e.g. rec_id|c1|52644-53715|+|protein_id|description
-
-        Returns:
-            a list of groups, each list being
-                a list of query ids in alphabetical order
-    """
-
-    groups = []
-    for name in cluster_names:
-        if name not in queries:
-            groups.append(set([name.split("|")[4]]))
-            continue
-        query = queries[name]
-        new_group = {query.id}.union(set(query.subjects))
-        redundant_groups = []
-        for i, other_group in enumerate(groups):
-            if new_group.intersection(other_group):
-                redundant_groups.append(i)
-                new_group.update(other_group)
-
-        for i in reversed(redundant_groups):
-            del groups[i]
-
-        groups.append(new_group)
-    return [sorted(list(i)) for i in groups]
-
-
 def parse_clusterblast_dict(queries: List[Query], clusters: Dict[str, ReferenceCluster],
                             cluster_label: str, allcoregenes: Set[str]
                             ) -> Tuple[Score, List[Tuple[int, int]], List[bool]]:
