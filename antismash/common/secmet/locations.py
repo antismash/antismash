@@ -888,6 +888,8 @@ def location_contains_overlapping_exons(location: Union[Location, B]) -> bool:
         raise TypeError(f"expected location type, received {type(location)}")
     if len(location.parts) == 1:
         return False
+    if location.strand == -1:
+        return len(set(part.start for part in location.parts)) != len(location.parts)
     return len(set(part.end for part in location.parts)) != len(location.parts)
 
 
