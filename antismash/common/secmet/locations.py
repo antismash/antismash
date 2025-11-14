@@ -888,6 +888,8 @@ def location_contains_overlapping_exons(location: Union[Location, B]) -> bool:
         raise TypeError(f"expected location type, received {type(location)}")
     if len(location.parts) == 1:
         return False
+    if location.strand == -1:
+        return len(set(part.start for part in location.parts)) != len(location.parts)
     return len(set(part.end for part in location.parts)) != len(location.parts)
 
 
@@ -897,8 +899,7 @@ def ensure_valid_locations(features: List[SeqFeature], can_be_circular: bool, se
         For a location to be considered invalid, it will be one of:
             - missing a location (biopython may strip invalid locations)
             - outside the sequence provided
-            - be a CDS and contain an exon with exact positions that is less than 3 bases
-            - contain exons that overlap by 3 or more bases (allows for frameshifts)
+            - contain multiple exons with the same end coordinates
             - contain exons in an order that isn't consistent with other features
                  (barring cross-origin features in records that can be circular)
 
