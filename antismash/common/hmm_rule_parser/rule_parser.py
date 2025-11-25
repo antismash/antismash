@@ -756,7 +756,7 @@ class SingleCondition(Conditions):
 
     def get_hit_string(self) -> str:
         if self.negated:
-            return "{self.hits}*({self.name})"
+            return f"{self.hits}*({self.name})"
         return f"{self.hits}*{self.name}"
 
     def __str__(self) -> str:
