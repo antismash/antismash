@@ -69,6 +69,18 @@ MITE = {
     "metadata": "4a83153df89ae754533ad7701c7407fc5d4b50fd09fae3654e52cc14e43aa202",
 }
 
+PARAS = {
+    "url_paras": "https://zenodo.org/records/18682178/files/all_substrates_model.paras.gz",
+    "archive_paras": "068c15b84bfdc3ffbccbb3f1d713c46e44b47adae99ad70f3bf4306d0d825d5a",
+    "model_paras": "60bb5ce10392732284ca715df2bfe3790d421ebaf191b4889c47996846759fcf",
+    "url_parasect": "https://zenodo.org/records/18682178/files/bacterial_model.parasect.gz",
+    "archive_parasect": "eaf26ce7e7759cd95e3fded73790f207119d3d1b4e461582c7f097e779bb65d4",
+    "model_parasect": "ee2aa6b17b417ec20aebee4c962250d4f5d3f9aed67ac6f5590c79a9454bf95d",
+    "url_metadata": "https://zenodo.org/records/18682178/files/model_metadata.txt",
+    "metadata": "239a33c70a4faef6058f46cca1e185aaa6987dfcd54150ad45e8efed646dd73d",
+    "version": "2.0.1"
+}
+
 RESFAM_URL = "https://dl.secondarymetabolites.org/releases/resfams/Resfams.hmm.gz"
 RESFAM_ARCHIVE_CHECKSUM = "ae1e4be5a4a4ef5f669d36daddb94020df0ec41c448a21c642bdeca43abed342"
 RESFAM_CHECKSUM = "780a0afdaa8c7a85d1b31367da66363c5b86ab8bc4a7288a8598f137cf55fbc0"
@@ -474,6 +486,42 @@ def download_nprs_svm(db_dir: str) -> bool:
     return True
 
 
+def download_paras_models(db_dir: str) -> None:
+    """Download PARAS and PARASECT models"""
+    version = PARAS["version"]
+    paras_archive_filename = os.path.join(db_dir, "paras", version, "all_substrates_model.paras.gz")
+    parasect_archive_filename = os.path.join(db_dir, "paras", version, "bacterial_model.parasect.gz")
+    metadata_filename = os.path.join(db_dir, "paras", version, "metadata.txt")
+
+    if all([
+        present_and_checksum_matches(paras_archive_filename, PARAS["archive_paras"]),
+        present_and_checksum_matches(parasect_archive_filename, PARAS["archive_parasect"]),
+        present_and_checksum_matches(metadata_filename, PARAS["metadata"]),
+    ]):
+        print(f"PARAS {PARAS['version']} already present")
+        return
+
+    print("Downloading PARAS models", PARAS["version"])
+    check_diskspace(PARAS["url_metadata"])
+    download_if_not_present(PARAS["url_metadata"], metadata_filename, PARAS["metadata"])
+
+    check_diskspace(PARAS["url_paras"])
+    download_if_not_present(PARAS["url_paras"], paras_archive_filename, PARAS["archive_paras"])
+
+    check_diskspace(PARAS["url_parasect"])
+    download_if_not_present(PARAS["url_parasect"], parasect_archive_filename, PARAS["archive_parasect"])
+
+    paras_filename = unzip_file(paras_archive_filename, gzip, gzip.zlib.error)  # type: ignore
+    parasect_filename = unzip_file(parasect_archive_filename, gzip, gzip.zlib.error)  # type: ignore
+
+    assert present_and_checksum_matches(paras_filename, PARAS["model_paras"])
+    assert present_and_checksum_matches(parasect_filename, PARAS["model_parasect"])
+    assert present_and_checksum_matches(metadata_filename, PARAS["metadata"])
+
+    delete_file(paras_filename)
+    delete_file(parasect_filename)
+
+
 def download_transator(db_dir: str) -> None:
     """Download the Stachelhaus signatures file."""
     version = TRANSATOR_URL.rsplit("_", 1)[1].split(".tar", 1)[0]  # e.g. transator_2022.11.16.tar.xz -> 2022.11.16
@@ -511,6 +559,7 @@ def download(args: argparse.Namespace) -> bool:
     )
 
     download_mite(args.database_dir)
+    download_paras_models(args.database_dir)
     download_resfam(args.database_dir)
 
     download_tigrfam(args.database_dir)
