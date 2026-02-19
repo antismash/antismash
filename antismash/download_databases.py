@@ -489,9 +489,9 @@ def download_nprs_svm(db_dir: str) -> bool:
 def download_paras_models(db_dir: str) -> None:
     """Download PARAS and PARASECT models"""
     version = PARAS["version"]
-    paras_archive_filename = os.path.join(db_dir, "paras", version, "all_substrates_model.paras.gz")
-    parasect_archive_filename = os.path.join(db_dir, "paras", version, "bacterial_model.parasect.gz")
-    metadata_filename = os.path.join(db_dir, "paras", version, "metadata.txt")
+    paras_archive_filename = os.path.join(db_dir, "nrps_pks", "paras", version, "all_substrates_model.paras.gz")
+    parasect_archive_filename = os.path.join(db_dir, "nrps_pks", "paras", version, "bacterial_model.parasect.gz")
+    metadata_filename = os.path.join(db_dir, "nrps_pks", "paras", version, "metadata.txt")
 
     if all([
         present_and_checksum_matches(paras_archive_filename, PARAS["archive_paras"]),
