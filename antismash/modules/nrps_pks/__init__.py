@@ -28,7 +28,7 @@ NAME = "nrps_pks"
 SHORT_DESCRIPTION = "NRPS/PKS analysis"
 
 
-def prepare_data(options: ConfigType, logging_only: bool = False) -> List[str]:
+def prepare_data(logging_only: bool = False) -> List[str]:
     """ Ensures packaged data is fully prepared
 
         Arguments:
@@ -52,9 +52,8 @@ def prepare_data(options: ConfigType, logging_only: bool = False) -> List[str]:
             if not logging_only:
                 raise
             failures.append(str(err))
-    for func in [at_prepare_data, c_prepare_data, kr_prepare_data, minowa_prepare_data]:
+    for func in [at_prepare_data, c_prepare_data, kr_prepare_data, minowa_prepare_data, paras_prepare_data]:
         failures.extend(func(logging_only=logging_only))
-    failures.extend(paras_prepare_data(options, logging_only=logging_only))
     return failures
 
 
@@ -66,7 +65,7 @@ def check_prereqs(options: ConfigType) -> List[str]:
     for binary_name in ["hmmsearch"]:
         if binary_name not in options.executables:
             failure_messages.append(f"Failed to locate executable for {binary_name!r}")
-    failure_messages.extend(prepare_data(options, logging_only=True))
+    failure_messages.extend(prepare_data(logging_only=True))
     failure_messages.extend(nrpys_check_prereqs(options))
     return failure_messages
 

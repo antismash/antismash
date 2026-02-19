@@ -3,7 +3,7 @@ import os
 from parasect.core.retrain_models import retrain_model, model_needs_retraining, update_metadata_file
 from parasect.core.models import ModelType
 
-from antismash.config import ConfigType
+from antismash.config import ConfigType, get_config
 from antismash.common.path import find_latest_database_version
 
 
@@ -22,7 +22,7 @@ def _get_model_dir(config: ConfigType) -> str:
     return os.path.join(root, version)
 
 
-def prepare_data(options: ConfigType, logging_only: bool = False) -> list[str]:
+def prepare_data(logging_only: bool = False) -> list[str]:
     """ Ensures packaged data is fully prepared
 
         Arguments:
@@ -35,6 +35,7 @@ def prepare_data(options: ConfigType, logging_only: bool = False) -> list[str]:
     failure_messages: list[str] = []
 
     try:
+        options = get_config()
         model_dir = _get_model_dir(options)
         metadata_path = os.path.join(model_dir, "metadata.txt")
 
