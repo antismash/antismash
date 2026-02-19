@@ -19,6 +19,7 @@ from .at_analysis import prepare_data as at_prepare_data
 from .c_analysis import prepare_data as c_prepare_data
 from .kr_analysis import prepare_data as kr_prepare_data
 from .minowa import prepare_data as minowa_prepare_data
+from .paras import prepare_data as paras_prepare_data
 from .nrpys import check_prereqs as nrpys_check_prereqs
 from .orderfinder import C_TERMINAL_PATH, N_TERMINAL_PATH
 
@@ -27,10 +28,11 @@ NAME = "nrps_pks"
 SHORT_DESCRIPTION = "NRPS/PKS analysis"
 
 
-def prepare_data(logging_only: bool = False) -> List[str]:
+def prepare_data(options: ConfigType, logging_only: bool = False) -> List[str]:
     """ Ensures packaged data is fully prepared
 
         Arguments:
+            options: configuration options
             logging_only: whether to return error messages instead of raising exceptions
 
         Returns:
@@ -52,6 +54,7 @@ def prepare_data(logging_only: bool = False) -> List[str]:
             failures.append(str(err))
     for func in [at_prepare_data, c_prepare_data, kr_prepare_data, minowa_prepare_data]:
         failures.extend(func(logging_only=logging_only))
+    failures.extend(paras_prepare_data(options, logging_only=logging_only))
     return failures
 
 
@@ -63,7 +66,7 @@ def check_prereqs(options: ConfigType) -> List[str]:
     for binary_name in ["hmmsearch"]:
         if binary_name not in options.executables:
             failure_messages.append(f"Failed to locate executable for {binary_name!r}")
-    failure_messages.extend(prepare_data(logging_only=True))
+    failure_messages.extend(prepare_data(options, logging_only=True))
     failure_messages.extend(nrpys_check_prereqs(options))
     return failure_messages
 
