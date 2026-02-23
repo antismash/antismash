@@ -32,7 +32,7 @@ install_requires = [
     'scipy',
     'scikit-learn >= 0.19.0',
     'MOODS-python',
-    'paras >= 2.0.1'
+    'paras >= 2.0.2'
 ]
 
 tests_require = [
