@@ -3,9 +3,6 @@ from math import isclose
 
 from markupsafe import Markup
 
-from antismash.config import build_config
-from antismash.common.secmet.test.helpers import DummyAntismashDomain
-from antismash.modules.nrps_pks.name_mappings import get_substrate_by_name, SubstrateName
 from antismash.modules.nrps_pks.paras import ParasModel, GeneralParasResult, ParasResult
 
 
