@@ -3,7 +3,7 @@ from math import isclose
 
 from markupsafe import Markup
 
-from antismash.modules.nrps_pks.paras import ParasModel, GeneralParasResult, ParasResult
+from antismash.modules.nrps_pks.paras import ParasModel, GeneralParasResult, ParasResult, ParasectResult
 
 
 class MockMinimalResult:
@@ -23,8 +23,12 @@ class TestGeneralParasResult(unittest.TestCase):
         self.parasect_result = GeneralParasResult(ParasModel.PARASECT,
                                                   "ILIKEDATAEVENFAKEDATADIDISAYILIKED",
                                                   ["tryptophan", "tyrosine", "phenylalanine"],
-                                                  [0.9, 0.8, 0.7],
+                                                  [0.9, 0.8, 0.6],
                                                   3)
+
+    def test_get_classification(self):
+        assert self.paras_result.get_classification() == ["Trp"]
+        assert self.parasect_result.get_classification() == ["Trp", "Tyr"]
 
     def test_classification_uncertain(self):
         pred = GeneralParasResult(ParasModel.PARAS,
@@ -125,6 +129,36 @@ class TestParasResult(unittest.TestCase):
         pred = ParasResult.from_json(self.json_result)
         assert pred.aa34 == "ILIKEDATAEVENFAKEDATADIDISAYILIKED"
         assert pred.method == "paras"
+        assert pred.predicted_substrate == "tryptophan"
+        assert isclose(pred.confidence, 0.9)
+        assert pred.top_substrates == ["tryptophan", "tyrosine"]
+        assert len(pred.top_confidences) == 2
+
+
+class TestParasectResult(unittest.TestCase):
+    def setUp(self):
+        self.minimal_result = MockMinimalResult("ILIKEDATAEVENFAKEDATADIDISAYILIKED",
+                                                ["tryptophan", "tyrosine", "phenylalanine"],
+                                                [0.9, 0.8, 0.7])
+
+        self.json_result = {"aa34": "ILIKEDATAEVENFAKEDATADIDISAYILIKED",
+                            "top_substrates": ["tryptophan", "tyrosine"],
+                            "top_confidences": [0.9, 0.8]}
+
+
+    def test_from_parasect_result(self):
+        pred = ParasectResult.from_parasect_result(self.minimal_result, substrates_to_report=2)
+        assert pred.aa34 == "ILIKEDATAEVENFAKEDATADIDISAYILIKED"
+        assert pred.method == "parasect"
+        assert pred.predicted_substrate == "tryptophan"
+        assert isclose(pred.confidence, 0.9)
+        assert pred.top_substrates == ["tryptophan", "tyrosine"]
+        assert len(pred.top_confidences) == 2
+
+    def test_from_json(self):
+        pred = ParasectResult.from_json(self.json_result)
+        assert pred.aa34 == "ILIKEDATAEVENFAKEDATADIDISAYILIKED"
+        assert pred.method == "parasect"
         assert pred.predicted_substrate == "tryptophan"
         assert isclose(pred.confidence, 0.9)
         assert pred.top_substrates == ["tryptophan", "tyrosine"]
