@@ -75,6 +75,10 @@ def modify_substrate(module: Module, base: str = "") -> str:  # pylint: disable=
         state.append("Me")
         base = base.replace("mmal", "mal", 1)
 
+    if "Epimerization" in domains:
+        conversions = {"Ile": "aIle", "aIle": "Ile", "Thr": "aThr", "aThr": "Thr"}
+        base = conversions.get(base, base)
+
     state.append(base)
 
     if "Epimerization" in domains:
