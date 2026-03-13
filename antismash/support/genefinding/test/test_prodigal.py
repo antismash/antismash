@@ -53,3 +53,27 @@ class TestProdigal(unittest.TestCase):
         with patch.object(prodigal, "MAX_SEQUENCE_LENGTH", max_len):
             with self.assertRaisesRegex(ValueError, "too long"):
                 prodigal.run_prodigal(record)
+
+    def test_default_id(self):
+        record = DummyRecord(record_id="DUMMY", seq="ATGGCAGGGATATGTTAG")
+        with patch.object(prodigal, "exec_prodigal", lambda _x: []), \
+             patch.object(prodigal, "_filter_genes", dummy_filter):
+            prodigal.run_prodigal(record, use_record_id=False)
+
+        features = record.get_cds_features()
+        assert len(features) == 1
+        assert features[0].get_name() == "ctg0_1"
+
+    def test_record_id(self):
+        record = DummyRecord(record_id="DUMMY", seq="ATGGCAGGGATATGTTAG")
+        with patch.object(prodigal, "exec_prodigal", lambda _x: []), \
+             patch.object(prodigal, "_filter_genes", dummy_filter):
+            prodigal.run_prodigal(record, use_record_id=True)
+
+        features = record.get_cds_features()
+        assert len(features) == 1
+        assert features[0].get_name() == "DUMMY_1"
+
+
+def dummy_filter(*_args):
+    return [FeatureLocation(0, 18, 1)]

@@ -40,6 +40,11 @@ def get_arguments() -> ModuleArgs:
                     type=str,
                     metavar="GFF3_FILE",
                     help="Specify GFF3 file to extract features from.")
+    args.add_option('use-record-id',
+                    dest='use_record_id',
+                    default=False,
+                    action="store_true",
+                    help="Use the record ID as basis for locus tags on found genes.")
     return args
 
 
@@ -95,6 +100,6 @@ def run_on_record(record: Record, options: ConfigType) -> None:
 
     if options.genefinding_tool in ["prodigal", "prodigal-m"]:
         logging.debug("Running prodigal based genefinding")
-        return run_prodigal(record)
+        return run_prodigal(record, options.genefinding_use_record_id)
 
     raise ValueError(f"Unknown genefinding tool: {options.genefinding_tool}")

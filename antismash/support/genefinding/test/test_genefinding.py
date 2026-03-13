@@ -18,6 +18,7 @@ class TestCore(unittest.TestCase):
         options = Namespace()
         options.taxon = 'bacteria'
         options.genefinding_tool = "none"
+        options.genefinding_use_record_id = False
         assert not check_options(options)
 
         options.taxon = 'fungi'
@@ -31,6 +32,7 @@ class TestCore(unittest.TestCase):
         options.taxon = 'bacteria'
         options.genefinding_tool = 'none'
         options.genefinding_gff3 = False
+        options.genefinding_use_record_id = False
         assert not is_enabled(options)
 
         options.genefinding_tool = 'prodigal'
@@ -48,6 +50,7 @@ class TestCore(unittest.TestCase):
         record = FakeRecord()
         options = Namespace()
         options.genefinding_tool = "none"
+        options.genefinding_use_record_id = False
 
         for taxon in ("fungi", "bacteria"):
             options.taxon = taxon
