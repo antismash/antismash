@@ -65,7 +65,7 @@ def _filter_genes(genes_found: Iterable[ProdigalGene], record: Record) -> Iterab
     return locations
 
 
-def run_prodigal(record: Record) -> None:
+def run_prodigal(record: Record, use_record_id: bool = False) -> None:
     """ Run progidal to annotate prokaryotic sequences
     """
 
@@ -84,7 +84,11 @@ def run_prodigal(record: Record) -> None:
     count = 0
     for location in locations:
         translation = record.get_aa_translation_from_location(location)
-        feature = CDSFeature(location, locus_tag=f"ctg{record.record_index}_{count + 1}",
+        if use_record_id:
+            tag = f"{record.id}_{count + 1}"
+        else:
+            tag = f"ctg{record.record_index}_{count + 1}"
+        feature = CDSFeature(location, locus_tag=tag,
                              translation=translation, translation_table=record.transl_table)
         record.add_cds_feature(feature)
         count += 1
