@@ -21,7 +21,7 @@ from antismash.custom_typing import AntismashModule, ConfigType
 
 from .args import build_parser, AntismashParser
 from .executables import get_default_paths
-from .loader import load_config_from_file
+from .loader import load_config_from_file, update_from_env
 
 _USER_FILE_NAME = os.path.expanduser('~/.antismash8.cfg')
 _INSTANCE_FILE_NAME = os.path.abspath(os.path.join(os.path.dirname(__file__), 'instance.cfg'))
@@ -147,6 +147,9 @@ def build_config(args: List[str], parser: Optional[AntismashParser] = None, isol
 
     if not parser:
         parser = build_parser(from_config_file=True, modules=modules)
+
+    update_from_env(parser)
+
     # check if the simple version will work
     if isolated and "--databases" in args:
         default.__dict__.update(parser.parse_args(args).__dict__)
