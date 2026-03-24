@@ -69,7 +69,8 @@ def prepare_data(logging_only: bool = False) -> list[str]:
     failures = []
     # account for database directories mounted into docker containers
     if "mounted_at_runtime" not in database:
-        failures.extend(hmmer.ensure_database_pressed(database, return_not_raise=logging_only))
+        for failure in hmmer.ensure_database_pressed(database, return_not_raise=logging_only):
+            failures.append(f"resistance: {failure}")
 
     return failures
 

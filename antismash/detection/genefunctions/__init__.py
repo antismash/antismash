@@ -193,10 +193,6 @@ def check_prereqs(options: ConfigType) -> List[str]:
         if binary_name not in options.executables:
             failure_messages.append(f"Failed to locate file: {binary_name!r}")
 
-    database = os.path.join(options.database_dir, 'resfam', 'Resfams.hmm')
-    if "mounted_at_runtime" not in database and path.locate_file(database) is None:
-        failure_messages.append(f"Failed to locate Resfam database in {database!r}")
-
     # normally a module would check the data is prepared here,
     # but only tools currently have data, so prepare_data here would only duplicate those checks
 
