@@ -70,10 +70,14 @@ def prepare_known_data(logging_only: bool = False) -> List[str]:
     config = get_config()
     if "mounted_at_runtime" in config.database_dir:
         return []
-    cluster_defs = _get_datafile_path("clusters.txt", config)
-    protein_seqs = _get_datafile_path("proteins.fasta", config)
-    db_file = _get_datafile_path("proteins.dmnd", config)
-    failure_messages.extend(check_clusterblast_files(cluster_defs, protein_seqs, db_file, logging_only=logging_only))
+    try:
+        cluster_defs = _get_datafile_path("clusters.txt", config)
+        protein_seqs = _get_datafile_path("proteins.fasta", config)
+        db_file = _get_datafile_path("proteins.dmnd", config)
+        failure_messages.extend(check_clusterblast_files(cluster_defs, protein_seqs,
+                                                         db_file, logging_only=logging_only))
+    except ValueError as err:
+        failure_messages.append(f"knownclusterblast: {err}")
 
     return failure_messages
 
