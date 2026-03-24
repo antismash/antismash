@@ -281,5 +281,5 @@ class TestMisc(unittest.TestCase):
         stach_path = nrpys._get_signature_path(self.config)
         db_path = nrpys._get_model_dir(self.config)
         ret = nrpys.check_prereqs(self.config)
-        assert ret == [f"Failed to locate {stach_path}",
-                       f"Failed to locate {db_path}"]
+        assert ret == [f"Signature file not found '{stach_path}'",
+                       f"Model directory not found '{db_path}'"]

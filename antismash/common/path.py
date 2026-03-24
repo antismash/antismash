@@ -134,8 +134,8 @@ def find_latest_database_version(database_dir: str, ignore_invalid: bool = False
         except ValueError:
             if ignore_invalid:
                 continue
-            raise ValueError(f"Incompatible database version naming: {name}")
+            raise ValueError(f"Incompatible database version naming: {version}")
     if not potentials:
-        raise ValueError(f"No matching database in location {database_dir}")
+        raise ValueError(f"No matching database in location '{database_dir}'")
     latest = sorted(potentials)[-1]
     return latest[1]
