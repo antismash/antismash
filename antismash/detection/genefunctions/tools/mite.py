@@ -161,7 +161,7 @@ def check_prereqs(options: ConfigType) -> list[str]:
         available = False
         if get_dataset(options.genefunctions_mite_version):
             available = True
-    except (FileNotFoundError, RuntimeError):
+    except (FileNotFoundError, RuntimeError, ValueError):
         pass
 
     if not available:
