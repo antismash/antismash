@@ -176,3 +176,11 @@ class TestMethylation:
     def test_last_o_skipped(self):
         smiles = "NC(CCCN)C(=O)O"
         assert methylate(smiles, "O") == smiles
+
+    def test_single_matched(self):
+        smiles = "N"
+        assert methylate(smiles, "N") == "N(C)"
+
+    def test_single_unmatched(self):
+        smiles = "N"
+        assert methylate(smiles, "C") == "N"

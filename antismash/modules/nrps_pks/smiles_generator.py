@@ -209,6 +209,11 @@ def methylate(smiles: str, variant: str) -> str:
     bonds = Bonds(smiles)
     atoms = list(bonds)
     start = 1
+    if len(atoms) == 1:
+        atom = atoms[0]
+        if atom.symbol == variant and atom.available_bonds > 0:
+            atom.branches.append([Atom("C")])
+        return bonds.to_smiles()
     if atoms[0].symbol == "N" and atoms[1].symbol == "C":
         start = 2  # skip the C too
     for atom in atoms[start:-1]:
