@@ -130,15 +130,17 @@ def prepare_data(logging_only: bool = False) -> List[str]:
     protein_seqs = os.path.join(clusterblastdir, "proteins.fasta")
     db_file = os.path.join(clusterblastdir, "proteins.dmnd")
 
+    failure_messages.extend(check_clusterblast_files(cluster_defs, protein_seqs, db_file, logging_only=logging_only))
+
+    # if there were errors, further checks won't help
+    if failure_messages:
+        return failure_messages
+
     # check the DBv3 region info exists instead of single cluster numbers
     with open(protein_seqs, encoding="utf-8") as handle:
         sample = handle.readline()
     if "-" not in sample.split("|", 3)[1]:
         failure_messages.append("clusterblast database out of date, update with download-databases")
-        # and don't bother pressing them
-        return failure_messages
-
-    failure_messages.extend(check_clusterblast_files(cluster_defs, protein_seqs, db_file, logging_only=logging_only))
 
     return failure_messages
 

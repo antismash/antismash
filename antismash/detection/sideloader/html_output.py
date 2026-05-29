@@ -30,7 +30,7 @@ def generate_html(region_layer: RegionLayer, results: ModuleResults,
     tools_by_name = {}
     areas_by_tool_name = defaultdict(list)
     for area in results.get_areas():
-        if not region_layer.location.start <= area.start <= region_layer.location.end:
+        if not region_layer.location.contains(area.build_location()):
             continue
         areas_by_tool_name[area.tool.name].append(area)
         tools_by_name[area.tool.name] = area.tool

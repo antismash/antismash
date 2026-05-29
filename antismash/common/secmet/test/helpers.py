@@ -194,12 +194,12 @@ class DummyRecord(Record):
 
 
 class DummyRegion(Region):
-    def __init__(self, candidate_clusters=None, subregions=None, start=0, end=100):
+    def __init__(self, candidate_clusters=None, subregions=None, start=0, end=100, **kwargs):
         if not candidate_clusters and not subregions:
             if candidate_clusters is None:
-                candidate_clusters = [DummyCandidateCluster(start=start, end=end)]
+                candidate_clusters = [DummyCandidateCluster(start=start, end=end, **kwargs)]
             if subregions is None:
-                subregions = [DummySubRegion(start=start, end=end)]
+                subregions = [DummySubRegion(start=start, end=end, **kwargs)]
         super().__init__(candidate_clusters, subregions)
 
 

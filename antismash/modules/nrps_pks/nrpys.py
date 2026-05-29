@@ -67,16 +67,18 @@ def check_prereqs(options: ConfigType) -> list[str]:
         return failure_messages
     try:
         datafile_path = _get_signature_path(options, minimum_version=MINIMUM_VERSION)
-    except ValueError:
-        datafile_path = ""
-    if not os.path.exists(datafile_path):
-        failure_messages.append(f"Failed to locate {datafile_path}")
+        if not os.path.exists(datafile_path):
+            failure_messages.append(f"Signature file not found '{datafile_path}'")
+    except ValueError as err:
+        failure_messages.append(f"nrpys: {err}")
+
     try:
         model_dir = _get_model_dir(options)
-    except ValueError:
-        model_dir = ""
-    if not os.path.exists(model_dir):
-        failure_messages.append(f"Failed to locate {model_dir}")
+        if not os.path.exists(model_dir):
+            failure_messages.append(f"Model directory not found '{model_dir}'")
+    except ValueError as err:
+        failure_messages.append(f"nrpys: {err}")
+
     return failure_messages
 
 

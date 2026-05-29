@@ -108,6 +108,11 @@ def check_clusterblast_files(cluster_path: str, fasta_path: str, diamond_path: s
             a list of error strings
     """
     failures = check_diamond_files(cluster_path, fasta_path, diamond_path, logging_only=logging_only)
+
+    # if there's already errors, further processing will fail anyway
+    if failures:
+        return failures
+
     try:
         build_protein_cache(fasta_path, json_path=cache_path)
     except OSError as err:

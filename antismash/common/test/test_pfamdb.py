@@ -43,13 +43,13 @@ class TestPFAMs(unittest.TestCase):
             os.makedirs(os.path.join(temp_db_layout, "pfam", "invalid30.7"))
             os.makedirs(os.path.join(temp_db_layout, "pfam", "irrelevant"))
 
-            with self.assertRaisesRegex(Exception, f"No matching database in location {temp_db_layout}"):
+            with self.assertRaisesRegex(Exception, f"No matching database in location '{temp_db_layout}/pfam'"):
                 pfamdb.find_latest_database_version(temp_db_layout)
 
             with open(os.path.join(bad, "Pfam-A.hmm"), "w", encoding="utf-8") as handle:
                 handle.write("dummy text")
 
-            with self.assertRaisesRegex(Exception, f"Incompatible database .* {temp_db_layout}"):
+            with self.assertRaisesRegex(Exception, "Incompatible database .* 30.7invalid.*"):
                 pfamdb.find_latest_database_version(temp_db_layout)
 
         # start with a clean temp dir since the last is poisoned

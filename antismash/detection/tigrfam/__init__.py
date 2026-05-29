@@ -53,6 +53,7 @@ def check_prereqs(options: ConfigType) -> List[str]:
     tigr_db = os.path.join(options.database_dir, "tigrfam", "TIGRFam.hmm")
     if not path.locate_file(tigr_db):
         failure_messages.append(f"Failed to locate TIGRFam db in {os.path.join(options.database_dir, 'tigrfam')}")
+        return failure_messages
 
     failure_messages.extend(hmmer.ensure_database_pressed(tigr_db, return_not_raise=True))
 

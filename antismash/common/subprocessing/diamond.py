@@ -223,6 +223,10 @@ def check_diamond_files(definition_file: str, fasta_file: str, db_file: str,
     elif path.is_outdated(db_file, fasta_file):
         regen_message = f"diamond database outdated: {db_file}"
 
+    # don't attempt database regeneration if there's already failures
+    if failure_messages:
+        return failure_messages
+
     if regen_message:
         try:
             logging.debug("%s, regenerating", regen_message)
