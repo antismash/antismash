@@ -1,7 +1,13 @@
+# License: GNU Affero General Public License v3 or later
+# A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
+
+""" Predicts A domain specificity using PARAS and PARASECT models """
+
 import os
 from typing import Any
-from joblib import load
 from enum import Enum
+
+from joblib import load
 
 from parasect.core.retrain_models import retrain_model, model_needs_retraining, update_metadata_file
 from parasect.core.models import ModelType
@@ -55,18 +61,15 @@ def prepare_data(logging_only: bool = False) -> list[str]:
 
         if not os.path.exists(metadata_path):
             if not logging_only:
-                raise
-            else:
-                failure_messages.append(f"Failed to locate {metadata_path}")
+                raise FileNotFoundError
+            failure_messages.append(f"Failed to locate {metadata_path}")
         else:
-            # TODO: Catch any exceptions appropriately
             retrain_paras_models_if_needed(metadata_path, model_dir)
 
-    except ValueError:
+    except FileNotFoundError:
         if not logging_only:
             raise
-        else:
-           failure_messages.append(f"Failed to locate PARAS model dir.")
+        failure_messages.append("Failed to locate PARAS model dir.")
 
     return failure_messages
 
@@ -99,6 +102,7 @@ def retrain_paras_models_if_needed(metadata_path: str, model_dir: str) -> None:
 
 
 class ParasModel(Enum):
+    """ Enum for PARAS model types"""
     PARAS = 1
     PARASECT = 2
 
@@ -185,6 +189,10 @@ class GeneralParasResult(Prediction):
             "top_confidences": self.top_confidences
         }
 
+    @classmethod
+    def from_json(cls, json: dict[str, Any]) -> "Prediction":
+        """ Creates a Prediction from a JSON representation """
+        raise NotImplementedError(f"Prediction subclass {cls} did not implement from_json()")
 
 class ParasResult(GeneralParasResult):
     """ Holds all the relevant results from PARAS for a domain """
@@ -194,7 +202,8 @@ class ParasResult(GeneralParasResult):
                  substrate_predictions: list[str],
                  prediction_confidences: list[float],
                  substrates_to_report: int = 1) -> None:
-        super().__init__(ParasModel.PARAS, aa34, substrate_predictions, prediction_confidences, substrates_to_report)
+        super().__init__(ParasModel.PARAS, aa34, substrate_predictions,
+                         prediction_confidences, substrates_to_report)
 
     @classmethod
     def from_paras_result(cls, minimal_result: MinimalResult,
@@ -220,7 +229,8 @@ class ParasectResult(GeneralParasResult):
                  substrate_predictions: list[str],
                  prediction_confidences: list[float],
                  substrates_to_report: int = 3):
-        super().__init__(ParasModel.PARASECT, aa34, substrate_predictions, prediction_confidences, substrates_to_report)
+        super().__init__(ParasModel.PARASECT, aa34, substrate_predictions,
+                         prediction_confidences, substrates_to_report)
 
     @classmethod
     def from_parasect_result(cls, minimal_result: MinimalResult,
