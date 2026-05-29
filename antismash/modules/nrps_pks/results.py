@@ -169,9 +169,9 @@ class NRPS_PKS_Results(ModuleResults):
                 if method == "nrpys":
                     rebuilt: Prediction = PredictorSVMResult.from_json(prediction)
                 elif method == "paras":
-                    rebuilt: Prediction = ParasResult.from_json(prediction)
+                    rebuilt = ParasResult.from_json(prediction)
                 elif method == "parasect":
-                    rebuilt: Prediction = ParasectResult.from_json(prediction)
+                    rebuilt = ParasectResult.from_json(prediction)
                 elif method.startswith("minowa"):
                     rebuilt = MinowaPrediction.from_json(prediction)
                 elif method == "signature":
