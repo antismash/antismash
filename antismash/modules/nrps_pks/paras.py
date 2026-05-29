@@ -66,7 +66,7 @@ def prepare_data(logging_only: bool = False) -> list[str]:
         else:
             retrain_paras_models_if_needed(metadata_path, model_dir)
 
-    except FileNotFoundError:
+    except (FileNotFoundError, ValueError):
         if not logging_only:
             raise
         failure_messages.append("Failed to locate PARAS model dir.")
