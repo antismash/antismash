@@ -1,4 +1,5 @@
 {% import 'region_table_macros.html' as region_table %}
+{% import 'filter_macros.html' as filters %}
 <!doctype html>
 <html lang="en">
 <head>
@@ -20,7 +21,18 @@
   <div id="header">
     {% include 'header.html' %}
     <div id="buttons">
-      <span id="region-type">Select genomic region:</span>
+      <div id="buttons-header">
+        <div>Select genomic region:</div>
+        <div id="filters">
+          <div id="product-filter" class="filter-section" style="display: none">
+            <div class="filter-label">Filtering by type:</div>
+          </div>
+          <div id="gene-filter" class="filter-section" style="display: none">
+            <div class="filter-label">Filtering by gene annotation:</div>
+            <div class="filter-alert"><span></span></div>
+          </div>
+        </div>
+      </div>
       <div id="regionbuttons">
         <div class="arrow-left" id="prev-region"></div>
         <div class="regbutton" style="min-width: inherit;"><a href="#">Overview</a></div>
@@ -51,6 +63,7 @@
    {% else %}
      <h3>{{intro}}<span id="truncated"></span></h3>
    {% endif %}
+
    <div class="overview-layout">
     <div id="record-tables">
      <div id="single-record-tables">
@@ -105,7 +118,7 @@
   <script src="regions.js"></script>
   <script>
     $(document).ready(function() {
-        viewer["start"](all_regions, resultsData, recordData);
+        viewer["start"](all_regions, resultsData, recordData, config);
     })
   </script>
 

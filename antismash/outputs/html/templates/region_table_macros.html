@@ -12,11 +12,11 @@
 {%- endmacro %}
 
 {% macro region_button(region, element_class, css) -%}
-    <{{element_class}} class="regbutton {{css}} {{region.anchor_id}}">
+    <{{element_class}} id="regbutton-{{region.anchor_id}}" class="regbutton {{css}} {{region.anchor_id}}">
 {%- endmacro %}
 
 {% macro region_row(region, cycle, record_index, options, css) -%}
-   <tr class="linked-row {{cycle}}" data-anchor="#{{region.anchor_id}}">
+   <tr id="{{ region.anchor_id }}-row" class="linked-row {{cycle}}" data-anchor="#{{region.anchor_id}}">
      {{region_button(region, "td", css)}}
       <a href="#{{region.anchor_id}}">Region&nbsp;{% if record_index %}{{record_index}}.{% endif %}{{region.get_region_number()}}</a>
      </td>

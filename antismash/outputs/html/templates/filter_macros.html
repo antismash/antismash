@@ -1,0 +1,27 @@
+{% macro product_filter(data) -%}
+   <div id="type-filter">
+   {{ data.clear_marker }}
+   <div>By gene annotation</div>
+   <input id="filter-gene-text"></input>
+   <div>By protocluster types</div>
+   <div class="filter-functions">
+   </div>
+   {% for cat in data.types_present %}
+    <label id="filter-cat-{{cat}}" class="filter-category filter-base" data-cat="{{cat}}">
+     <input type="checkbox">
+     <span class="filter-checkbox"></span>
+     {{ cat }}
+    </label>
+     <div id="filter-block-{{cat}}" class="filter-block" style="display: none;" data-cat="{{cat}}">
+     {% for type in data.types_present[cat] %}
+      <label class="filter-line filter-base" data-cat="{{type}}">
+       <input type="checkbox">
+       <span class="filter-checkbox"></span>
+       {{ type }}
+      </label>
+     {% endfor %}
+     </div>
+   {% endfor %}
+    <div id="filter-type-clear-button" class="button-like">Clear</div>
+   </div>
+{%- endmacro %}

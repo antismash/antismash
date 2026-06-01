@@ -4,12 +4,13 @@
 """ Responsible for creating the single web page results """
 
 import abc as abstract
+from collections import defaultdict
 import dataclasses
 import importlib
 import pkgutil
 import string
 import os
-from typing import cast, Any, Callable, ClassVar, Dict, List, Tuple, Optional
+from typing import cast, Any, Callable, ClassVar, Dict, List, Self, Tuple, Optional
 
 from antismash.common import json, path
 from antismash.common.html_renderer import (
@@ -35,6 +36,53 @@ TEMPLATE_PATH = path.get_full_path(__file__, "templates")
 _BUTTON_CLASS = "button-like legend-selector"
 _SYMBOL_CLASS = "legend-symbol"
 _STATIC_CLASS = "legend-selector-static"
+
+
+class FilterData:
+    """ Configuration for interactive region filtering """
+    def __init__(self, *, types_present: dict[str, list[str]],
+                 clear_marker: Markup | None = None,
+                 selectors: dict[str, str] | None = None,
+                 ) -> None:
+        if selectors is None:
+            selectors = {
+                "singleFilterRemoveButton": ".clear-marker",
+            }
+        if clear_marker is None:
+            clear_marker = Markup(
+                '<svg class="clear-marker" xmlns="http://www.w3.org/2000/svg" viewBox="2 2 12 12">'
+                '<g stroke="currentColor"><path d="M12 12 4 4M12 4l-8 8" stroke-width="2">'
+                '</path></g></svg>'
+            )
+        self.types_present = types_present
+        self.selectors = selectors
+        self.clear_marker = clear_marker
+
+    @classmethod
+    def from_records(cls, records: list[Record],
+                     *, clear_marker: Markup = None, selectors: dict[str, str] = None,
+                     ) -> Self:
+        """ Build filtering data from records """
+        category_to_products = defaultdict(set)
+        for rec in records:
+            for region in rec.get_regions():
+                for cluster in region.get_unique_protoclusters():
+                    category_to_products[cluster.product_category].add(cluster.product)
+        types_present = {key: sorted(val, key=lambda x: x.lower())
+                         for key, val in category_to_products.items()}
+
+        return cls(
+            types_present=types_present,
+            clear_marker=clear_marker,
+            selectors=selectors,
+        )
+
+    def to_javascript_config(self) -> dict[str, Any]:
+        """ Builds the config subset for the javascript interactions """
+        return {
+            "selectors": self.selectors,
+            "clearMarkerContent": str(self.clear_marker),
+        }
 
 
 @dataclasses.dataclass(kw_only=True)
@@ -233,9 +281,22 @@ def build_json_data(records: List[Record], results: List[Dict[str, ModuleResults
 
 
 def write_regions_js(records: List[Dict[str, Any]], output_dir: str,
-                     module_results: dict[str, dict[str, json.JSONCompatible]]) -> None:
+                     module_results: dict[str, dict[str, json.JSONCompatible]],
+                     *,
+                     as_js_config: dict[str, Any] = None,
+                     ) -> None:
     """ Writes out the cluster and domain JSONs to file for the javascript sections
-        of code"""
+        of code.
+
+        Arguments:
+            records: the JSON representation of record data to pass along
+            output_dir: the path to the output directory in which to write the file
+            module_results: the JSON representations of module results,
+                keyed by region identifier, then module name
+            as_js_config: config options to pass through to relevant javascript modules, if any
+    """
+    if as_js_config is None:
+        as_js_config = {}
 
     with open(os.path.join(output_dir, "regions.js"), "w", encoding="utf-8") as handle:
         handle.write(f"var recordData = {json.dumps(records)};\n")
@@ -246,6 +307,7 @@ def write_regions_js(records: List[Dict[str, Any]], output_dir: str,
                 regions['order'].append(region['anchor'])
         handle.write(f"var all_regions = {json.dumps(regions)};\n")
         handle.write(f"var resultsData = {json.dumps(module_results)};\n")
+        handle.write(f"var config = {json.dumps(as_js_config)};\n")
 
 
 def generate_html_sections(records: List[RecordLayer], results: Dict[str, Dict[str, ModuleResults]],
@@ -334,7 +396,11 @@ def generate_webpage(records: List[Record], results: List[Dict[str, ModuleResult
     if legends is None:
         legends = LEGENDS
     json_records, js_results = build_json_data(records, results, options, all_modules)
-    write_regions_js(json_records, options.output_dir, js_results)
+    filter_data = FilterData.from_records(records)
+    as_js_config = {
+        "filters": filter_data.to_javascript_config(),
+    }
+    write_regions_js(json_records, options.output_dir, js_results, as_js_config=as_js_config)
 
     template = FileTemplate(os.path.join(TEMPLATE_PATH, "overview.html"))
 
@@ -376,6 +442,8 @@ def generate_webpage(records: List[Record], results: List[Dict[str, ModuleResult
                               records_without_regions=record_layers_without_regions,
                               svg_tooltip=svg_tooltip, get_region_css=js.get_region_css,
                               as_js_url=as_js_url, legends=legends,
+                              tta_name=tta.__name__, tfbs_name=tfbs.__name__,
+                              filter_data=filter_data,
                               )
     return content
 
