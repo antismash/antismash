@@ -78,7 +78,7 @@ class IntegrationNRPSPKS(unittest.TestCase):
         feature_names = nrps_names + ["nrpspksdomains_pks_CAL_domain.1"]
         assert set(results.domain_predictions) == set(feature_names + c_names + e_names)
 
-        assert set(results.domain_predictions[feature_names[0]]) == {"nrpys"}
+        assert set(results.domain_predictions[feature_names[0]]) == {"nrpys", "paras", "parasect"}
         plain_results = {}
         norine_results = {}
         for domain, methods in results.domain_predictions.items():
