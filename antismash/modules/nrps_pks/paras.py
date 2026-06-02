@@ -52,10 +52,13 @@ def prepare_data(logging_only: bool = False) -> list[str]:
         Returns:
             a list of error messages (only if logging_only is True)
     """
+    options = get_config()
     failure_messages: list[str] = []
 
+    if "mounted_at_runtime" in options.database_dir:
+        return failure_messages
+
     try:
-        options = get_config()
         model_dir = _get_model_dir(options)
         metadata_path = os.path.join(model_dir, "metadata.txt")
 
