@@ -4,12 +4,14 @@
 """Configuration handling for antiSMASH
 
 """
+import argparse
 import configparser
 import os
 
 from argparse import Namespace
 
 from antismash.common import path
+from .args import AntismashParser
 
 _DEFAULT_NAME = 'default.cfg'
 _BASEDIR = path.get_full_path(__file__)
@@ -48,3 +50,39 @@ def load_config_from_file() -> Namespace:
             namespace.__dict__[key] = value
 
     return namespace
+
+
+def update_from_env(parser: AntismashParser) -> None:
+    """ Load new command line defaults from environment variables """
+    args: list[str] = []
+    for action in parser.get_actions():
+        # Don't override help or positional args
+        if action.dest.startswith("help") or action.dest == "sequences":
+            continue
+
+        var = f"ANTISMASH_{action.dest.upper()}"
+        if var not in os.environ:
+            continue
+
+        value = os.environ[var]
+
+        # usually, last string is the long option
+        option = action.option_strings[-1]
+
+        # but in boolean options, last is False and first is True
+        if isinstance(action, argparse.BooleanOptionalAction):
+            if _get_truthy_value(value):
+                option = action.option_strings[0]
+
+            args.append(option)
+        else:
+            args.extend([option, value])
+
+    parsed_env = parser.parse_args(args)
+    parser.set_defaults(**vars(parsed_env))
+
+
+def _get_truthy_value(string: str) -> bool:
+    """ Get truthy value from string """
+    string = string.lower()
+    return string in ("true", "yes", "t", "y")
