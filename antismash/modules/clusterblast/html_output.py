@@ -22,7 +22,7 @@ from antismash.common.secmet import CDSFeature, Record, Region
 from antismash.config import get_config
 
 from .data_structures import ReferenceCluster, Protein, Query, Subject
-from .results import ClusterBlastResults
+from .results import ClusterBlastResults, KnownHitSummary
 from .svg_builder import build_colour_groups
 
 ASDB_URL = (
@@ -36,9 +36,46 @@ TITLE_GENERAL = "Similar known clusters"
 TITLE_KNOWN = f"{TITLE_GENERAL} from MIBiG %s"
 TITLE_SUB = "Similar subclusters"
 
+# categories in MIBiG that don't directly match to antiSMASH categories
+MIBIG_CATEGORY_MAPPING = {
+    "ribosomal": "RiPP",
+}
+# a similarity percentage above this needs no further checks
+MIBIG_CATEGORY_EXCEPTION_LIMIT = 50
+
 
 def will_handle(_products: List[str], _product_categories: Set[str]) -> bool:
     """ Relevant to every region, so return True for every product """
+    return True
+
+
+def is_good_enough(hit: KnownHitSummary | None, region: Region,
+                   bypass_threshold: int = MIBIG_CATEGORY_EXCEPTION_LIMIT,
+                   ) -> bool:
+    """ Checks if the MIBiG cluster types are present in the hit.
+
+        Arguments:
+            hit: the reference cluster data
+            region: the region to which the hit matched
+            bypass_threshold: a maximum similarity for which type checks should
+                              apply
+
+        Returns:
+            a boolean indicating whether the hit is good enough to show outside
+            the clusterblast-specific panel
+    """
+    if not hit:
+        return False
+    if hit.similarity_percentage >= bypass_threshold:
+        return True
+    haystack = [cat.lower() for cat in region.product_categories]
+    ref_categories = [product.split(":", 1)[0].lower() for product in hit.product.split("+")]
+    for ref_cat in ref_categories:
+        if ref_cat == "other":
+            continue
+        needle = MIBIG_CATEGORY_MAPPING.get(ref_cat, ref_cat).lower()
+        if needle not in haystack:
+            return False
     return True
 
 
@@ -84,7 +121,8 @@ def generate_html(region_layer: RegionLayer, results: ClusterBlastResults,
         region_results = results.knowncluster.region_results[region.get_region_number() - 1]
         references = [ref for ref, _ in region_results.ranking]
         best_match = region_results.get_best_match()
-        if best_match:
+        if is_good_enough(best_match, region):
+            assert best_match is not None
             region_layer.most_related_area = best_match
         title = TITLE_KNOWN % results.knowncluster.data_version
         div = generate_div(region_layer, record_layer, options_layer, "knownclusterblast",
