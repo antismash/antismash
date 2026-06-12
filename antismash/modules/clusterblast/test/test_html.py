@@ -46,7 +46,8 @@ class TestHTMLReuse(unittest.TestCase):
 
     def test_known(self):
         self.results.knowncluster = self.build_result()
-        sections = self.check()
+        with patch.object(clusterblast.html_output, "is_good_enough", return_value=True):
+            sections = self.check()
         assert len(sections.detail_sections) == 1
         assert sections.detail_sections[0].label == "KnownClusterBlast"
 
@@ -60,13 +61,42 @@ class TestHTMLReuse(unittest.TestCase):
         self.results.knowncluster = self.build_result()
         self.results.general = self.build_result()
         self.results.subcluster = self.build_result()
-        sections = self.check(expected_call_count=3)
+        with patch.object(clusterblast.html_output, "is_good_enough", return_value=True):
+            sections = self.check(expected_call_count=3)
         assert len(sections.detail_sections) == 3
         assert {section.label for section in sections.detail_sections} == {
             "ClusterBlast",
             "KnownClusterBlast",
             "SubClusterBlast",
         }
+
+
+class TestGoodEnough(unittest.TestCase):
+    def setUp(self):
+        self.func = clusterblast.html_output.is_good_enough
+
+    def build_hit(self, bgc_id="dummy1", name="name", cluster_number="1",
+                  similarity=75, cluster_type="other:other"):
+        return clusterblast.results.KnownHitSummary(bgc_id, name, cluster_number,
+                                                    similarity, cluster_type)
+
+    def test_above_threshold(self):
+        region = Mock(product_categories=["unmatchable"])
+        hit = self.build_hit(cluster_type="arbitrary_type", similarity=80)
+        assert self.func(hit, region)
+
+    def test_type_mismatch(self):
+        region = Mock(product_categories=["type1"])
+        hit = self.build_hit(cluster_type="type2:some_subtype+type3", similarity=20)
+        assert not self.func(hit, region)
+
+    def test_type_match(self):
+        region = Mock(product_categories=["type1", "type2"])
+        hit = self.build_hit(cluster_type="type2:some_subtype", similarity=20)
+        assert self.func(hit, region)
+
+        hit = self.build_hit(cluster_type="type1+type2:some_subtype", similarity=20)
+        assert self.func(hit, region)
 
 
 class TestQueryJSON(unittest.TestCase):

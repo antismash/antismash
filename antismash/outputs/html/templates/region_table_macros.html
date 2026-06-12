@@ -6,7 +6,7 @@
    <th>From</th>
    <th>To</th>
    <th>Similarity Confidence</th>
-   <th colspan="2">Most similar known cluster</th>
+   <th>Most similar known cluster</th>
   </tr>
  </thead>
 {%- endmacro %}
@@ -48,7 +48,6 @@
        {%- else %}
        <td>{{region.most_related_area.description}}</td>
        {%- endif %}
-       <td>{{region.most_related_area.product}}</td>
       {% else %}
        <td class="similarity-text"></td>
        <td colspan="2"></td>
