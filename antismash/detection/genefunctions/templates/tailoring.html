@@ -18,7 +18,8 @@
         <div class="tailoring-entries">
         {% for entry in entries[ec_group] %}
           <div class="tailoring-entry">
-            {{ cds_selector_span(entry.name, ["tailoring-name"]) }}: <span class="tailoring-description">{{ entry.description }}</span>
+            {{ cds_selector_span(entry.name, additional_classes=["tailoring-name"]) }}:
+              <span class="tailoring-description">{{ entry.description }}</span>
             {{ collapser_start(entry.name, level="none") }}
             <dl class="tailoring-details-container">
               {% for details in entry %}

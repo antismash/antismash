@@ -234,6 +234,12 @@ class TestSelector(unittest.TestCase):
         assert html.startswith("<span")
         assert html.endswith("</span>")
 
+    def test_display_name(self):
+        html = renderer.cds_selector_span("some-name", display_name="other-name")
+        _verify_html_tags_match(html)
+        assert 'data-locus="some-name"' in html
+        assert '>other-name</span>' in html
+
 
 class TestBlastLink(unittest.TestCase):
     def test_static(self):
