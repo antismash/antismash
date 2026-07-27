@@ -83,7 +83,7 @@ class TestTerpene(unittest.TestCase):
         destroy_config()
 
     def get_args(self):
-        return ["--minimal", "--enable-terpene"]
+        return ["--minimal", "--enable-terpene", "--enable-html"]
 
     def test_full_pathway(self):
         features = []

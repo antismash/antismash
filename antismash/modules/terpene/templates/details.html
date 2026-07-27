@@ -49,7 +49,7 @@
             {% if prediction.cds_predictions.items() %}
             {% for cds, domain_preds in prediction.cds_predictions.items() %}
               <div>
-              {{ cds_selector_span(cds, ["section-header"]) }}: {{ format_domain_types(domain_preds) }}
+              {{ cds_selector_span(cds, additional_classes=["section-header"]) }}: {{ format_domain_types(domain_preds) }}
               {{collapser_start(target=cds, level="cds")}}
               {% for pred in domain_preds %}
                <div>
