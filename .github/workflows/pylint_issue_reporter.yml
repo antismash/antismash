@@ -1,4 +1,4 @@
-name: Comment on pylint issue comparison
+name: Lint comparison
 
 on: [pull_request]
 
@@ -28,18 +28,16 @@ jobs:
         pip install -e .[testing]
     # build the comparison report
     - id: comparison
-      uses: SJShaw/pylint-compare/build-report@v2
+      uses: SJShaw/pylint-compare/build-report@v3
       with:
         targets: antismash *.py
         install_pylint: false
-  comment:
-    runs-on: ubuntu-latest
-    needs: lint_comparison
-    permissions:
-      pull-requests: write
-    steps:
-      - name: Comment
-        uses: SJShaw/pylint-compare/update-pr@v2
-        with:
-          comment: |
-            ${{ needs.lint_comparison.outputs.report }}
+    - name: Save lint report
+      run: |
+        mkdir -p ./lint_report
+        echo "${{ steps.comparison.outputs.report }}" >> ./lint_report/message
+        echo "${{ github.event.number }}" >> ./lint_report/pr
+    - uses: actions/upload-artifact@v7
+      with:
+        name: lint_report
+        path: lint_report/
