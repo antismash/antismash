@@ -26,11 +26,13 @@ def get_arguments() -> ModuleArgs:
     return args
 
 
-def check_options(_options: ConfigType) -> List[str]:
-    """ Checks options for conflicts.
-        No extra options, so they can't have conflicts.
-    """
-    return []
+def check_options(options: ConfigType) -> List[str]:
+    """ Pfam2go requires Pfams """
+    problems = []
+    if is_enabled(options) and not (options.fullhmmer or options.clusterhmmer):
+        problems.append("Pfam2go enabled without an Pfam analysis. "
+                        "The --clusterhmmer or --fullhmmer option is required.")
+    return problems
 
 
 def check_prereqs(_options: ConfigType) -> List[str]:
