@@ -15,8 +15,6 @@ import stat
 from typing import Dict, List, Optional
 import warnings
 
-import sass
-
 from antismash.common import html_renderer, path
 from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import Record
@@ -58,21 +56,6 @@ def get_arguments() -> ModuleArgs:
 
 def prepare_data(_logging_only: bool = False) -> List[str]:
     """ Rebuild any dynamically buildable data """
-    flavours = ["bacteria", "fungi", "plants"]
-
-    with path.changed_directory(path.get_full_path(__file__, "css")):
-        built_files = [os.path.abspath(f"{flavour}.css") for flavour in flavours]
-
-        if path.is_outdated(built_files, glob.glob("*.scss")):
-            logging.info("CSS files out of date, rebuilding")
-
-            for flavour in flavours:
-                target = f"{flavour}.css"
-                source = f"{flavour}.scss"
-                assert os.path.exists(source), flavour
-                result = sass.compile(filename=source, output_style="compact")
-                with open(target, "w", encoding="utf-8") as out:
-                    out.write(result)
     return []
 
 
@@ -105,7 +88,7 @@ def write(records: List[Record], results: List[Dict[str, ModuleResults]],
     """
     output_dir = options.output_dir
 
-    copy_template_dir('css', output_dir, pattern=f"{options.taxon}.css")
+    copy_template_dir('css', output_dir)
     copy_template_dir('js', output_dir)
     # if there wasn't an antismash.js in the JS dir, fall back to one in databases
     local_path = os.path.join(output_dir, "js", "antismash.js")
