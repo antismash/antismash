@@ -26,7 +26,6 @@ install_requires = [
     'markupsafe >= 2.0',
     'nrpys >= 0.1.1',
     'bcbio-gff == 0.7.1',
-    'libsass >= 0.22',
     'matplotlib',
     'orjson',
     'scipy',

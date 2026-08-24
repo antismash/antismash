@@ -4,6 +4,7 @@
 # for test files, silence irrelevant and noisy pylint warnings
 # pylint: disable=use-implicit-booleaness-not-comparison,protected-access,missing-docstring
 
+import re
 import unittest
 
 from antismash.common import path
@@ -18,12 +19,12 @@ class TestClusterCSS(unittest.TestCase):
             "hybrid",  # a special case used at the javascript level
             "unknown",  # for regions containing only subregions
         }
-        less = path.get_full_path(__file__, "..", "css", "secmet.scss")
-        with open(less, encoding="utf-8") as handle:
-            for line in handle.readlines():
-                if line.startswith('.'):
-                    class_ = line[1:].split()[0]
-                    available_classes.add(class_)
+        css_path = path.get_full_path(__file__, "..", "css", "secmet.css")
+        with open(css_path, encoding="utf-8") as handle:
+            contents = handle.read()
+        for selectors, declarations in re.findall(r"([^{}]+)\{([^{}]*)\}", contents):
+            if "--secmet-bg:" in declarations:
+                available_classes.update(re.findall(r"\.([A-Za-z0-9_-]+)", selectors))
         missing_css = [f"{rule.name} (category: {rule.category})"
                        for rule in rules
                        if not available_classes.intersection({rule.name, rule.category})]

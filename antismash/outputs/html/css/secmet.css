@@ -1,0 +1,359 @@
+/* Colour definitions for secondary metabolite types. */
+
+.PKS {
+    --secmet-fg: purple;
+    --secmet-bg: sandybrown;
+    --secmet-highlight: purple;
+    --secmet-hover-bg: #f7bd8b;
+}
+
+.RiPP {
+    --secmet-fg: white;
+    --secmet-bg: royalblue;
+    --secmet-highlight: orangered;
+    --secmet-hover-bg: #6988e7;
+}
+
+.other {
+    --secmet-fg: lightsteelblue;
+    --secmet-bg: midnightblue;
+    --secmet-highlight: orangered;
+    --secmet-hover-bg: #212196;
+}
+
+.arylpolyene,
+.melanin {
+    --secmet-fg: white;
+    --secmet-bg: peru;
+    --secmet-highlight: orangered;
+    --secmet-hover-bg: #d69c63;
+}
+
+.resorcinol,
+.ladderane,
+.PUFA,
+.terpene,
+.furan,
+.PBDE,
+.betalactone,
+.pyrrolidine {
+    --secmet-fg: white;
+    --secmet-bg: purple;
+    --secmet-highlight: orangered;
+    --secmet-hover-bg: #ae00ae;
+}
+
+.NRPS {
+    --secmet-fg: white;
+    --secmet-bg: seagreen;
+    --secmet-highlight: orangered;
+    --secmet-hover-bg: #39ad6d;
+}
+
+.lanthipeptide-class-i,
+.lanthipeptide-class-ii,
+.lanthipeptide-class-iii,
+.lanthipeptide-class-iv,
+.lanthipeptide-class-v,
+.lipolanthine {
+    --secmet-fg: blue;
+    --secmet-bg: #ffff77;
+    --secmet-highlight: blue;
+    --secmet-hover-bg: #ffffa5;
+}
+
+.azole-containing-RiPP,
+.thioamitides {
+    --secmet-fg: black;
+    --secmet-bg: gold;
+    --secmet-highlight: black;
+    --secmet-hover-bg: #ffde2e;
+}
+
+.blactam {
+    --secmet-fg: black;
+    --secmet-bg: aliceblue;
+    --secmet-highlight: black;
+    --secmet-hover-bg: white;
+}
+
+.amglyccycl,
+.aminocoumarin {
+    --secmet-fg: black;
+    --secmet-bg: yellowgreen;
+    --secmet-highlight: black;
+    --secmet-hover-bg: #acd657;
+}
+
+.NI-siderophore,
+.NRP-metallophore,
+.methanobactin,
+.opine-like-metallophore,
+.aminopolycarboxylic-acid,
+.hydroxytropolone {
+    --secmet-fg: white;
+    --secmet-bg: crimson;
+    --secmet-highlight: blue;
+    --secmet-hover-bg: #ec3257;
+}
+
+.ectoine,
+.NAGGN {
+    --secmet-fg: firebrick;
+    --secmet-bg: yellowgreen;
+    --secmet-highlight: firebrick;
+    --secmet-hover-bg: #acd657;
+}
+
+.butyrolactone {
+    --secmet-fg: white;
+    --secmet-bg: mediumpurple;
+    --secmet-highlight: orangered;
+    --secmet-hover-bg: #af95e4;
+}
+
+.indole {
+    --secmet-fg: black;
+    --secmet-bg: peachpuff;
+    --secmet-highlight: black;
+    --secmet-hover-bg: #fff2e7;
+}
+
+.deazapurine {
+    --secmet-fg: black;
+    --secmet-bg: antiquewhite;
+    --secmet-highlight: black;
+    --secmet-hover-bg: white;
+}
+
+.phosphoglycolipid {
+    --secmet-fg: black;
+    --secmet-bg: yellowgreen;
+    --secmet-highlight: black;
+    --secmet-hover-bg: #acd657;
+}
+
+.oligosaccharide {
+    --secmet-fg: black;
+    --secmet-bg: burlywood;
+    --secmet-highlight: black;
+    --secmet-hover-bg: #e8cdab;
+}
+
+.hserlactone,
+.acyl_amino_acids,
+.tropodithietic-acid {
+    --secmet-fg: black;
+    --secmet-bg: tan;
+    --secmet-highlight: black;
+    --secmet-hover-bg: #dfcaad;
+}
+
+.phenazine {
+    --secmet-fg: black;
+    --secmet-bg: plum;
+    --secmet-highlight: black;
+    --secmet-hover-bg: #e9c2e9;
+}
+
+.phosphonate {
+    --secmet-fg: black;
+    --secmet-bg: mediumaquamarine;
+    --secmet-highlight: black;
+    --secmet-hover-bg: #89d8bd;
+}
+
+.unknown,
+.saccharide,
+.fatty_acid,
+.halogenated {
+    --secmet-fg: black;
+    --secmet-bg: #f2f2f2;
+    --secmet-highlight: black;
+    --secmet-hover-bg: white;
+}
+
+/* Keep this last so that it overrides other product classes. */
+.hybrid {
+    --secmet-fg: midnightblue;
+    --secmet-bg: lightsteelblue;
+    --secmet-highlight: midnightblue;
+    --secmet-hover-bg: #d0dcec;
+}
+
+:is(
+    .PKS,
+    .RiPP,
+    .other,
+    .arylpolyene,
+    .resorcinol,
+    .ladderane,
+    .PUFA,
+    .NRPS,
+    .terpene,
+    .lanthipeptide-class-i,
+    .lanthipeptide-class-ii,
+    .lanthipeptide-class-iii,
+    .lanthipeptide-class-iv,
+    .lanthipeptide-class-v,
+    .lipolanthine,
+    .azole-containing-RiPP,
+    .thioamitides,
+    .blactam,
+    .amglyccycl,
+    .aminocoumarin,
+    .NI-siderophore,
+    .NRP-metallophore,
+    .methanobactin,
+    .opine-like-metallophore,
+    .aminopolycarboxylic-acid,
+    .hydroxytropolone,
+    .ectoine,
+    .NAGGN,
+    .butyrolactone,
+    .indole,
+    .deazapurine,
+    .phosphoglycolipid,
+    .melanin,
+    .oligosaccharide,
+    .furan,
+    .hserlactone,
+    .acyl_amino_acids,
+    .tropodithietic-acid,
+    .phenazine,
+    .phosphonate,
+    .PBDE,
+    .betalactone,
+    .pyrrolidine,
+    .unknown,
+    .saccharide,
+    .fatty_acid,
+    .halogenated,
+    .hybrid
+) {
+    background-color: var(--secmet-bg);
+
+    & a,
+    & a:link,
+    & a:visited {
+        color: var(--secmet-fg);
+    }
+
+    &.active {
+        border-color: var(--secmet-highlight);
+        border-width: 2px;
+        border-style: solid;
+    }
+
+    &:hover {
+        background-color: var(--secmet-hover-bg);
+    }
+}
+
+/* Ensure SVG regions and cross-origin indicators use matching colours. */
+:is(rect, path):is(
+    .PKS,
+    .RiPP,
+    .other,
+    .arylpolyene,
+    .resorcinol,
+    .ladderane,
+    .PUFA,
+    .NRPS,
+    .terpene,
+    .lanthipeptide-class-i,
+    .lanthipeptide-class-ii,
+    .lanthipeptide-class-iii,
+    .lanthipeptide-class-iv,
+    .lanthipeptide-class-v,
+    .lipolanthine,
+    .azole-containing-RiPP,
+    .thioamitides,
+    .blactam,
+    .amglyccycl,
+    .aminocoumarin,
+    .NI-siderophore,
+    .NRP-metallophore,
+    .methanobactin,
+    .opine-like-metallophore,
+    .aminopolycarboxylic-acid,
+    .hydroxytropolone,
+    .ectoine,
+    .NAGGN,
+    .butyrolactone,
+    .indole,
+    .deazapurine,
+    .phosphoglycolipid,
+    .melanin,
+    .oligosaccharide,
+    .furan,
+    .hserlactone,
+    .acyl_amino_acids,
+    .tropodithietic-acid,
+    .phenazine,
+    .phosphonate,
+    .PBDE,
+    .betalactone,
+    .pyrrolidine,
+    .unknown,
+    .saccharide,
+    .fatty_acid,
+    .halogenated,
+    .hybrid
+) {
+    fill: var(--secmet-bg);
+    stroke: var(--secmet-highlight);
+}
+
+.cluster-bar-extension:is(
+    .PKS,
+    .RiPP,
+    .other,
+    .arylpolyene,
+    .resorcinol,
+    .ladderane,
+    .PUFA,
+    .NRPS,
+    .terpene,
+    .lanthipeptide-class-i,
+    .lanthipeptide-class-ii,
+    .lanthipeptide-class-iii,
+    .lanthipeptide-class-iv,
+    .lanthipeptide-class-v,
+    .lipolanthine,
+    .azole-containing-RiPP,
+    .thioamitides,
+    .blactam,
+    .amglyccycl,
+    .aminocoumarin,
+    .NI-siderophore,
+    .NRP-metallophore,
+    .methanobactin,
+    .opine-like-metallophore,
+    .aminopolycarboxylic-acid,
+    .hydroxytropolone,
+    .ectoine,
+    .NAGGN,
+    .butyrolactone,
+    .indole,
+    .deazapurine,
+    .phosphoglycolipid,
+    .melanin,
+    .oligosaccharide,
+    .furan,
+    .hserlactone,
+    .acyl_amino_acids,
+    .tropodithietic-acid,
+    .phenazine,
+    .phosphonate,
+    .PBDE,
+    .betalactone,
+    .pyrrolidine,
+    .unknown,
+    .saccharide,
+    .fatty_acid,
+    .halogenated,
+    .hybrid
+) {
+    fill: var(--secmet-bg);
+}
