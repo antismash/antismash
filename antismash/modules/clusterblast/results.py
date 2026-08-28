@@ -6,14 +6,12 @@
 
 from collections import OrderedDict
 import logging
-import os
-from typing import Any, Dict, IO, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from antismash.common.module_results import ModuleResults
 from antismash.common.layers import AbstractRelatedArea
-from antismash.common.path import changed_directory
 from antismash.common.secmet import Record, Region
-from antismash.config import ConfigType, get_config
+from antismash.config import get_config
 
 from .data_structures import (
     MibigEntry,
@@ -229,13 +227,6 @@ class GeneralResults(ModuleResults):
                 protein_name = f"{cluster.accession}_{protein_name}"
                 self.proteins_of_interest[protein_name] = reference_proteins[protein_name]
 
-    def write_to_file(self, record: Record, options: ConfigType) -> None:
-        """ Write the results to a text file """
-        for cluster in self.region_results:
-            write_clusterblast_output(options, record, cluster,
-                                      self.proteins_of_interest,
-                                      searchtype=self.search_type)
-
     def to_json(self) -> Dict[str, Any]:
         if not self.region_results:
             return {}
@@ -320,88 +311,3 @@ class ClusterBlastResults(ModuleResults):
         for result in [self.general, self.subcluster, self.knowncluster]:
             if result is not None:
                 result.add_to_record(record)
-
-    def write_outputs(self, record: Record, options: ConfigType) -> None:
-        for subresult in [self.general, self.knowncluster, self.subcluster]:
-            if subresult:
-                subresult.write_to_file(record, options)
-
-
-def write_clusterblast_output(options: ConfigType, record: Record,
-                              cluster_result: RegionResult, proteins: Dict[str, Protein],
-                              searchtype: str = "clusterblast") -> None:
-    """ Writes a text form of clusterblast results to file.
-
-        Arguments:
-            options: the antismash config
-            record: the record that the results came from
-            cluster_result: the RegionResult object to write information about
-            proteins: a dict mapping protein name to Protein
-            searchtype: the name of the module of which to write results for
-
-        Returns:
-            None
-    """
-    assert isinstance(proteins, dict)
-
-    region_number = cluster_result.region.get_region_number()
-    filename = f"{record.id}_c{region_number}.txt"
-
-    with changed_directory(_get_output_dir(options, searchtype)):
-        with open(filename, "w", encoding="utf-8") as out_file:
-            _write_output(out_file, record, cluster_result, proteins)
-
-
-def _write_output(out_file: IO, record: Record, cluster_result: RegionResult,
-                  proteins: Dict[str, Protein]) -> None:
-    ranking = cluster_result.ranking
-    # Output for each hit: table of genes and locations of input cluster,
-    # table of genes and locations of hit cluster, table of hits between the clusters
-    out_file.write("ClusterBlast scores for " + record.id + "\n")
-    out_file.write("\nTable of genes, locations, strands and annotations of query cluster:\n")
-    for i, cds in enumerate(cluster_result.region.cds_children):
-        if cds.strand == 1:
-            strand = "+"
-        else:
-            strand = "-"
-        out_file.write("\t".join([cds.get_name(), str(int(cds.location.start)),
-                                  str(int(cds.location.end)), strand, cds.product]) + "\t\n")
-    out_file.write("\n\nSignificant hits: \n")
-    for i, cluster_and_score in enumerate(ranking):
-        cluster = cluster_and_score[0]
-        out_file.write(f"{i + 1}. {cluster.accession}\t{cluster.description}\n")
-
-    out_file.write("\n\nDetails:")
-    for i, cluster_and_score in enumerate(ranking):
-        cluster, score = cluster_and_score
-        nrhits = score.hits
-        out_file.write("\n\n>>\n")
-        out_file.write(f"{i + 1}. {cluster.accession}\n")
-        out_file.write(f"Source: {cluster.description}\n")
-        out_file.write(f"Type: {cluster.cluster_type}\n")
-        out_file.write(f"Number of proteins with BLAST hits to this cluster: {nrhits}\n")
-        out_file.write(f"Cumulative BLAST score: {score.blast_score}\n\n")
-        out_file.write("Table of genes, locations, strands and annotations of subject cluster:\n")
-        for protein_name in cluster.proteins:
-            protein = proteins.get(protein_name)
-            if protein:
-                out_file.write(str(protein))
-        out_file.write("\nTable of Blast hits (query gene, subject gene,"
-                       " %identity, blast score, %coverage, e-value):\n")
-        if score.scored_pairings:
-            for query, subject in score.scored_pairings:
-                out_file.write(f"{query.id}\t{subject.get_table_string()}\n")
-        else:
-            out_file.write("data not found\n")
-        out_file.write("\n")
-
-
-def _get_output_dir(options: ConfigType, searchtype: str) -> str:
-    assert searchtype in ["clusterblast", "subclusterblast", "knownclusterblast"], searchtype
-    output_dir = os.path.join(options.output_dir, searchtype)
-
-    if not os.path.exists(output_dir):
-        os.mkdir(output_dir)
-    if not os.path.isdir(output_dir):
-        raise RuntimeError(f"{output_dir} exists as a file, but must be a directory")
-    return output_dir

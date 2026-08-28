@@ -18,7 +18,6 @@ from antismash.config import ConfigType
 from antismash.detection.tigrfam.tigr_domain import TIGRDomain
 from antismash.modules import clusterblast, smcog_trees, tfbs_finder as tfbs, tta
 from antismash.outputs.html.area_packing import build_area_rows
-from antismash.outputs.html.generate_html_table import generate_html_table
 
 GO_URL = 'http://amigo.geneontology.org/amigo/term/'
 
@@ -95,13 +94,10 @@ def convert_source(source: Source, region: Region, name: str = None) -> Dict[str
 def convert_regions(record: Record, options: ConfigType, result: Dict[str, ModuleResults]) -> List[Dict[str, Any]]:
     """Convert Region features to JSON"""
     js_regions = []
-    mibig_results: Dict[int, Dict[str, List[clusterblast.results.MibigEntry]]] = {}
 
     clusterblast_results = result.get(clusterblast.__name__)
     if clusterblast_results is not None:
         assert isinstance(clusterblast_results, clusterblast.results.ClusterBlastResults)
-        if clusterblast_results.knowncluster:
-            mibig_results = clusterblast_results.knowncluster.mibig_entries
 
     assert record.record_index  # shouldn't get here without ensuring this
     for region in record.get_regions():
@@ -111,7 +107,6 @@ def convert_regions(record: Record, options: ConfigType, result: Dict[str, Modul
         js_region['start'] = int(region.location.start) + 1
         js_region['end'] = int(region.location.end)
         js_region['idx'] = region.get_region_number()
-        mibig_entries = mibig_results.get(js_region['idx'], {})
         if region.crosses_origin():
             last_part = region.location.parts[-1]
             assert last_part.start == 0, region.location.parts
@@ -124,7 +119,7 @@ def convert_regions(record: Record, options: ConfigType, result: Dict[str, Modul
                 convert_source(Source(FeatureLocation(start, end)), region, record.id),
             ]
             js_region["sources"][-1]["regionEnd"] = len(record) + len(last_part)
-        js_region['orfs'] = convert_cds_features(record, region.cds_children, options, mibig_entries, region, result)
+        js_region['orfs'] = convert_cds_features(record, region.cds_children, options, region, result)
         js_region["clusters"] = build_area_rows(region, len(record.seq), circular=record.is_circular())
         sites = {
             "ttaCodons": convert_tta_codons(tta_codons, record),
@@ -147,7 +142,7 @@ def convert_regions(record: Record, options: ConfigType, result: Dict[str, Modul
 
 
 def convert_cds_features(record: Record, features: Iterable[CDSFeature], options: ConfigType,
-                         mibig_entries: dict[str, list[clusterblast.results.MibigEntry]], region: Region,
+                         region: Region,
                          results: dict[str, ModuleResults],
                          ) -> List[Dict[str, Any]]:
     """ Convert CDSFeatures to JSON """
@@ -157,9 +152,7 @@ def convert_cds_features(record: Record, features: Iterable[CDSFeature], options
         # resistance genes have special markers, not just a colouring, so revert to OTHER
         if gene_function == GeneFunction.RESISTANCE:
             gene_function = GeneFunction.OTHER
-        mibig_hits: List[clusterblast.results.MibigEntry] = []
-        mibig_hits = mibig_entries.get(feature.get_name(), [])
-        description = get_description(record, feature, str(gene_function), options, mibig_hits, results)
+        description = get_description(record, feature, str(gene_function), options, results)
         start = feature.start + 1
         end = feature.end
         if region.crosses_origin():
@@ -308,7 +301,7 @@ def generate_tigr_tooltip(record: Record, feature: CDSFeature) -> List[str]:
 
 
 def get_description(record: Record, feature: CDSFeature, type_: str,
-                    options: ConfigType, mibig_result: List[clusterblast.results.MibigEntry],
+                    options: ConfigType,
                     results: dict[str, ModuleResults],
                     ) -> str:
     "Get the description text of a CDS feature"
@@ -317,7 +310,6 @@ def get_description(record: Record, feature: CDSFeature, type_: str,
         "blastp": ("http://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE=Proteins&"
                    f"PROGRAM=blastp&BLAST_PROGRAMS=blastp&QUERY={feature.translation}&"
                    "LINK_LOC=protein&PAGE_TYPE=BlastSearch"),
-        "mibig": "",
         "transport": "",
         "smcog_tree": "",
         "context": (
@@ -332,15 +324,6 @@ def get_description(record: Record, feature: CDSFeature, type_: str,
     # the NCBI context viewer doesn't handle cross-origin areas, so don't include those
     if feature.crosses_origin():
         urls.pop("context")
-
-    if mibig_result:
-        assert feature.region
-        region_number = feature.region.get_region_number()
-        mibig_homology_file = os.path.join(options.output_dir, "knownclusterblast",
-                                           f"region{region_number}",
-                                           f"{feature.get_accession()}_mibig_hits.html")
-        generate_html_table(mibig_homology_file, mibig_result)
-        urls["mibig"] = mibig_homology_file[len(options.output_dir) + 1:]
 
     if type_ == 'transport':
         urls["transport"] = ("http://blast.jcvi.org/er-blast/index.cgi?project=transporter;"
