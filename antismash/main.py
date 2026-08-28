@@ -624,6 +624,10 @@ def list_plugins() -> None:
     """
 
     def print_modules(modules: List[AntismashModule], indent: int = 0) -> None:
+        if not modules:
+            print(f"{' ' * indent}None currently available")
+            print()
+            return
         max_length = max(len(mod.NAME) for mod in modules)
         format_string = f"{' ' * indent}%-{max_length}s:  %s"
         for module in modules:

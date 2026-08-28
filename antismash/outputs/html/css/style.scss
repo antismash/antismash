@@ -14,7 +14,6 @@ $gene-type-transport: cornflowerblue;
 $feature-resistance: #bbb;
 $feature-tta-codon: #444;
 $table-background: #f1f1f1;
-$tool-cassis: wheat;
 $kind-protoclusters: white;
 
 @mixin unselectable(){
@@ -584,12 +583,6 @@ table.region-table {
     fill: $kind-protoclusters;
 }
 
-.svgene-border-cassis .cluster-core {
-    stroke: black;
-    stroke-width: 1px;
-    fill: $tool-cassis;
-}
-
 .svgene-orf, .svgene-minimap-orf{
     stroke-width: 0;
 }
@@ -694,10 +687,6 @@ table.region-table {
 }
 .legend-type-regulatory {
     background-color: $gene-type-regulatory;
-}
-
-.legend-border-cassis {
-    background-color: $tool-cassis;
 }
 
 .legend-tta-codon {
