@@ -177,7 +177,7 @@ def get_arguments() -> ModuleArgs:
     args.add_option('strictness',
                     dest='strictness',
                     type=str,
-                    choices=["strict", "relaxed", "loose"],
+                    choices=_STRICTNESS_LEVELS,
                     default="relaxed",
                     help=("Defines which level of strictness to use for "
                           "HMM-based cluster detection, (default: %(default)s)."))
