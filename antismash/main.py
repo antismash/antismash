@@ -606,7 +606,11 @@ def check_prerequisites(modules: List[AntismashModule], options: ConfigType) -> 
     errors_by_module = {}
     for module in modules:
         logging.debug("Checking prerequisites for %s", module.__name__)
-        res = module.check_prereqs(options)
+        try:
+            res = module.check_prereqs(options)
+        except Exception as err:
+            logging.error("Unhandled failures in {module.__name__}: '%s'", err)
+            raise
         if res:
             errors_by_module[module.__name__] = res
     if errors_by_module:
