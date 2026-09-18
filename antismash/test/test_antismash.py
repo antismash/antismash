@@ -127,6 +127,25 @@ class TestAntismash(unittest.TestCase):
         res = main.canonical_base_filename("foo.1_example.gbff.gz", "out", options)
         assert res == expected
 
+    def test_check_prereqs_bad_module(self):
+        options = build_config([], isolated=True, modules=[])
+
+        def dummy(*args, **kwargs):
+            # raise the error least able to be handled
+            raise Exception("some unhandled thing")  # pylint: disable=broad-exception-raised
+
+        module = unittest.mock.Mock()
+        module.check_prereqs = dummy
+        module.__name__ = "dummy module"
+
+        # the error should be both logged and thrown
+        with self.assertLogs(level="WARNING") as logs:
+            with self.assertRaisesRegex(Exception, "some unhandled thing"):
+                main.check_prerequisites([module], options)
+            assert len(logs.output) == 1
+            assert logs.output[0].startswith("ERROR")
+            assert "some unhandled thing" in logs.output[0]
+
 
 class TestErrorsInLogfile(unittest.TestCase):
     def setUp(self):
