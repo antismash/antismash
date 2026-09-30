@@ -694,17 +694,24 @@ class CDSCondition(Conditions):
         if local_only or satisfied_internally:
             return ConditionMet(xor(self.negated, satisfied_internally.met), satisfied_internally)
 
-        results = satisfied_internally.met
-        # negative matches must also ensure all neighbours are negative
+        # otherwise look for a neighbouring CDS that satisfies all subconditions
+        # on its own, and attribute the matched domains to that CDS (not the anchor)
+        # via ancillary hits, the same way SingleCondition reports neighbour hits
         start_feature = details.features_by_id[details.cds]
+        ancillary: Dict[str, Set[str]] = {}
         for cds, feature in details.features_by_id.items():
             if details.cds == cds:
                 continue
             if not details.in_range(start_feature.location, feature.location):
                 continue
-            results = results or super().are_subconditions_satisfied(details.just_cds(cds), local_only=True).met
+            neighbour = super().are_subconditions_satisfied(details.just_cds(cds), local_only=True)
+            if neighbour.met:
+                ancillary[cds] = set(neighbour.matches)
 
-        return ConditionMet(xor(results, self.negated))
+        if ancillary:
+            return ConditionMet(not self.negated, ancillary_hits=ancillary)
+
+        return ConditionMet(self.negated)
 
     def get_hit_string(self) -> str:
         prefix = "not " if self.negated else ""
