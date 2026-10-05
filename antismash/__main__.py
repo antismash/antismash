@@ -47,6 +47,9 @@ def get_git_version(fallback_filename: Optional[str] = GIT_VERSION_FALLBACK_FILE
 
 def get_version() -> str:
     """Get the current version string"""
+    # if already set, use that version rather than redo the git work
+    if antismash.config.args.ANTISMASH_VERSION:
+        return antismash.config.args.ANTISMASH_VERSION
     version = antismash.__version__
     git_version = get_git_version()
     if git_version:
@@ -58,12 +61,14 @@ def get_version() -> str:
 antismash.config.args.ANTISMASH_VERSION = get_version()
 
 
-def main(args: List[str]) -> int:
+def main(args: List[str], *, branding_override: str = "", version_override: str = "") -> int:
     """ The entrypoint of antiSMASH as if it was on the command line
 
         Arguments:
             args: a list of args as would be given on the command line
                     e.g. ["inputfile", "--minimal", "--enable-nrps_pks"]
+            branding_override: a name to use instead of antiSMASH, when used as a library
+            branding_override: a version to use instead of antiSMASH's version, when used as a library
 
         Returns:
             zero if successful, non-zero otherwise
@@ -72,12 +77,26 @@ def main(args: List[str]) -> int:
     all_modules = antismash.get_all_modules()
     parser = antismash.config.args.build_parser(from_config_file=True, modules=all_modules)
 
+    if branding_override or version_override:
+        if not branding_override and version_override:
+            raise ValueError("both branding and version must be overridden, if either is supplied")
+        assert branding_override != "antiSMASH"
+        antismash.config.args.ANTISMASH_VERSION = (
+            f"{ version_override }"
+            f" (based on antiSMASH { get_version() })"
+        )
+
     # if --help, show help texts and exit
     if set(args).intersection({"-h", "--help", "--help-showall"}):
         parser.print_help(show_all="--help-showall" in args)
         return 0
 
     options = antismash.config.build_config(args, parser=parser)
+    # while the branding can be set in the default configs, ensure it's set here too
+    if branding_override and options.branding != branding_override:
+        antismash.config.update_config({"branding": branding_override})
+
+    assert options.branding, repr(options.branding)
 
     if options.write_config_file:
         parser.write_to_config_file(options.write_config_file, options.__dict__)
@@ -85,7 +104,7 @@ def main(args: List[str]) -> int:
 
     # if -V, show version text and exit
     if options.version:
-        print(f"antiSMASH {get_version()}")
+        print(f"{options.branding} {get_version()}")
         return 0
 
     if len(options.sequences) > 1:
