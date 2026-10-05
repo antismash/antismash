@@ -16,6 +16,7 @@ from helperlibs.bio import seqio
 
 from ..abstract import AbstractRegion
 from ..candidate_cluster import CandidateCluster
+from ...constants import get_structured_comment_key
 from ...locations import (
     FeatureLocation,
     Location,
@@ -56,8 +57,9 @@ def _build_annotations(region: RegionData, original_annotations: dict[str, Any])
 
     # while there ought to be existing antiSMASH structured comments, allow for them to be missing
     annotations.setdefault("structured_comment", {})
-    annotations["structured_comment"].setdefault("antiSMASH-Data", {})
-    antismash_comment = annotations["structured_comment"]["antiSMASH-Data"]
+    key = get_structured_comment_key()
+    annotations["structured_comment"].setdefault(key, {})
+    antismash_comment = annotations["structured_comment"][key]
 
     # any additions here need to be added in the order they should appear
 
