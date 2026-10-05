@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Optional, Type, TypeVar
 
 from Bio.SeqFeature import SeqFeature
 
+from ..constants import get_tool_name
 from ..errors import SecmetInvalidInputError
 from .feature import Feature, Location, pop_locus_qualifier
 
@@ -108,7 +109,7 @@ class AntismashFeature(Feature):
         assert isinstance(feature, AntismashFeature)
 
         # semi-optional qualifiers
-        if leftovers.get("tool") == ["antismash"] and not feature.tool:
+        if leftovers.get("tool") == [get_tool_name()] and not feature.tool:
             raise SecmetInvalidInputError("an AntismashFeature created by antiSMASH must have a tool supplied")
 
         # grab optional qualifiers
