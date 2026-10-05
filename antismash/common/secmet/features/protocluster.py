@@ -10,6 +10,7 @@ from Bio.SeqFeature import SeqFeature
 from .cds_feature import CDSFeature
 from .cdscollection import CDSCollection, CollectionSection, CoredCollectionMixin
 from .feature import Feature
+from ..constants import get_subtool_key, get_tool_name
 from ..locations import Location, location_from_string
 from ..qualifiers.t2pks import T2PKSQualifier
 from ..qualifiers.gene_functions import GeneFunction
@@ -110,7 +111,7 @@ class Protocluster(CDSCollection, CoredCollectionMixin):
             "neighbourhood": [str(self.neighbourhood_range)],
             "cutoff": [str(self.cutoff)],
             "product": [self.product],
-            "aStool": [self.tool],
+            get_subtool_key(): [self.tool],
             "detection_rule": [self.detection_rule]
         }
         if self._parent_record:
@@ -127,7 +128,7 @@ class Protocluster(CDSCollection, CoredCollectionMixin):
         for key, val in sorted(core_qualifiers.items()):
             core_feature.qualifiers[key] = val
             # this doesn't go through to the Feature annotations, so add the tool explicitly
-            core_feature.qualifiers["tool"] = ["antismash"]
+            core_feature.qualifiers["tool"] = [get_tool_name()]
 
         shared_qualifiers["core_location"] = [str(self.core_location)]
         if self.product_category:
@@ -141,7 +142,7 @@ class Protocluster(CDSCollection, CoredCollectionMixin):
         assert bio_feature.type == Protocluster.FEATURE_TYPE
         if leftovers is None:
             leftovers = Feature.make_qualifiers_copy(bio_feature)
-        if leftovers.get("aStool", [""])[0].startswith("externally annotated"):
+        if leftovers.get(get_subtool_key(), [""])[0].startswith("externally annotated"):
             external = SideloadedProtocluster.from_biopython(bio_feature)
             assert isinstance(external, cls)
             return external
@@ -153,7 +154,7 @@ class Protocluster(CDSCollection, CoredCollectionMixin):
                 neighbourhood_range = int(leftovers.pop("neighbourhood")[0])
                 cutoff = int(leftovers.pop("cutoff")[0])
                 product = leftovers.pop("product")[0]
-                tool = leftovers.pop("aStool")[0]
+                tool = leftovers.pop(get_subtool_key())[0]
                 rule = leftovers.pop("detection_rule")[0]
                 core_location = location_from_string(leftovers.pop("core_location")[0])
             except KeyError as err:
@@ -203,7 +204,7 @@ class SideloadedProtocluster(Protocluster):
     def to_biopython(self, qualifiers: Optional[Dict[str, List[str]]] = None) -> List[SeqFeature]:
         features = super().to_biopython(qualifiers)
         for feature in features:
-            feature.qualifiers["aStool"] = [f"externally annotated by: {self.tool}"]
+            feature.qualifiers[get_subtool_key()] = [f"externally annotated by: {self.tool}"]
             if self.extra_qualifiers:
                 feature.qualifiers["external_qualifier_ids"] = list(self.extra_qualifiers)
                 feature.qualifiers.update(self.extra_qualifiers)
@@ -215,9 +216,9 @@ class SideloadedProtocluster(Protocluster):
         if leftovers is None:
             leftovers = Feature.make_qualifiers_copy(bio_feature)
         if not feature:
-            tool = leftovers.pop("aStool")[0]
+            tool = leftovers.pop(get_subtool_key())[0]
             tool = tool.split(": ", 1)[1]
-            leftovers["aStool"] = [tool]
+            leftovers[get_subtool_key()] = [tool]
             core_location = location_from_string(leftovers["core_location"][0])
             product = leftovers.pop("product")[0]
             extra_qualifiers: Dict[str, List[str]] = {}

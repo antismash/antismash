@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Optional, Type, TypeVar
 
 from Bio.SeqFeature import SeqFeature
 
+from ..constants import get_tool_name
 from ..errors import SecmetInvalidInputError
 from .cds_motif import CDSMotif
 from .feature import Feature, FeatureLocation, Location, pop_locus_qualifier
@@ -135,7 +136,7 @@ class Prepeptide(CDSMotif):  # pylint: disable=too-many-instance-attributes
                 ],
                 "locus_tag": [self.locus_tag],
                 "aSTool": [self.tool],
-                "tool": ["antismash"],
+                "tool": [get_tool_name()],
             }
             leader = SeqFeature(leader_location, type=self.type)
             leader.qualifiers.update(leader_qualifiers)
@@ -158,7 +159,7 @@ class Prepeptide(CDSMotif):  # pylint: disable=too-many-instance-attributes
             "monoisotopic_mass": [f"{self.monoisotopic_mass:.1f}"],
             "core_sequence": [self._core],
             "aSTool": [self.tool],
-            "tool": ["antismash"],
+            "tool": [get_tool_name()],
         })
         if self._leader:
             core.qualifiers.update({
@@ -183,7 +184,7 @@ class Prepeptide(CDSMotif):  # pylint: disable=too-many-instance-attributes
             tail.qualifiers['note'] = ['tail peptide', self.peptide_class]
             tail.qualifiers['prepeptide'] = ['tail']
             tail.qualifiers['aSTool'] = [self.tool]
-            tail.qualifiers["tool"] = ["antismash"]
+            tail.qualifiers["tool"] = [get_tool_name()]
             features.append(tail)
 
         return features
