@@ -65,6 +65,17 @@ class TestPredictorSVMResult(unittest.TestCase):
 
         assert pred.uncertain
 
+    def test_bad_signature_lengths(self) -> None:
+        with self.assertRaises(ValueError):
+            nrpys.PredictorSVMResult(
+                "FAKEDATAOK", "FAKEDATAOK", [self.stach], self.three,
+                self.large, self.small, self.single)
+
+        with self.assertRaises(ValueError):
+            nrpys.PredictorSVMResult(
+                "ILIKEDATAEVENFAKEDATADIDISAYILIKED", "ILIKEDATAEVENFAKEDATADIDISAYILIKED",
+                [self.stach], self.three, self.large, self.small, self.single)
+
     def test_classification_certain(self) -> None:
         pred = self.pred
         pred.stachelhaus_quality = 0.6
