@@ -1149,25 +1149,8 @@ class Parser:  # pylint: disable=too-few-public-methods
         neighbourhood = self._consume_int() * 1000
         self._consume(TokenTypes.CONDITIONS)
         conditions = Conditions(False, self._parse_conditions())
-        extenders: Optional[Union[CDSCondition, SingleCondition]] = None
-        if self.current_token and self.current_token.type == TokenTypes.EXTENDERS:
-            self._consume(TokenTypes.EXTENDERS)
-            if not self.current_token:
-                raise self._build_syntax_error(f"unexpected end of input after '{TokenTypes.EXTENDERS}'")
-            if self.current_token.type == TokenTypes.CDS:
-                extenders = CDSCondition(False, self._parse_cds())
-            elif self.current_token.type == TokenTypes.IDENTIFIER:
-                extenders = self._parse_single_condition(allow_cds=False)
-                if self.current_token and self.current_token.type not in _STARTERS:
-                    raise self._build_syntax_error(
-                        f"expected '{TokenTypes.CDS}'"
-                        f" or single identifier after '{TokenTypes.EXTENDERS}'"
-                    )
-            else:
-                raise self._build_syntax_error(
-                    f"expected '{TokenTypes.CDS}'"
-                    f" or single identifier after '{TokenTypes.EXTENDERS}'"
-                )
+        extenders = self._parse_extenders()
+
         if self.current_token is not None and self.current_token.type not in _STARTERS:
             raise self._build_syntax_error(f"Unexpected symbol {self.current_token.type}", context_lines=5)
         return DetectionRule(rule_name, category, cutoff, neighbourhood, conditions,
@@ -1340,6 +1323,33 @@ class Parser:  # pylint: disable=too-few-public-methods
             raise self._build_syntax_error("cds conditions must contain more than a single identifier")
         self._consume(TokenTypes.GROUP_CLOSE)
         return conditions
+
+    def _parse_extenders(self) -> Union[CDSCondition, SingleCondition, None]:
+        """ EXTENDERS_MARKER condition:(ID | CDS_CONDITION)
+        """
+        extenders: Union[CDSCondition, SingleCondition, None] = None
+        if not self.current_token or self.current_token.type != TokenTypes.EXTENDERS:
+            return extenders
+        self._consume(TokenTypes.EXTENDERS)
+        if not self.current_token:
+            raise self._build_syntax_error(f"unexpected end of input after '{TokenTypes.EXTENDERS}'")
+        if self.current_token.type == TokenTypes.CDS:
+            extenders = CDSCondition(False, self._parse_cds())
+        elif self.current_token.type == TokenTypes.IDENTIFIER:
+            single = self._parse_single_condition(allow_cds=False)
+            assert isinstance(single, SingleCondition)
+            extenders = single
+            if self.current_token and self.current_token.type not in _STARTERS:
+                raise self._build_syntax_error(
+                    f"expected '{TokenTypes.CDS}'"
+                    f" or single identifier after '{TokenTypes.EXTENDERS}'"
+                )
+        else:
+            raise self._build_syntax_error(
+                f"expected '{TokenTypes.CDS}'"
+                f" or single identifier after '{TokenTypes.EXTENDERS}'"
+            )
+        return extenders
 
     def _parse_group(self, allow_cds: bool) -> ConditionList:
         """
