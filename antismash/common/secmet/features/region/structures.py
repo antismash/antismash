@@ -199,7 +199,7 @@ class Region(AbstractRegion, CDSCollection):
         qualifiers["rules"] = self.detection_rules
         qualifiers["subregion_numbers"] = [str(sub.get_subregion_number()) for sub in self._subregions]
         candidates = [str(cand.get_candidate_cluster_number()) for cand in self._candidate_clusters]
-        qualifiers["candidate_cluster_numbers"] = candidates
+        qualifiers["candidate_clusters"] = candidates
 
         return super().to_biopython(qualifiers)
 
@@ -209,7 +209,7 @@ class Region(AbstractRegion, CDSCollection):
         if leftovers is None:
             leftovers = Feature.make_qualifiers_copy(bio_feature)
 
-        candidate_numbers = [int(num) for num in leftovers.pop("candidate_cluster_numbers", [])]
+        candidate_numbers = [int(num) for num in leftovers.pop("candidate_clusters", [])]
         subregion_numbers = [int(num) for num in leftovers.pop("subregion_numbers", [])]
 
         if not record:

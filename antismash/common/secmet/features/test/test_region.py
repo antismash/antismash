@@ -254,7 +254,7 @@ class TestHelpers(unittest.TestCase):
         )
         assert set(cand.get_candidate_cluster_number() for cand in data.candidate_clusters) == {2, 3, 4}
         bio_candidates = [cand.to_biopython()[0] for cand in candidates]
-        as_quals = (int(cand.qualifiers["candidate_cluster_number"][0]) for cand in bio_candidates)
+        as_quals = (int(cand.qualifiers["candidate_cluster"][0]) for cand in bio_candidates)
         assert set(as_quals) == {1, 2, 3, 4, 5}
 
         bio_record.features.extend(bio_candidates)
@@ -267,7 +267,7 @@ class TestHelpers(unittest.TestCase):
         print(bio_region.features)
         expected = {1, 2, 3}
         # the candidate features themselves must be adjusted
-        assert set(int(cand.qualifiers["candidate_cluster_number"][0]) for cand in result_cands) == expected
+        assert set(int(cand.qualifiers["candidate_cluster"][0]) for cand in result_cands) == expected
         # as well as the region feature referencing those candidates
         bio_region_feature = [f for f in bio_region.features if f.type == Region.FEATURE_TYPE][0]
-        assert set(map(int, bio_region_feature.qualifiers["candidate_cluster_numbers"])) == expected
+        assert set(map(int, bio_region_feature.qualifiers["candidate_clusters"])) == expected
