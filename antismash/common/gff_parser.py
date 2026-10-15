@@ -224,9 +224,11 @@ def update_records(gff_file: str, records: list[SeqRecord]) -> None:
     # a single set of annotations in each, but with mismatching identifiers, is assumed to be the same
     # catching minor cases, such as one embedding a version and not the other
     if len(records) == 1 and len(features_by_record) == 1:
+        assert records[0].id
         features_by_record[records[0].id] = features_by_record.pop(list(features_by_record)[0])
 
     for record in records:
+        assert record.id
         features = features_by_record.get(record.id)
         if not features:
             continue

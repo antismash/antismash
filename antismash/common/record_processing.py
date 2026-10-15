@@ -109,6 +109,8 @@ def parse_input_sequence(filename: str, taxon: str = "bacteria", minimum_length:
     records: List[SeqRecord] = []
 
     for record in _strict_parse(filename):
+        if not record.id:
+            raise AntismashInputError("all records must have an identifier")
         # in no case allow record identifiers to be longer than the filesystem's
         # maximum file length, allowing for region numbers and extension
         if len(record.id) > os.pathconf("/", "PC_NAME_MAX") - len(".region000.gbk"):

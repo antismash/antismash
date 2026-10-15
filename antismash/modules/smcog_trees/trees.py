@@ -145,7 +145,8 @@ def build_tree(alignment: dict[str, str], name: str) -> str:
     return handle.getvalue()
 
 
-def draw_tree(tree: Union[str, Phylo.BaseTree], file_path: str, identifier: str = "") -> None:
+def draw_tree(tree: Union[str, Phylo.BaseTree.Tree], file_path: str, identifier: str = "",
+              ) -> None:
     """ Generates an image of the given tree and writes it to file
 
         Arguments:

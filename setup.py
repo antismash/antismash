@@ -18,7 +18,7 @@ long_description = read('README.md')
 install_requires = [
     'brawn',
     'numpy',
-    'biopython == 1.81',
+    'biopython == 1.88',
     'helperlibs >=0.2.2',
     'jinja2',
     'joblib',
