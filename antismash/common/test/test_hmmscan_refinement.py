@@ -227,7 +227,7 @@ class TestRefinement(unittest.TestCase):
         assert hit_ids == self.hit_ids
         # 2 hits each for 1048 and 1237, for 5 hits total
         assert len(results) == 5
-        new = refinement._merge_domain_list(results, self.hmm_lengths)
+        new = refinement.merge_domain_list(results, self.hmm_lengths)
         # after merging, only one hit should remain for each
         assert len(new) == 3
         # and the original list should be untouched
@@ -238,12 +238,12 @@ class TestRefinement(unittest.TestCase):
         second = refinement.HMMResult("dummy_hit", 10, 20, 3e-20, 73.5)
         results = [first, second]
         # Preserve_unmerged off: If domains cannot be merged, only the last one is kept
-        merged = refinement._merge_domain_list(results, {"dummy_hit": 10},
+        merged = refinement.merge_domain_list(results, {"dummy_hit": 10},
                                                preserve_unmerged=False)
         assert len(merged) == 1
         assert merged[0] == second
         # Preserve_unmerged on: If domains cannot be merged, both are kept
-        merged = refinement._merge_domain_list(results, {"dummy_hit": 10},
+        merged = refinement.merge_domain_list(results, {"dummy_hit": 10},
                                                 preserve_unmerged=True)
         assert len(merged) == 2
 
@@ -252,18 +252,18 @@ class TestRefinement(unittest.TestCase):
         second = refinement.HMMResult("dummy_hit", 15, 25, 3e-20, 73.5, hit_start=10, hit_end=30)
         results = [first, second]
         # Check_hit_overlap off: Domains covering the same region of the profile are merged
-        merged = refinement._merge_domain_list(results, {"dummy_hit": 30},
+        merged = refinement.merge_domain_list(results, {"dummy_hit": 30},
                                                preserve_unmerged=True,
                                                check_hit_overlap=False)
         assert len(merged) == 1
         # Check_hit_overlap on: Domains covering the same region of the profile are not merged
-        merged = refinement._merge_domain_list(results, {"dummy_hit": 30},
+        merged = refinement.merge_domain_list(results, {"dummy_hit": 30},
                                                preserve_unmerged=True,
                                                check_hit_overlap=True,
                                                allowed_hit_overlap=5)
         assert len(merged) == 2
         # If allowed_hit_overlap >= hit_overlap, they are merged
-        merged = refinement._merge_domain_list(results, {"dummy_hit": 30},
+        merged = refinement.merge_domain_list(results, {"dummy_hit": 30},
                                                preserve_unmerged=True,
                                                check_hit_overlap=True,
                                                allowed_hit_overlap=10)

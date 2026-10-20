@@ -289,7 +289,7 @@ def remove_incomplete(domains: List[HMMResult], hmm_lengths: Dict[str, int],
     return []
 
 
-def _merge_domain_list(domains: list[HMMResult], hmm_lengths: dict[str, int],
+def merge_domain_list(domains: list[HMMResult], hmm_lengths: dict[str, int],
                        *, max_length: float = 1.5,
                        preserve_unmerged: bool = False,
                        check_hit_overlap: bool = False, allowed_hit_overlap: int = 20,
@@ -394,7 +394,7 @@ def refine_hmmscan_results(hmmscan_results: List[QueryResult], hmm_lengths: Dict
             refined = _merge_immediate_neigbours(refined, hmm_lengths)
         else:
             # Merge domain fragments which are really one domain
-            refined = _merge_domain_list(refined, hmm_lengths)
+            refined = merge_domain_list(refined, hmm_lengths)
             # Only keep best hits for overlapping domains
             refined = _remove_overlapping(refined, hmm_lengths)
         # Remove incomplete domains (covering less than 60% of total domain hmm length)
