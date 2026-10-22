@@ -248,6 +248,11 @@ class PredictorSVMResult(Prediction):
                  single_amino: SvmPrediction,
                  ) -> None:
         super().__init__("nrpys")
+
+        if len(aa34) != 34:
+            raise ValueError(f"aa34 signature must be 34 residues long, not {len(aa34)}: '{aa34}'")
+        if len(aa10) != 10:
+            raise ValueError(f"aa10 signature must be 10 residues long, not {len(aa10)}: '{aa10}'")
         self.aa34 = aa34
         self.aa10 = aa10
 
@@ -422,12 +427,15 @@ class PredictorSVMResult(Prediction):
     @classmethod
     def from_json(cls, json: dict[str, Any]) -> "PredictorSVMResult":
         stach_matches = [StachelhausMatch.from_json(d) for d in json["stachelhaus_matches"]]
-        return PredictorSVMResult(json["aa10"], json["aa34"], stach_matches,
-                                  SvmPrediction.from_json(json["physiochemical_class"]),
-                                  SvmPrediction.from_json(json["large_cluster"]),
-                                  SvmPrediction.from_json(json["small_cluster"]),
-                                  SvmPrediction.from_json(json["single_amino"]),
-                                  )
+        return PredictorSVMResult(
+            aa34=json["aa34"],
+            aa10=json["aa10"],
+            stachelhaus_matches=stach_matches,
+            physicochemical_class=SvmPrediction.from_json(json["physiochemical_class"]),
+            large_cluster=SvmPrediction.from_json(json["large_cluster"]),
+            small_cluster=SvmPrediction.from_json(json["small_cluster"]),
+            single_amino=SvmPrediction.from_json(json["single_amino"]),
+        )
 
 
 def run_nrpys(a_domains: list[ModularDomain], options: ConfigType) -> dict[str, Prediction]:

@@ -79,6 +79,12 @@ class IntegrationNRPSPKS(unittest.TestCase):
         assert set(results.domain_predictions) == set(feature_names + c_names + e_names)
 
         assert set(results.domain_predictions[feature_names[0]]) == {"nrpys"}
+
+        # check signatures of first A domain
+        first = results.domain_predictions[nrps_names[0]]["nrpys"]
+        assert first.aa10 == "DAFYLGMMCK"
+        assert first.aa34 == "LDASFDASLFEMYLLTGGDRNMYGPTEATMCATW"
+
         plain_results = {}
         norine_results = {}
         for domain, methods in results.domain_predictions.items():
