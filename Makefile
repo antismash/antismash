@@ -16,7 +16,6 @@ clean:
 	rm -f antismash/detection/hmm_detection/data/bgc_seeds.hmm*
 	rm -f antismash/modules/clusterblast/test/data/*/*.dmnd
 	find antismash/modules/clusterblast/test/data -name '*.json' -exec rm {} +
-	rm -f antismash/outputs/html/css/*.css
 	find antismash -name "*.scaler.pkl" -o -name "*.classifier.pkl" -exec rm {} +
 	find . -name "*.h3?" -exec rm {} +
 	find . -name '*.pyc' | xargs rm -f

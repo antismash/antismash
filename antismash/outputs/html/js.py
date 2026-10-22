@@ -31,15 +31,16 @@ def get_region_css(region: Region) -> str:
             region: the region to generate CSS for
 
         Returns:
-            a string of the CSS class(es)
+            a string of the CSS class(es), including the shared 'secmet' marker
     """
     if len(region.product_categories) > 1:
-        return "hybrid"
+        return "hybrid secmet"
     if len(region.get_unique_protoclusters()) < 1:
-        return "unknown"
+        return "unknown secmet"
     classes = [list(region.product_categories)[0]]
     if len(region.get_unique_protoclusters()) == 1:
         classes.append(region.get_unique_protoclusters()[0].product)
+    classes.append("secmet")
     return " ".join(classes)
 
 
