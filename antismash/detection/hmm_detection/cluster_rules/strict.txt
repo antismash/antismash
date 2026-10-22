@@ -903,3 +903,18 @@ RULE deazapurine
     NEIGHBOURHOOD 10
     CONDITIONS GTP_cyclohydroI and PTPS and (QueE or QueC) and
                not(dpdA1 or bTGT) # avoid detecting deazapurine modifications in tRNA or DNA
+
+RULE alkylcitrate
+    CATEGORY other
+    DESCRIPTION Fungal alkyl citrate, FAS-primed
+    # A dedicated fungal fatty acid synthase supplies a short acyl-CoA that an
+    # alkylcitrate synthase condenses with oxaloacetate. Discovered by searching
+    # for fungal FAS genes co-located with citrate synthase genes, the PKS-primed
+    # alkylcitrate pathways (e.g. squalestatin, byssochlamic acid) being detected
+    # as T1PKS instead. See DOIs: 10.1039/d0sc04886k and 10.3390/jof4030096
+    # In 10.1039/d0sc04886k simultaneous knockout of the citrate synthase (spoE)
+    # and the FAS alpha subunit (spofasA) abolished sporothriolide production.
+    EXAMPLE NCBI MT889334.1 1-50372 sporothriolide
+    CUTOFF 20
+    NEIGHBOURHOOD 20
+    CONDITIONS Citrate_synt and ft1fas
