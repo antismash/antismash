@@ -50,9 +50,12 @@ class DummyCompoundGroup(CompoundGroup):
                  biosynthetic_subclass=None,
                  chain_length=10,
                  initial_cyclisations=("unknown",),
-                 functional_groups=("PP",)):
+                 functional_groups=("PP",),
+                 smiles=None,
+                 marts=("marts_M00000",)):
         super().__init__(name, extended_name, single_compound, biosynthetic_class,
-                         chain_length, initial_cyclisations, functional_groups, biosynthetic_subclass)
+                         chain_length, initial_cyclisations, functional_groups, biosynthetic_subclass,
+                         smiles, marts)
 
 
 class DummyDomainPrediction(DomainPrediction):
@@ -88,6 +91,8 @@ EXISTING_COMPOUND_GROUPS = {
         chain_length=25,
         initial_cyclisations=tuple(),
         functional_groups=("PP",),
+        smiles="CC(C)=CCC/C(C)=C/CC/C(C)=C/CC/C(C)=C/CC/C(C)=C/COP(=O)([O-])OP(=O)([O-])[O-]",
+        marts=("marts_M00550",),
     ),
     "C40_carotenoid": CompoundGroup(
         name="C40_carotenoid",
@@ -98,6 +103,8 @@ EXISTING_COMPOUND_GROUPS = {
         chain_length=40,
         initial_cyclisations=("unknown",),
         functional_groups=("unknown",),
+        smiles=None,
+        marts=tuple(),
     )
 }
 
@@ -368,7 +375,7 @@ class TestAnalysis(TestCase):
         assert domain_pred.subtypes == ("T1TS_ARIS",)
         assert domain_pred.start == 1
         assert domain_pred.end == 100
-        assert domain_pred.reactions[0].products[0].name == "aristolochene"
+        assert domain_pred.reactions[0].products[0].name == "(+)-aristolochene"
         assert domain_pred.activity == Activity.INACTIVE #since the motifs are not present in the dummy sequence
 
     def test_ambiguous_multiple_types(self):

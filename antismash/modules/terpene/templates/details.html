@@ -23,6 +23,8 @@
                   <th>Chain length</th>
                   <th>Initial cyclisations</th>
                   <th>Functional groups</th>
+                  <th>Structure</th>
+                  <th>MARTS-DB</th>
                 </tr>
               </thead>
               <tbody>
@@ -34,6 +36,14 @@
                   <td>C{{ product.chain_length }}</td>
                   <td>{{ product.get_cyclisations_description() }}</td>
                   <td>{{ product.get_functional_groups_description() }}</td>
+                  <td>{% if product.smiles %}
+                    <canvas id="smiles-canvas-terpene-{{product.name}}" class="smiles-canvas" data-smiles="{{product.smiles}}" width="300" height="100"></canvas></td>
+                    {% endif %}
+                  <td>
+                    {% for id in product.marts %}
+                    <a class="external-link" href="https://tpsdb.uochb.cas.cz/record/{{id}}" target="_blank">{{id}}</a>
+                    {% endfor %}
+                  </td>
                 </tr>
                 {% endfor %}
               </tbody>

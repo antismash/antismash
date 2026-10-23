@@ -10,6 +10,10 @@
             "initial_cyclisations": [],
             "functional_groups": [
                 "PP"
+            ],
+            "smiles": "CC(C)=CCC/C(C)=C(\\C)COP(=O)([O-])OP(=O)([O-])[O-]",
+            "marts": [
+                "marts_M01086"
             ]
         },
         {
@@ -22,7 +26,9 @@
             "initial_cyclisations": [
                 "C1-C6"
             ],
-            "functional_groups": []
+            "functional_groups": [],
+            "smiles": "CC1(C2CCC1(C(=C)C2)C)C",
+            "marts": []
         },
         {
             "name": "2-methylisoborneol",
@@ -36,10 +42,14 @@
             ],
             "functional_groups": [
                 "OH"
+            ],
+            "smiles": "CC1(C)[C@@H]2CC[C@@]1(C)[C@](C)(O)C2",
+            "marts": [
+                "marts_M01164"
             ]
         },
         {
-            "name": "aristolochene",
+            "name": "(+)-aristolochene",
             "extended_name": null,
             "single_compound": true,
             "biosynthetic_class": "sesquiterpene",
@@ -48,7 +58,11 @@
             "initial_cyclisations": [
                 "C1-C10"
             ],
-            "functional_groups": []
+            "functional_groups": [],
+            "smiles": "C=C(C)[C@H]1CC=C2CCC[C@H](C)[C@@]2(C)C1",
+            "marts": [
+                "marts_M00214"
+            ]
         },
         {
             "name": "cyclic_indole_diterpenoid",
@@ -63,7 +77,9 @@
             "functional_groups": [
                 "indole",
                 "OH"
-            ]
+            ],
+            "smiles": null,
+            "marts": []
         },
         {
             "name": "cyclic_meroditerpenoid",
@@ -77,7 +93,9 @@
             ],
             "functional_groups": [
                 "OH"
-            ]
+            ],
+            "smiles": null,
+            "marts": []
         },
         {
             "name": "cyclic_polyketide_diterpenoid",
@@ -91,7 +109,9 @@
             ],
             "functional_groups": [
                 "OH"
-            ]
+            ],
+            "smiles": null,
+            "marts": []
         },
         {
             "name": "cyclic_merosesquiterpenoid",
@@ -105,7 +125,9 @@
             ],
             "functional_groups": [
                 "OH"
-            ]
+            ],
+            "smiles": null,
+            "marts": []
         },
         {
             "name": "cyclic_polyketide_sesquiterpenoid",
@@ -119,7 +141,9 @@
             ],
             "functional_groups": [
                 "OH"
-            ]
+            ],
+            "smiles": null,
+            "marts": []
         },
         {
             "name": "C40_carotenoid",
@@ -133,7 +157,9 @@
             ],
             "functional_groups": [
                 "unknown"
-            ]
+            ],
+            "smiles": null,
+            "marts": []
         },
         {
             "name": "diapophytoene",
@@ -143,7 +169,11 @@
             "biosynthetic_subclass": "C30 carotenoid",
             "chain_length": 30,
             "initial_cyclisations": [],
-            "functional_groups": []
+            "functional_groups": [],
+            "smiles": "CC(C)=CCC/C(C)=C/CC/C(C)=C/C=C\\C=C(/C)CC/C=C(\\C)CCC=C(C)C",
+            "marts": [
+                "marts_M01167"
+            ]
         },
         {
             "name": "diterpene",
@@ -157,7 +187,9 @@
             ],
             "functional_groups": [
                 "unknown"
-            ]
+            ],
+            "smiles": null,
+            "marts": []
         },
         {
             "name": "diterpene_C1-C11/C10-C14",
@@ -170,7 +202,14 @@
                 "C1-C11",
                 "C10-C14"
             ],
-            "functional_groups": []
+            "functional_groups": [],
+            "smiles": "C/C1=C'\\CC2(C)CCC([C+](C)C)C2CC/C(C)=C/CC1",
+            "marts": [
+                "marts_M00279",
+                "marts_M01321",
+                "marts_M01338",
+                "marts_M01860"
+            ]
         },
         {
             "name": "diterpene_C1-C6",
@@ -182,7 +221,11 @@
             "initial_cyclisations": [
                 "C1-C6"
             ],
-            "functional_groups": []
+            "functional_groups": [],
+            "smiles": "CC(C)=CCC/C(C)=C/CC[C+](C)C1CC=C(C)CC1",
+            "marts": [
+                "marts_M00051"
+            ]
         },
         {
             "name": "diterpene_C1-C7/C6-C10",
@@ -195,7 +238,11 @@
                 "C1-C7",
                 "C6-C10"
             ],
-            "functional_groups": []
+            "functional_groups": [],
+            "smiles": "CC(C)=CCC[C+](C)[CH]1CC[C]2(C)CC=C(C)CCC12",
+            "marts": [
+                "marts_M00053"
+            ]
         },
         {
             "name": "diterpene_C6-C11/C10-C14_PP",
@@ -208,7 +255,13 @@
                 "C6-C11",
                 "C10-C14"
             ],
-            "functional_groups": ["PP"]
+            "functional_groups": [
+                "PP"
+            ],
+            "smiles": "C/C(=C\\COP(=O)([O-])OP(=O)([O-])[O-])CCC1(C)C(C)CCC2([C+](C)C)CCCC21",
+            "marts": [
+                "marts_M00273"
+            ]
         },
         {
             "name": "diterpene_C6-C11/C10-C15",
@@ -221,7 +274,12 @@
                 "C6-C11",
                 "C10-C15"
             ],
-            "functional_groups": []
+            "functional_groups": [],
+            "smiles": "[CH2+]/C=C(\\C)CC[CH]1C(C)=CC[CH]2C(C)(C)CCC[C]12C",
+            "marts": [
+                "marts_M00529",
+                "marts_M00911"
+            ]
         },
         {
             "name": "diterpene_C6-C11/C10-C15_PP",
@@ -236,6 +294,12 @@
             ],
             "functional_groups": [
                 "PP"
+            ],
+            "smiles": "C/C(=C\\COP(=O)([O-])OP(=O)([O-])[O-])CC[CH]1[C+](C)CC[CH]2C(C)(C)CCC[C]12C",
+            "marts": [
+                "marts_M00442",
+                "marts_M00468",
+                "marts_M00479"
             ]
         },
         {
@@ -248,6 +312,10 @@
             "initial_cyclisations": [],
             "functional_groups": [
                 "PP"
+            ],
+            "smiles": "CC(C)=CCOP(=O)([O-])OP(=O)([O-])[O-]",
+            "marts": [
+                "marts_M01084"
             ]
         },
         {
@@ -261,7 +329,9 @@
             "functional_groups": [
                 "indole",
                 "epoxy"
-            ]
+            ],
+            "smiles": null,
+            "marts": []
         },
         {
             "name": "epoxy_meroditerpenoid",
@@ -273,7 +343,9 @@
             "initial_cyclisations": [],
             "functional_groups": [
                 "epoxy"
-            ]
+            ],
+            "smiles": null,
+            "marts": []
         },
         {
             "name": "epoxy_polyketide_diterpenoid",
@@ -285,7 +357,9 @@
             "initial_cyclisations": [],
             "functional_groups": [
                 "epoxy"
-            ]
+            ],
+            "smiles": null,
+            "marts": []
         },
         {
             "name": "epoxy_merosesquiterpenoid",
@@ -297,7 +371,9 @@
             "initial_cyclisations": [],
             "functional_groups": [
                 "epoxy"
-            ]
+            ],
+            "smiles": null,
+            "marts": []
         },
         {
             "name": "epoxy_polyketide_sesquiterpenoid",
@@ -309,7 +385,9 @@
             "initial_cyclisations": [],
             "functional_groups": [
                 "epoxy"
-            ]
+            ],
+            "smiles": null,
+            "marts": []
         },
         {
             "name": "epoxy_polypodane",
@@ -323,7 +401,9 @@
             ],
             "functional_groups": [
                 "epoxy"
-            ]
+            ],
+            "smiles": "CC1(C(O1)CC/C(C)=C/CC/C(C)=C/CCC2[C+](CCC3C(C)(CCCC32C)C)C)C",
+            "marts": []
         },
         {
             "name": "FPP",
@@ -335,6 +415,10 @@
             "initial_cyclisations": [],
             "functional_groups": [
                 "PP"
+            ],
+            "smiles": "CC(C)=CCC/C(C)=C/CC/C(C)=C/COP(=O)([O-])OP(=O)([O-])[O-]",
+            "marts": [
+                "marts_M00002"
             ]
         },
         {
@@ -349,6 +433,10 @@
             ],
             "functional_groups": [
                 "OH"
+            ],
+            "smiles": "C[C@H]1CCC[C@@]2(C)CCCC[C@]12O",
+            "marts": [
+                "marts_M01162"
             ]
         },
         {
@@ -363,6 +451,10 @@
             ],
             "functional_groups": [
                 "OH"
+            ],
+            "smiles": "C/C1=C\\CC[C@H](C)/C=C/[C@H](C(C)(C)O)CC1",
+            "marts": [
+                "marts_M00164"
             ]
         },
         {
@@ -375,6 +467,10 @@
             "initial_cyclisations": [],
             "functional_groups": [
                 "PP"
+            ],
+            "smiles": "CC(C)=CCC/C(C)=C/CC/C(C)=C/CC/C(C)=C/CC/C(C)=C/COP(=O)([O-])OP(=O)([O-])[O-]",
+            "marts": [
+                "marts_M00550"
             ]
         },
         {
@@ -387,7 +483,9 @@
             "initial_cyclisations": [],
             "functional_groups": [
                 "indole"
-            ]
+            ],
+            "smiles": "CC(=CCC/C(=C/CC/C(=C/CC/C(=C/CC1=CC2=CC=CC=C2N1)/C)/C)/C)C",
+            "marts": []
         },
         {
             "name": "GGPP",
@@ -399,6 +497,10 @@
             "initial_cyclisations": [],
             "functional_groups": [
                 "PP"
+            ],
+            "smiles": "CC(C)=CCC/C(C)=C/CC/C(C)=C/CC/C(C)=C/COP(=O)([O-])OP(=O)([O-])[O-]",
+            "marts": [
+                "marts_M00014"
             ]
         },
         {
@@ -411,6 +513,10 @@
             "initial_cyclisations": [],
             "functional_groups": [
                 "PP"
+            ],
+            "smiles": "CC(C)=CCC/C(C)=C/COP(=O)([O-])OP(=O)([O-])[O-]",
+            "marts": [
+                "marts_M00312"
             ]
         },
         {
@@ -425,6 +531,10 @@
             ],
             "functional_groups": [
                 "unknown"
+            ],
+            "smiles": "C[C+](C)C1CC[C@]2(C)C1CC[C@]1(C)C2CCC2C3(C)CCCC(C)(C)C3CC[C@@]21C",
+            "marts": [
+                "marts_M00418"
             ]
         },
         {
@@ -437,7 +547,9 @@
             "initial_cyclisations": [],
             "functional_groups": [
                 "PP"
-            ]
+            ],
+            "smiles": "CC(=CCC/C(=C/CC/C(=C/CC/C(=C/CC/C(=C/CC/C(=C/COP(=O)(O)OP(=O)(O)O)/C)/C)/C)/C)/C)C",
+            "marts": []
         },
         {
             "name": "hydroxysqualene",
@@ -449,7 +561,9 @@
             "initial_cyclisations": [],
             "functional_groups": [
                 "OH"
-            ]
+            ],
+            "smiles": "CC(=CCC/C(=C/CC/C(=C/CC(/C=C(\\C)/CC/C=C(\\C)/CCC=C(C)C)O)/C)/C)C",
+            "marts": []
         },
         {
             "name": "IPP",
@@ -461,31 +575,11 @@
             "initial_cyclisations": [],
             "functional_groups": [
                 "PP"
-            ]
-        },
-        {
-            "name": "kaurene_like",
-            "extended_name": null,
-            "single_compound": false,
-            "biosynthetic_class": "diterpene",
-            "biosynthetic_subclass": null,
-            "chain_length": 20,
-            "initial_cyclisations": ["kaurene skeleton"],
-            "functional_groups": [
-                "unknown"
-            ]
-        },
-        {
-            "name": "monoterpene_C1-C10",
-            "extended_name": null,
-            "single_compound": false,
-            "biosynthetic_class": "monoterpene",
-            "biosynthetic_subclass": null,
-            "chain_length": 10,
-            "initial_cyclisations": [
-                "C1-C10"
             ],
-            "functional_groups": []
+            "smiles": "C=C(C)CCOP(=O)([O-])OP(=O)([O-])[O-]",
+            "marts": [
+                "marts_M01083"
+            ]
         },
         {
             "name": "monoterpene_C1-C6",
@@ -497,7 +591,13 @@
             "initial_cyclisations": [
                 "C1-C6"
             ],
-            "functional_groups": []
+            "functional_groups": [],
+            "smiles": "CC1=CCC([C+](C)C)CC1",
+            "marts": [
+                "marts_M00316",
+                "marts_M00190",
+                "marts_M00922"
+            ]
         },
         {
             "name": "onoceroid",
@@ -511,7 +611,9 @@
             ],
             "functional_groups": [
                 "OH"
-            ]
+            ],
+            "smiles": null,
+            "marts": []
         },
         {
             "name": "2,3-oxidosqualene",
@@ -523,7 +625,9 @@
             "initial_cyclisations": [],
             "functional_groups": [
                 "epoxy"
-            ]
+            ],
+            "smiles": null,
+            "marts": []
         },
         {
             "name": "phytoene",
@@ -533,20 +637,32 @@
             "biosynthetic_subclass": "C40 carotenoid",
             "chain_length": 40,
             "initial_cyclisations": [],
-            "functional_groups": []
+            "functional_groups": [],
+            "smiles": null,
+            "marts": []
         },
         {
-            "name": "pimaradiene_like",
+            "name": "pimaranyl_derivative",
             "extended_name": null,
             "single_compound": false,
             "biosynthetic_class": "diterpene",
             "biosynthetic_subclass": null,
             "chain_length": 20,
             "initial_cyclisations": [
-                "pimaradiene skeleton"
+                "C6-C11",
+                "C10-C15"
             ],
             "functional_groups": [
                 "unknown"
+            ],
+            "smiles": "C=C[C]1(C)CCC2[C+](CC[CH]3C(C)(C)CCC[C]23C)C1",
+            "marts": [
+                "marts_M00470",
+                "marts_M01279",
+                "marts_M00408",
+                "marts_M00022",
+                "marts_M00782",
+                "marts_M00317"
             ]
         },
         {
@@ -561,6 +677,10 @@
             ],
             "functional_groups": [
                 "unknown"
+            ],
+            "smiles": "CC(C)=CCC/C(C)=C/CC/C(C)=C/CC[CH]1[C+](C)CCC2C(C)(C)CCCC21C",
+            "marts": [
+                "marts_M00415"
             ]
         },
         {
@@ -571,10 +691,15 @@
             "biosynthetic_subclass": null,
             "chain_length": 20,
             "initial_cyclisations": [
-                "premutilin skeleton"
+                "C6-C11",
+                "C10-C14"
             ],
             "functional_groups": [
                 "unknown"
+            ],
+            "smiles": "C=CC1(C)CCC2(C)C(C)CCC3(CCCC32)[C+](C)C1",
+            "marts": [
+                "marts_M00276"
             ]
         },
         {
@@ -587,7 +712,9 @@
             "initial_cyclisations": [],
             "functional_groups": [
                 "PP"
-            ]
+            ],
+            "smiles": null,
+            "marts": []
         },
         {
             "name": "sesquiterpene_C1-C10",
@@ -599,7 +726,12 @@
             "initial_cyclisations": [
                 "C1-C10"
             ],
-            "functional_groups": []
+            "functional_groups": [],
+            "smiles": "C/C1=C\\CC([C+](C)C)CC/C(C)=C/CC1",
+            "marts": [
+                "marts_M00005",
+                "marts_M00287"
+            ]
         },
         {
             "name": "sesquiterpene_C1-C11",
@@ -611,7 +743,12 @@
             "initial_cyclisations": [
                 "C1-C11"
             ],
-            "functional_groups": []
+            "functional_groups": [],
+            "smiles": "C/C1=C\\CC(C)(C)[CH+]CC/C(C)=C/CC1",
+            "marts": [
+                "marts_M00035",
+                "marts_M00174"
+            ]
         },
         {
             "name": "sesquiterpene_C1-C6",
@@ -623,7 +760,11 @@
             "initial_cyclisations": [
                 "C1-C6"
             ],
-            "functional_groups": []
+            "functional_groups": [],
+            "smiles": "CC(C)=CCC[C+](C)C1CC=C(C)CC1",
+            "marts": [
+                "marts_M00031"
+            ]
         },
         {
             "name": "sesquiterpene_C2-C7/C6-C11_PP",
@@ -638,7 +779,9 @@
             ],
             "functional_groups": [
                 "PP"
-            ]
+            ],
+            "smiles": "CC1=CC[CH]2[C]([CH]1COP(=O)([O-])OP(=O)([O-])[O-])(CCCC2(C)C)C",
+            "marts": []
         },
         {
             "name": "sesquiterpene_C6-C11_PP",
@@ -652,7 +795,9 @@
             ],
             "functional_groups": [
                 "PP"
-            ]
+            ],
+            "smiles": "C/C(CCC1[C+](C)CCCC1(C)C)=C\\COP([O-])(OP([O-])([O-])=O)=O",
+            "marts": []
         },
         {
             "name": "sesterterpene_C1-C11/C10-C14",
@@ -665,7 +810,11 @@
                 "C1-C11",
                 "C10-C14"
             ],
-            "functional_groups": []
+            "functional_groups": [],
+            "smiles": "CC(C)=CCC[C+](C)C1CC[C]2(C)C/C=C(\\C)CC/C=C(\\C)CCC12",
+            "marts": [
+                "marts_M00696"
+            ]
         },
         {
             "name": "sesterterpene_C1-C15/C14-C18",
@@ -678,20 +827,27 @@
                 "C1-C15",
                 "C14-C18"
             ],
-            "functional_groups": []
+            "functional_groups": [],
+            "smiles": "C/C1=C\\CC/C(C)=C/C[C]2(C)CC[CH]([C+](C)C)[CH]2CC/C(C)=C/CC1",
+            "marts": [
+                "marts_M00705",
+                "marts_M00733",
+                "marts_M00775"
+            ]
         },
         {
-            "name": "sesterterpene_C1-C7/C6-C10",
+            "name": "sesterterpene_C1-C6",
             "extended_name": null,
             "single_compound": false,
             "biosynthetic_class": "sesterterpene",
             "biosynthetic_subclass": null,
             "chain_length": 25,
             "initial_cyclisations": [
-                "C1-C7",
-                "C6-C10"
+                "C1-C6"
             ],
-            "functional_groups": []
+            "functional_groups": [],
+            "smiles": "C/C(CC/C=C(C)\\C)=C\\CC/C(C)=C/CC[C+](C1CC=C(CC1)C)C",
+            "marts": []
         },
         {
             "name": "squalene",
@@ -701,7 +857,11 @@
             "biosynthetic_subclass": null,
             "chain_length": 30,
             "initial_cyclisations": [],
-            "functional_groups": []
+            "functional_groups": [],
+            "smiles": "CC(C)=CCC/C(C)=C/CC/C(C)=C/CC/C=C(\\C)CC/C=C(\\C)CCC=C(C)C",
+            "marts": [
+                "marts_M00412"
+            ]
         },
         {
             "name": "steroid",
@@ -715,6 +875,10 @@
             ],
             "functional_groups": [
                 "OH"
+            ],
+            "smiles": "CC(C)=CCC[C+](C)C1CC[C@@]2(C)[C@H]1CC[C@H]1[C@@]3(C)CC[C@H](O)C(C)(C)[C@@H]3CC[C@@]12C",
+            "marts": [
+                "marts_M00380"
             ]
         },
         {
@@ -727,7 +891,11 @@
             "initial_cyclisations": [
                 "C1-C6"
             ],
-            "functional_groups": []
+            "functional_groups": [],
+            "smiles": "C=C1CCC[C@]1(C)[C@]1(C)CC=C(C)CC1",
+            "marts": [
+                "marts_M00162"
+            ]
         },
         {
             "name": "triterpene_C1-C11/C10-C14",
@@ -740,7 +908,9 @@
                 "C1-C11",
                 "C10-C14"
             ],
-            "functional_groups": []
+            "functional_groups": [],
+            "smiles": "C/C(C/C=C(C)\\C)=C\\CC[C+](C1CCC2(C/C=C(CC/C=C(CCC12)\\C)\\C)C)C",
+            "marts": []
         },
         {
             "name": "triterpene_C1-C14",
@@ -752,7 +922,9 @@
             "initial_cyclisations": [
                 "C1-C14"
             ],
-            "functional_groups": []
+            "functional_groups": [],
+            "smiles": "C/C(C)=C\\CC/C(C)=C/CC[C+](C)C1CC/C(C)=C/CC/C(C)=C/CC/C(C)=C\\1",
+            "marts": []
         }
     ]
 }
