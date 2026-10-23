@@ -9,7 +9,13 @@ from typing import Iterable
 from collections import defaultdict
 
 from antismash.common import fasta, path
-from antismash.common.hmmscan_refinement import HMMResult, QueryResult, gather_by_query, remove_incomplete
+from antismash.common.hmmscan_refinement import (
+    HMMResult,
+    QueryResult,
+    gather_by_query,
+    merge_domain_list,
+    remove_incomplete
+)
 from antismash.common.secmet import Protocluster, CDSFeature
 from antismash.common.subprocessing.hmmscan import run_hmmscan
 
@@ -46,9 +52,11 @@ def run_terpene_hmmscan(cds_features: Iterable[CDSFeature]) -> list[QueryResult]
     return hmmscan_results
 
 
-def filter_incomplete(hmmscan_results: list[QueryResult], hmm_lengths: dict[str, int]
-                      ) -> dict[str, list[HMMResult]]:
-    """ Removes incomplete fragments
+def filter_terpene_hits(hmmscan_results: list[QueryResult], hmm_lengths: dict[str, int]
+                        ) -> dict[str, list[HMMResult]]:
+    """ Filters the results of a terpene hmmscan by merging domain fragments and removing
+        incomplete domains. Overlapping hits are not removed at this stage, as these may be
+        specific subtypes of the same domain.
 
         Arguments:
             hmmscan_results: a list of QueryResult objects from Bio's SearchIO
@@ -61,6 +69,10 @@ def filter_incomplete(hmmscan_results: list[QueryResult], hmm_lengths: dict[str,
     refined_results = {}
     for cds, results in results_by_id.items():
         refined = sorted(list(results), key=lambda result: result.query_start)
+        refined = merge_domain_list(refined, hmm_lengths,
+                                    preserve_unmerged=True,
+                                    check_hit_overlap=True,
+                                    allowed_hit_overlap=20)
         refined = remove_incomplete(refined, hmm_lengths)
         if refined:
             refined_results[cds] = refined
@@ -258,7 +270,7 @@ def analyse_cluster(cluster: Protocluster) -> ProtoclusterPrediction:
     hmm_lengths = load_hmm_lengths(hmm_properties)
 
     hmmscan_results = run_terpene_hmmscan(cluster.cds_children)
-    refined_results = filter_incomplete(hmmscan_results, hmm_lengths)
+    refined_results = filter_terpene_hits(hmmscan_results, hmm_lengths)
     refined_results = filter_by_score(refined_results, hmm_properties)
     cds_predictions = get_cds_predictions(refined_results, hmm_properties)
     return get_cluster_prediction(cds_predictions)
