@@ -16,8 +16,10 @@ from antismash.modules.terpene.data_loader import (
     MissingCompoundError,
     MissingHmmError,
     Reaction,
+    Relationship,
     TerpeneHMM,
     load_hmm_properties,
+    load_relationships,
 )
 from antismash.modules.terpene.results import (
     DomainPrediction,
@@ -31,6 +33,7 @@ from antismash.modules.terpene import (
 )
 
 _hmm_properties = load_hmm_properties()
+_relationships = load_relationships(_hmm_properties)
 
 
 class DummyCompoundGroup(CompoundGroup):
@@ -218,6 +221,35 @@ class TestAnalysis(TestCase):
         expected_groups = [[hmm_results[2], hmm_results[1]], [hmm_results[0]]]
         assert groups == expected_groups
 
+    def test_filter_subtypes(self):
+        hmm_results = [DummyHMMResult(label="parent_A", start=1, end=100),
+                       DummyHMMResult(label="level_1", start=1, end=100),
+                       DummyHMMResult(label="level_2", start=1, end=100),
+                       DummyHMMResult(label="level_3", start=1, end=100),
+                       DummyHMMResult(label="unrelated", start=1, end=100),]
+        relationships = {
+            "parent_A": Relationship(parents=set(), children={"level_1", "unrelated"}),
+            "parent_B": Relationship(parents=set(), children={"level_1", "unrelated"}),
+            "level_1": Relationship(parents={"parent_A", "parent_B"}, children={"level_2"}),
+            "level_2": Relationship(parents={"level_1"}, children={"level_3"}),
+            "level_3": Relationship(parents={"level_2"}, children=set()),
+            "unrelated": Relationship(parents={"parent_A", "parent_B"}, children={"unrelated_2"}),
+        }
+        filtered = terpene_analysis.filter_subtypes(hmm_results, relationships)
+        assert filtered == hmm_results[3:5]
+
+        hmm_results[1] = DummyHMMResult(label="level_1", start=100, end=200)
+        filtered = terpene_analysis.filter_subtypes(hmm_results, relationships)
+        assert filtered == hmm_results[3:5]
+        filtered = terpene_analysis.filter_subtypes(hmm_results, relationships, check_parents=True)
+        assert filtered == [hmm_results[-1]]
+
+        hmm_results.pop(1)
+        filtered = terpene_analysis.filter_subtypes(hmm_results, relationships)
+        assert filtered == hmm_results[2:4]
+        filtered = terpene_analysis.filter_subtypes(hmm_results, relationships, check_parents=True)
+        assert filtered == [hmm_results[-1]]
+
     def test_merge_reactions_by_substrate(self):
         reaction1 = build_dummy_reaction(
             substrates=(DummyCompoundGroup(name="compound1"), DummyCompoundGroup(name="compound2"),),
@@ -243,7 +275,7 @@ class TestAnalysis(TestCase):
     def test_get_domain_prediction(self):
         hmm_results = [DummyHMMResult(label="T1TS", start=1, end=50),
                        DummyHMMResult(label="T1TS_ARIS", start=30, end=100)]
-        domain_pred = terpene_analysis.get_domain_prediction(hmm_results, _hmm_properties)
+        domain_pred = terpene_analysis.get_domain_prediction(hmm_results, _hmm_properties, _relationships)
 
         assert domain_pred.domain_type == "T1TS"
         assert domain_pred.subtypes == ("T1TS_ARIS",)
@@ -251,15 +283,16 @@ class TestAnalysis(TestCase):
         assert domain_pred.end == 100
         assert domain_pred.reactions[0].products[0].name == "aristolochene"
 
-        hmm_results2 = [DummyHMMResult(label="T1TS", start=1, end=50),
+    def test_ambiguous_multiple_types(self):
+        hmm_results = [DummyHMMResult(label="T1TS", start=1, end=50),
                         DummyHMMResult(label="T2TS", start=30, end=100)]
-        domain_pred = terpene_analysis.get_domain_prediction(hmm_results2, _hmm_properties)
+        domain_pred = terpene_analysis.get_domain_prediction(hmm_results, _hmm_properties, _relationships)
         assert domain_pred.domain_type == "ambiguous"
         assert domain_pred.subtypes == tuple()
 
     def test_get_cds_predictions(self):
         hmm_results_per_cds = {"cds1": [DummyHMMResult(label="T1TS", bitscore=300)]}
-        cds_preds = terpene_analysis.get_cds_predictions(hmm_results_per_cds, _hmm_properties)
+        cds_preds = terpene_analysis.get_cds_predictions(hmm_results_per_cds, _hmm_properties, _relationships)
         assert cds_preds == {"cds1": [DomainPrediction(domain_type="T1TS", subtypes=tuple(),
                                                        start=1, end=10, reactions=tuple())]}
 

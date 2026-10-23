@@ -163,9 +163,18 @@ class TerpeneHMM:
                          for reaction in hmm_json["reactions"]))
 
 
+@dataclass
+class Relationship:
+    """ Stores the parents and children of a TerpeneHMM
+    """
+    parents: set[str]
+    children: set[str]
+
+
 _COMPOUND_CACHE: dict[str, CompoundGroup] = {}
 _HMM_PROPERTIES_CACHE: dict[str, TerpeneHMM] = {}
 _HMM_LENGTHS: dict[str, int] = {}
+_RELATIONSHIPS: dict[str, Relationship] = {}
 HMM_METADATA_FILE = path.get_full_path(__file__, "data", "hmm_properties.json")
 COMPOUND_FILE = path.get_full_path(__file__, "data", "compound_groups.json")
 
@@ -234,3 +243,36 @@ def load_hmm_lengths(hmm_properties: dict[str, TerpeneHMM]) -> dict[str, int]:
         hmm_lengths = {hmm_name: hmm_obj.length for hmm_name, hmm_obj in hmm_properties.items()}
         _HMM_LENGTHS.update(hmm_lengths)
     return _HMM_LENGTHS
+
+
+def load_relationships(hmm_properties: dict[str, TerpeneHMM]) -> dict[str, Relationship]:
+    """ Loads relationships from hmm properties.
+        Only does the processing once per python invocation, future runs access
+        existing properties
+
+        Arguments:
+            hmm_properties: a dictionary of hmm names to TerpeneHMM objects
+
+        Returns:
+            a dictionary of hmm names to relationships
+    """
+    if _RELATIONSHIPS:
+        return _RELATIONSHIPS
+    relationships: dict[str, Relationship] = {}
+    for hmm_name, hmm_obj in hmm_properties.items():
+        for child in hmm_obj.subtypes:
+            try:
+                relationships[child.name].parents.add(hmm_name)
+            except KeyError:
+                relationships[child.name] = Relationship(
+                    parents={hmm_name},
+                    children=set(grandchild.name for grandchild in child.subtypes)
+                )
+        if hmm_obj.is_subtype():
+            continue
+        relationships[hmm_name] = Relationship(
+            parents=set(),
+            children=set(child.name for child in hmm_obj.subtypes)
+        )
+    _RELATIONSHIPS.update(relationships)
+    return _RELATIONSHIPS
