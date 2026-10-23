@@ -25,6 +25,20 @@ from .results import RegionResult, GeneralResults
 from .data_structures import MibigEntry, ProteinDB, ReferenceCluster
 
 
+def _get_data_dir(config: ConfigType) -> str:
+    """ A helper to fetch the path the knownclusterblast data directory.
+
+        Arguments:
+            config: the antiSMASH config/options
+
+        Returns:
+            the path of the data directory
+    """
+    root = os.path.join(config.database_dir, "knownclusterblast")
+    version = find_latest_database_version(root)
+    return os.path.join(root, version)
+
+
 def _get_datafile_path(filename: str, config: ConfigType) -> str:
     """ A helper to construct absolute paths to files in the knownclusterblast
         data directory.
@@ -35,9 +49,7 @@ def _get_datafile_path(filename: str, config: ConfigType) -> str:
         Returns:
             the absolute path of the file
     """
-    root = os.path.join(config.database_dir, "knownclusterblast")
-    version = find_latest_database_version(root)
-    return os.path.join(root, version, filename)
+    return os.path.join(_get_data_dir(config), filename)
 
 
 def check_known_prereqs(options: ConfigType) -> List[str]:
@@ -93,7 +105,7 @@ def run_knownclusterblast_on_record(record: Record, options: ConfigType) -> Gene
             an instance of GeneralResults with a result for each cluster in the record
     """
     logging.info('Running known cluster search')
-    clusters, proteins = load_clusterblast_database(searchtype="knownclusterblast")
+    clusters, proteins = load_clusterblast_database(data_dir=_get_data_dir(options))
     return perform_knownclusterblast(options, record, clusters, proteins)
 
 

@@ -9,7 +9,7 @@ import logging
 import os
 from tempfile import NamedTemporaryFile
 import unittest
-from unittest.mock import call, patch
+from unittest.mock import Mock, call, patch
 
 import pytest
 
@@ -66,6 +66,7 @@ class TestAntismash(unittest.TestCase):
         options.start = -1
         options.end = -1
         options.version = "5.dummy"
+        options.branding = "antiSMASH"
         bio = rec.to_biopython()
 
         main.add_antismash_comments([(rec, bio)], options)
@@ -97,6 +98,16 @@ class TestAntismash(unittest.TestCase):
         comment = bio.annotations["structured_comment"]["antiSMASH-Data"]
         assert comment["Original ID"] == rec.original_id
 
+        # ensure that alternate branding uses the correct entry
+        rec = DummyRecord()
+        alt_bio = rec.to_biopython()
+        options.branding = "alternate_branding"
+        main.add_antismash_comments([(rec, alt_bio)], options)
+        alt_structured = alt_bio.annotations["structured_comment"]
+        assert len(alt_structured) == 1, list(alt_structured)
+        comment = alt_structured[f"{options.branding}-Data"]
+        assert {"Version", "Run date"}.issubset(set(comment))
+
     def test_canonical_base_filename(self):
         options = build_parser(modules=self.all_modules).parse_args([])
         expected = os.path.join("out", "foo.1_example")
@@ -126,6 +137,25 @@ class TestAntismash(unittest.TestCase):
 
         res = main.canonical_base_filename("foo.1_example.gbff.gz", "out", options)
         assert res == expected
+
+    def test_check_prereqs_bad_module(self):
+        options = build_config([], isolated=True, modules=[])
+
+        def dummy(*args, **kwargs):
+            # raise the error least able to be handled
+            raise Exception("some unhandled thing")  # pylint: disable=broad-exception-raised
+
+        module = unittest.mock.Mock()
+        module.check_prereqs = dummy
+        module.__name__ = "dummy module"
+
+        # the error should be both logged and thrown
+        with self.assertLogs(level="WARNING") as logs:
+            with self.assertRaisesRegex(Exception, "some unhandled thing"):
+                main.check_prerequisites([module], options)
+            assert len(logs.output) == 1
+            assert logs.output[0].startswith("ERROR")
+            assert "some unhandled thing" in logs.output[0]
 
 
 class TestErrorsInLogfile(unittest.TestCase):
@@ -180,6 +210,35 @@ class TestErrorsInLogfile(unittest.TestCase):
         check_message(printed.err.strip())
         # and nothing should have gone to stdout
         assert not printed.out
+
+
+class TestModuleReplacement(unittest.TestCase):
+    def setUp(self):
+        self.original_modules = main._MODULES
+
+    def tearDown(self):
+        main._MODULES = self.original_modules
+
+    def test_detection(self):
+        new = [Mock(), Mock()]
+        new[0].DETECTION_STAGE = main.DetectionStage.FULL_GENOME
+        new[1].DETECTION_STAGE = main.DetectionStage.PER_AREA
+
+        main.replace_detection_modules(list(new))
+        fetched = main.get_detection_modules()
+        assert fetched == new
+
+    def test_analysis(self):
+        new = [Mock(), Mock()]
+        main.replace_analysis_modules(list(new))
+        fetched = main.get_analysis_modules()
+        assert fetched == new
+
+    def test_output(self):
+        new = [Mock()]
+        main.replace_output_modules(list(new))
+        fetched = main.get_output_modules()
+        assert fetched == new
 
 
 @patch.object(logging, 'debug')

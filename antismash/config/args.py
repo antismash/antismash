@@ -26,6 +26,7 @@ from .executables import AlternateExecutablesAction, get_default_paths
 # not being picked up or argparse's liberal use of *kwargs.
 
 ANTISMASH_VERSION = ""  # needs to be set on module import, avoids cyclic imports
+DATABASE_DEFAULT = os.path.join(os.path.dirname(__file__), 'databases')
 
 
 class AntismashParser(argparse.ArgumentParser):
@@ -530,7 +531,7 @@ def basic_options() -> _SimpleArgs:
                     help="How many CPUs to use in parallel. (default for this machine: %(default)s)")
     group.add_option('--databases',
                     dest='database_dir',
-                    default=os.path.join(os.path.dirname(os.path.dirname(__file__)), 'databases'),
+                    default=DATABASE_DEFAULT,
                     metavar="PATH",
                     action=FullPathAction,
                     type=str,

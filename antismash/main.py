@@ -21,7 +21,7 @@ import pstats
 import shutil
 import time
 import tempfile
-from typing import cast, Any, Dict, List, Optional, Tuple, Union
+from typing import cast, Any, Dict, Iterable, List, Optional, Tuple, Union
 
 from Bio.SeqRecord import SeqRecord
 from helperlibs.bio import seqio as hl_seqio
@@ -38,17 +38,83 @@ from antismash.common.path import get_full_path
 from antismash.common.secmet import Record
 from antismash.common import subprocessing
 from antismash.detection import DetectionStage
-from antismash.outputs import html
 from antismash.support import genefinding
 from antismash.custom_typing import AntismashModule
 
 __version__ = "8.dev"
 
 
-def _gather_analysis_modules() -> List[AntismashModule]:
+class _Modules:
+    def __init__(self, *,
+                 analysis: list[AntismashModule] = None,
+                 detection: dict[DetectionStage, list[AntismashModule]] = None,
+                 output: list[AntismashModule] = None,
+                 support: list[AntismashModule] = None,
+                 ) -> None:
+        self._analysis = analysis or []
+        self._detection = detection or {stage: [] for stage in DetectionStage}
+        self._output = output or []
+        self._support = support or []
+
+    @property
+    def analysis(self) -> list[AntismashModule]:
+        """ The analysis modules to be used """
+        return self._analysis
+
+    @analysis.setter
+    def analysis(self, modules: Iterable[AntismashModule]) -> None:
+        self._analysis = list(modules)
+
+    @property
+    def detection(self) -> dict[DetectionStage, list[AntismashModule]]:
+        """ A mapping of detection stage to the modules to be used in each stage """
+        return self._detection
+
+    @detection.setter
+    def detection(self, modules: Iterable[AntismashModule]) -> None:
+        self._detection = {}
+        for key in DetectionStage:
+            values: list[AntismashModule] = []
+            self._detection[key] = values
+            for module in modules:
+                if module.DETECTION_STAGE == key:
+                    values.append(module)
+
+    @property
+    def output(self) -> list[AntismashModule]:
+        """ The output modules to be used """
+        return self._output
+
+    @output.setter
+    def output(self, modules: Iterable[AntismashModule]) -> None:
+        self._output = list(modules)
+
+    @property
+    def support(self) -> list[AntismashModule]:
+        """ The support modules to be used """
+        return self._support
+
+    @support.setter
+    def support(self, modules: Iterable[AntismashModule]) -> None:
+        self._support = list(modules)
+
+    def get_all_modules(self) -> list[AntismashModule]:
+        """ All of the modules to be used """
+        results: list[AntismashModule] = []
+        for detection_stage in DetectionStage:
+            results.extend(self._detection[detection_stage])
+        results.extend(self._analysis)
+        results.extend(self._output)
+        results.extend(self._support)
+        return results
+
+
+def _gather_modules_in_section(section_name: str) -> list[AntismashModule]:
     modules = []
-    for module_data in pkgutil.walk_packages([get_full_path(__file__, "modules")]):
-        module = importlib.import_module(f"antismash.modules.{module_data.name}")
+    for module_data in pkgutil.walk_packages([get_full_path(__file__, section_name)]):
+        if not module_data.ispkg:  # avoids stdlib inclusions when names match
+            continue
+        module = importlib.import_module(f"antismash.{section_name}.{module_data.name}")
         modules.append(cast(AntismashModule, module))
     return modules
 
@@ -60,10 +126,9 @@ def _gather_detection_modules() -> Dict[DetectionStage, List[AntismashModule]]:
         DetectionStage.AREA_REFINEMENT: [],
         DetectionStage.PER_AREA: [],
     }
-    for module_data in pkgutil.walk_packages([get_full_path(__file__, "detection")]):
-        name = f"antismash.detection.{module_data.name}"
-        module = cast(AntismashModule, importlib.import_module(name))
+    for module in _gather_modules_in_section("detection"):
         stage = getattr(module, "DETECTION_STAGE", None)
+        name = module.__name__
         if stage is None:
             raise ValueError(f"detection module missing DETECTION_STAGE attribute: {name}")
         if not isinstance(stage, DetectionStage):
@@ -74,8 +139,54 @@ def _gather_detection_modules() -> Dict[DetectionStage, List[AntismashModule]]:
     return modules
 
 
-_ANALYSIS_MODULES = _gather_analysis_modules()
-_DETECTION_MODULES = _gather_detection_modules()
+_MODULES = _Modules(
+    analysis=_gather_modules_in_section("modules"),
+    detection=_gather_detection_modules(),
+    output=_gather_modules_in_section("outputs"),
+    support=_gather_modules_in_section("support"),
+)
+
+
+def replace_analysis_modules(modules: Iterable[AntismashModule]) -> None:
+    """ Replaces default antiSMASH analysis modules with the provided modules.
+        The replacement modules may include existing antiSMASH modules as
+        well as custom modules.
+
+        Arguments:
+            modules: a list of modules
+
+        Returns:
+            None
+    """
+    _MODULES.analysis = modules
+
+
+def replace_detection_modules(modules: list[AntismashModule]) -> None:
+    """ Replaces default antiSMASH detection modules with the provided modules.
+        The replacement modules may include existing antiSMASH modules as
+        well as custom modules.
+
+        Arguments:
+            modules: a list of modules
+
+        Returns:
+            None
+    """
+    _MODULES.detection = modules
+
+
+def replace_output_modules(modules: list[AntismashModule]) -> None:
+    """ Replaces default antiSMASH output modules with the provided modules.
+        The replacement modules may include existing antiSMASH modules as
+        well as custom modules.
+
+        Arguments:
+            module: the replacement modules
+
+        Returns:
+            None
+    """
+    _MODULES.output = modules
 
 
 def get_all_modules() -> List[AntismashModule]:
@@ -87,11 +198,7 @@ def get_all_modules() -> List[AntismashModule]:
         Returns:
             a list of modules
     """
-    all_modules = []
-    for modules in [get_detection_modules(), get_analysis_modules(),
-                    get_output_modules(), get_support_modules()]:
-        all_modules.extend(modules)
-    return list(all_modules)
+    return _MODULES.get_all_modules()
 
 
 def get_detection_modules() -> List[AntismashModule]:
@@ -104,7 +211,7 @@ def get_detection_modules() -> List[AntismashModule]:
             a list of modules
     """
     modules = []
-    for stage in _DETECTION_MODULES.values():
+    for stage in _MODULES.detection.values():
         modules.extend(stage)
     return modules
 
@@ -118,7 +225,7 @@ def get_analysis_modules() -> List[AntismashModule]:
         Returns:
             a list of modules
     """
-    return list(_ANALYSIS_MODULES)
+    return list(_MODULES.analysis)
 
 
 def get_output_modules() -> List[AntismashModule]:
@@ -130,7 +237,7 @@ def get_output_modules() -> List[AntismashModule]:
         Returns:
             a list of modules
     """
-    return [html]  # type: ignore  # a lot of casting avoided
+    return list(_MODULES.output)
 
 
 def get_support_modules() -> List[AntismashModule]:
@@ -142,8 +249,7 @@ def get_support_modules() -> List[AntismashModule]:
         Returns:
             a list of modules
     """
-    genef = cast(AntismashModule, genefinding)
-    return [genef]
+    return list(_MODULES.support)
 
 
 def verify_options(options: ConfigType, modules: List[AntismashModule]) -> bool:
@@ -189,7 +295,7 @@ def run_detection(record: Record, options: ConfigType,
     timings: Dict[str, float] = {}
 
     # run full genome detections
-    for module in _DETECTION_MODULES[DetectionStage.FULL_GENOME]:
+    for module in _MODULES.detection[DetectionStage.FULL_GENOME]:
         run_module(record, module, options, module_results, timings)
         results = module_results.get(module.__name__)
         if results:
@@ -199,8 +305,8 @@ def run_detection(record: Record, options: ConfigType,
 
     # generate cluster predictions
     logging.info("Detecting secondary metabolite clusters")
-    modules = list(_DETECTION_MODULES[DetectionStage.AREA_FORMATION])
-    modules.extend(_DETECTION_MODULES[DetectionStage.AREA_REFINEMENT])
+    modules = list(_MODULES.detection[DetectionStage.AREA_FORMATION])
+    modules.extend(_MODULES.detection[DetectionStage.AREA_REFINEMENT])
     for module in modules:
         run_module(record, module, options, module_results, timings)
         results = module_results.get(module.__name__)
@@ -225,7 +331,7 @@ def run_detection(record: Record, options: ConfigType,
     logging.info("%d region(s) detected in record", len(record.get_regions()))
 
     # finally, run any detection limited to genes in clusters
-    for module in _DETECTION_MODULES[DetectionStage.PER_AREA]:
+    for module in _MODULES.detection[DetectionStage.PER_AREA]:
         run_module(record, module, options, module_results, timings)
         results = module_results.get(module.__name__)
         if results:
@@ -424,7 +530,7 @@ def add_antismash_comments(records: List[Tuple[Record, SeqRecord]], options: Con
         if "structured_comment" not in bio_record.annotations:
             bio_record.annotations["structured_comment"] = {}
 
-        bio_record.annotations["structured_comment"]["antiSMASH-Data"] = comment
+        bio_record.annotations["structured_comment"][f"{options.branding}-Data"] = comment
 
 
 def write_outputs(results: serialiser.AntismashResults, options: ConfigType) -> None:
@@ -437,7 +543,7 @@ def write_outputs(results: serialiser.AntismashResults, options: ConfigType) -> 
         Returns:
             None
     """
-    logging.debug("Writing non-HTML output files")
+    logging.debug("Writing analysis module results files")
     # don't use results for which the module no longer exists to regenerate/calculate
     module_results_per_record = []
     assert len(results.records) == len(results.results)
@@ -451,14 +557,16 @@ def write_outputs(results: serialiser.AntismashResults, options: ConfigType) -> 
                 result.write_outputs(record, options)
         module_results_per_record.append(record_result)
 
-    if html.is_enabled(options):
-        logging.debug("Creating results page")
+    for module in get_output_modules():
+        if not module.is_enabled(options):
+            continue
+        logging.debug(" Writing relevant output files for %s ", module.__name__)
         start = time.time()
-        html.write(results.records, module_results_per_record, options, get_all_modules())
-        # use an average of times for html
+        module.write(results.records, module_results_per_record, options, get_all_modules())
+        # use an average of times for output modules, since they cover multiple records
         duration = (time.time() - start) / len(results.records)
         for val in results.timings_by_record.values():
-            val[html.__name__] = duration
+            val[module.__name__] = duration
 
     # convert records to biopython
     bio_records = [record.to_biopython() for record in results.records]
@@ -606,7 +714,11 @@ def check_prerequisites(modules: List[AntismashModule], options: ConfigType) -> 
     errors_by_module = {}
     for module in modules:
         logging.debug("Checking prerequisites for %s", module.__name__)
-        res = module.check_prereqs(options)
+        try:
+            res = module.check_prereqs(options)
+        except Exception as err:
+            logging.error("Unhandled failures in {module.__name__}: '%s'", err)
+            raise
         if res:
             errors_by_module[module.__name__] = res
     if errors_by_module:
@@ -636,7 +748,7 @@ def list_plugins() -> None:
 
     print("Available plugins")
     print("  Detection modules")
-    for stage, modules in _DETECTION_MODULES.items():
+    for stage, modules in _MODULES.detection.items():
         simple_stage = stage.replace("_", " ").capitalize()
         print(f"    {simple_stage}")
         print_modules(modules, indent=6)
@@ -701,7 +813,7 @@ def _get_all_enabled_modules(modules: list[AntismashModule], options: ConfigType
 
 def _run_antismash(sequence_file: Optional[str], options: ConfigType) -> int:
     """ The real run_antismash, assumes logging is set up around it """
-    logging.info("antiSMASH version: %s", options.version)
+    logging.info("%s version: %s", options.branding, options.version)
     _log_found_executables(options)
 
     if options.list_plugins:
@@ -791,10 +903,10 @@ def _run_antismash(sequence_file: Optional[str], options: ConfigType) -> int:
     if options.debug:
         log_module_runtimes(results.timings_by_record)
 
-    logging.debug("antiSMASH calculation finished at %s; runtime: %s",
+    logging.debug("%s calculation finished at %s; runtime: %s", options.branding,
                   datetime.now().strftime("%Y-%m-%d %H:%M:%S"), str(running_time))
 
-    logging.info("antiSMASH status: SUCCESS")
+    logging.info("%s status: SUCCESS", options.branding)
     return 0
 
 
