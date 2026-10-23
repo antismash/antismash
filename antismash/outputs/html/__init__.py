@@ -123,7 +123,7 @@ def write(records: List[Record], results: List[Dict[str, ModuleResults]],
     with open(os.path.join(options.output_dir, "index.html"), "w", encoding="utf-8") as result_file:
         content = generate_webpage(records, results, options, all_modules)
         # strip all leading whitespace and blank lines, as they're meaningless to HTML
-        content = re.sub("^( *|$)", "", content, flags=re.M)
+        content = re.sub(r"^\s*", "", content, flags=re.M)
         result_file.write(content)
 
 

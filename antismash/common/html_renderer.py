@@ -324,6 +324,7 @@ class _Template:  # pylint: disable=too-few-public-methods
         else:
             loader = _jinja2.FileSystemLoader(search_path)
         self.env = _jinja2.Environment(loader=loader, autoescape=True,
+                                       lstrip_blocks=True, trim_blocks=True,
                                        undefined=_jinja2.StrictUndefined)
 
     def render(self, **kwargs: Any) -> Markup:

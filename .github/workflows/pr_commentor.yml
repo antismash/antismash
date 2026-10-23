@@ -1,0 +1,42 @@
+name: Comment on PR
+
+on:
+  workflow_run:
+    workflows: ["Lint comparison"]
+    types:
+      - completed
+
+permissions:
+  actions: read
+  pull-requests: write
+
+jobs:
+  comment:
+    runs-on: ubuntu-latest
+    if: >
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'success'
+    steps:
+      - name: 'Download lint report'
+        uses: actions/download-artifact@v8
+        with:
+          name: lint_report
+          path: ${{ runner.temp }}/lint_report
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: message_reader
+        run: |
+          echo 'message<<EOF' >> $GITHUB_OUTPUT
+          cat '${{ runner.temp }}/lint_report/message' >> $GITHUB_OUTPUT
+          echo 'EOF' >> $GITHUB_OUTPUT
+          echo 'pr<<EOF' >> $GITHUB_OUTPUT
+          cat '${{ runner.temp }}/lint_report/pr' >> $GITHUB_OUTPUT
+          echo 'EOF' >> $GITHUB_OUTPUT
+        shell: bash
+      - name: Comment
+        uses: SJShaw/pylint-compare/update-pr@v3
+        with:
+          comment: |
+            ${{ steps.message_reader.outputs.message }}
+          pr_number: ${{ steps.message_reader.outputs.pr }}
