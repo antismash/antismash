@@ -132,6 +132,6 @@ def run_on_record(record: Record, results: TerpeneResults, _options: ConfigType)
 
     logging.info("Analysing terpene clusters")
     for cluster in terpene_clusters:
-        results.cluster_predictions[cluster.get_protocluster_number()] = analyse_cluster(cluster)
+        results.cluster_predictions[cluster.get_protocluster_number()] = analyse_cluster(cluster, record)
 
     return results
