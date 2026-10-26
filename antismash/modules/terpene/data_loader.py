@@ -30,6 +30,8 @@ class CompoundGroup:
     chain_length: int
     initial_cyclisations: tuple[str]
     functional_groups: tuple[str]
+    smiles: Optional[str]
+    marts: tuple[str]
     biosynthetic_subclass: str = ""
 
     def get_compound_name(self) -> str:
@@ -72,6 +74,7 @@ class CompoundGroup:
         """ Reconstructs an instance from a JSON representation """
         data["initial_cyclisations"] = tuple(data["initial_cyclisations"])
         data["functional_groups"] = tuple(data["functional_groups"])
+        data["marts"] = tuple(data["marts"])
         data["biosynthetic_subclass"] = data["biosynthetic_subclass"] or ""
         return cls(**data)
 
