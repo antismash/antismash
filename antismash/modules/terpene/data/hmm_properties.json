@@ -357,7 +357,7 @@
                         "FPP"
                     ],
                     "products": [
-                        "aristolochene"
+                        "(+)-aristolochene"
                     ]
                 }
             ],
@@ -485,14 +485,6 @@
             "cutoff": 275,
             "subtypes": [],
             "reactions": [
-                {
-                    "substrates": [
-                        "GPP"
-                    ],
-                    "products": [
-                        "monoterpene_C1-C10"
-                    ]
-                },
                 {
                     "substrates": [
                         "FPP"
@@ -737,8 +729,7 @@
                         "diterpene_C6-C11/C10-C15_PP"
                     ],
                     "products": [
-                        "kaurene_like",
-                        "pimaradiene_like"
+                        "pimaranyl_derivative"
                     ]
                 }
             ],
@@ -1175,7 +1166,7 @@
                         "GFPP"
                     ],
                     "products": [
-                        "sesterterpene_C1-C7/C6-C10"
+                        "sesterterpene_C1-C6"
                     ]
                 }
             ],

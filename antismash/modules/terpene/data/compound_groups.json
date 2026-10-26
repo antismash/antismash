@@ -39,7 +39,7 @@
             ]
         },
         {
-            "name": "aristolochene",
+            "name": "(+)-aristolochene",
             "extended_name": null,
             "single_compound": true,
             "biosynthetic_class": "sesquiterpene",
@@ -464,30 +464,6 @@
             ]
         },
         {
-            "name": "kaurene_like",
-            "extended_name": null,
-            "single_compound": false,
-            "biosynthetic_class": "diterpene",
-            "biosynthetic_subclass": null,
-            "chain_length": 20,
-            "initial_cyclisations": ["kaurene skeleton"],
-            "functional_groups": [
-                "unknown"
-            ]
-        },
-        {
-            "name": "monoterpene_C1-C10",
-            "extended_name": null,
-            "single_compound": false,
-            "biosynthetic_class": "monoterpene",
-            "biosynthetic_subclass": null,
-            "chain_length": 10,
-            "initial_cyclisations": [
-                "C1-C10"
-            ],
-            "functional_groups": []
-        },
-        {
             "name": "monoterpene_C1-C6",
             "extended_name": null,
             "single_compound": false,
@@ -536,14 +512,15 @@
             "functional_groups": []
         },
         {
-            "name": "pimaradiene_like",
+            "name": "pimaranyl_derivative",
             "extended_name": null,
             "single_compound": false,
             "biosynthetic_class": "diterpene",
             "biosynthetic_subclass": null,
             "chain_length": 20,
             "initial_cyclisations": [
-                "pimaradiene skeleton"
+                "C6-C11",
+                "C10-C15"
             ],
             "functional_groups": [
                 "unknown"
@@ -681,15 +658,14 @@
             "functional_groups": []
         },
         {
-            "name": "sesterterpene_C1-C7/C6-C10",
+            "name": "sesterterpene_C1-C6",
             "extended_name": null,
             "single_compound": false,
             "biosynthetic_class": "sesterterpene",
             "biosynthetic_subclass": null,
             "chain_length": 25,
             "initial_cyclisations": [
-                "C1-C7",
-                "C6-C10"
+                "C1-C6"
             ],
             "functional_groups": []
         },

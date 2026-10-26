@@ -368,7 +368,7 @@ class TestAnalysis(TestCase):
         assert domain_pred.subtypes == ("T1TS_ARIS",)
         assert domain_pred.start == 1
         assert domain_pred.end == 100
-        assert domain_pred.reactions[0].products[0].name == "aristolochene"
+        assert domain_pred.reactions[0].products[0].name == "(+)-aristolochene"
         assert domain_pred.activity == Activity.INACTIVE #since the motifs are not present in the dummy sequence
 
     def test_ambiguous_multiple_types(self):
