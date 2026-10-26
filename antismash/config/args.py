@@ -113,7 +113,14 @@ class AntismashParser(argparse.ArgumentParser):
                 return []
             lines = []
             processed_destinations.add(arg.dest)
-            flag = sorted(arg.option_strings, key=len, reverse=True)[0].lstrip('-')
+            # BooleanOptionActions always have the '--no-' variant after the others
+            # but skip over the single '-' options where alternatives exist
+            flag = ""
+            for flag in arg.option_strings:
+                if flag.startswith("--"):
+                    break
+            flag = flag.lstrip("-")
+            assert flag, arg.option_strings
             # fill in the current default if relevant
             assert arg.help is not None
             if "%(default)" in arg.help:
@@ -140,6 +147,14 @@ class AntismashParser(argparse.ArgumentParser):
                 state = "#"
                 if value:
                     state = ""
+                lines.append(f"{state}{flag}")
+            elif arg.const is None:  # BooleanOptionActions
+                state = "#"
+                if value != arg.default:
+                    if value:
+                        state = ""
+                    else:
+                        state = "no-"
                 lines.append(f"{state}{flag}")
             elif not value:
                 default = arg.default
