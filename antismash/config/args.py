@@ -173,12 +173,15 @@ class AntismashParser(argparse.ArgumentParser):
                     outfile.write("\n")
                 outfile.write("\n\n")
 
-    def format_help(self) -> str:
+    def format_help(self, formatter: argparse.HelpFormatter = None,
+                    ) -> str:
         """Custom help formatter"""
+        if formatter is None:
+            formatter = self._get_formatter()
         help_text = f"""
 ########### antiSMASH {ANTISMASH_VERSION} #############
 
-{self.format_usage()}
+{self.format_usage(formatter=formatter)}
 
 {self._get_args_text()}
 --------
@@ -188,10 +191,12 @@ Options
 """
         return help_text
 
-    def format_usage(self) -> str:
+    def format_usage(self, formatter: argparse.HelpFormatter = None,
+                     ) -> str:
         """ Custom usage generator """
         if self._show_all:
-            formatter = self._get_formatter()
+            if formatter is None:
+                formatter = self._get_formatter()
             formatter.add_usage(self.usage, self._actions, self._mutually_exclusive_groups)
             return formatter.format_help()
         return f"usage: {self.prog} [-h] [options ..] sequence\n"
