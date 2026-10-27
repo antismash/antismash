@@ -1,0 +1,106 @@
+3HCDH	3-hydroxyacyl-CoA dehydrogenase, C-terminal domain	22	rule_hmms/3HCDH.hmm	PF00725.28
+3HCDH_N	3-hydroxyacyl-CoA dehydrogenase, NAD binding domain	22	rule_hmms/3HCDH_N.hmm	PF02737.25
+4HBT_2	Thioesterase-like superfamily	25	rule_hmms/4HBT_2.hmm	PF13279.13
+ACPS	4'-phosphopantetheinyl transferase superfamily	25	rule_hmms/ACPS.hmm	PF01648.26
+ACP_syn_III_C	3-Oxoacyl-[acyl-carrier-protein (ACP)] synthase III C terminal	26	rule_hmms/ACP_syn_III_C.hmm	PF08541.17
+ADC	Acetoacetate decarboxylase (ADC)	29	rule_hmms/ADC.hmm	PF06314.17
+ADH_N	Alcohol dehydrogenase GroES-like domain	23	rule_hmms/ADH_N.hmm	PF08240.18
+ADH_zinc_N	Zinc-binding dehydrogenase	31	rule_hmms/ADH_zinc_N.hmm	PF00107.33
+AMP-binding	AMP-binding enzyme	29	rule_hmms/AMP-binding.hmm	PF00501.35
+AMP-binding_C	AMP-binding enzyme C-terminal domain	24	rule_hmms/AMP-binding_C.hmm	PF13193.13
+ATP-grasp_4	ATP-grasp domain	27	rule_hmms/ATP-grasp_4.hmm	PF13535.12
+ATPgrasp_N	ATP-grasp N-terminal domain	27	rule_hmms/ATPgrasp_N.hmm	PF18130.7
+Abhydrolase_6	Alpha/beta hydrolase family	26	rule_hmms/Abhydrolase_6.hmm	PF12697.14
+Acyl-CoA_dh_1	Acyl-CoA dehydrogenase, C-terminal domain	22	rule_hmms/Acyl-CoA_dh_1.hmm	PF00441.30
+Acyl-CoA_dh_2	Acyl-CoA dehydrogenase, C-terminal domain	22	rule_hmms/Acyl-CoA_dh_2.hmm	PF08028.17
+Acyl-CoA_dh_M	Acyl-CoA dehydrogenase, middle domain	33	rule_hmms/Acyl-CoA_dh_M.hmm	PF02770.25
+Acyl-CoA_dh_N	Acyl-CoA dehydrogenase, N-terminal domain	22	rule_hmms/Acyl-CoA_dh_N.hmm	PF02771.22
+Acyl_transf_1	Acyl transferase domain	32	rule_hmms/Acyl_transf_1.hmm	PF00698.27
+Aldo_ket_red	Aldo/keto reductase family	24	rule_hmms/Aldo_ket_red.hmm	PF00248.28
+Aldolase_II	Class II Aldolase and Adducin N-terminal domain	22	rule_hmms/Aldolase_II.hmm	PF00596.28
+Aminotran_1_2	Aminotransferase class I and II	19	rule_hmms/Aminotran_1_2.hmm	PF00155.28
+Aminotran_3	Aminotransferase class-III	30	rule_hmms/Aminotran_3.hmm	PF00202.28
+B12-binding	B12 binding domain	32	rule_hmms/B12-binding.hmm	PF02310.25
+BD-FAE	BD-FAE	26	rule_hmms/BD-FAE.hmm	PF20434.6
+Beta_elim_lyase	Beta-eliminating lyase	27	rule_hmms/Beta_elim_lyase.hmm	PF01212.28
+CM_2	Chorismate mutase type II	27	rule_hmms/CM_2.hmm	PF01817.27
+Carbam_trans_C	Carbamoyltransferase C-terminus	27	rule_hmms/Carbam_trans_C.hmm	PF16861.11
+Carbam_trans_N	Carbamoyltransferase N-terminus	24	rule_hmms/Carbam_trans_N.hmm	PF02543.22
+Carboxyl_trans	Carboxyl transferase domain	22	rule_hmms/Carboxyl_trans.hmm	PF01039.28
+Chal_sti_synt_C	Chalcone and stilbene synthases, C-terminal domain	27	rule_hmms/Chal_sti_synt_C.hmm	PF02797.22
+Chorismate_bind	chorismate binding enzyme	27	rule_hmms/Chorismate_bind.hmm	PF00425.26
+Chorismate_bind_2	Chorismate binding enzyme	27	rule_hmms/Chorismate_bind_2.hmm	PF30495.1
+Condensation	Condensation domain	30	rule_hmms/Condensation.hmm	PF00668.26
+DHQS	3-dehydroquinate synthase II N-terminal domain	24	rule_hmms/DHQS.hmm	PF01959.22
+DHQS_2nd	3-dehydroquinate synthase II C-terminal domain	22	rule_hmms/DHQS_2nd.hmm	PF26558.1
+DUF1702	Protein of unknown function (DUF1702)	31	rule_hmms/DUF1702.hmm	PF08012.17
+DUF6365	Family of unknown function (DUF6365)	51	rule_hmms/DUF6365.hmm	PF19892.6
+DXP_synthase_N	1-deoxy-D-xylulose-5-phosphate synthase	21	rule_hmms/DXP_synthase_N.hmm	PF13292.12
+DegT_DnrJ_EryC1	DegT/DnrJ/EryC1/StrS aminotransferase family	19	rule_hmms/DegT_DnrJ_EryC1.hmm	PF01041.24
+DeoC	DeoC/LacD family aldolase	23	rule_hmms/DeoC.hmm	PF01791.16
+Dimerisation	O-methyltransferase dimerisation domain	25	rule_hmms/Dimerisation.hmm	PF08100.19
+ECH_1	Enoyl-CoA hydratase/isomerase	27	rule_hmms/ECH_1.hmm	PF00378.26
+Epimerase	NAD dependent epimerase/dehydratase family	20	rule_hmms/Epimerase.hmm	PF01370.28
+F420_oxidored	NADP oxidoreductase coenzyme F420-dependent	21	rule_hmms/F420_oxidored.hmm	PF03807.24
+FAD_binding_3	FAD binding domain	22	rule_hmms/FAD_binding_3.hmm	PF01494.26
+FG-GAP_3	FG-GAP-like repeat	26	rule_hmms/FG-GAP_3.hmm	PF13517.13
+FMN_dh	FMN-dependent dehydrogenase	24	rule_hmms/FMN_dh.hmm	PF01070.25
+Flavin_Reduct	Flavin reductase like domain	27	rule_hmms/Flavin_Reduct.hmm	PF01613.25
+GATase	Glutamine amidotransferase class-I	22	rule_hmms/GATase.hmm	PF00117.35
+GDP_Man_Dehyd	GDP-mannose 4,6 dehydratase	27	rule_hmms/GDP_Man_Dehyd.hmm	PF16363.12
+GFO_IDH_MocA	Oxidoreductase family, NAD-binding Rossmann fold	24	rule_hmms/GFO_IDH_MocA.hmm	PF01408.29
+GFO_IDH_MocA_C3	GFO/IDH/MocA C-terminal domain	27	rule_hmms/GFO_IDH_MocA_C3.hmm	PF22725.2
+GHMP_kinases_N	GHMP kinases N terminal domain	22	rule_hmms/GHMP_kinases_N.hmm	PF00288.33
+GcpE	GcpE TIM-barrel domain	32	rule_hmms/GcpE.hmm	PF04551.20
+GcpE_C	GcpE protein C-terminal domain	32	rule_hmms/GcpE_C.hmm	PF26540.1
+Glu_synthase	Conserved region in glutamate synthase	20	rule_hmms/Glu_synthase.hmm	PF01645.24
+Glyoxalase	Glyoxalase/Bleomycin resistance protein/Dioxygenase superfamily	20	rule_hmms/Glyoxalase.hmm	PF00903.32
+Hexose_dehydrat	NDP-hexose 2,3-dehydratase	25	rule_hmms/Hexose_dehydrat.hmm	PF03559.21
+HpaB	4-hydroxyphenylacetate 3-hydroxylase C terminal	25	rule_hmms/HpaB.hmm	PF03241.19
+HpaB_N	4-hydroxyphenylacetate 3-hydroxylase N terminal	35	rule_hmms/HpaB_N.hmm	PF11794.14
+Inositol_P	Inositol monophosphatase family	27	rule_hmms/Inositol_P.hmm	PF00459.31
+KR	KR domain	22	rule_hmms/KR.hmm	PF08659.17
+KYNU_C	Kynureninase C-terminal domain	27	rule_hmms/KYNU_C.hmm	PF22580.3
+Ketoacyl-synt_C	Beta-ketoacyl synthase, C-terminal domain	20	rule_hmms/Ketoacyl-synt_C.hmm	PF02801.29
+LAL_C2	L-amino acid ligase C-terminal domain 2	29	rule_hmms/LAL_C2.hmm	PF18603.8
+Lactamase_B	Metallo-beta-lactamase superfamily	22	rule_hmms/Lactamase_B.hmm	PF00753.34
+Lyase_1	Lyase	27	rule_hmms/Lyase_1.hmm	PF00206.26
+Lyase_aromatic	Aromatic amino acid lyase	27	rule_hmms/Lyase_aromatic.hmm	PF00221.25
+Met_asp_mut_E	Methylaspartate mutase E chain (MutE)	26	rule_hmms/Met_asp_mut_E.hmm	PF06368.18
+Methyltransf_13	Putative zinc binding domain	31	rule_hmms/Methyltransf_13.hmm	PF08421.17
+Methyltransf_14	C-methyltransferase C-terminal domain	23	rule_hmms/Methyltransf_14.hmm	PF08484.18
+Methyltransf_2	O-methyltransferase domain	22	rule_hmms/Methyltransf_2.hmm	PF00891.25
+Methyltransf_25	Methyltransferase domain	27	rule_hmms/Methyltransf_25.hmm	PF13649.13
+N6_N4_Mtase	DNA methylase	26	rule_hmms/N6_N4_Mtase.hmm	PF01555.25
+NTP_transferase	Nucleotidyl transferase	21	rule_hmms/NTP_transferase.hmm	PF00483.30
+OCD_Mu_crystall	Ornithine cyclodeaminase/mu-crystallin family	24	rule_hmms/OCD_Mu_crystall.hmm	PF02423.22
+OTCace	Aspartate/ornithine carbamoyltransferase, Asp/Orn binding domain	29	rule_hmms/OTCace.hmm	PF00185.31
+OTCace_N	Aspartate/ornithine carbamoyltransferase, carbamoyl-P binding domain	30	rule_hmms/OTCace_N.hmm	PF02729.27
+P5CR_dimer	Pyrroline-5-carboxylate reductase dimerisation	25	rule_hmms/P5CR_dimer.hmm	PF14748.12
+PALP	Pyridoxal-phosphate dependent enzyme	35	rule_hmms/PALP.hmm	PF00291.32
+PDH_C	Prephenate dehydrogenase, dimerization domain	22	rule_hmms/PDH_C.hmm	PF20463.4
+PDH_N	Prephenate dehydrogenase, nucleotide-binding domain	26	rule_hmms/PDH_N.hmm	PF02153.24
+PKS_DH_N	Polyketide synthase dehydratase domain	27	rule_hmms/PKS_DH_N.hmm	PF21089.4
+PP-binding	Phosphopantetheine attachment site	20	rule_hmms/PP-binding.hmm	PF00550.32
+PS-DH	Polyketide synthase dehydratase N-terminal domain	23	rule_hmms/PS-DH.hmm	PF14765.13
+PTase_Orf2	Aromatic prenyltransferase Orf2	25	rule_hmms/PTase_Orf2.hmm	PF11468.14
+Polyketide_cyc2	Polyketide cyclase / dehydrase and lipid transport	27	rule_hmms/Polyketide_cyc2.hmm	PF10604.16
+Radical_SAM	Radical SAM superfamily	29	rule_hmms/Radical_SAM.hmm	PF04055.28
+RmlD_sub_bind	RmlD substrate binding domain	27	rule_hmms/RmlD_sub_bind.hmm	PF04321.24
+SQHop_cyclase_C	Squalene-hopene cyclase C-terminal domain	26	rule_hmms/SQHop_cyclase_C.hmm	PF13243.13
+TauD	Taurine catabolism dioxygenase TauD, TfdA family	27	rule_hmms/TauD.hmm	PF02668.23
+Terpene_syn_C_2	Terpene synthase family 2, C-terminal metal binding	23	rule_hmms/Terpene_syn_C_2.hmm	PF19086.6
+Transketolase_C	Transketolase, C-terminal domain	25	rule_hmms/Transketolase_C.hmm	PF02780.26
+Trp_dioxygenase	Tryptophan 2,3-dioxygenase	34	rule_hmms/Trp_dioxygenase.hmm	PF03301.19
+Trp_halogenase	Tryptophan halogenase	21	rule_hmms/Trp_halogenase.hmm	PF04820.21
+UDPG_MGDP_dh	UDP-glucose/GDP-mannose dehydrogenase family, central domain	25	rule_hmms/UDPG_MGDP_dh.hmm	PF00984.25
+UDPG_MGDP_dh_C	UDP-glucose/GDP-mannose dehydrogenase family, UDP binding domain	28	rule_hmms/UDPG_MGDP_dh_C.hmm	PF03720.23
+UDPG_MGDP_dh_N	UDP-glucose/GDP-mannose dehydrogenase family, NAD binding domain	27	rule_hmms/UDPG_MGDP_dh_N.hmm	PF03721.22
+UbiA	UbiA prenyltransferase family	34	rule_hmms/UbiA.hmm	PF01040.24
+UnbV_ASPIC	ASPIC and UnbV	23	rule_hmms/UnbV_ASPIC.hmm	PF07593.19
+adh_short	short chain dehydrogenase	26	rule_hmms/adh_short.hmm	PF00106.32
+adh_short_C2	Enoyl-(Acyl carrier protein) reductase	27	rule_hmms/adh_short_C2.hmm	PF13561.13
+dTDP_sugar_isom	dTDP-4-dehydrorhamnose 3,5-epimerase	27	rule_hmms/dTDP_sugar_isom.hmm	PF00908.24
+ketoacyl-synt	Beta-ketoacyl synthase, N-terminal domain	20	rule_hmms/ketoacyl-synt.hmm	PF00109.33
+p450	Cytochrome P450	22	rule_hmms/p450.hmm	PF00067.28
+polyprenyl_synt	Polyprenyl synthetase	27	rule_hmms/polyprenyl_synt.hmm	PF00348.23

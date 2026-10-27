@@ -1,0 +1,12 @@
+# Cutoffs and neighbourhoods are given in kilobases
+
+
+RULE SCG0062
+    CATEGORY Subcluster
+    DESCRIPTION Diiodotetrayne intermediate moiety
+    CUTOFF 25
+    NEIGHBOURHOOD 0
+    CONDITIONS 4HBT_2
+               and cds(Acyl_transf_1 and KR and PS-DH and ketoacyl-synt)
+               and cds(FG-GAP_3 and UnbV_ASPIC)
+    EXTENDERS DUF1702

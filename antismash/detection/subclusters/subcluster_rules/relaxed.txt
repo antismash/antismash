@@ -1,0 +1,408 @@
+# Contains automatically generated rules generated from annotated subclusters
+
+# Cutoffs and neighbourhoods are given in kilobases
+
+
+RULE SCG0002
+    CATEGORY Subcluster
+    DESCRIPTION L-streptose moiety
+    CUTOFF 5
+    NEIGHBOURHOOD 0
+    CONDITIONS NTP_transferase
+               and GDP_Man_Dehyd
+               and dTDP_sugar_isom
+               and RmlD_sub_bind
+
+RULE SCG0004
+    CATEGORY Subcluster
+    DESCRIPTION actinamine moiety
+    CUTOFF 15
+    NEIGHBOURHOOD 0
+    CONDITIONS Inositol_P
+               and GFO_IDH_MocA
+               and DegT_DnrJ_EryC1
+               and N6_N4_Mtase
+
+RULE SCG0005
+    CATEGORY Subcluster
+    DESCRIPTION actinospectose moiety
+    CUTOFF 15
+    NEIGHBOURHOOD 0
+    CONDITIONS NTP_transferase
+               and GDP_Man_Dehyd
+               and Aminotran_3
+               and cds(GFO_IDH_MocA and GFO_IDH_MocA_C3)
+
+RULE SCG0006
+    CATEGORY Subcluster
+    DESCRIPTION 3-amino-4,7-dihydroxycoumarin moiety
+    CUTOFF 10
+    NEIGHBOURHOOD 0
+    CONDITIONS p450
+               and adh_short_C2
+               and adh_short
+               and cds(AMP-binding and AMP-binding_C and PP-binding)
+
+RULE SCG0007
+    CATEGORY Subcluster
+    DESCRIPTION 4-O-demethyl-beta-L-noviose moiety
+    CUTOFF 10
+    NEIGHBOURHOOD 0
+    CONDITIONS NTP_transferase
+               and GDP_Man_Dehyd
+               and dTDP_sugar_isom
+               and RmlD_sub_bind
+               and cds(Methyltransf_13 and Methyltransf_14)
+
+RULE SCG0008
+    CATEGORY Subcluster
+    DESCRIPTION 3-prenyl-4-hydroxybenzoic acid moiety
+    CUTOFF 30
+    NEIGHBOURHOOD 0
+    CONDITIONS PDH_N
+               and PTase_Orf2
+               and Aldolase_II
+
+RULE SCG0011
+    CATEGORY Subcluster
+    DESCRIPTION platensic acid moiety
+    CUTOFF 15
+    NEIGHBOURHOOD 0
+    CONDITIONS SQHop_cyclase_C
+               and Terpene_syn_C_2
+               and polyprenyl_synt
+
+RULE SCG0012
+    CATEGORY Subcluster
+    DESCRIPTION 3-amino-2,4-dihydroxybenzoic acid moiety
+    CUTOFF 5
+    NEIGHBOURHOOD 0
+    CONDITIONS DeoC
+               and FAD_binding_3
+               and cds(DHQS and DHQS_2nd)
+
+RULE SCG0015
+    CATEGORY Subcluster
+    DESCRIPTION benzoisochromanequinone polyketide moiety
+    CUTOFF 30
+    NEIGHBOURHOOD 0
+    CONDITIONS PP-binding
+               and ACPS
+               and Carboxyl_trans
+               and Polyketide_cyc2
+               and adh_short
+               and repeatable(2, [ketoacyl-synt])
+               and Lactamase_B
+
+RULE SCG0016
+    CATEGORY Subcluster
+    DESCRIPTION D-angolosamine moiety
+    CUTOFF 10
+    NEIGHBOURHOOD 0
+    CONDITIONS DegT_DnrJ_EryC1
+               and NTP_transferase
+               and GDP_Man_Dehyd
+               and Hexose_dehydrat
+               and Methyltransf_25
+               and Epimerase
+
+RULE SCG0017
+    CATEGORY Subcluster
+    DESCRIPTION dihydrokalafungin moiety
+    CUTOFF 25
+    NEIGHBOURHOOD 0
+    CONDITIONS Acyl-CoA_dh_2
+               and adh_short_C2
+               and adh_short
+               and repeatable(2, [ketoacyl-synt])
+               and PP-binding
+               and Polyketide_cyc2
+               and Lactamase_B
+               and Flavin_Reduct
+
+RULE SCG0018
+    CATEGORY Subcluster
+    DESCRIPTION L-rhodinose moiety
+    CUTOFF 25
+    NEIGHBOURHOOD 0
+    CONDITIONS NTP_transferase
+               and GDP_Man_Dehyd
+               and Epimerase
+               and DegT_DnrJ_EryC1
+               and dTDP_sugar_isom
+               and cds(GFO_IDH_MocA and GFO_IDH_MocA_C3)
+    EXTENDERS cds(Hexose_dehydrat or DUF6365)
+
+RULE SCG0020
+    CATEGORY Subcluster
+    DESCRIPTION D-olivose moiety
+    CUTOFF 25
+    NEIGHBOURHOOD 0
+    CONDITIONS NTP_transferase
+               and Epimerase
+               and GDP_Man_Dehyd
+               and cds(GFO_IDH_MocA and GFO_IDH_MocA_C3)
+    EXTENDERS Hexose_dehydrat
+
+RULE SCG0021
+    CATEGORY Subcluster
+    DESCRIPTION 3-amino-4,7-dihydroxy-8-chlorocoumarin moiety
+    CUTOFF 15
+    NEIGHBOURHOOD 0
+    CONDITIONS p450
+               and repeatable(2, [adh_short_C2])
+               and adh_short
+               and cds(AMP-binding and AMP-binding_C and Condensation and PP-binding)
+
+RULE SCG0023
+    CATEGORY Subcluster
+    DESCRIPTION 3-methyl-aspartate moiety
+    CUTOFF 10
+    NEIGHBOURHOOD 0
+    CONDITIONS Glu_synthase
+               and B12-binding
+               and Met_asp_mut_E
+
+RULE SCG0025
+    CATEGORY Subcluster
+    DESCRIPTION dimethylsalicylic acid moiety
+    CUTOFF 15
+    NEIGHBOURHOOD 0
+    CONDITIONS cds(AMP-binding and AMP-binding_C)
+               and cds(Acyl_transf_1 and KR and PKS_DH_N and PP-binding and ketoacyl-synt)
+               and cds(Dimerisation and Methyltransf_2)
+    EXTENDERS ACP_syn_III_C
+
+RULE SCG0030
+    CATEGORY Subcluster
+    DESCRIPTION 4-amino-4-deoxy-3-methyl-β-d-ribose moiety
+    CUTOFF 15
+    NEIGHBOURHOOD 0
+    CONDITIONS NTP_transferase
+               and Epimerase
+               and DegT_DnrJ_EryC1
+               and cds(Methyltransf_13 and Methyltransf_14)
+               and cds(UDPG_MGDP_dh and UDPG_MGDP_dh_C and UDPG_MGDP_dh_N)
+
+RULE SCG0032
+    CATEGORY Subcluster
+    DESCRIPTION 4-hydroxyphenylglycine moiety
+    CUTOFF 65
+    NEIGHBOURHOOD 0
+    CONDITIONS Glyoxalase
+               and FMN_dh
+               and Aminotran_1_2
+               and cds(PDH_C and PDH_N)
+
+RULE SCG0033
+    CATEGORY Subcluster
+    DESCRIPTION beta-hydroxytyrosine moiety
+    CUTOFF 5
+    NEIGHBOURHOOD 0
+    CONDITIONS p450
+               and Abhydrolase_6
+               and cds(AMP-binding and AMP-binding_C and PP-binding)
+
+RULE SCG0034
+    CATEGORY Subcluster
+    DESCRIPTION dehydrovancosamine moiety
+    CUTOFF 20
+    NEIGHBOURHOOD 0
+    CONDITIONS Hexose_dehydrat
+               and DegT_DnrJ_EryC1
+               and dTDP_sugar_isom
+               and cds(Methyltransf_13 and Methyltransf_14)
+
+RULE SCG0035
+    CATEGORY Subcluster
+    DESCRIPTION L-enduracididine moiety
+    CUTOFF 5
+    NEIGHBOURHOOD 0
+    CONDITIONS repeatable(2, [Aminotran_1_2])
+               and ADC
+
+RULE SCG0036
+    CATEGORY Subcluster
+    DESCRIPTION 4-methylproline moiety
+    CUTOFF 5
+    NEIGHBOURHOOD 0
+    CONDITIONS cds(ADH_N and ADH_zinc_N)
+               and cds(F420_oxidored and P5CR_dimer)
+
+RULE SCG0037
+    CATEGORY Subcluster
+    DESCRIPTION p-aminophenylpyruvate moiety
+    CUTOFF 5
+    NEIGHBOURHOOD 0
+    CONDITIONS PDH_C
+               and CM_2
+               and cds(Chorismate_bind and GATase)
+
+RULE SCG0038
+    CATEGORY Subcluster
+    DESCRIPTION 4-methyl-3-hydroxyanthranilic acid moiety
+    CUTOFF 35
+    NEIGHBOURHOOD 0
+    CONDITIONS repeatable(2, [KYNU_C])
+               and BD-FAE
+               and Trp_dioxygenase
+
+RULE SCG0039
+    CATEGORY Subcluster
+    DESCRIPTION salicylate moiety
+    CUTOFF 5
+    NEIGHBOURHOOD 0
+    CONDITIONS Chorismate_bind_2
+               and CM_2
+
+RULE SCG0040
+    CATEGORY Subcluster
+    DESCRIPTION 4-O-carbamoyl-2-deoxyrhamnose moiety
+    CUTOFF 15
+    NEIGHBOURHOOD 0
+    CONDITIONS GDP_Man_Dehyd
+               and NTP_transferase
+               and Epimerase
+               and Hexose_dehydrat
+               and cds(Carbam_trans_C and Carbam_trans_N)
+               and cds(GFO_IDH_MocA and GFO_IDH_MocA_C3)
+
+RULE SCG0043
+    CATEGORY Subcluster
+    DESCRIPTION diaminobutyric acid moiety
+    CUTOFF 10
+    NEIGHBOURHOOD 0
+    CONDITIONS Lyase_1
+               and GHMP_kinases_N
+               and Beta_elim_lyase
+               and cds(ATP-grasp_4 and ATPgrasp_N and LAL_C2 and PALP)
+
+RULE SCG0046
+    CATEGORY Subcluster
+    DESCRIPTION L-mycarose moiety
+    CUTOFF 65
+    NEIGHBOURHOOD 0
+    CONDITIONS Hexose_dehydrat
+               and Aldo_ket_red
+               and dTDP_sugar_isom
+               and Epimerase
+
+RULE SCG0047
+    CATEGORY Subcluster
+    DESCRIPTION D-desosamine moiety
+    CUTOFF 65
+    NEIGHBOURHOOD 0
+    CONDITIONS repeatable(2, [DegT_DnrJ_EryC1])
+               and Radical_SAM
+               and Methyltransf_25
+    EXTENDERS cds(NTP_transferase or GDP_Man_Dehyd)
+
+RULE SCG0049
+    CATEGORY Subcluster
+    DESCRIPTION pyrrole-2-carboxylic acid moiety
+    CUTOFF 5
+    NEIGHBOURHOOD 0
+    CONDITIONS PP-binding
+               and cds(Acyl-CoA_dh_1 and Acyl-CoA_dh_M and Acyl-CoA_dh_N)
+               and cds(AMP-binding and AMP-binding_C)
+
+RULE SCG0050
+    CATEGORY Subcluster
+    DESCRIPTION platencinic acid moiety
+    CUTOFF 15
+    NEIGHBOURHOOD 0
+    CONDITIONS UbiA
+               and SQHop_cyclase_C
+               and polyprenyl_synt
+
+RULE SCG0052
+    CATEGORY Subcluster
+    DESCRIPTION aminomalonyl-ACP moiety
+    CUTOFF 5
+    NEIGHBOURHOOD 0
+    CONDITIONS PP-binding
+               and cds(3HCDH and 3HCDH_N)
+               and cds(Acyl-CoA_dh_1 and Acyl-CoA_dh_M and Acyl-CoA_dh_N)
+               and cds(AMP-binding and AMP-binding_C)
+
+RULE SCG0053
+    CATEGORY Subcluster
+    DESCRIPTION beta-ureidoalanine moiety
+    CUTOFF 5
+    NEIGHBOURHOOD 0
+    CONDITIONS PALP
+               and OCD_Mu_crystall
+               and cds(OTCace and OTCace_N)
+
+RULE SCG0054
+    CATEGORY Subcluster
+    DESCRIPTION enduracididine moiety
+    CUTOFF 5
+    NEIGHBOURHOOD 0
+    CONDITIONS repeatable(2, [Aminotran_1_2])
+               and ADC
+
+RULE SCG0055
+    CATEGORY Subcluster
+    DESCRIPTION diaminopropionate moiety
+    SUPERIORS SCG0053
+    CUTOFF 20
+    NEIGHBOURHOOD 0
+    CONDITIONS PALP
+               and OCD_Mu_crystall
+
+RULE SCG0056
+    CATEGORY Subcluster
+    DESCRIPTION capreomycidine moiety
+    CUTOFF 5
+    NEIGHBOURHOOD 0
+    CONDITIONS TauD
+               and Aminotran_1_2
+
+RULE SCG0057
+    CATEGORY Subcluster
+    DESCRIPTION (S)-3-chloro-5-hydroxy-β-tyrosine moiety
+    CUTOFF 40
+    NEIGHBOURHOOD 0
+    CONDITIONS Trp_halogenase
+               and PP-binding
+               and Lyase_aromatic
+               and cds(HpaB and HpaB_N)
+               and cds(AMP-binding and AMP-binding_C)
+
+RULE SCG0058
+    CATEGORY Subcluster
+    DESCRIPTION isobutyrylmalonyl-CoA moiety
+    CUTOFF 5
+    NEIGHBOURHOOD 0
+    CONDITIONS ACP_syn_III_C
+               and cds(ADH_N and ADH_zinc_N)
+               and cds(3HCDH and 3HCDH_N)
+
+RULE SCG0059
+    CATEGORY Subcluster
+    DESCRIPTION allylmalonyl-CoA moiety
+    CUTOFF 10
+    NEIGHBOURHOOD 0
+    CONDITIONS Ketoacyl-synt_C
+               and cds(Acyl_transf_1 and PP-binding)
+               and cds(ADH_N and ADH_zinc_N)
+               and cds(Acyl-CoA_dh_1 and Acyl-CoA_dh_M and Acyl-CoA_dh_N)
+
+RULE SCG0060
+    CATEGORY Subcluster
+    DESCRIPTION 4-keto-D-olivose moiety
+    CUTOFF 15
+    NEIGHBOURHOOD 0
+    CONDITIONS NTP_transferase
+               and GDP_Man_Dehyd
+               and Hexose_dehydrat
+               and cds(GFO_IDH_MocA and GFO_IDH_MocA_C3)
+
+RULE SCG0061
+    CATEGORY Subcluster
+    DESCRIPTION isoprene moiety
+    CUTOFF 5
+    NEIGHBOURHOOD 0
+    CONDITIONS cds(GcpE and GcpE_C)
+               and cds(DXP_synthase_N and Transketolase_C)
