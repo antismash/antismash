@@ -42,7 +42,7 @@ class Gene(Feature):
         """ Was the gene marked as a pseudo-gene """
         return self.get_qualifier("pseudo") is not None
 
-    def to_biopython(self, qualifiers: Dict[str, Any] = None) -> SeqFeature:
+    def to_biopython(self, qualifiers: dict[str, Any] = None) -> list[SeqFeature]:
         """ Construct a matching SeqFeature for this Gene """
         if not qualifiers:
             qualifiers = {}

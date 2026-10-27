@@ -99,7 +99,7 @@ def get_features_from_file(handle: IO) -> Dict[str, List[SeqFeature]]:
 
     results = {}
     for gff_record in gff_records:
-        landmark: SeqFeature = None
+        landmark: SeqFeature | None = None
         features = []
         for feature in gff_record.features:
             new_features = []

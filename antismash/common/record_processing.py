@@ -183,8 +183,8 @@ def parse_input_sequence(filename: str, taxon: str = "bacteria", minimum_length:
 
     # if parsable by secmet, it has a better context on what to strip, so run
     # the secmet stripping to ensure there's no surprises
-    for record in converted_records:
-        record.strip_antismash_annotations()
+    for converted in converted_records:
+        converted.strip_antismash_annotations()
 
     return converted_records
 
@@ -512,7 +512,7 @@ def trim_sequence(record: SeqRecord, start: int, end: int) -> SeqRecord:
     return new
 
 
-def records_contain_shotgun_scaffolds(records: List[Record]) -> bool:
+def records_contain_shotgun_scaffolds(records: list[Record] | list[SeqRecord]) -> bool:
     """ Check if given records contain a WGS master record or supercontig record
 
         Arguments:
