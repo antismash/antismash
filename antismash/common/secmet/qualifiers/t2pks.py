@@ -13,9 +13,9 @@ class T2PKSQualifier:
     """A qualifier for type II PKS details at a Cluster level.
     """
     STARTER_KEY = "t2pks_starter_units"
-    MAL_ELONGATION_KEY = "t2pks_malonyl_elongations"
-    WEIGHTS_KEY = "t2pks_molecular_weights"
-    PRODUCT_CLASSES_KEY = "t2pks_product_classes"
+    MAL_ELONGATION_KEY = "t2pks_malonly_elong"
+    WEIGHTS_KEY = "t2pks_mol_weights"
+    PRODUCT_CLASSES_KEY = "t2pks_classes"
 
     WEIGHT_TEMPLATE = "{} (Da): {:.3f}"
 
