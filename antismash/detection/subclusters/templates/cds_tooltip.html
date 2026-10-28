@@ -1,0 +1,13 @@
+{#
+  The contents of the popup shown when a gene in a subcluster visualisation is clicked.
+#}
+<div class="subclusters-tooltip-header">
+  <span class="subclusters-tooltip-cds-name">{{ cds_name }}</span>
+  <span class="subclusters-tooltip-subheader">domains matching the detection rule</span>
+</div>
+<div class="subclusters-tooltip-domains">
+{% for domain in domains %}
+  <span class="subclusters-tooltip-domain-name">{{ domain.name }}</span>
+  <span class="subclusters-tooltip-domain-description">{{ domain.description or "no description available" }}</span>
+{% endfor %}
+</div>

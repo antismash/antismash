@@ -1,0 +1,13 @@
+# Contains manually curated rules for subclusters
+
+# Cutoffs and neighbourhoods are given in kilobases
+
+
+RULE SCG0031
+    CATEGORY Subcluster
+    DESCRIPTION dihydroxyphenylglycine moiety
+    CUTOFF 25
+    NEIGHBOURHOOD 0
+    CONDITIONS Chal_sti_synt_C
+               and repeatable(2, [ECH_1])
+               and Aminotran_1_2
