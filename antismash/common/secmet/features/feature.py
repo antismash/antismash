@@ -15,6 +15,7 @@ from antismash.common.secmet.locations import (
     locations_overlap,
 )
 
+from ..constants import get_tool_name
 from ..locations import (
     CompoundLocation,
     FeatureLocation,
@@ -156,7 +157,7 @@ class Feature:
             # sorting helps with consistency and comparison testing
             quals["note"] = sorted(notes)
         if self.created_by_antismash:
-            quals["tool"] = ["antismash"]
+            quals["tool"] = [get_tool_name()]
         # adjust location back if neccessary
         if self._original_codon_start is not None:
             start = self._original_codon_start + 1
@@ -219,7 +220,7 @@ class Feature:
             feature.notes = leftovers.pop("note", [])
         assert isinstance(feature, cls)
         if leftovers:
-            feature.created_by_antismash = leftovers.get("tool") == ["antismash"]
+            feature.created_by_antismash = leftovers.get("tool") == [get_tool_name()]
             if "codon_start" in leftovers:
                 start = leftovers.pop("codon_start")[0]
                 # adjust the location for now until converting back to biopython if required

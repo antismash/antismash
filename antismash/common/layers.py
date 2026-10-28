@@ -11,7 +11,7 @@ from abc import ABC as AbstractClass, abstractmethod
 import os
 from typing import Any, List, Optional
 
-from antismash.config import ConfigType
+from antismash.config import ConfigType, args
 from antismash.common.html_renderer import Markup
 from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import Record, Region
@@ -64,6 +64,7 @@ class OptionsLayer:
     def __init__(self, options: ConfigType, modules: List[AntismashModule]) -> None:
         self.options = options
         self.plugins = modules
+        self.version = args.ANTISMASH_VERSION
 
     def __getattr__(self, attr: str) -> Any:
         if attr in self.__dict__:

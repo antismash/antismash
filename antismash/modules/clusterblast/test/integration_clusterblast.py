@@ -19,7 +19,7 @@ from antismash.common.subprocessing.diamond import run_diamond_version
 from antismash.config import build_config, destroy_config, update_config
 from antismash.detection import hmm_detection
 from antismash.modules import clusterblast
-from antismash.modules.clusterblast import core, sub
+from antismash.modules.clusterblast import core, known, sub
 from antismash.outputs import html
 
 
@@ -256,15 +256,15 @@ class SubIntegrationTest(Base):
 
 class TestDatabaseValidity(unittest.TestCase):
     def setUp(self):
-        build_config([], isolated=True, modules=[clusterblast])
+        self.config = build_config([], isolated=True, modules=[clusterblast])
         clusterblast.prepare_data(logging_only=False)
 
     def tearDown(self):
         destroy_config()
 
-    def _check_proteins_match_clusters(self, searchtype):
-        clusters = core.load_reference_clusters(searchtype)
-        proteins = core.load_reference_proteins(searchtype)
+    def _check_proteins_match_clusters(self, data_dir):
+        clusters = core.load_reference_clusters_from_dir(data_dir)
+        proteins = core.load_reference_proteins_from_dir(data_dir)
         original_count = len(proteins)
         expected_proteins = 0
         for cluster in clusters.values():
@@ -275,10 +275,11 @@ class TestDatabaseValidity(unittest.TestCase):
         assert len(proteins) == original_count  # no extras should be created during lazy conversion
 
     def test_general(self):
-        self._check_proteins_match_clusters("clusterblast")
+        data_dir = os.path.join(self.config.database_dir, "clusterblast")
+        self._check_proteins_match_clusters(data_dir)
 
     def test_known(self):
-        self._check_proteins_match_clusters("knownclusterblast")
+        self._check_proteins_match_clusters(known._get_data_dir(self.config))
 
     def test_sub(self):
-        self._check_proteins_match_clusters("subclusterblast")
+        self._check_proteins_match_clusters(sub.SUB_DATA)

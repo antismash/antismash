@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Optional, Type, TypeVar
 
 from Bio.SeqFeature import SeqFeature
 
+from ..constants import get_subtool_key
 from .cdscollection import CDSCollection
 from .feature import Feature, FeatureLocation, Location
 
@@ -39,7 +40,7 @@ class SubRegion(CDSCollection):
             qualifiers = {}
         if self._parent_record:
             qualifiers["subregion_number"] = [str(self.get_subregion_number())]
-        qualifiers["aStool"] = [self.tool]
+        qualifiers[get_subtool_key()] = [self.tool]
         if self.label:
             qualifiers["label"] = [self.label]
         return super().to_biopython(qualifiers)
@@ -51,7 +52,7 @@ class SubRegion(CDSCollection):
             leftovers = Feature.make_qualifiers_copy(bio_feature)
 
         try:
-            tool = leftovers["aStool"][0]
+            tool = leftovers[get_subtool_key()][0]
         except KeyError as err:
             raise ValueError(f"{cls.FEATURE_TYPE} missing expected qualifier: {err}")
         if tool.startswith("externally annotated"):
@@ -59,7 +60,7 @@ class SubRegion(CDSCollection):
             assert isinstance(external, cls)
             return external
 
-        leftovers.pop("aStool")
+        leftovers.pop(get_subtool_key())
         label = leftovers.pop("label", [""])[0]
         if not label:
             label = leftovers.pop("anchor", [""])[0]  # backwards compatibility
@@ -89,7 +90,7 @@ class SideloadedSubRegion(SubRegion):
     def to_biopython(self, qualifiers: Optional[Dict[str, List[str]]] = None) -> List[SeqFeature]:
         features = super().to_biopython(qualifiers)
         for feature in features:
-            feature.qualifiers["aStool"] = [f"externally annotated by: {self.tool}"]
+            feature.qualifiers[get_subtool_key()] = [f"externally annotated by: {self.tool}"]
             if self.extra_qualifiers:
                 feature.qualifiers["external_qualifier_ids"] = list(self.extra_qualifiers)
                 feature.qualifiers.update(self.extra_qualifiers)
@@ -100,9 +101,9 @@ class SideloadedSubRegion(SubRegion):
                        leftovers: Optional[Dict] = None, record: Any = None) -> S:
         if leftovers is None:
             leftovers = Feature.make_qualifiers_copy(bio_feature)
-        tool = leftovers.pop("aStool")[0]
+        tool = leftovers.pop(get_subtool_key())[0]
         tool = tool.split(": ", 1)[1]
-        leftovers["aStool"] = [tool]
+        leftovers[get_subtool_key()] = [tool]
         extra_qualifiers: Dict[str, List[str]] = {}
         for key in leftovers.pop("external_qualifier_ids", []):
             extra_qualifiers[key] = leftovers.pop(key)
