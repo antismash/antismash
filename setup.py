@@ -37,7 +37,7 @@ install_requires = [
 tests_require = [
     'pytest >= 7.2.0, < 8',
     'coverage',
-    'pylint == 3.0.2',
+    'pylint == 4.0.9',
     'mypy == 1.17.1',  # for consistent type checking
 ]
 
