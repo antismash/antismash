@@ -20,7 +20,7 @@ from antismash.config import ConfigType
 from antismash.config.args import ModuleArgs
 from antismash.detection import DetectionStage
 
-from . import fundaries_v3 as fundaries
+from . import fundaries as fundaries
 
 NAME = "fungal_boundary"
 SHORT_DESCRIPTION = "Predict fungal cluster boundaries using Fundaries"
