@@ -15,7 +15,7 @@ import numpy as np
 from antismash.common.secmet import CDSFeature, Record
 from antismash.modules.clusterblast.core import get_core_gene_ids
 
-from . import utils_v3 as utils
+from . import utils
 from . import config
 
 
