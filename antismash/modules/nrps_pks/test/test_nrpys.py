@@ -13,7 +13,7 @@ from markupsafe import Markup
 import antismash
 from antismash.config import build_config
 from antismash.common.secmet.test.helpers import DummyAntismashDomain
-from antismash.modules.nrps_pks.name_mappings import get_substrate_by_name, SubstrateName
+from antismash.modules.nrps_pks.name_mappings import Category, get_category_by_name, get_substrate_by_name, lookup
 from antismash.modules.nrps_pks import nrpys, data_structures
 
 
@@ -32,17 +32,14 @@ class TestPredictorSVMResult(unittest.TestCase):
         signature = "FAKEDATAOK"
         self.stach = nrpys.StachelhausMatch(substrates, signature, 1.0, 1.0)
 
-        self.three = nrpys.SvmPrediction("hydrophobic-aromatic", 1.0,
-                                         list(map(get_substrate_by_name, [
-                                          "Phe", "Tyr", "2,3-dohBza", "Pgl", "R-ohTyr",
-                                         ])))
+        hydrophobic_aromatic = get_category_by_name("hydrophobic_aromatic")
+        self.three = nrpys.SvmPrediction(hydrophobic_aromatic.name, 1.0, list(hydrophobic_aromatic.substrates))
         self.large = nrpys.SvmPrediction("cys", 1.0, [get_substrate_by_name("Cys")])
 
-        self.small = nrpys.SvmPrediction("Unpolar aromatic ring", 1.0,
-                                         [get_substrate_by_name("Phe"),
-                                          get_substrate_by_name("Tyr")])
+        unpolar_aromatic = get_category_by_name("Unpolar aromatic ring")
+        self.small = nrpys.SvmPrediction(unpolar_aromatic.name, 1.0, list(unpolar_aromatic.substrates))
 
-        self.single = nrpys.SvmPrediction("horn", 1.0, [get_substrate_by_name("ohOrn")])
+        self.single = nrpys.SvmPrediction("ohOrn", 1.0, [get_substrate_by_name("ohOrn")])
 
         self.pred = nrpys.PredictorSVMResult(
             "ILIKEDATAEVENFAKEDATADIDISAYILIKED", "FAKEDATAOK", [self.stach], self.three,
@@ -71,19 +68,16 @@ class TestPredictorSVMResult(unittest.TestCase):
 
         assert not pred.uncertain
 
-        assert pred.get_classification() == [self.single.substrates[0].norine]
+        assert pred.get_classification() == [self.single.substrates[0].short]
 
         pred.single_amino = nrpys.SvmPrediction("N/A", 0.0, [])
-        assert pred.get_classification() == list(
-            map(nrpys._get_norine_if_not_x, self.small.substrates))
+        assert pred.get_classification() == [substrate.short for substrate in self.small.substrates]
 
         pred.small_cluster = nrpys.SvmPrediction("N/A", 0.0, [])
-        assert pred.get_classification() == list(
-            map(nrpys._get_norine_if_not_x, self.large.substrates))
+        assert pred.get_classification() == [substrate.short for substrate in self.large.substrates]
 
         pred.large_cluster = nrpys.SvmPrediction("N/A", 0.0, [])
-        assert pred.get_classification() == list(
-            map(nrpys._get_norine_if_not_x, self.three.substrates))
+        assert pred.get_classification() == [substrate.short for substrate in self.three.substrates]
 
     def test_classification_uncertain(self) -> None:
         pred = self.pred
@@ -105,8 +99,7 @@ class TestPredictorSVMResult(unittest.TestCase):
             if i < 8:
                 assert pred.get_classification() == []
             else:
-                assert pred.get_classification() == list(
-                    map(nrpys._get_norine_if_not_x, self.stach.substrates)), i
+                assert pred.get_classification() == [substrate.short for substrate in self.stach.substrates], i
 
     def test_classification_stach_and_single(self) -> None:
         pred = self.pred
@@ -114,12 +107,11 @@ class TestPredictorSVMResult(unittest.TestCase):
 
         # stach quality of 1.0 wins
         pred.stachelhaus_quality = 1.0
-        assert sorted(pred.get_classification()) == sorted(list(
-                    map(nrpys._get_norine_if_not_x, self.stach.substrates)))
+        assert sorted(pred.get_classification()) == sorted([substrate.short for substrate in self.stach.substrates])
 
         # stach quality of 0.8 loses
         pred.stachelhaus_quality = 0.8
-        assert pred.get_classification() == [self.single.substrates[0].norine]
+        assert pred.get_classification() == [self.single.substrates[0].short]
 
         pred.stachelhaus_quality = 0.9
         assert not set(pred.single_amino.substrates).intersection(set(self.stach.substrates))
@@ -199,51 +191,6 @@ class TestPredictorSVMResult(unittest.TestCase):
         assert "PredictorSVMResult" in str(self.pred)
 
 
-NAME_TO_SUBSTRATES: dict[str, tuple[str, list[SubstrateName]]] = {
-    "hydrophilic": ("hydrophilic", list(map(get_substrate_by_name, [
-        "Arg", "Asp", "Glu", "Asn", "Lys", "Gln",
-        "Orn", "Aad",
-    ]))),
-    "hydrophobic-aliphatic": ("hydrophobic-aliphatic", list(map(get_substrate_by_name, [
-        "Ala", "Gly", "Val", "Leu", "Ile", "Abu",
-        "Iva", "Ser", "Thr", "Hpg", "dHpg", "Cys",
-        "Pro", "Pip",
-    ]))),
-    "hydrophobic-aromatic": ("hydrophobic-aromatic", list(map(get_substrate_by_name, [
-        "Phe", "Tyr", "2,3-dohBza", "Pgl", "R-ohTyr",
-    ]))),
-    "asp,asn,glu,gln,aad": ("Aliphatic chain with H-bond donor", list(map(get_substrate_by_name, [
-        "Asp", "Asn", "Glu", "Gln", "Aad",
-    ]))),
-    "cys": ("Polar, uncharged (aliphatic with -SH)", [get_substrate_by_name("Cys")]),
-    "dhb,sal": ("Hydroxy-benzoic acid derivates", [get_substrate_by_name("2,3-dohBza"),
-                                                   get_substrate_by_name("Sal")]),
-    "gly,ala,val,leu,ile,abu,iva": ("Apolar, aliphatic", list(map(get_substrate_by_name,
-                                    "gly,ala,val,leu,ile,abu,iva".split(",")))),
-    "orn,lys,arg": ("Long positively charged side chain", list(map(get_substrate_by_name,
-                    "orn,lys,arg".split(",")))),
-    "phe,trp,phg,tyr,bht": ("Aromatic side chain", list(map(get_substrate_by_name,
-                            "phe,trp,Pgl,tyr,R-ohTyr".split(",")))),
-    "pro,pip": ("Cyclic aliphatic chain (polar NH2 group)", list(map(get_substrate_by_name,
-                "pro,pip".split(",")))),
-    "ser,thr,dhpg,hpg": ("Aliphatic chain or phenyl group with -OH", list(map(get_substrate_by_name,
-                         "ser,thr,dhpg,hpg".split(",")))),
-    "dhpg,hpg": ("Polar, uncharged (hydroxy-phenyl)", list(map(get_substrate_by_name,
-                 "dhpg,hpg".split(",")))),
-    "gly,ala": ("Tiny, hydrophilic, transition to aliphatic", list(map(get_substrate_by_name,
-                "gly,ala".split(",")))),
-    "orn,horn": ("Orn and hydroxy-Orn specific", list(map(get_substrate_by_name,
-                 "orn,ohOrn".split(",")))),
-    "phe,trp": ("Unpolar aromatic ring", list(map(get_substrate_by_name,
-                "phe,trp".split(",")))),
-    "tyr,bht": ("Polar aromatic ring", list(map(get_substrate_by_name,
-                "tyr,R-ohTyr".split(",")))),
-    "val,leu,ile,abu,iva": ("Aliphatic, branched hydrophobic", list(map(get_substrate_by_name,
-                            "val,leu,ile,abu,iva".split(",")))),
-
-}
-
-
 @dataclass
 class FakePrediction:
     name: str
@@ -251,9 +198,12 @@ class FakePrediction:
 
 
 class TestSvmPrediction(unittest.TestCase):
-    def test_resolve(self) -> None:
-        for init, (name, substrates) in NAME_TO_SUBSTRATES.items():
-            assert nrpys._resolve_name_substrates(FakePrediction(init)) == (name, substrates)
+    def test_str(self) -> None:
+        pred = nrpys.SvmPrediction("hydrophobic-aromatic", 1.0,
+                                   list(map(get_substrate_by_name, [
+                                    "Phe", "Tyr", "2,3-dohBza", "Pgl", "R-ohTyr",
+                                   ])))
+        assert str(pred) == "hydrophobic-aromatic: Phe, Tyr, 2,3-dohBza, Pgl, R-ohTyr"
 
 
 class TestMisc(unittest.TestCase):
