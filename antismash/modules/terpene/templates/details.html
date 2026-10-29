@@ -58,8 +58,16 @@
                 {% if format_subtype(pred) != "none" or pred.reactions %}
                   {{collapser_start(cds, level="cds")}}
                   <div class="domain-details">
+                    <span> Predicted activity:</span> {{ pred.get_activity() }}
+                    {% if pred.motif_results %}
+                      {{collapser_start(cds, level="cds")}}
+                        <div class="motif-details">
+                        {{ format_motifs(pred) }}
+                        </div>
+                      {{collapser_end()}}
+                    {% endif %}
                     {% if format_subtype(pred) != "none" %}
-                    <span> Subtype:</span> {{ format_subtype(pred) }}<br>
+                    <div><span> Subtype:</span> {{ format_subtype(pred) }}<br></div>
                     {% endif %}
                     {% if pred.reactions %}
                     <dl class="reactions">
