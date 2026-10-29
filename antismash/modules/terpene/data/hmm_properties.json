@@ -18,7 +18,8 @@
                         "GFPP"
                     ]
                 }
-            ]
+            ],
+            "motifs": []
         },
         {
             "name": "PT_FPP_bact",
@@ -39,7 +40,8 @@
                         "FPP"
                     ]
                 }
-            ]
+            ],
+            "motifs": []
         },
         {
             "name": "PT_FPP_fung",
@@ -58,7 +60,8 @@
                         "FPP"
                     ]
                 }
-            ]
+            ],
+            "motifs": []
         },
         {
             "name": "PT_GFPP",
@@ -77,7 +80,8 @@
                         "GFPP"
                     ]
                 }
-            ]
+            ],
+            "motifs": []
         },
         {
             "name": "PT_GGI",
@@ -95,7 +99,8 @@
                         "GGI"
                     ]
                 }
-            ]
+            ],
+            "motifs": []
         },
         {
             "name": "PT_GGPP",
@@ -114,7 +119,8 @@
                         "GGPP"
                     ]
                 }
-            ]
+            ],
+            "motifs": []
         },
         {
             "name": "PT_FPPS_like",
@@ -142,6 +148,18 @@
                         "HPP"
                     ]
                 }
+            ],
+            "motifs": [
+                {
+                    "name": "DDxxD (first)",
+                    "positions": [53, 54, 57],
+                    "allowed_residues": ["D", "DR", "D"]
+                },
+                {
+                    "name": "DDxxD (second)",
+                    "positions": [181, 182, 185],
+                    "allowed_residues": ["DNR", "D", "NDGSA"]
+                }
             ]
         },
         {
@@ -160,7 +178,8 @@
                         "diapophytoene"
                     ]
                 }
-            ]
+            ],
+            "motifs": []
         },
         {
             "name": "PT_hydroxysqualene",
@@ -178,7 +197,8 @@
                         "hydroxysqualene"
                     ]
                 }
-            ]
+            ],
+            "motifs": []
         },
         {
             "name": "PT_PSPP",
@@ -196,7 +216,8 @@
                         "PSPP"
                     ]
                 }
-            ]
+            ],
+            "motifs": []
         },
         {
             "name": "PT_squalene",
@@ -214,7 +235,8 @@
                         "squalene"
                     ]
                 }
-            ]
+            ],
+            "motifs": []
         },
         {
             "name": "PT_phytoene_like",
@@ -254,6 +276,18 @@
                     "products": [
                         "hydroxysqualene"
                     ]
+                }
+            ],
+            "motifs": [
+                {
+                    "name": "DDxxD",
+                    "positions": [34, 35, 38],
+                    "allowed_residues": ["DEN", "DTENQ", "DEN"]
+                },
+                {
+                    "name": "DxxxD",
+                    "positions": [162, 166],
+                    "allowed_residues": ["DEN", "DEN"]
                 }
             ]
         },
@@ -296,6 +330,18 @@
                         "hydroxysqualene"
                     ]
                 }
+            ],
+            "motifs": [
+                {
+                    "name": "DDxxD",
+                    "positions": [44, 45, 48],
+                    "allowed_residues": ["DEN", "DTENQ", "DEN"]
+                },
+                {
+                    "name": "DxxxD",
+                    "positions": [170, 174],
+                    "allowed_residues": ["DEN", "DEN"]
+                }
             ]
         },
         {
@@ -311,10 +357,11 @@
                         "FPP"
                     ],
                     "products": [
-                        "aristolochene"
+                        "(+)-aristolochene"
                     ]
                 }
-            ]
+            ],
+            "motifs": []
         },
         {
             "name": "T1TS_Bas_a",
@@ -332,7 +379,8 @@
                         "sesquiterpene_C1-C10"
                     ]
                 }
-            ]
+            ],
+            "motifs": []
         },
         {
             "name": "T1TS_Bas_b",
@@ -350,7 +398,8 @@
                         "sesquiterpene_C1-C10"
                     ]
                 }
-            ]
+            ],
+            "motifs": []
         },
         {
             "name": "T1TS_Bas_c",
@@ -368,7 +417,8 @@
                         "sesquiterpene_C1-C11"
                     ]
                 }
-            ]
+            ],
+            "motifs": []
         },
         {
             "name": "T1TS_CEABS",
@@ -386,7 +436,8 @@
                         "sesquiterpene_C1-C10"
                     ]
                 }
-            ]
+            ],
+            "motifs": []
         },
         {
             "name": "T1TS_geosC",
@@ -404,7 +455,8 @@
                         "geosmin"
                     ]
                 }
-            ]
+            ],
+            "motifs": []
         },
         {
             "name": "T1TS_geosN",
@@ -422,7 +474,8 @@
                         "germacradienol"
                     ]
                 }
-            ]
+            ],
+            "motifs": []
         },
         {
             "name": "T1TS_GERAS",
@@ -434,21 +487,14 @@
             "reactions": [
                 {
                     "substrates": [
-                        "GPP"
-                    ],
-                    "products": [
-                        "monoterpene_C1-C10"
-                    ]
-                },
-                {
-                    "substrates": [
                         "FPP"
                     ],
                     "products": [
                         "sesquiterpene_C1-C10"
                     ]
                 }
-            ]
+            ],
+            "motifs": []
         },
         {
             "name": "T1TS_HYPB",
@@ -474,7 +520,8 @@
                         "sesquiterpene_C1-C6"
                     ]
                 }
-            ]
+            ],
+            "motifs": []
         },
         {
             "name": "T1TS_IAFRS",
@@ -492,7 +539,8 @@
                         "sesquiterpene_C1-C11"
                     ]
                 }
-            ]
+            ],
+            "motifs": []
         },
         {
             "name": "T1TS_III-IV_a",
@@ -519,7 +567,8 @@
                         "sesterterpene_C1-C15/C14-C18"
                     ]
                 }
-            ]
+            ],
+            "motifs": []
         },
         {
             "name": "T1TS_III-IV_b",
@@ -545,7 +594,8 @@
                         "sesterterpene_C1-C11/C10-C14"
                     ]
                 }
-            ]
+            ],
+            "motifs": []
         },
         {
             "name": "T1TS_III-IV_c",
@@ -579,7 +629,8 @@
                         "triterpene_C1-C11/C10-C14"
                     ]
                 }
-            ]
+            ],
+            "motifs": []
         },
         {
             "name": "T1TS_IV-V_a",
@@ -597,7 +648,8 @@
                         "sesterterpene_C1-C15/C14-C18"
                     ]
                 }
-            ]
+            ],
+            "motifs": []
         },
         {
             "name": "T1TS_IV-V_b",
@@ -623,7 +675,8 @@
                         "triterpene_C1-C14"
                     ]
                 }
-            ]
+            ],
+            "motifs": []
         },
         {
             "name": "T1TS_IV-V_c",
@@ -641,7 +694,27 @@
                         "sesterterpene_C1-C15/C14-C18"
                     ]
                 }
-            ]
+            ],
+            "motifs": []
+        },
+        {
+            "name": "T1TS_PLE",
+            "description": "Type 1 terpene synthase; Premutilin synthase type",
+            "type": "T1TS",
+            "length": 365,
+            "cutoff": 500,
+            "subtypes": [],
+            "reactions": [
+                {
+                    "substrates": [
+                        "diterpene_C6-C11/C10-C14_PP"
+                    ],
+                    "products": [
+                        "premutilin_like"
+                    ]
+                }
+            ],
+            "motifs": []
         },
         {
             "name": "T1TS_KS",
@@ -649,16 +722,27 @@
             "type": "T1TS",
             "length": 392,
             "cutoff": 200,
-            "subtypes": [],
+            "subtypes": ["T1TS_PLE"],
             "reactions": [
                 {
                     "substrates": [
                         "diterpene_C6-C11/C10-C15_PP"
                     ],
                     "products": [
-                        "kaurene_like",
-                        "pimaradiene_like"
+                        "pimaranyl_derivative"
                     ]
+                }
+            ],
+            "motifs": [
+                {
+                    "name": "DDxxD",
+                    "positions": [108, 109, 112],
+                    "allowed_residues": ["DEN", "DENGSTF", "ACDEFGHIKLMNPQRSTVWY"]
+                },
+                {
+                    "name": "NDxxSxxxE",
+                    "positions": [301, 302, 305, 309],
+                    "allowed_residues": ["NHPSD", "DE", "ST", "ED"]
                 }
             ]
         },
@@ -678,7 +762,8 @@
                         "diterpene_C6-C11/C10-C15"
                     ]
                 }
-            ]
+            ],
+            "motifs": []
         },
         {
             "name": "T1TS_MIBS",
@@ -697,14 +782,15 @@
                         "2-methylenebornane"
                     ]
                 }
-            ]
+            ],
+            "motifs": []
         },
         {
-            "name": "T1TS_TRI",
-            "description": "Type 1 terpene synthase; Trichodiene synthase type",
+            "name": "T1TS_TRI5",
+            "description": "Type 1 terpene synthase; Trichodiene synthase",
             "type": "T1TS",
             "length": 305,
-            "cutoff": 237,
+            "cutoff": 436,
             "subtypes": [],
             "reactions": [
                 {
@@ -712,11 +798,32 @@
                         "FPP"
                     ],
                     "products": [
-                        "trichodiene",
-                        "acoradiene"
+                        "trichodiene"
                     ]
                 }
-            ]
+            ],
+            "motifs": []
+        },
+        {
+            "name": "T1TS_TRI5_like",
+            "description": "Type 1 terpene synthase; Trichodiene synthase like",
+            "type": "T1TS",
+            "length": 305,
+            "cutoff": 237,
+            "subtypes": [
+                "T1TS_TRI5"
+            ],
+            "reactions": [
+                {
+                    "substrates": [
+                        "FPP"
+                    ],
+                    "products": [
+                        "sesquiterpene_C1-C6"
+                    ]
+                }
+            ],
+            "motifs": []
         },
         {
             "name": "T1TS",
@@ -744,9 +851,21 @@
                 "T1TS_KS",
                 "T1TS_LATES",
                 "T1TS_MIBS",
-                "T1TS_TRI"
+                "T1TS_TRI5_like"
             ],
-            "reactions": []
+            "reactions": [],
+            "motifs": [
+                {
+                    "name": "DDxxD",
+                    "positions": [200, 201, 204],
+                    "allowed_residues": ["DEN", "DENGSTF", "ACDEFGHIKLMNPQRSTVWY"]
+                },
+                {
+                    "name": "NDxxSxxxE",
+                    "positions": [338, 339, 342, 346],
+                    "allowed_residues": ["NHPSDQ", "DE", "ST", "ED"]
+                }
+            ]
         },
         {
             "name": "T2TS_C15_a",
@@ -765,7 +884,8 @@
                         "sesquiterpene_C6-C11_PP"
                     ]
                 }
-            ]
+            ],
+            "motifs": []
         },
         {
             "name": "T2TS_C15_b",
@@ -783,7 +903,27 @@
                         "sesquiterpene_C2-C7/C6-C11_PP"
                     ]
                 }
-            ]
+            ],
+            "motifs": []
+        },
+        {
+            "name": "T2TS_PLE",
+            "description": "Type 2 terpene synthase; Premutilin synthase type",
+            "type": "T2TS",
+            "length": 537,
+            "cutoff": 800,
+            "subtypes": [],
+            "reactions": [
+                {
+                    "substrates": [
+                        "GGPP"
+                    ],
+                    "products": [
+                        "diterpene_C6-C11/C10-C14_PP"
+                    ]
+                }
+            ],
+            "motifs": []
         },
         {
             "name": "T2TS_C20",
@@ -791,7 +931,7 @@
             "type": "T2TS",
             "length": 529,
             "cutoff": 167,
-            "subtypes": [],
+            "subtypes": ["T2TS_PLE"],
             "reactions": [
                 {
                     "substrates": [
@@ -801,7 +941,8 @@
                         "diterpene_C6-C11/C10-C15_PP"
                     ]
                 }
-            ]
+            ],
+            "motifs": []
         },
         {
             "name": "T2TS_oxidosqualene",
@@ -819,7 +960,8 @@
                         "steroid"
                     ]
                 }
-            ]
+            ],
+            "motifs": []
         },
         {
             "name": "T2TS_squalene",
@@ -838,7 +980,8 @@
                         "polypodane"
                     ]
                 }
-            ]
+            ],
+            "motifs": []
         },
         {
             "name": "T2TS",
@@ -853,7 +996,14 @@
                 "T2TS_oxidosqualene",
                 "T2TS_squalene"
             ],
-            "reactions": []
+            "reactions": [],
+            "motifs": [
+                {
+                    "name": "DxDD",
+                    "positions": [346, 348, 349],
+                    "allowed_residues": ["DNV", "DNLF", "DTNMC"]
+                }
+            ]
         },
         {
             "name": "TS_Pyr4_C15_polyketide_a",
@@ -871,7 +1021,8 @@
                         "cyclic_polyketide_sesquiterpenoid"
                     ]
                 }
-            ]
+            ],
+            "motifs": []
         },
         {
             "name": "TS_Pyr4_C15_polyketide_b",
@@ -889,7 +1040,8 @@
                         "cyclic_polyketide_sesquiterpenoid"
                     ]
                 }
-            ]
+            ],
+            "motifs": []
         },
         {
             "name": "TS_Pyr4_C20_indole",
@@ -907,7 +1059,8 @@
                         "cyclic_indole_diterpenoid"
                     ]
                 }
-            ]
+            ],
+            "motifs": []
         },
         {
             "name": "TS_Pyr4_C20_polyketide_a",
@@ -925,7 +1078,8 @@
                         "cyclic_polyketide_diterpenoid"
                     ]
                 }
-            ]
+            ],
+            "motifs": []
         },
         {
             "name": "TS_Pyr4_C20_polyketide_b",
@@ -943,7 +1097,8 @@
                         "cyclic_polyketide_diterpenoid"
                     ]
                 }
-            ]
+            ],
+            "motifs": []
         },
         {
             "name": "TS_Pyr4_onoceroid",
@@ -961,7 +1116,8 @@
                         "onoceroid"
                     ]
                 }
-            ]
+            ],
+            "motifs": []
         },
         {
             "name": "TS_Pyr4",
@@ -977,7 +1133,8 @@
                 "TS_Pyr4_C20_polyketide_b",
                 "TS_Pyr4_onoceroid"
         ],
-            "reactions": []
+            "reactions": [],
+            "motifs": []
         },
         {
             "name": "TS_UbiA",
@@ -1009,8 +1166,20 @@
                         "GFPP"
                     ],
                     "products": [
-                        "sesterterpene_C1-C7/C6-C10"
+                        "sesterterpene_C1-C6"
                     ]
+                }
+            ],
+            "motifs": [
+                {
+                    "name": "NQxxGxxED",
+                    "positions": [80, 81, 84, 87, 88],
+                    "allowed_residues": ["N", "Q", "GASET", "E", "D"]
+                },
+                {
+                    "name": "QDxxDxxxD",
+                    "positions": [198, 199, 202, 206],
+                    "allowed_residues": ["Q", "D", "D", "D"]
                 }
             ]
         },
@@ -1030,7 +1199,8 @@
                         "C40_carotenoid"
                     ]
                 }
-            ]
+            ],
+            "motifs": []
         },
         {
             "name": "Lycopene_cycl_fung",
@@ -1048,7 +1218,8 @@
                         "C40_carotenoid"
                     ]
                 }
-            ]
+            ],
+            "motifs": []
         }
     ]
 }
