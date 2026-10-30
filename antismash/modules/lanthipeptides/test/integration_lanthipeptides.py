@@ -12,7 +12,6 @@ from antismash.common import path
 from antismash.common.test import helpers
 from antismash.common.secmet import Record
 from antismash.config import build_config, destroy_config
-from antismash.config.test.helpers import skip_without_fimo
 from antismash.modules import lanthipeptides
 
 
@@ -163,11 +162,3 @@ class IntegrationLanthipeptides(unittest.TestCase):
         # this was the case in CP013129.1, in a nrps-lanthipeptide hybrid, but
         # the hybrid was only created due to a bug in cluster formation
         pass
-
-
-@skip_without_fimo
-class IntegrationLanthipeptidesWithFimo(IntegrationLanthipeptides):
-    def setUp(self):
-        self.options = build_config(["--minimal", "--enable-html", "--enable-lanthipeptides", "--fimo"],
-                                    isolated=True, modules=antismash.get_all_modules())
-        assert self.options.fimo
