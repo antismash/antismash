@@ -13,7 +13,6 @@ import re
 import os
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
-from helperlibs.wrappers.io import TemporaryFile
 import joblib
 
 from antismash.common import (
@@ -440,35 +439,9 @@ def acquire_rodeo_heuristics(record: Record, cluster: Protocluster, query: CDSFe
     return score, tabs
 
 
-def identify_lasso_motifs(leader: str, core: str) -> Tuple[List[int], int, Dict[int, float]]:
-    """Run FIMO to identify lasso peptide-specific motifs"""
-    motif_file = path.get_full_path(__file__, 'data', "lasso_motifs_meme.txt")
-    with TemporaryFile() as tempfile:
-        with open(tempfile.name, "w", encoding="utf-8") as out_file:
-            out_file.write(f">query\n{leader}{core}")
-        fimo_output = subprocessing.run_fimo_simple(motif_file, tempfile.name)
-    fimo_scores = {}
-    fimo_motifs = []
-    for motif in fimo_output:
-        if not motif.pattern_name.isdigit():
-            continue
-        motif_id = int(motif.pattern_name)
-        fimo_motifs.append(motif_id)
-        fimo_scores[motif_id] = motif.score
-    # Calculate score
-    motif_score = 0
-    if 2 in fimo_motifs:
-        motif_score += 4
-    elif fimo_motifs:
-        motif_score += 2
-    else:
-        motif_score += -1
-    return fimo_motifs, motif_score, fimo_scores
-
-
 def generate_rodeo_svm_csv(record: Record, query: CDSFeature, leader: str, core: str,
-                           previously_gathered_tabs: List[Union[float, int]], fimo_motifs: List[int],
-                           fimo_scores: Dict[int, float]) -> List[Union[float, int]]:
+                           previously_gathered_tabs: list[Union[float, int]],
+                           ) -> list[Union[float, int]]:
     """Generates all the items for a single precursor peptide candidate"""
     columns: List[Union[float, int]] = []
     # Precursor Index
@@ -535,19 +508,12 @@ def generate_rodeo_svm_csv(record: Record, query: CDSFeature, leader: str, core:
     # combined groups
     for group in groups:
         columns.append(sum(precursor.count(aa) for aa in group))
-    # Motifs
-    columns += [1 if motif in fimo_motifs else 0 for motif in range(1, 17)]
-    # Total motifs hit
-    columns.append(len(fimo_motifs))
-    # Motif scores
-    columns += [fimo_scores[motif] if motif in fimo_motifs else 0 for motif in range(1, 17)]
-    # Sum of MEME scores
-    columns.append(sum(fimo_scores[motif] if motif in fimo_motifs else 0 for motif in range(1, 17)))
-    # No Motifs?
-    if not fimo_motifs:
-        columns.append(1)
-    else:
-        columns.append(0)
+    # replacements for the FIMO/MEME motifs that were previously used
+    columns += [0 for _ in range(1, 17)]
+    columns.append(0)
+    columns += [0 for _ in range(1, 17)]
+    columns.append(0)
+    columns.append(1)
     # Alternate Start Codon?
     if not str(query.extract(record.seq)).startswith("ATG"):
         columns.append(1)
@@ -578,17 +544,8 @@ def run_rodeo(record: Record, cluster: Protocluster, query: CDSFeature, leader: 
     heuristic_score, gathered_tabs_for_csv = acquire_rodeo_heuristics(record, cluster, query, leader, core)
     rodeo_score += heuristic_score
 
-    fimo_motifs: List[int] = []
-    fimo_scores: Dict[int, float] = {}
-    motif_score = 0
-
-    if get_config().fimo:
-        # Incorporate motif scores
-        fimo_motifs, motif_score, fimo_scores = identify_lasso_motifs(leader, core)
-    rodeo_score += motif_score
-
     # Incorporate SVM scores
-    csv_columns = generate_rodeo_svm_csv(record, query, leader, core, gathered_tabs_for_csv, fimo_motifs, fimo_scores)
+    csv_columns = generate_rodeo_svm_csv(record, query, leader, core, gathered_tabs_for_csv)
     rodeo_score += run_rodeo_svm(csv_columns)
 
     return rodeo_score >= 15, rodeo_score

@@ -51,8 +51,6 @@ def check_prereqs(options: ConfigType) -> List[str]:
     failure_messages = []
 
     binaries = ['hmmpfam2']
-    if options.fimo:
-        binaries.append('fimo')
 
     for binary_name in binaries:
         if binary_name not in options.executables:
