@@ -4,21 +4,16 @@
 """ The RODEO subsection of lanthipeptide analysis. Runs a support vector machine
     using a precalculated training set and a variety of feature attributes to
     determine whether a CDS likely contains a lanthipeptide precursor.
-
-    Requires fimo binary to be present on the system somewhere for full accuracy,
-    but not required.
 """
 
 
 import os
 import re
-from tempfile import NamedTemporaryFile
-from typing import Dict, List, Set, Tuple
+from typing import List, Set, Tuple
 
 import joblib
 
-from antismash.common import path, subprocessing, secmet, utils
-from antismash.config import get_config
+from antismash.common import path, secmet, utils
 
 
 def run_rodeo(record: secmet.Record, query: secmet.CDSFeature, leader: str,
@@ -30,14 +25,8 @@ def run_rodeo(record: secmet.Record, query: secmet.CDSFeature, leader: str,
     heuristic_score, gathered_tabs_for_csv = acquire_rodeo_heuristics(record, query, leader, core, domains)
     rodeo_score += heuristic_score
 
-    fimo_scores: Dict[int, float] = {}
-
-    if get_config().fimo:
-        # Find motifs
-        fimo_scores = identify_lanthi_motifs(leader, core)
-
     # Incorporate SVM scores
-    csv_columns = generate_rodeo_svm_csv(leader, core, gathered_tabs_for_csv, fimo_scores)
+    csv_columns = generate_rodeo_svm_csv(leader, core, gathered_tabs_for_csv)
     svm_score = run_rodeo_svm(csv_columns)
     rodeo_score += svm_score
     return rodeo_score
@@ -367,7 +356,7 @@ def acquire_rodeo_heuristics(record: secmet.Record, query: secmet.CDSFeature,
 
 
 def generate_rodeo_svm_csv(leader: str, core: str, previously_gathered_tabs: List[float],
-                           fimo_scores: Dict[int, float]) -> List[float]:
+                           ) -> List[float]:
     """Generates all the items for one candidate precursor peptide"""
     precursor = leader + core
     columns: List[float] = []
@@ -389,9 +378,9 @@ def generate_rodeo_svm_csv(leader: str, core: str, previously_gathered_tabs: Lis
         columns.append(1.0)
     # Ratio of number of Cys/Ser/Thr to length of core peptide
     columns.append(float(core.count("S") + core.count("T") + core.count("C")) / len(core))
-    # log10 p-value MEME motifs
+    # empty values for those that were previously generated with FIMO
     for i in range(1, 6):
-        columns.append(fimo_scores.get(i, 0))
+        columns.append(0)
     # Number in leader of each amino acid
     columns += [leader.count(aa) for aa in "ARDNCQEGHILKMFPSTWYV"]
     amino_groups = ["FWY", "DE", "RK", "RKDE", "GAVLMI", "ST"]
@@ -440,16 +429,3 @@ def cds_has_domains(cds: secmet.CDSFeature, domains: Set[str]) -> bool:
             True if any of the domains are present in the CDS, otherwise False
     """
     return bool(cds.sec_met and set(cds.sec_met.domain_ids).intersection(domains))
-
-
-def identify_lanthi_motifs(leader: str, core: str) -> Dict[int, float]:
-    """Run FIMO to identify lanthipeptide-specific motifs"""
-    motifs_file = path.get_full_path(__file__, "data", "lanthi_motifs_meme.txt")
-    with NamedTemporaryFile() as tempfile:
-        with open(tempfile.name, "w", encoding="utf-8") as out_file:
-            out_file.write(f">query\n{leader}{core}")
-        fimo_output = subprocessing.run_fimo_simple(motifs_file, tempfile.name)
-    fimo_scores = {}
-    for motif in fimo_output:
-        fimo_scores[int(motif.pattern_name)] = motif.score
-    return fimo_scores
