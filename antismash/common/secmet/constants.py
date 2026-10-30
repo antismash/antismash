@@ -11,6 +11,7 @@ class _Values:
     structured_comment_key: str = "antiSMASH-Data"
     subtool_key: str = "aStool"
     tool_value: str = "antismash"
+    external_qualifiers_key: str = "external_qualifiers"
 
 
 _VALUES = _Values()
@@ -19,6 +20,21 @@ _VALUES = _Values()
 def get_defaults() -> tuple[tuple[str, str], ...]:
     """ Returns the current annotation defaults """
     return tuple((f.name, getattr(_VALUES, f.name)) for f in dataclasses.fields(_VALUES))
+
+
+def get_external_qualifiers_key() -> str:
+    """ Returns the key of the qualifier identifying qualifier annotations that
+        were sideloaded.
+    """
+    return _VALUES.external_qualifiers_key
+
+
+def set_external_qualifiers_key(key: str) -> None:
+    """ Sets the key to use for genbank structured comments.
+    """
+    if not key:
+        raise ValueError("external qualifier list key cannot be empty")
+    _VALUES.external_qualifiers_key = key
 
 
 def get_structured_comment_key() -> str:
