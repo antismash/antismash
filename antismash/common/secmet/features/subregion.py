@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional, Type, TypeVar
 
 from Bio.SeqFeature import SeqFeature
 
-from ..constants import get_subtool_key
+from ..constants import get_external_qualifiers_key, get_subtool_key
 from .cdscollection import CDSCollection
 from .feature import Feature, FeatureLocation, Location
 
@@ -92,7 +92,7 @@ class SideloadedSubRegion(SubRegion):
         for feature in features:
             feature.qualifiers[get_subtool_key()] = [f"externally annotated by: {self.tool}"]
             if self.extra_qualifiers:
-                feature.qualifiers["external_qualifier_ids"] = list(self.extra_qualifiers)
+                feature.qualifiers[get_external_qualifiers_key()] = list(self.extra_qualifiers)
                 feature.qualifiers.update(self.extra_qualifiers)
         return features
 
@@ -105,7 +105,7 @@ class SideloadedSubRegion(SubRegion):
         tool = tool.split(": ", 1)[1]
         leftovers[get_subtool_key()] = [tool]
         extra_qualifiers: Dict[str, List[str]] = {}
-        for key in leftovers.pop("external_qualifier_ids", []):
+        for key in leftovers.pop(get_external_qualifiers_key(), []):
             extra_qualifiers[key] = leftovers.pop(key)
         if not feature:
             feature = cls(bio_feature.location, tool, extra_qualifiers=extra_qualifiers)

@@ -382,6 +382,15 @@ class RuleParserTest(unittest.TestCase):
         assert len(rules) == 1
         assert rules[0].description == description
 
+    def test_ints_in_comments(self):
+        description = "group 1"
+        rules = self.parse(
+            f"RULE name CATEGORY category DESCRIPTION {description}"
+            " CUTOFF 20 NEIGHBOURHOOD 20 CONDITIONS a"
+        ).rules
+        assert len(rules) == 1
+        assert rules[0].description == description
+
     def test_example(self):
         rules = self.parse("RULE name CATEGORY category DESCRIPTION this is a comment"
                            " EXAMPLE NCBI Y16952.3 1-66669 balhimycin"

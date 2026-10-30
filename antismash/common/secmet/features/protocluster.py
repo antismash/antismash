@@ -10,7 +10,7 @@ from Bio.SeqFeature import SeqFeature
 from .cds_feature import CDSFeature
 from .cdscollection import CDSCollection, CollectionSection, CoredCollectionMixin
 from .feature import Feature
-from ..constants import get_subtool_key, get_tool_name
+from ..constants import get_external_qualifiers_key, get_subtool_key, get_tool_name
 from ..locations import Location, location_from_string
 from ..qualifiers.t2pks import T2PKSQualifier
 from ..qualifiers.gene_functions import GeneFunction
@@ -206,7 +206,7 @@ class SideloadedProtocluster(Protocluster):
         for feature in features:
             feature.qualifiers[get_subtool_key()] = [f"externally annotated by: {self.tool}"]
             if self.extra_qualifiers:
-                feature.qualifiers["external_qualifier_ids"] = list(self.extra_qualifiers)
+                feature.qualifiers[get_external_qualifiers_key()] = list(self.extra_qualifiers)
                 feature.qualifiers.update(self.extra_qualifiers)
         return features
 
@@ -222,7 +222,7 @@ class SideloadedProtocluster(Protocluster):
             core_location = location_from_string(leftovers["core_location"][0])
             product = leftovers.pop("product")[0]
             extra_qualifiers: Dict[str, List[str]] = {}
-            for key in leftovers.pop("external_qualifier_ids", []):
+            for key in leftovers.pop(get_external_qualifiers_key(), []):
                 if key in leftovers:
                     extra_qualifiers[key] = leftovers.pop(key)
             neighbourhood_range = int(leftovers.pop("neighbourhood")[0])
