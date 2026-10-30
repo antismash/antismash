@@ -32,8 +32,8 @@ ASDB_URL = (
     f"&end={WILDCARD_TEMPLATE.format('real_end')}"
 )
 MIBIG_URL = f"https://mibig.secondarymetabolites.org/go/{WILDCARD_TEMPLATE.format('accession')}"
-TITLE_GENERAL = "Similar known clusters"
-TITLE_KNOWN = f"{TITLE_GENERAL} from MIBiG %s"
+TITLE_GENERAL = "Similar clusters from the antiSMASH-database"
+TITLE_KNOWN = "Similar known clusters from MIBiG %s"
 TITLE_SUB = "Similar subclusters"
 
 # categories in MIBiG that don't directly match to antiSMASH categories
