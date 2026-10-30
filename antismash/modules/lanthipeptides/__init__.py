@@ -83,16 +83,10 @@ def prepare_data(logging_only: bool = False) -> List[str]:
 
 def check_prereqs(options: ConfigType) -> List[str]:
     """ Checks the prereqs for the lanthipeptide module.
-
-        fimo is optional, having it available increases accuracy in the RODEO
-        subsection
     """
     failure_messages = []
 
     binaries = ['hmmpfam2']
-    if options.fimo:
-        binaries.append('fimo')
-
     for binary_name in binaries:
         if binary_name not in options.executables:
             failure_messages.append(f"Failed to locate executable for {binary_name!r}")
