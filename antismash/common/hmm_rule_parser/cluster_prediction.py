@@ -615,16 +615,27 @@ def filter_results(results: list[HSP], results_by_id: Dict[str, list[HSP]],
                     if new_group_needed:
                         overlapping_groups.append(pairing)
 
-            # find the best in each group
+            # find the best in each group, allowing multiple if they're virtually
+            # the same value
             for group in overlapping_groups:
                 # start with one of them
-                best = list(group)[0]
-                for hit in group:
-                    if not best or hit.bitscore > best.bitscore:
-                        best = hit
+                items = list(group)
+                best = [items[0]]
+                for hit in items[1:]:
+                    if not best:
+                        best = [hit]
+                        continue
+                    if hit.bitscore > best[0].bitscore:
+                        new = [hit]
+                        for existing in best:
+                            if hit.bitscore - 1e-8 <= existing.bitscore:
+                                new.append(existing)
+                        best = new
+                    elif hit.bitscore + 1e-8 > best[0].bitscore:
+                        best.append(hit)
                 # remove the rest
                 for hit in group:
-                    if hit != best:
+                    if hit not in best:
                         if id(hit) not in removed_ids:
                             del results[results.index(hit)]
                             del results_by_id[cds][results_by_id[cds].index(hit)]

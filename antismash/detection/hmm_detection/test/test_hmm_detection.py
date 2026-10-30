@@ -255,6 +255,31 @@ class HmmDetectionTest(unittest.TestCase):
         assert new == [first, second]
         assert by_id == {"A": [first], "B": [second]}
 
+    def test_filter_near_equality(self):
+        equivalence_groups = [{"first", "second", "third"}]
+
+        first = FakeHSPHit("first", "A", 50, 90, 0.5, None)
+        second = FakeHSPHit("second", "A", 50, 90, 12.0 + 1e-10, None)
+        third = FakeHSPHit("third", "A", 50, 90, 12.0, None)
+
+        # when the highest is significantly higher, the result will be only that hit
+        new, by_id = hmm_detection.filter_results([first, second], {"A": [first, second]},
+                                                  equivalence_groups)
+        assert new == [second]
+        assert by_id == {"A": [second]}
+
+        # when the highest isn't really higher, the result will be both (or more)
+        new, by_id = hmm_detection.filter_results([first, second, third], {"A": [first, second, third]},
+                                                  equivalence_groups)
+        assert set(new) == {second, third}
+        assert set(by_id["A"]) == {second, third}
+
+        # and when the highest is encountered last, all of the near-equal values need to be kept
+        new, by_id = hmm_detection.filter_results([first, third, second], {"A": [first, third, second]},
+                                                  equivalence_groups)
+        assert set(new) == {second, third}
+        assert set(by_id["A"]) == {second, third}
+
     def test_filter_bin_packing(self):
         # given three profile hits of the form:
         # AAAAAAA  X    BBBBBBB
