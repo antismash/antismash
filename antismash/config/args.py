@@ -11,6 +11,7 @@ import argparse
 from collections import defaultdict
 import multiprocessing
 import os
+from pathlib import Path
 from typing import Any, AnyStr, Dict, IO, List, Optional, Set, Tuple, TYPE_CHECKING
 if TYPE_CHECKING:
     from _typeshed import SupportsWrite
@@ -26,7 +27,7 @@ from .executables import AlternateExecutablesAction, get_default_paths
 # not being picked up or argparse's liberal use of *kwargs.
 
 ANTISMASH_VERSION = ""  # needs to be set on module import, avoids cyclic imports
-DATABASE_DEFAULT = os.path.join(os.path.dirname(__file__), 'databases')
+DATABASE_DEFAULT = str(Path(__file__).parent.parent / "databases")
 
 
 class AntismashParser(argparse.ArgumentParser):
