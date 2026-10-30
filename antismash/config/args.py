@@ -621,11 +621,6 @@ def advanced_options() -> ModuleArgs:
                      action=FullPathAction,
                      type=str,
                      help="Write a config file to the supplied path")
-    group.add_option('--fimo',
-                     dest='fimo',
-                     action=argparse.BooleanOptionalAction,
-                     default=False,
-                     help="Run with FIMO (requires the meme-suite)")
     group.add_option('--executable-paths',
                      dest='executables',
                      metavar="EXECUTABLE=PATH,EXECUTABLE2=PATH2,...",

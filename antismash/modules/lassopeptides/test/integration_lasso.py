@@ -6,13 +6,10 @@
 
 import unittest
 
-import pytest
-
 import antismash
 from antismash.common import path
 from antismash.common.test import helpers
 from antismash.config import build_config, destroy_config, ConfigType
-from antismash.config.test.helpers import skip_without_fimo
 from antismash.modules import lassopeptides
 from antismash.modules.lassopeptides import check_prereqs
 
@@ -46,7 +43,7 @@ class LassoBase(unittest.TestCase):
 
 class IntegrationLasso(LassoBase):
     def setUp(self):
-        self.options = build_config(["--minimal", "--enable-lassopeptides", "--enable-html", "--no-fimo"],
+        self.options = build_config(["--minimal", "--enable-lassopeptides", "--enable-html"],
                                     isolated=True, modules=antismash.get_all_modules())
         check_prereqs(self.options)
 
@@ -86,20 +83,3 @@ class IntegrationLasso(LassoBase):
         self.assertEqual(motif.tail, 'IDSDDE')
         self.assertAlmostEqual(motif.monoisotopic_mass, 2521.1, delta=1)
         self.assertAlmostEqual(motif.molecular_weight, 2522.5, delta=1)
-
-    @pytest.mark.xfail(reason="Expecting this test to fail without fimo")
-    def test_ssv2083(self):
-        "Test lassopeptide prediction for SSV-2083"
-        self._run_ssv2083()
-
-
-@skip_without_fimo
-class IntegrationLassoWithFimo(LassoBase):
-    def setUp(self):
-        self.options = build_config(["--minimal", "--enable-lassopeptides", "--enable-html", "--fimo"],
-                                    isolated=True, modules=antismash.get_all_modules())
-        check_prereqs(self.options)
-
-    def test_ssv2083(self):
-        "Test lassopeptide prediction for SSV-2083"
-        self._run_ssv2083()

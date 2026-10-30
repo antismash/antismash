@@ -45,12 +45,6 @@ from .hmmsearch import (
     run_hmmsearch_version,
 )
 
-from .memesuite import (
-    run_fimo_simple,
-    run_fimo_version,
-    run_meme_version,
-)
-
 from .prodigal import (
     run_prodigal_version,
 )
