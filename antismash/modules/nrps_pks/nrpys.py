@@ -12,17 +12,18 @@ from typing import Any, Optional
 
 import nrpys
 
-from antismash.common.html_renderer import Markup
+from antismash.common.html_renderer import Markup, collapser_end, collapser_start
 from antismash.common.path import find_latest_database_version
 from antismash.config import ConfigType
 from antismash.detection.nrps_pks_domains import ModularDomain
 
 from .data_structures import Prediction
-from .name_mappings import get_substrate_by_name, SubstrateName
+from .name_mappings import get_substrate_by_name, Substrate, Category, lookup
 from .signatures import get_a_dom_signatures
 
 SIGNATURE_FILE_NAME = "signatures.tsv"
-MINIMUM_VERSION = "1.1"
+MINIMUM_STACH_VERSION = "1.1"
+MINIMUM_SVM_VERSION = "3.0"
 
 
 def _get_signature_path(config: ConfigType, minimum_version: Optional[str] = None) -> str:
@@ -45,18 +46,24 @@ def _get_signature_path(config: ConfigType, minimum_version: Optional[str] = Non
     return os.path.join(root, version, SIGNATURE_FILE_NAME)
 
 
-def _get_model_dir(config: ConfigType) -> str:
+def _get_model_dir(config: ConfigType, minimum_version: str | None = None) -> str:
     """ A helper to construct the absolute path to the NRPS SVM model base dir in the
         data directory.
 
         Arguments:
             config: the antiSMASH config
+            minimum_version: the minimum version of the NRPS SVM model to use
 
         Returns:
             the absolute path of the NRPS SVM model base dir
     """
     root = os.path.join(config.database_dir, "nrps_pks", "svm")
     version = find_latest_database_version(root)
+    if minimum_version:
+        min_major, min_minor = map(int, minimum_version.split("."))
+        version_major, version_minor = map(int, version.split("."))
+        if version_major < min_major or (version_major == min_major and version_minor < min_minor):
+            return os.path.join(root, minimum_version)
     return os.path.join(root, version)
 
 
@@ -66,14 +73,14 @@ def check_prereqs(options: ConfigType) -> list[str]:
     if "mounted_at_runtime" in options.database_dir:  # can't prepare this one
         return failure_messages
     try:
-        datafile_path = _get_signature_path(options, minimum_version=MINIMUM_VERSION)
+        datafile_path = _get_signature_path(options, minimum_version=MINIMUM_STACH_VERSION)
         if not os.path.exists(datafile_path):
             failure_messages.append(f"Signature file not found '{datafile_path}'")
     except ValueError as err:
         failure_messages.append(f"nrpys: {err}")
 
     try:
-        model_dir = _get_model_dir(options)
+        model_dir = _get_model_dir(options, minimum_version=MINIMUM_SVM_VERSION)
         if not os.path.exists(model_dir):
             failure_messages.append(f"Model directory not found '{model_dir}'")
     except ValueError as err:
@@ -82,34 +89,28 @@ def check_prereqs(options: ConfigType) -> list[str]:
     return failure_messages
 
 
-def _get_norine_if_not_x(substrate: SubstrateName) -> str:
-    if substrate.norine == "X":
-        return substrate.short
-    return substrate.norine
-
-
 @dataclass
 class StachelhausMatch:
     """A Stachelhaus-table-based A domain substrate prediction"""
-    substrates: list[SubstrateName]
+    substrates: list[Substrate]
     signature: str
     aa10_score: float
     aa34_score: float
 
     def __str__(self) -> str:
-        name = " or ".join(map(_get_norine_if_not_x, self.substrates))
+        name = " or ".join([substrate.short for substrate in self.substrates])
         return f"{name} ({self.signature})"
 
     def html(self) -> str:
         """ Return HTML-friendly stringification """
-        name = " or ".join(map(_get_norine_if_not_x, self.substrates))
+        name = " or ".join([substrate.short for substrate in self.substrates])
         return (f'<dd>{name} <span class="serif">{self.signature}</span> '
                 f'({round(self.aa34_score * 100)}% 8Å match)</dd>')
 
     def to_json(self) -> dict[str, Any]:
         """ Creates a JSON representation of a StachelhausMatch """
         return {
-            "substrates": list(map(lambda x: x.to_json(), self.substrates)),
+            "substrates": [x.to_json() for x in self.substrates],
             "signature": self.signature,
             "aa10_score": self.aa10_score,
             "aa34_score": self.aa34_score,
@@ -118,7 +119,7 @@ class StachelhausMatch:
     @classmethod
     def from_json(cls, data: dict[str, Any]) -> "StachelhausMatch":
         """ Create a StachelhausMatch from the JSON representation """
-        substrates = [SubstrateName.from_json(d) for d in data["substrates"]]
+        substrates = [Substrate.from_json(d) for d in data["substrates"]]
         return cls(substrates, data["signature"], data["aa10_score"], data["aa34_score"])
 
     @classmethod
@@ -128,36 +129,45 @@ class StachelhausMatch:
         return cls(substrates, pred.aa10_sig, pred.aa10_score, pred.aa34_score)
 
 
-NRPSPRED_TO_AS = {
-    "bht": "R-ohTyr",
-    "dhb": "2,3-dohBza",
-    "horn": "ohOrn",
-    "phg": "Pgl",
-}
-
-
 @dataclass
 class SvmPrediction:
     """A Stachelhaus-table-based A domain substrate prediction"""
     name: str
     score: float
-    substrates: list[SubstrateName]
+    substrates: list[Substrate]
 
     def __str__(self) -> str:
         if self.name == "N/A":
             return self.name
-        substrates = ", ".join(map(_get_norine_if_not_x, self.substrates))
-        return f"{self.name} ({substrates})"
+        substrates = ", ".join([substrate.short for substrate in self.substrates])
+        return f"{self.name}: {substrates}"
+
+    def as_html(self) -> Markup:
+        """ Return HTML-friendly stringification """
+        if self.name == "N/A":
+            return Markup(self.name)
+        substrates = ", ".join([substrate.short for substrate in self.substrates])
+        return Markup(f"{self.name}") + \
+                collapser_start("svm-pred", level="none") + \
+                Markup(f"{substrates}") +\
+                collapser_end()
 
     @classmethod
     def from_nrpys(cls, predictions: list[nrpys.Prediction]) -> "SvmPrediction":
-        """ Load from an nrpys.Prediction, converting substrate strings to SubstrateNames """
+        """ Load from an nrpys.Prediction, converting substrate strings corresponding objects """
         if not predictions:
             return cls("N/A", 0.0, [])
 
         pred = predictions[0]
 
-        name, substrates = _resolve_name_substrates(pred)
+        # predictions can be a category or a substrate
+        category_or_substrate = lookup(pred.name)
+        if isinstance(category_or_substrate, Category):
+            name = category_or_substrate.name
+            substrates = list(category_or_substrate.substrates)
+        else:
+            name = category_or_substrate.short
+            substrates = [category_or_substrate]
 
         return cls(name, pred.score, substrates)
 
@@ -166,74 +176,14 @@ class SvmPrediction:
         return {
             "name": self.name,
             "score": self.score,
-            "substrates": list(map(lambda x: x.to_json(), self.substrates)),
+            "substrates": [x.to_json() for x in self.substrates],
         }
 
     @classmethod
     def from_json(cls, data: dict[str, Any]) -> "SvmPrediction":
         """ Create an SvmPrediction from the JSON representation """
-        substrates = [SubstrateName.from_json(d) for d in data["substrates"]]
+        substrates = [Substrate.from_json(d) for d in data["substrates"]]
         return cls(data["name"], data["score"], substrates)
-
-
-def _resolve_name_substrates(pred: nrpys.Prediction) -> tuple[str, list[SubstrateName]]:
-    substrates: list[SubstrateName] = []
-
-    if pred.name == "hydrophilic":
-        substrates = list(map(get_substrate_by_name, [
-            "Arg", "Asp", "Glu", "Asn", "Lys", "Gln",
-            "Orn", "Aad",
-        ]))
-        return (pred.name, substrates)
-    if pred.name == "hydrophobic-aliphatic":
-        substrates = list(map(get_substrate_by_name, [
-            "Ala", "Gly", "Val", "Leu", "Ile", "Abu",
-            "Iva", "Ser", "Thr", "Hpg", "dHpg", "Cys",
-            "Pro", "Pip",
-        ]))
-        return (pred.name, substrates)
-    if pred.name == "hydrophobic-aromatic":
-        substrates = list(map(get_substrate_by_name, [
-            "Phe", "Tyr", "2,3-dohBza", "Pgl", "R-ohTyr",
-        ]))
-        return (pred.name, substrates)
-
-    for part in pred.name.split(","):
-        name = NRPSPRED_TO_AS.get(part, part)
-        substrates.append(get_substrate_by_name(name))
-
-    if pred.name == "asp,asn,glu,gln,aad":
-        name = "Aliphatic chain with H-bond donor"
-    elif pred.name == "cys":
-        name = "Polar, uncharged (aliphatic with -SH)"
-    elif pred.name == "dhb,sal":
-        name = "Hydroxy-benzoic acid derivates"
-    elif pred.name == "gly,ala,val,leu,ile,abu,iva":
-        name = "Apolar, aliphatic"
-    elif pred.name == "orn,lys,arg":
-        name = "Long positively charged side chain"
-    elif pred.name == "phe,trp,phg,tyr,bht":
-        name = "Aromatic side chain"
-    elif pred.name == "pro,pip":
-        name = "Cyclic aliphatic chain (polar NH2 group)"
-    elif pred.name == "ser,thr,dhpg,hpg":
-        name = "Aliphatic chain or phenyl group with -OH"
-    elif pred.name == "dhpg,hpg":
-        name = "Polar, uncharged (hydroxy-phenyl)"
-    elif pred.name == "gly,ala":
-        name = "Tiny, hydrophilic, transition to aliphatic"
-    elif pred.name == "orn,horn":
-        name = "Orn and hydroxy-Orn specific"
-    elif pred.name == "phe,trp":
-        name = "Unpolar aromatic ring"
-    elif pred.name == "tyr,bht":
-        name = "Polar aromatic ring"
-    elif pred.name == "val,leu,ile,abu,iva":
-        name = "Aliphatic, branched hydrophobic"
-    else:
-        name = pred.name
-
-    return (name, substrates)
 
 
 class PredictorSVMResult(Prediction):
@@ -268,7 +218,7 @@ class PredictorSVMResult(Prediction):
         self.single_amino = single_amino
         self.uncertain = aa34.count("-") >= 10
 
-    def _get_classification(self) -> list[SubstrateName]:
+    def _get_classification(self) -> list[Substrate]:
         # comparing number of stach matches (n) to which category of SVM prediction
         # was made, and also to whether the SVM registered being outside of applicability domain
         # < = take stach, ^ = take SVM, & = take intersection of both, . = neither
@@ -277,37 +227,37 @@ class PredictorSVMResult(Prediction):
         #     9      &            &              <
         #     8      ^            &              <
         #  <= 7      ^            ^              .
-        classification: list[SubstrateName] = []
+        classification: list[Substrate] = []
 
-        def get_best_stach_results() -> list[SubstrateName]:
+        def get_best_stach_results() -> list[Substrate]:
             """Get the best Stachelhaus matches by aa10/aa34 score"""
             preds = [self.stachelhaus_matches[0]]
             for match in self.stachelhaus_matches[1:]:
                 if match.aa34_score == preds[0].aa34_score:
                     preds.append(match)
             return list(
-                itertools.chain.from_iterable(map(lambda x: x.substrates, preds)))
+                itertools.chain.from_iterable(x.substrates for x in preds))
 
         if self.uncertain:
             if self.stachelhaus_quality >= 0.8:
                 classification.extend(get_best_stach_results())
             return classification
 
-        def stach_intersection_with_best_group() -> set[SubstrateName]:
+        def stach_intersection_with_best_group() -> set[Substrate]:
             """ Finds the intersection of stach predictions with the tightest
                 group of SVM predictions. If no SVM prediction, returns stach preds instead.
             """
-            stach_preds: set[SubstrateName] = set(
+            stach_preds: set[Substrate] = set(
                 itertools.chain.from_iterable(
-                    map(lambda x: x.substrates, self.stachelhaus_matches)))
+                    x.substrates for x in self.stachelhaus_matches))
             for group in [self.small_cluster, self.large_cluster, self.physicochemical_class]:
                 if group.name == "N/A":
                     continue
                 return stach_preds.intersection(set(group.substrates))
             return stach_preds
 
-        stach_preds: set[SubstrateName] = set(
-            itertools.chain.from_iterable(map(lambda x: x.substrates, self.stachelhaus_matches)))
+        stach_preds: set[Substrate] = set(
+            itertools.chain.from_iterable(x.substrates for x in self.stachelhaus_matches))
         if self.stachelhaus_quality == 1.0:
             # return the best stachelhaus match(es)
             if self.stachelhaus_matches:
@@ -332,10 +282,10 @@ class PredictorSVMResult(Prediction):
         """ Get the classification """
         substrates = self._get_classification()
 
-        def mapper(substrate: SubstrateName) -> str:
+        def mapper(substrate: Substrate) -> str:
             if as_norine:
                 return substrate.norine
-            return substrate.norine if substrate.norine != "X" else substrate.short
+            return substrate.short
 
         return list(map(mapper, substrates))
 
@@ -349,7 +299,7 @@ class PredictorSVMResult(Prediction):
         elif self.stachelhaus_quality > 0.7:
             qualifier = "moderate"
 
-        stachelhaus_results = "\n".join(map(lambda x: x.html(), self.stachelhaus_matches))
+        stachelhaus_results = "\n".join(x.html() for x in self.stachelhaus_matches)
 
         raw = ("\n"
                "<dl><dt>SVM prediction details:</dt>\n"
@@ -357,13 +307,13 @@ class PredictorSVMResult(Prediction):
                f"  {note}"
                "  <dl>"
                "   <dt>Predicted physicochemical class:</dt>\n"
-               f"   <dd>{self.physicochemical_class}</dd>\n"
+               f"   <dd>{self.physicochemical_class.as_html()}</dd>\n"
                "   <dt>Large clusters prediction:</dt>\n"
-               f"   <dd>{self.large_cluster}</dd>\n"
+               f"   <dd>{self.large_cluster.as_html()}</dd>\n"
                "   <dt>Small clusters prediction:</dt>\n"
-               f"   <dd>{self.small_cluster}</dd>\n"
+               f"   <dd>{self.small_cluster.as_html()}</dd>\n"
                "   <dt>Single AA prediction:</dt>\n"
-               f"   <dd>{self.single_amino}</dd>\n"
+               f"   <dd>{self.single_amino.name}</dd>\n"
                "  </dl>\n"
                " </dd>\n"
                "</dl>\n"
@@ -398,13 +348,13 @@ class PredictorSVMResult(Prediction):
             stachelhaus_matches.append(StachelhausMatch.from_nrpys(pred))
 
         physiochemical_class = SvmPrediction.from_nrpys(
-            a_domain.get_best(nrpys.PredictionCategory.ThreeClusterV2))
+            a_domain.get_best(nrpys.PredictionCategory.ThreeClusterV3))
         large_custer = SvmPrediction.from_nrpys(
-            a_domain.get_best(nrpys.PredictionCategory.LargeClusterV2))
+            a_domain.get_best(nrpys.PredictionCategory.LargeClusterV3))
         small_custer = SvmPrediction.from_nrpys(
-            a_domain.get_best(nrpys.PredictionCategory.SmallClusterV2))
+            a_domain.get_best(nrpys.PredictionCategory.SmallClusterV3))
         single_amino = SvmPrediction.from_nrpys(
-            a_domain.get_best(nrpys.PredictionCategory.SingleV2))
+            a_domain.get_best(nrpys.PredictionCategory.SingleV3))
 
         return cls(aa34, aa10, stachelhaus_matches, physiochemical_class, large_custer,
                    small_custer, single_amino)
@@ -413,7 +363,7 @@ class PredictorSVMResult(Prediction):
         return "PredictorSVMResult: " + str(vars(self))
 
     def to_json(self) -> dict[str, Any]:
-        stach_matches = list(map(lambda x: x.to_json(), self.stachelhaus_matches))
+        stach_matches = [x.to_json() for x in self.stachelhaus_matches]
         return {
             "aa10": self.aa10,
             "aa34": self.aa34,
@@ -454,7 +404,7 @@ def run_nrpys(a_domains: list[ModularDomain], options: ConfigType) -> dict[str, 
     config.model_dir = _get_model_dir(options)
     config.stachelhaus_signatures = _get_signature_path(options)
     config.skip_v1 = True
-    config.skip_v3 = True
+    config.skip_v2 = True
 
     names: list[str] = []
     signatures: list[str] = []

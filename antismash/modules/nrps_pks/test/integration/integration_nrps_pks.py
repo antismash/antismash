@@ -93,7 +93,7 @@ class IntegrationNRPSPKS(unittest.TestCase):
             plain_results[domain] = methods["nrpys"].get_classification()
             norine_results[domain] = methods["nrpys"].get_classification(as_norine=True)
 
-        expected_preds = [["Leu"], ["bOH-Tyr"], ["Asn"], ["Hpg"], ["Hpg"], ["bOH-Tyr"], ["Dhpg"], ["Tyr"], ["pk"]]
+        expected_preds = [["Leu"], ["R-ohTyr"], ["Asn"], ["Hpg"], ["Hpg"], ["R-ohTyr"], ["dHpg"], ["Tyr"], ["pk"]]
         expected_norine_preds = [["Leu"], ["bOH-Tyr"], ["Asn"], ["Hpg"], ["Hpg"], ["bOH-Tyr"], ["Dhpg"], ["Tyr"]]
 
         expected = dict(zip(nrps_names, expected_preds))

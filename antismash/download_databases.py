@@ -81,9 +81,9 @@ STACHELHAUS_URL = "https://dl.secondarymetabolites.org/releases/stachelhaus/1.1/
 STACHELHAUS_ARCHIVE_CHECKSUM = "90ea6d56503be456f1919769821fec884aff95e7a7290b32a5d8761d3ecd9f98"
 STACHELHAUS_CHECKSUM = "eda79ad1e2c12791e70cb819721c109697295ecab5e8ba253ae658e1afb58cc5"
 
-NRPS_SVM_URL = "https://dl.secondarymetabolites.org/releases/nrps_svm/2.0/models.tar.xz"
-NRPS_SVM_ARCHIVE_CHECKSUM = "501bea0cb5048405c6bbf3e6cb05975e927117c4a080f02f452f86c0eb08c132"
-NRPS_SVM_CHECKSUMS_COLLECTION = "9e53bfd3ab4076d52fcb651831561a2bb8325eff0a7a074f8287fe0ba4e78f54"
+NRPS_SVM_URL = "https://dl.secondarymetabolites.org/releases/nrps_svm/3.0/models.tar.xz"
+NRPS_SVM_ARCHIVE_CHECKSUM = "cb40e0c7e33545183a656d872e3d436225d02a61e6126c507006d9ca819da953"
+NRPS_SVM_CHECKSUMS_COLLECTION = "c281f0fb0425bef874dbfdac3f6392286f24f646eaf84ce65fa16be7ca1f80b6"
 
 TRANSATOR_URL = "https://dl.secondarymetabolites.org/releases/transATor/transATor_2023.02.23.tar.xz"
 TRANSATOR_ARCHIVE_CHECKSUM = "1e6cc5ab5aa0c70e26da47097520a49be754967f330c2857895b211e7601751c"
