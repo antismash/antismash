@@ -46,7 +46,7 @@ from .nrps_pks_domains import (
 
 
 assert DetectionResults.schema_version == 4, "nrps_pks_domains results version mismatch, update required"
-assert AnalysisResults.schema_version == 3, "nrps_pks results version mismatch, update required"
+assert AnalysisResults.schema_version == 4, "nrps_pks results version mismatch, update required"
 
 
 def has_enough_results(_record: Record, region: Region, results: Dict[str, ModuleResults]) -> bool:
