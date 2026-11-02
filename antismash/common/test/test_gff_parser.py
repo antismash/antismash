@@ -80,7 +80,7 @@ class GffParserTest(TestCase):
     def test_circular_suitability(self):
         # the suitability check should not reject coordinates outside the record
         # at this stage, that happens with feature parsing when circularity is known
-        record = SeqRecord(id="DUMMY.1", seq="A" * 300)
+        record = SeqRecord(id="DUMMY.1", seq=Seq("A" * 300))
         text = (
             f"{record.id}	Genbank	region	1	400	.	+	.	ID=DUMMY.1:1..400;Is_circular=true\n"
             f"{record.id}	Genbank	CDS	200	500	.	+	0	ID=cds-1"
@@ -134,7 +134,7 @@ class GffParserTest(TestCase):
         assert features[1].location == FeatureLocation(199, 300, 1)
 
     def test_multiple_region_features(self):
-        record = SeqRecord(id="DUMMY.1", seq="A" * 300)
+        record = SeqRecord(id="DUMMY.1", seq=Seq("A" * 300))
         text = (
             f"{record.id}	Genbank	region	1	400	.	+	.	ID=DUMMY.1:1..400;Is_circular=true\n"
             f"{record.id}	Genbank	region	500	700	.	+	0	ID=DUMMY.1:500..700;Is_circular=true"
@@ -242,7 +242,7 @@ class TestSplitLocation(TestCase):
 
 class TestUpdateRecords(TestCase):
     def setUp(self):
-        self.record = SeqRecord(seq="A" * 100, id="dummy")
+        self.record = SeqRecord(seq=Seq("A" * 100), id="dummy")
         self.circular_feature = SeqFeature(
             location=FeatureLocation(0, len(self.record), 1),
             type="source",

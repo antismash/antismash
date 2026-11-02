@@ -143,7 +143,7 @@ class CandidateCluster(CDSCollection, CoredCollectionMixin):
         if qualifiers is None:
             qualifiers = {}
         if self._parent_record:
-            qualifiers["candidate_cluster_number"] = [str(self.get_candidate_cluster_number())]
+            qualifiers["candidate_cluster"] = [str(self.get_candidate_cluster_number())]
         qualifiers["kind"] = [str(self.kind)]
         qualifiers["product"] = self.products
         qualifiers["protoclusters"] = [str(cluster.get_protocluster_number()) for cluster in self._protoclusters]

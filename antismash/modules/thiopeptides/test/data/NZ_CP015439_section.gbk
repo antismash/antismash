@@ -45,7 +45,7 @@ FEATURES             Location/Qualifiers
                      /product="thiopeptide"
                      /protocluster_number="1"
      cand_cluster    1..38117
-                     /candidate_cluster_number="1"
+                     /candidate_cluster="1"
                      /contig_edge="True"
                      /detection_rules="((YcaO or TIGR03882) and ((thio_amide and
                      (PF06968 or PF04055 or PF07366)) or Lant_dehydr_C or
@@ -102,7 +102,7 @@ FEATURES             Location/Qualifiers
                      /product="head_to_tail"
                      /protocluster_number="3"
      cand_cluster    1..16672
-                     /candidate_cluster_number="2"
+                     /candidate_cluster="2"
                      /contig_edge="True"
                      /detection_rules="(Subtilosin_A or skfc)"
                      /kind="single"

@@ -85,7 +85,7 @@ FEATURES             Location/Qualifiers
                      and not YcaO)"
                      /kind="single"
                      /product="lanthipeptide"
-                     /candidate_cluster_number="1"
+                     /candidate_cluster="1"
                      /tool="antismash"
      region          1..15016
                      /product="lanthipeptide"
@@ -98,7 +98,7 @@ FEATURES             Location/Qualifiers
                      leader_abc or mature_d or mature_ab or mature_a or mature_b
                      or mature_ha or mature_h_beta or lacticin_l or lacticin_mat
                      or LD_lanti_pre or strep_PEQAXS) and not YcaO)"
-                     /candidate_cluster_numbers="1"
+                     /candidate_clusters="1"
                      /tool="antismash"
      gene            828..1001
                      /gene="nisA"

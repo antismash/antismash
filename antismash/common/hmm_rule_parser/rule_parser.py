@@ -278,6 +278,7 @@ class TokenTypes(IntEnum):
             TokenTypes.IDENTIFIER,
             TokenTypes.AND,
             TokenTypes.CDS,
+            TokenTypes.INT,
             TokenTypes.NOT,
             TokenTypes.OR,
             TokenTypes.TEXT,

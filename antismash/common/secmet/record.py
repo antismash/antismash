@@ -848,10 +848,7 @@ class Record:
             if feature.location.ref or feature.location.ref_db:
                 for ref in [feature.location.ref, feature.location.ref_db]:
                     if ref and ref != seq_record.id:
-                        raise SecmetInvalidInputError(f"feature references another sequence: {feature.ref}")
-                # to handle a biopython issue, set the references to None
-                feature.ref = None
-                feature.ref_db = None
+                        raise SecmetInvalidInputError(f"feature references another sequence: {feature.location.ref}")
 
             # prefilter some NCBI Pfam hits locations that are generated poorly
             if all([can_be_circular, feature.type == "misc_feature",

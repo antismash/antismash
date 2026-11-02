@@ -101,7 +101,6 @@ class TestFeatureSerialiser(unittest.TestCase):
         location = FeatureLocation(1, 6, strand=1)
         f_type = "test type"
         qualifiers = {"a": ["1", "2"], "b": ["3", "4"]}
-        # skipping biopython deprecated members: ref, ref_db, strand, location_operator
 
         feature = SeqFeature(location=location, type=f_type,
                              qualifiers=qualifiers)
