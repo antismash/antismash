@@ -7,6 +7,8 @@
 from unittest import TestCase
 from unittest.mock import Mock, patch
 
+from markupsafe import Markup
+
 from antismash.common import json, path
 from antismash.common.layers import OptionsLayer, RecordLayer, RegionLayer
 from antismash.common.test.helpers import DummyCDS, DummyHMMResult, get_simple_options
@@ -429,7 +431,12 @@ class TestHTML(TestCase):
 
     def test_format_subtype(self):
         domain_pred = DummyDomainPrediction(subtypes=("T1TS_Bas_a", "T1TS_Bas_b"))
-        assert html_output.format_subtype(domain_pred) == "Basidiomycete, group a or Basidiomycete, group b"
+        assert html_output.format_subtype(domain_pred
+        ) == Markup('Basidiomycete, group a (<a class="external-link" '
+                    'href="https://github.com/antismash/data-sources/blob/master/terpenes/T1TS_Bas_a.mfa" '
+                    'target="_blank">T1TS_Bas_a</a>), and Basidiomycete, group b (<a class="external-link" '
+                    'href="https://github.com/antismash/data-sources/blob/master/terpenes/T1TS_Bas_b.mfa" '
+                    'target="_blank">T1TS_Bas_b</a>)')
         domain_pred = DummyDomainPrediction(domain_type="T1TS", subtypes=tuple())
         assert html_output.format_subtype(domain_pred) == "unknown"
         domain_pred = DummyDomainPrediction(domain_type="TS_UbiA", subtypes=tuple())

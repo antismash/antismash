@@ -33,7 +33,8 @@ def get_domain_description(prediction: DomainPrediction) -> str:
     return load_hmm_properties()[prediction.domain_type].description
 
 
-def format_subtype(prediction: DomainPrediction) -> str:
+
+def format_subtype(prediction: DomainPrediction) -> Markup:
     """ Creates a description of the subtypes of a domain
         If the main type of the domain doesn't have any subtypes associated to it,
         return "none".
@@ -44,22 +45,23 @@ def format_subtype(prediction: DomainPrediction) -> str:
             prediction: a DomainPrediction object
 
         Returns:
-            a string with the subtypes description
+            a Markup object containing a description of the subtypes
     """
     if prediction.domain_type == "ambiguous":
-        return "none"
+        return Markup("none")
     hmm_properties = load_hmm_properties()
     if not prediction.subtypes:
         if hmm_properties[prediction.domain_type].subtypes:
-            return "unknown"
-        return "none"
+            return Markup("unknown")
+        return Markup("none")
     descriptions = []
     for subtype in prediction.subtypes:
         short_description = _hmm_properties[subtype].description
         if ";" in short_description:
             short_description = "".join(short_description.split("; ")[1:])
-        descriptions.append(short_description)
-    return " or ".join(descriptions)
+        link = f'<a class="external-link" href="https://github.com/antismash/data-sources/blob/master/terpenes/{subtype}.mfa" target="_blank">{subtype}</a>'
+        descriptions.append(short_description + " (" + link + ")")
+    return Markup(", and ".join(descriptions))
 
 
 def format_reactions(prediction: DomainPrediction) -> Markup:
