@@ -1803,20 +1803,15 @@ ul.dropdown-options {
         font-weight: bold;
     }
     .section-body {
-        padding-left: 2em;
+        padding-left: 0;
     }
     .protocluster-pred {
-        padding-left: 1em;
-        padding-bottom: 1.5em;
-    }
-    .products {
-        padding-left: 2em;
+        padding-left: 0.5em;
+        padding-bottom: 0.5em;
     }
     .product-table {
-        padding-left: 1.5em;
         * th, * td {
             padding: 0.5em;
-            padding-right: 1em;
         }
         tbody tr {
             &:nth-of-type(even) {
@@ -1836,11 +1831,10 @@ ul.dropdown-options {
         margin-top: 2px;
         }
     .domains {
-        padding-left: 2em;
         padding-top: 0.5em;
 
         .domain-list {
-            padding-left: 2em;
+            padding-left: 1em;
             margin-top: 0em;
         }
     }
@@ -1881,3 +1875,4 @@ ul.dropdown-options {
         }
     }
 }
+
