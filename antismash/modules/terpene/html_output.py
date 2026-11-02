@@ -99,7 +99,7 @@ def format_motifs(prediction: DomainPrediction) -> Markup:
             motif_string = (
                 "<tr>"
                 f"<td>{motif.name}:&emsp;</td>"
-                f"<td>{motif.sequence} ({motif.start+1} - {motif.end}), {motif_activity}</td>"
+                f"<td>{motif.sequence} ({motif.start+1} - {motif.end} aa), {motif_activity}</td>"
                 "</tr>"
             )
         else:
