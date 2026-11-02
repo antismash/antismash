@@ -7,11 +7,11 @@
       {% if preds_by_cluster | length > 1 %}
         <div>
           <span class="cluster-header"> Terpene cluster {{ loop.index }}</span>
-          ({{ "{:,d}".format(cluster.location.start) }} - {{ "{:,d}".format(cluster.location.end) }}):</span>
+          ({{ "{:,d}".format(cluster.location.start) }} - {{ "{:,d}".format(cluster.location.end) }} nt):</span>
         </div>
       {% endif %}
         <div class="products">
-        <div class="section-header">Product predictions:</div>
+        <div class="section-header">Possible end products of terpene core biosynthetic genes:</div>
           <div class="section-body">
         {% if prediction.products %}
             <table class="product-table">
@@ -90,7 +90,7 @@
               {% for pred in domain_preds %}
                <div>
                 <strong>Domain {{ loop.index }}</strong>
-                  ({{ "{:,d}".format(pred.start+1)}}  - {{ "{:,d}".format(pred.end) }}): {{ get_domain_description(pred) }}
+                  ({{ "{:,d}".format(pred.start+1)}}  - {{ "{:,d}".format(pred.end) }} aa): {{ get_domain_description(pred) }}
                 {% if format_subtype(pred) != "none" or pred.reactions %}
                   {{collapser_start(cds, level="cds")}}
                   <div class="domain-details">
@@ -107,7 +107,7 @@
                     {% endif %}
                     {% if pred.reactions %}
                     <dl class="reactions">
-                    <dt> Reactions:</dt>
+                    <dt> Possible reactions:</dt>
                     {{ format_reactions(pred) }}
                     </dl>
                     {% endif %}
