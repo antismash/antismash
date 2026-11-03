@@ -73,7 +73,8 @@ def filter_terpene_hits(hmmscan_results: list[QueryResult], hmm_lengths: dict[st
                                     preserve_unmerged=True,
                                     check_hit_overlap=True,
                                     allowed_hit_overlap=20)
-        refined = remove_incomplete(refined, hmm_lengths)
+        # Using the fallback used in hmm detection as the threshold, to avoid removing main hits that are kept in detection
+        refined = remove_incomplete(refined, hmm_lengths, threshold = 1./3.)
         if refined:
             refined_results[cds] = refined
     return refined_results
