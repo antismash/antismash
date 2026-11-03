@@ -7,11 +7,11 @@
       {% if preds_by_cluster | length > 1 %}
         <div>
           <span class="cluster-header"> Terpene cluster {{ loop.index }}</span>
-          ({{ "{:,d}".format(cluster.location.start) }} - {{ "{:,d}".format(cluster.location.end) }}):</span>
+          ({{ "{:,d}".format(cluster.location.start) }} - {{ "{:,d}".format(cluster.location.end) }} nt):</span>
         </div>
       {% endif %}
         <div class="products">
-        <div class="section-header">Product predictions:</div>
+        <div class="section-header">Possible end products of terpene core biosynthetic genes:</div>
           <div class="section-body">
         {% if prediction.products %}
             <table class="product-table">
@@ -19,21 +19,57 @@
                 <tr>
                   <th>Class</th>
                   <th>Subclass</th>
-                  <th>Product name</th>
-                  <th>Chain length</th>
-                  <th>Initial cyclisations</th>
-                  <th>Functional groups</th>
+                  <th>Carbons</th>
+                  <th>Cyclisations</th>
+                  <th>Compound name</th>
+                  <th>Structure</th>
+                  <th>MARTS-DB</th>
                 </tr>
               </thead>
               <tbody>
                 {% for product in prediction.products %}
                 <tr>
                   <td>{{ product.biosynthetic_class }}</td>
-                  <td>{{ product.biosynthetic_subclass }} </td>
-                  <td>{{ product.get_compound_name() }}</td>
+                  <td>
+                  {% if product.biosynthetic_subclass %}
+                    {{ product.biosynthetic_subclass }}
+                  {% else %}
+                    N/A
+                  {% endif %}
+                  </td>
                   <td>C{{ product.chain_length }}</td>
                   <td>{{ product.get_cyclisations_description() }}</td>
-                  <td>{{ product.get_functional_groups_description() }}</td>
+                  <td>
+                  {% if product.single_compound %}
+                    {{ product.get_compound_name() }}
+                  {% else %}
+                    N/A
+                  {% endif %}
+                  </td>
+                  <td>
+                  {% if product.smiles %}
+                    <canvas id="smiles-canvas-terpene-cluster{{cluster.get_protocluster_number()}}-product{{loop.index}}" class="smiles-canvas" data-smiles="{{product.smiles}}" width="250" height="70" padding="5"></canvas>
+                    {% if not product.single_compound %}
+                      <div class="structure-caption">Intermediate carbocation</div>
+                    {% endif %}
+                    <div id="smiles-canvas-terpene-cluster{{cluster.get_protocluster_number()}}-product{{loop.index}}-modal" class="modal-container">
+                    <div class="modal-content">
+                      <canvas class="smiles-canvas-modal" data-smiles="{{product.smiles}}"></canvas>
+                    </div>
+                    </div>
+                  {% else %}
+                    N/A
+                  {% endif %}
+                  </td>
+                  <td>
+                  {% if product.marts %}
+                    {% for id in product.marts %}
+                      <a class="external-link" href="https://tpsdb.uochb.cas.cz/record/{{id}}" target="_blank">{{id}}</a>
+                    {% endfor %}
+                  {% else %}
+                    N/A
+                  {% endif %}
+                  </td>
                 </tr>
                 {% endfor %}
               </tbody>
@@ -54,16 +90,24 @@
               {% for pred in domain_preds %}
                <div>
                 <strong>Domain {{ loop.index }}</strong>
-                  ({{ "{:,d}".format(pred.start+1)}}  - {{ "{:,d}".format(pred.end) }}): {{ get_domain_description(pred) }}
+                  ({{ "{:,d}".format(pred.start+1)}}  - {{ "{:,d}".format(pred.end) }} aa): {{ get_domain_description(pred) }}
                 {% if format_subtype(pred) != "none" or pred.reactions %}
                   {{collapser_start(cds, level="cds")}}
                   <div class="domain-details">
+                    <span> Predicted activity:</span> {{ pred.get_activity() }}
+                    {% if pred.motif_results %}
+                      {{collapser_start(cds, level="cds")}}
+                        <div class="motif-details">
+                        {{ format_motifs(pred) }}
+                        </div>
+                      {{collapser_end()}}
+                    {% endif %}
                     {% if format_subtype(pred) != "none" %}
-                    <span> Subtype:</span> {{ format_subtype(pred) }}<br>
+                    <div><span> Subtype:</span> {{ format_subtype(pred) }}<br></div>
                     {% endif %}
                     {% if pred.reactions %}
                     <dl class="reactions">
-                    <dt> Reactions:</dt>
+                    <dt> Possible reactions:</dt>
                     {{ format_reactions(pred) }}
                     </dl>
                     {% endif %}
