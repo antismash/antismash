@@ -5,6 +5,7 @@
 # pylint: disable=use-implicit-booleaness-not-comparison,protected-access,missing-docstring
 
 import unittest
+from unittest.mock import Mock
 
 from antismash.common import utils
 from antismash.common.secmet import FeatureLocation
@@ -54,6 +55,22 @@ class TestSignatureBuilding(unittest.TestCase):
         assert sig == "ACE-"
         sig = utils.extract_by_reference_positions("ABCDF", "ABCDE", [0, 1, 3, 4])
         assert sig == "ABDF"
+
+    def test_get_query_positions(self):
+        query = Mock(seq="ABC-DE-F")
+        ref = Mock(seq="A-BC-DEF")
+
+        alignment = Mock(aln=[query, ref], query_start=0)
+        positions = utils.get_query_positions_from_alignment(alignment, [0, 1, 3])
+        assert positions == [0, 2, 4]
+
+        alignment = Mock(aln=[query, ref], query_start=0)
+        positions = utils.get_query_positions_from_alignment(alignment, [0, 1, 3, 4])
+        assert positions == []
+
+        alignment = Mock(aln=[query, ref], query_start=1)
+        positions = utils.get_query_positions_from_alignment(alignment, [0, 1, 3])
+        assert positions == [1, 3, 5]
 
 
 class TestDistanceCalculations(unittest.TestCase):
