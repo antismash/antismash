@@ -20,7 +20,7 @@ from antismash.config import ConfigType
 from antismash.config.args import ModuleArgs
 from antismash.detection import DetectionStage
 
-from . import fundaries as fundaries
+from . import fundaries
 
 NAME = "fungal_boundary"
 SHORT_DESCRIPTION = "Predict fungal cluster boundaries using Fundaries"
@@ -30,7 +30,7 @@ DETECTION_STAGE = DetectionStage.AREA_REFINEMENT
 class FungalBoundaryResults(DetectionResults):
     """Expose a Fundaries report through antiSMASH's detection results API."""
 
-    schema_version = 5
+    schema_version = 6
 
     def __init__(self, report: fundaries.FundariesReport) -> None:
         """Keep the predictor's report as the source of all boundary data."""
@@ -61,8 +61,8 @@ class FungalBoundaryResults(DetectionResults):
         """ Restore fungal boundary results saved by to_json().
             so to_json() --> from_json()
 
-            Reconstruct the Fundaries report, boundary predictions, and gene rows
-            without modifying the saved data.
+            Reconstruct the Fundaries report with copied prediction and gene-row
+            dictionaries, without modifying the saved data.
 
             Arguments:
                 json: saved results with the schema version, record
@@ -77,30 +77,25 @@ class FungalBoundaryResults(DetectionResults):
         if json.get("record_id") != record.id:
             return None
         report_data = deepcopy(json["report"])
-        for prediction in report_data["predictions"]:
-            prediction["motif_type"] = fundaries.MotifType(prediction["motif_type"])
-            prediction["gene_table"] = [fundaries.GeneRow(**gene)
-                                        for gene in prediction["gene_table"]]
         report = fundaries.FundariesReport(
             contig=report_data["contig"],
-            predictions=[fundaries.BoundaryPrediction(**prediction)
-                         for prediction in report_data["predictions"]],
+            predictions=report_data["predictions"],
         )
         return FungalBoundaryResults(report)
 
     def get_predicted_subregions(self) -> list[SubRegion]:
         """Create boundary features only when antiSMASH requests them."""
         return [
-            SubRegion(FeatureLocation(prediction.start, prediction.end),
-                      tool=NAME, label=prediction.anchor_id)
+            SubRegion(FeatureLocation(prediction["start"], prediction["end"]),
+                      tool=NAME, label=prediction["anchor_id"])
             for prediction in self.report.predictions
         ]
 
 
 def get_arguments() -> ModuleArgs:
     """Register a separate enable switch for this new wrapper."""
-    args = ModuleArgs("Fungal boundary options", "fungalnew")
-    args.add_analysis_toggle("fungalnew", dest="fungalnew",
+    args = ModuleArgs("Fungal boundary options", "detect")
+    args.add_analysis_toggle("boundries-fungal", dest="boundries_fungal",
                              action="store_true", default=False,
                              help="Predict fungal cluster boundaries "
                                   "using Fundaries.")
@@ -109,7 +104,7 @@ def get_arguments() -> ModuleArgs:
 
 def is_enabled(options: ConfigType) -> bool:
     """Return whether this wrapper is enabled."""
-    return options.fungalnew
+    return options.detect_boundries_fungal
 
 
 def check_options(options: ConfigType) -> list[str]:
@@ -149,11 +144,11 @@ def generate_html(region_layer: RegionLayer, results: FungalBoundaryResults,
                   options_layer: OptionsLayer) -> HTMLSections:
     """Render the report's predictions for this region's anchors."""
     html = HTMLSections(NAME)
-    if not options_layer.fungalnew:
+    if not options_layer.detect_boundries_fungal:
         return html
     anchors = {sub.label for sub in region_layer.subregions if sub.tool == NAME}
     predictions = [prediction for prediction in results.report.predictions
-                   if prediction.anchor_id in anchors]
+                   if prediction["anchor_id"] in anchors]
     template = FileTemplate(path.get_full_path(__file__, "templates", "fungal_boundary.html"))
     html.add_detail_section(NAME, template.render(predictions=predictions),
                             "fungal_boundary-details")
