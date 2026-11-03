@@ -22,8 +22,8 @@ import numpy as np
 
 from antismash.common.secmet import CDSFeature, GeneFunction, Record
 
-from . import config_v7 as config
-from . import utils_v7 as utils
+from . import config as config
+from . import utils as utils
 
 
 @dataclass
