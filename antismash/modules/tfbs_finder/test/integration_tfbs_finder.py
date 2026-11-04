@@ -27,27 +27,35 @@ class TestTFBSFinder(unittest.TestCase):
         assert not tfbs_finder.check_prereqs(self.options)
         assert tfbs_finder.is_enabled(self.options)
 
-        options = build_config(["--minimal", "--enable-html",
-                                "--tfbs", "--tfbs-pvalue", "-1", "--tfbs-range", "-10"],
+        options = build_config(["--minimal", "--enable-html", "--tfbs",
+                                "--tfbs-pvalue", "-1", "--tfbs-range=-10:-10"],
                                isolated=True, modules=antismash.get_all_modules())
         issues = tfbs_finder.check_options(options)
         assert len(issues) == 2
         assert "TFBS finder p-value is negative" in issues[0]
         assert "TFBS finder range is negative" in issues[1]
 
-    def test_nisin(self):
-        genbank = helpers.get_path_to_nisin_with_detection()
+    def test_balhimycin(self):
+        genbank = helpers.get_path_to_balhymicin_genbank()
         results = helpers.run_and_regenerate_results_for_module(genbank, tfbs_finder, self.options)
         assert isinstance(results, tfbs_finder.TFBSFinderResults)
         assert results.pvalue == self.options.tfbs_pvalue
-        assert results.start_overlap == self.options.tfbs_range
-        assert results.record_id == 'HM219853.1'
+        assert (results.upstream_range, results.start_overlap) == \
+            tfbs_finder.tfbs_finder.parse_range(self.options.tfbs_range)
+        assert results.record_id == 'Y16952.3'
         assert len(results.hits_by_region) == 1
-        feature = results.hits_by_region[1][0]
-        assert feature.name == 'NrtR'
-        assert feature.start == 290
-        assert feature.strand == -1
-        self.assertAlmostEqual(feature.score, 24.636, delta=1e-3)
+
+        hits = results.get_hits_by_region(1)
+        assert len(hits) == 17
+        strong = results.get_hits_by_region(1, confidence=tfbs_finder.tfbs_finder.Confidence.STRONG)
+        assert len(strong) == 9
+        assert not results.get_hits_by_region(1, confidence=tfbs_finder.tfbs_finder.Confidence.WEAK)
+
+        best = max(hits, key=lambda hit: hit.score)
+        assert best.name == "VqsM"
+        assert best.start == 1398
+        assert best.strand == 1
+        self.assertAlmostEqual(best.score, 20.469, delta=1e-3)
 
     def test_run_moods(self):
         sequence = Seq("GAATAACGTTAGGCTCAACGTTGCT")
@@ -56,12 +64,12 @@ class TestTFBSFinder(unittest.TestCase):
         region_start = 100
         all_hits = tfbs_finder.tfbs_finder.run_moods(sequence, bg, matrices, 0.01, region_start)
         matrix_hits = {matrix.name: hits for matrix, hits in zip(matrices, all_hits) if hits}
-        assert len(matrix_hits) == 7
+        assert len(matrix_hits) == 45
         # the scores will be largely useless thanks to the high threshold, but
         # the positional information is worth testing
         expected_positions = {
             "BldD": [(10, -1)],
-            "CsoR": [(2, 1)],
+            "CsoR": [(2, -1)],
             "DmdR1": [(3, 1)],
             "OsdR": [(10, 1)],
         }

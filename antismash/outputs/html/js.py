@@ -224,7 +224,7 @@ def convert_binding_sites(region: Region, results: Dict[str, ModuleResults]) -> 
     if not tfbs_results:
         return sites
     assert isinstance(tfbs_results, tfbs.TFBSFinderResults)
-    confidence = tfbs.tfbs_finder.Confidence.MEDIUM
+    confidence = tfbs.tfbs_finder.Confidence.STRONG
     for hits in tfbs_results.get_hits_by_region(region.get_region_number(),
                                                 confidence=confidence, allow_better=True):
         sites.append({
