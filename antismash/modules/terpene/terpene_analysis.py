@@ -119,13 +119,14 @@ def group_hmm_results(hmm_results: list[HMMResult],
 
 def merge_reactions_by_substrate(profiles: list[TerpeneHMM]
                                  ) -> tuple[Reaction, ...]:
-    """ Merges the reactions for a group of hmms.
+    """ Merges the reactions for a group of hmms (collapsing to a single reaction with the union
+        of all products).
         Only merges reactions with identical substrates in
         all members of the group.
         If no reactions fit this criterium, outputs an empty tuple.
 
         Arguments:
-            hmm_results: a list of HMMResult objects
+            profiles: a list of TerpeneHMM objects
 
         Returns:
             reactions: a tuple of Reaction objects
@@ -148,15 +149,13 @@ def merge_reactions_by_substrate(profiles: list[TerpeneHMM]
     if not intersecting_groups:
         return tuple()
 
-    # for each matching substrate, compress the reaction down to the intersection of all products
+    # for each group of reactions with matching substrates, merge all products
     results = []
     for substrate_group in intersecting_groups.values():
         first = substrate_group[0]
         for reaction in substrate_group[1:]:
-            first = first.build_intersection(reaction)
-        # if no products remain, don't include the substrate
-        if first.products:
-            results.append(first)
+            first = first.merge(reaction)
+        results.append(first)
 
     # return all remaining merged reactions
     return tuple(results)
