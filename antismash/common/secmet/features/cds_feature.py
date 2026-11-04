@@ -345,7 +345,7 @@ class CDSFeature(Feature):
 
         return feature
 
-    def to_biopython(self, qualifiers: Dict[str, List[str]] = None) -> SeqFeature:
+    def to_biopython(self, qualifiers: dict[str, List[str]] = None) -> list[SeqFeature]:
         mine: Dict[str, List[str]] = OrderedDict()
         # mandatory
         mine["translation"] = [self.translation]

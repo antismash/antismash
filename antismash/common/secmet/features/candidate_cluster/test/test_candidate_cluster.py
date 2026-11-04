@@ -86,7 +86,7 @@ class TestCandidateCluster(unittest.TestCase):
         bio = bios[0]
         assert bio.qualifiers["product"] == ["a"]
         assert bio.qualifiers["kind"] == [str(kind)]
-        assert bio.qualifiers["candidate_cluster_number"] == [str(original.get_candidate_cluster_number())]
+        assert bio.qualifiers["candidate_cluster"] == [str(original.get_candidate_cluster_number())]
         assert bio.qualifiers["SMILES"] == ["dummy smiles"]
         assert bio.qualifiers["polymer"] == ["dummy polymer"]
         assert bio.qualifiers["contig_edge"] == ["True"]

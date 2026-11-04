@@ -28,7 +28,7 @@ class Source(Feature):
             assert isinstance(qualifiers, dict)
             self._qualifiers.update(qualifiers)
 
-    def to_biopython(self, qualifiers: Dict[str, Any] = None) -> SeqFeature:
+    def to_biopython(self, qualifiers: dict[str, Any] = None) -> list[SeqFeature]:
         """ Construct a matching SeqFeature for this Source feature """
         if not qualifiers:
             qualifiers = {}
