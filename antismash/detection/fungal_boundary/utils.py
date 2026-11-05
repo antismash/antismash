@@ -12,7 +12,7 @@ from itertools import product
 from Bio.Seq import reverse_complement
 import numpy as np
 
-from . import config as config
+from . import config
 
 
 class MotifType(StrEnum):
@@ -249,8 +249,7 @@ def repeat_motif_counts(promoter_seq: str,
          promoter_seq, config.ARM)
 
     # Each table stores counts at [arm_id, gap_size].
-    num_arm_ids = 4 ** config.ARM
-    inverted_counts = np.zeros((num_arm_ids, config.SPACERS), dtype=np.int64)
+    inverted_counts = np.zeros((4 ** config.ARM, config.SPACERS), dtype=np.int64)
     direct_counts = np.zeros_like(inverted_counts)
 
     # Check every possible arm pair for each allowed gap size.
@@ -276,9 +275,9 @@ def repeat_motif_counts(promoter_seq: str,
         )
         # Count occurrences of each arm for this gap size.
         inverted_counts[:, gap_size] = np.bincount(inverted_arm_ids,
-                                                   minlength=num_arm_ids)
+                                                   minlength=inverted_counts.shape[0])
         direct_counts[:, gap_size] = np.bincount(direct_arm_ids,
-                                                 minlength=num_arm_ids)
+                                                 minlength=direct_counts.shape[0])
 
     # Flatten each arm's gap counts in order, with inverted repeats before
     # direct repeats. This preserves the motif IDs used by the scoring pipeline

@@ -14,6 +14,7 @@
     requirements.
 """
 
+from collections.abc import Iterator
 from dataclasses import dataclass
 from enum import IntEnum
 from typing import Any
@@ -22,8 +23,8 @@ import numpy as np
 
 from antismash.common.secmet import CDSFeature, GeneFunction, Record
 
-from . import config as config
-from . import utils as utils
+from . import config
+from . import utils
 
 
 @dataclass
@@ -137,9 +138,9 @@ class ContigMotifs:
 class SelectionMode(IntEnum):
     """ Motif proximity requirements for comparable enrichment scores.
 
-        ANCHOR requires that the motif is in the anchor's promoter. 
+        ANCHOR requires that the motif is in the anchor's promoter.
         ADJACENT allows that a motif is found in immediate neighbour genes promoter.
-        ALL allows a motif hit anywhere in the candidate window. 
+        ALL allows a motif hit anywhere in the candidate window.
     """
 
     ANCHOR = 0
@@ -250,9 +251,210 @@ def get_background_freqs_motif_ids(genes: dict[str, GeneWithMotifs]
     return background_freqs
 
 
-def find_the_most_enriched_motifs_within_window(
-        genes, background_freqs_motif_ids, minimum_num_of_genes=3,
-        max_genes_in_bgc=30, enriched_motif: EnrichedMotif | None = None,
+@dataclass
+class _WindowCandidates:
+    """ Motif evidence for candidate windows sharing a starting gene. """
+
+    first: int
+    stops: np.ndarray
+    observed: np.ndarray
+    expected: np.ndarray
+    eligible: np.ndarray
+    in_anchor: np.ndarray
+    in_adjacent: np.ndarray
+
+    def best_motifs(self, motif_ids: np.ndarray, anchor_id: str,
+                    anchor_index: int, enriched_motif: EnrichedMotif | None
+                    ) -> Iterator[EnrichedMotif]:
+        """ Yields every eligible candidate tied for the highest LLR. """
+        rows, columns = np.nonzero(self.eligible)
+        if columns.size == 0:
+            return
+        hits = self.observed[rows, columns]
+        expected_hits = self.expected[rows, columns]
+        scores = hits * np.log(hits / expected_hits) - (hits - expected_hits)
+        highest_llr = float(scores.max())
+        for winner in np.flatnonzero(scores == highest_llr):
+            row, column = rows[winner], columns[winner]
+            if enriched_motif is not None:
+                mode = enriched_motif.mode
+            elif self.in_anchor[column]:
+                mode = SelectionMode.ANCHOR
+            elif self.in_adjacent[row, column]:
+                mode = SelectionMode.ADJACENT
+            else:
+                mode = SelectionMode.ALL
+            yield EnrichedMotif(
+                anchor_id=anchor_id,
+                motif_id=int(motif_ids[column]),
+                llr=highest_llr,
+                mode=mode,
+                first_gene_offset=self.first - anchor_index,
+                gene_count=int(self.stops[row]) - self.first,
+            )
+
+
+@dataclass
+class _WindowMotifCounts:
+    """ Cumulative motif counts for the genes surrounding one anchor.
+
+        Each cumulative array starts with a zero row, so subtracting the
+        row at a window's start from the row at its stop gives its total.
+    """
+
+    motif_ids: np.ndarray
+    motif_types: np.ndarray
+    background_frequencies: np.ndarray
+    occurrences: np.ndarray
+    genes_with_motif: np.ndarray
+    type_occurrences: np.ndarray
+    anchor_index: int
+
+    @classmethod
+    def from_genes(cls, genes: list[GeneWithMotifs], anchor_index: int,
+                   motif_ids: np.ndarray, background_frequencies: dict[int, float], *,
+                   single_motif: bool, minimum_num_of_genes: int) -> "_WindowMotifCounts | None":
+        """ Builds running totals, skipping an ineligible single-motif search. """
+        # initalize windows lenght x num_motifs
+        # which stores the count data, for the genes in the current window
+        # that is gene_0 has 2 occurances of motif_id 10
+        counts = np.zeros((len(genes), len(motif_ids)), dtype=np.int64)
+        # initalize windows_lenght x 3 (different kind of motif types)
+        type_counts = np.zeros((len(genes), 3), dtype=np.int64)
+        # Loop through each gene object and its zero-based position within
+        # the window.
+        for index, gene in enumerate(genes):
+            if single_motif:
+                counts[index, 0] = gene.counts[gene.motif_ids == motif_ids[0]].sum()
+            else:
+                counts[index, gene.motif_ids] = gene.counts
+            # To find out what kind of motif_type (inverted, direct, or linear) the motif_ids is
+            gene_types = np.searchsorted(config.MOTIF_TYPE_ID_BOUNDARIES,
+                                         gene.motif_ids, side="right")
+            # adds up motif-id occurrences by motif-type for the current gene
+            # np.bincount: Count number of occurrences of each value in array
+            type_counts[index] = np.bincount(gene_types, weights=gene.counts, minlength=3)
+
+        if single_motif and np.count_nonzero(counts) < minimum_num_of_genes:
+            return None
+        # initialize a 2d matrix: (number of genes in the window +1) x motif IDs
+        # +1 extra row is used for cumulative sums later
+        occurrences = np.zeros((len(genes) + 1, len(motif_ids)), dtype=np.int64)
+        genes_with_motif = np.zeros_like(occurrences)
+        # Store cumulative motif occurrence counts by type:
+        # inverted, direct, linear.
+        type_occurrences = np.zeros((len(genes) + 1, 3), dtype=np.int64)
+        # Calculate running totals for each motif across genes.
+        # Example, using these cols = motif IDs 10, 42, 80
+        # counts       cumulative_occurrences_per_motif
+        #              [0, 0, 0]  <- no genes counted yet
+        # [2, 0, 1]    [2, 0, 1]  <- gene 0
+        # [1, 3, 0]    [3, 3, 1]  <- genes 0 and 1
+        # [0, 1, 2]    [3, 4, 3]  <- all three genes
+        # Here, occurrences is the cumulative_occurrences_per_motif column in the example.
+        np.cumsum(counts, axis=0, out=occurrences[1:])
+        np.cumsum(counts > 0, axis=0, out=genes_with_motif[1:])
+        np.cumsum(type_counts, axis=0, out=type_occurrences[1:])
+        return cls(
+            motif_ids=motif_ids,
+            # To find out what kind of motif_type (inverted, direct, or linear)
+            # the motif_ids is
+            motif_types=np.searchsorted(config.MOTIF_TYPE_ID_BOUNDARIES, motif_ids, side="right"),
+            background_frequencies=np.array([
+                background_frequencies.get(motif_id, 0.0) for motif_id in motif_ids
+            ], dtype=float),
+            occurrences=occurrences,
+            genes_with_motif=genes_with_motif,
+            type_occurrences=type_occurrences,
+            anchor_index=anchor_index,
+        )
+
+    def candidates(self, first: int, minimum_num_of_genes: int,
+                   max_genes_in_bgc: int, required_mode: SelectionMode) -> _WindowCandidates:
+        """ Scores the counts and eligibility of windows with the given start. """
+        # first_stop and last_stop defines the earliest and latest allowed index for window
+        # These bounds are calculated directly in np.arange below.
+        stops = np.arange(
+            max(self.anchor_index + 1, first + minimum_num_of_genes),
+            min(len(self.occurrences) - 1, first + max_genes_in_bgc) + 1,
+        )
+        # the idea is to look at the
+        # Total inside a candidate window = running total at its end − running total before its start.
+        observed = self.occurrences[stops] - self.occurrences[first]
+        genes_with_motif = self.genes_with_motif[stops] - self.genes_with_motif[first]
+        type_totals = self.type_occurrences[stops] - self.type_occurrences[first]
+        # expected count = total occurrences of its motif type in the window
+        #     × its background frequency within that type
+        # Expected occurrences of each motif in each candidate window:
+        # multiply its motif-type total by its background frequency within that type.
+        expected = type_totals[:, self.motif_types] * self.background_frequencies
+        in_anchor = (self.genes_with_motif[self.anchor_index + 1]
+                     - self.genes_with_motif[self.anchor_index]) > 0
+        nearby_stops = np.minimum(stops, self.anchor_index + 2)
+        in_adjacent = (self.genes_with_motif[nearby_stops]
+                       - self.genes_with_motif[max(first, self.anchor_index - 1)]) > 0
+        eligible = (genes_with_motif >= minimum_num_of_genes) & (observed > expected)
+        if required_mode == SelectionMode.ANCHOR:
+            eligible &= in_anchor
+        elif required_mode == SelectionMode.ADJACENT:
+            eligible &= in_adjacent
+        return _WindowCandidates(first, stops, observed, expected, eligible, in_anchor, in_adjacent)
+
+
+def _motif_rank(result: EnrichedMotif) -> tuple[float, bool, SelectionMode, int, int]:
+    """ Ranks by LLR, repeat preference, proximity, window size, and motif ID. """
+    # Compare priorities if different candidatas achieve
+    # the same score.
+    return (
+        -result.llr,                                    # Higher LLR first.
+        result.motif_id >= config.LINEAR_MOTIF_ID_START,  # Repeats (False) win when LLR scores tie.
+        result.mode,                                    # Anchor, then adjacent, then all.
+        result.gene_count,                              # Fewer genes in the window first.
+        result.motif_id,                                # Lower motif ID breaks the final tie.
+    )
+
+
+def _score_anchor(window: _WindowMotifCounts, anchor_id: str,
+                  minimum_num_of_genes: int, max_genes_in_bgc: int,
+                  enriched_motif: EnrichedMotif | None) -> EnrichedMotif | None:
+    """ Selects the best motif window containing the anchor, preserving ties. """
+    # Search all promoters before classifying the winning motif's mode.
+    required_mode = SelectionMode.ALL if enriched_motif is None else enriched_motif.mode
+    best = None
+    best_rank = None
+    # Loop which tries different starting genes for candidate
+    # windows containing the anchor gen
+    # in most cases (not right next to contig end), will the range be from 0 to 31
+    for first in range(max(0, window.anchor_index - max_genes_in_bgc + 1), window.anchor_index + 1):
+        candidates = window.candidates(first, minimum_num_of_genes, max_genes_in_bgc, required_mode)
+        for candidate in candidates.best_motifs(window.motif_ids, anchor_id, window.anchor_index, enriched_motif):
+            candidate_rank = _motif_rank(candidate)
+            # Keep the first candidate when all ranking values are equal.
+            if best_rank is None or candidate_rank < best_rank:
+                best_rank = candidate_rank
+                best = candidate
+    return best
+
+
+def _motif_near_anchor(gene_list: list[GeneWithMotifs], anchor_index: int,
+                       enriched_motif: EnrichedMotif | None) -> bool:
+    """ Checks the required proximity before rescoring a random anchor. """
+    if enriched_motif is None or enriched_motif.mode >= SelectionMode.ALL:
+        return True
+    if enriched_motif.mode == SelectionMode.ANCHOR:
+        # The motif must occur in the anchor itself.
+        genes_to_check = [gene_list[anchor_index]]
+    else:
+        # The motif may occur in the anchor or either adjacent gene.
+        genes_to_check = gene_list[max(0, anchor_index - 1):anchor_index + 2]
+    # at least one gene in genes_to_check contains the target motif
+    return any(enriched_motif.motif_id in gene.motif_ids for gene in genes_to_check)
+
+
+def find_enriched_motifs(
+        genes: dict[str, GeneWithMotifs], background_freqs_motif_ids: dict[int, float],
+        minimum_num_of_genes: int = 3, max_genes_in_bgc: int = 30,
+        enriched_motif: EnrichedMotif | None = None,
 ) -> dict[str, EnrichedMotif | None]:
     """ Finds the most enriched motif in a window of genes around each anchor
 
@@ -296,185 +498,30 @@ def find_the_most_enriched_motifs_within_window(
         # len(motif_ids) == 1
         motif_ids = np.array([enriched_motif.motif_id], dtype=int)
 
-    # To find out what kind of motif_type (inverted, direct, or linear)
-    # the motif_ids is 
-    motif_types = np.searchsorted(config.MOTIF_TYPE_ID_BOUNDARIES, motif_ids,
-                                  side="right")
-
-    if enriched_motif is None:
-        # Search all promoters before classifying the winning motif's mode.
-        required_mode = SelectionMode.ALL
-    else:
-        required_mode = enriched_motif.mode
-    
     gene_list = list(genes.values())
-    results = {}
+    results: dict[str, EnrichedMotif | None] = {}
     for anchor_index, anchor in enumerate(gene_list):
         # treat "used_as_random_acting_anchor" and "is_anchor" as acting_anchor
         acting_anchor = (anchor.is_anchor if enriched_motif is None
                          else anchor.used_as_random_acting_anchor)
         if not acting_anchor:
             continue
-        
         results[anchor.name] = None
-        if enriched_motif is not None and required_mode < SelectionMode.ALL:
-            if required_mode == SelectionMode.ANCHOR:
-                # The motif must occur in the anchor itself.
-                genes_to_check = [anchor]
-            else:
-                # The motif may occur in the anchor or either adjacent gene.
-                first_index = max(0, anchor_index - 1)
-                stop_index = anchor_index + 2
-                genes_to_check = gene_list[first_index:stop_index]
-            # at least one gene in genes_to_check contains the target motif
-            motif_found = any(
-                enriched_motif.motif_id in gene.motif_ids
-                for gene in genes_to_check
-            )
-            if not motif_found:
-                continue
-        # making sure that the window is inside the contig/gene_list
-        start_gene_index_in_window = max(0, anchor_index - max_genes_in_bgc)
-        end_gene_index_in_window = min(len(gene_list), anchor_index + 
-                                       max_genes_in_bgc + 1)
-        anchor_index_in_window = anchor_index - start_gene_index_in_window
-        # initalize windows lenght x num_motifs 
-        # which stores the count data, for the genes in the current window
-        # that is gene_0 has 2 occurances of motif_id 10
-        counts = np.zeros((end_gene_index_in_window -
-                           start_gene_index_in_window,
-                           len(motif_ids)), dtype=np.int64)
-        # initalize windows_lenght x 3 (different kind of motif types)
-        type_counts = np.zeros((len(counts), 3), dtype=np.int64)
-        # Loop through each gene object and its zero-based position within
-        # the window.
-        for gene_index_in_window, gene in enumerate(
-                gene_list[start_gene_index_in_window:end_gene_index_in_window]):
-            if enriched_motif is None:
-                counts[gene_index_in_window, gene.motif_ids] = gene.counts
-            else:
-                counts[gene_index_in_window, 0] = (gene.counts[gene.motif_ids == enriched_motif.motif_id].sum())
-            # To find out what kind of motif_type (inverted, direct, or linear) the motif_ids is 
-            gene_types = np.searchsorted(config.MOTIF_TYPE_ID_BOUNDARIES, 
-                                         gene.motif_ids, side="right")
-            # adds up motif-id occurrences by motif-type for the current gene
-            # np.bincount: Count number of occurrences of each value in array
-            type_counts[gene_index_in_window] = np.bincount(
-                gene_types, weights=gene.counts, minlength=3)
-
-        if (enriched_motif is not None
-                and np.count_nonzero(counts) < minimum_num_of_genes):
+        if not _motif_near_anchor(gene_list, anchor_index, enriched_motif):
             continue
-        # initialize a 2d matrix: (number of genes in the window +1) x motif IDs
-        # +1 extra row is used for cumulative sums later
-        cumulative_occurrences_per_motif = np.zeros(
-            (len(counts) + 1, len(motif_ids)), dtype=np.int64)
-        cumulative_genes_with_motif = (
-            np.zeros_like(cumulative_occurrences_per_motif))
-        # Store cumulative motif occurrence counts by type:
-        # inverted, direct, linear.
-        cumulative_occurrences_per_motif_type = np.zeros(
-            (len(counts) + 1, 3), dtype=np.int64)
-        # Calculate running totals for each motif across genes.
-        # Example, using these cols = motif IDs 10, 42, 80
-        # counts       cumulative_occurrences_per_motif
-        #              [0, 0, 0]  <- no genes counted yet
-        # [2, 0, 1]    [2, 0, 1]  <- gene 0
-        # [1, 3, 0]    [3, 3, 1]  <- genes 0 and 1
-        # [0, 1, 2]    [3, 4, 3]  <- all three genes
-        np.cumsum(counts, axis=0, out=cumulative_occurrences_per_motif[1:])
-        np.cumsum(counts > 0, axis=0, out=cumulative_genes_with_motif[1:])
-        np.cumsum(type_counts, axis=0, 
-                  out=cumulative_occurrences_per_motif_type[1:])
-        in_anchor = counts[anchor_index_in_window] > 0
-
-        best_rank = None
-        # Loop which tries different starting genes for candidate
-        # windows containing the anchor gen
-        # in most cases (not right next to contig end), will the range be from 0 to 31 
-        for first in range(
-            max(0, anchor_index_in_window - max_genes_in_bgc + 1),
-            anchor_index_in_window + 1
-        ):
-            # first_stop and last_stop defines the earliest and latest allowed index for window
-            first_stop = max(anchor_index_in_window + 1,
-                             first + minimum_num_of_genes)
-            last_stop = min(len(counts), first + max_genes_in_bgc)
-            stops = np.arange(first_stop, last_stop + 1)
-
-            # the idea is to look at the 
-            # Total inside a candidate window = running total at its end − running total before its start.
-            observed = (cumulative_occurrences_per_motif[stops]
-                        - cumulative_occurrences_per_motif[first])
-            genes_with_motif = (cumulative_genes_with_motif[stops]
-                                - cumulative_genes_with_motif[first])
-            window_type_totals = (cumulative_occurrences_per_motif_type[stops]
-                                  - cumulative_occurrences_per_motif_type[first])
-            # expected count = total occurrences of its motif type in the window
-            #     × its background frequency within that type
-            # Expected occurrences of each motif in each candidate window:
-            # multiply its motif-type total by its background frequency within that type.
-            expected = window_type_totals[:, motif_types] * np.array([
-                background_freqs_motif_ids.get(motif_id, 0.0)
-                for motif_id in motif_ids
-            ], dtype=float)
-            nearby_stops = np.minimum(stops, anchor_index_in_window + 2)
-            in_adjacent = (
-                cumulative_genes_with_motif[nearby_stops]
-                - cumulative_genes_with_motif[max(first,
-                                                  anchor_index_in_window - 1)]
-            ) > 0
-
-            eligible = ((genes_with_motif >= minimum_num_of_genes) &
-                        (observed > expected))
-            if required_mode == SelectionMode.ANCHOR:
-                eligible &= in_anchor
-            elif required_mode == SelectionMode.ADJACENT:
-                eligible &= in_adjacent
-            rows, columns = np.nonzero(eligible)
-            if columns.size == 0:
-                continue
-            hits = observed[rows, columns]
-            expected_hits = expected[rows, columns]
-            scores = (hits * np.log(hits / expected_hits) -
-                      (hits - expected_hits))
-            highest_llr = float(scores.max())
-            for winner in np.flatnonzero(scores == highest_llr):
-                row, column = rows[winner], columns[winner]
-                stop = int(stops[row])
-                motif_id = int(motif_ids[column])
-                start = first - anchor_index_in_window
-                gene_count = stop - first
-                if enriched_motif is not None:
-                    mode_rank = required_mode
-                elif in_anchor[column]:
-                    mode_rank = SelectionMode.ANCHOR
-                elif in_adjacent[row, column]:
-                    mode_rank = SelectionMode.ADJACENT
-                else:
-                    mode_rank = SelectionMode.ALL
-                is_linear = motif_id >= config.LINEAR_MOTIF_ID_START
-
-                # Compare priorities if different candidatas achieve
-                # the same score.
-                candidate_rank = (
-                    -highest_llr,   # Higher LLR first.
-                    is_linear,      # Repeats (False) win when LLR scores tie.
-                    mode_rank,      # Anchor, then adjacent, then all.
-                    gene_count,     # Fewer genes in the window first.
-                    motif_id,       # Lower motif ID breaks the final tie.
-                )
-                # Keep the first candidate when all ranking values are equal.
-                if best_rank is None or candidate_rank < best_rank:
-                    best_rank = candidate_rank
-                    results[anchor.name] = EnrichedMotif(
-                        anchor_id=anchor.name,
-                        motif_id=motif_id,
-                        llr=highest_llr,
-                        mode=mode_rank,
-                        first_gene_offset=start,
-                        gene_count=gene_count,
-                    )
+        # making sure that the window is inside the contig/gene_list
+        first_index = max(0, anchor_index - max_genes_in_bgc)
+        stop_index = min(len(gene_list), anchor_index + max_genes_in_bgc + 1)
+        window = _WindowMotifCounts.from_genes(
+            gene_list[first_index:stop_index], anchor_index - first_index,
+            motif_ids, background_freqs_motif_ids,
+            single_motif=enriched_motif is not None,
+            minimum_num_of_genes=minimum_num_of_genes,
+        )
+        if window is not None:
+            results[anchor.name] = _score_anchor(
+                window, anchor.name, minimum_num_of_genes, max_genes_in_bgc, enriched_motif,
+            )
     return results
 
 
@@ -579,7 +626,7 @@ def select_random_acting_anchors(
         Arguments:
             genes: the contig's genes in CDS order
             enriched_motifs: each anchor's result from
-                             find_the_most_enriched_motifs_within_window,
+                             find_enriched_motifs,
                              whose windows are excluded from the candidates
             max_genes_in_bgc: the most genes a window may span
 
@@ -628,7 +675,7 @@ def calculate_empirical_p_values(
         Arguments:
             genes: the contig's genes in CDS order, keyed by gene name
             enriched_motifs: the results to annotate, as returned by
-                             find_the_most_enriched_motifs_within_window
+                             find_enriched_motifs
             background_freqs_motif_ids: each motif ID mapped to its background
                                         frequency within its own motif type
 
@@ -655,7 +702,7 @@ def calculate_empirical_p_values(
             continue
         key = (result.motif_id, result.mode)
         if key not in random_scores:
-            random_results = find_the_most_enriched_motifs_within_window(
+            random_results = find_enriched_motifs(
                 genes, background_freqs_motif_ids, enriched_motif=result
             )
             random_scores[key] = np.array([
@@ -721,7 +768,7 @@ def main(record: Record) -> FundariesReport:
         Each CDS becomes a GeneWithMotifs, then every gene antiSMASH
         called an core is scored for the most enrichsd motif. A sample
         of other genes is used to re-score the same motif to build an
-        empirical p-value. Only the motifs beating config.P_VAL_MAX 
+        empirical p-value. Only the motifs beating config.P_VAL_MAX
         reach the report.
 
         Arguments:
@@ -743,11 +790,11 @@ def main(record: Record) -> FundariesReport:
         genes[gene.name] = gene
 
     background_freqs_motif_ids = get_background_freqs_motif_ids(genes)
-    results = find_the_most_enriched_motifs_within_window(
+    results = find_enriched_motifs(
         genes=genes,
         background_freqs_motif_ids=background_freqs_motif_ids,
-                )
-    
+    )
+
     select_random_acting_anchors(genes, results)
     calculate_empirical_p_values(genes, results, background_freqs_motif_ids)
 

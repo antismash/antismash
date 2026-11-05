@@ -20,9 +20,9 @@ from antismash.common.secmet.test.helpers import (
     DummyRecord,
 )
 
-from .. import config_v7 as config
-from .. import fundaries_v7 as fundaries
-from .. import utils_v7 as utils
+from .. import config
+from .. import fundaries
+from .. import utils
 
 GENE_LENGTH_IN_BASES = 600
 GENE_START_SPACING_IN_BASES = 2000
@@ -40,8 +40,10 @@ def gene_start(index: int) -> int:
     return config.UPSTREAM + index * GENE_START_SPACING_IN_BASES
 
 
-def build_dummy_contig(num_genes: int, motif: str = "", motif_gene_indices=(), cores=(),
-                       upstream_dist_to_motif=800, seed=0) -> DummyRecord:
+def build_dummy_contig(num_genes: int, motif: str = "",
+                       motif_gene_indices: list[int] | tuple[int, ...] | range = (), *,
+                       cores: list[int] | tuple[int, ...] | range = (),
+                       upstream_dist_to_motif: int = 800, seed: int = 0) -> DummyRecord:
     """ Builds a record of evenly spaced genes on random DNA
 
         Arguments:
@@ -53,17 +55,16 @@ def build_dummy_contig(num_genes: int, motif: str = "", motif_gene_indices=(), c
             seed: seed for reproducablity
 
         Returns:
-            DummyRecord 
+            DummyRecord
     """
     rng = np.random.default_rng(seed)
-    sequence_length = gene_start(num_genes) + GENE_LENGTH_IN_BASES
-    sequence = rng.choice(list("ACGT"), size=sequence_length).tolist()
+    sequence = rng.choice(list("ACGT"), size=gene_start(num_genes) + GENE_LENGTH_IN_BASES).tolist()
 
     for index in motif_gene_indices:
         promoter_start = gene_start(index) - upstream_dist_to_motif
         for offset in (0, 20, 40):
-            motif_start = promoter_start + offset 
-            # inserts the motif 
+            motif_start = promoter_start + offset
+            # inserts the motif
             sequence[motif_start:motif_start + len(motif)] = list(motif)
 
     record = DummyRecord(seq="".join(sequence))
@@ -111,12 +112,50 @@ def make_genes(counts_by_gene: list[dict[int, int]], anchor_indices: tuple[int, 
     return genes
 
 
+def brute_force_motif_llr(window: list[fundaries.GeneWithMotifs],
+                          background_frequency: float, motif: int, centre: int) -> float:
+    """ Returns the best eligible LLR for one motif around the anchor
+
+        Arguments:
+            window: the genes surrounding the anchor
+            background_frequency: the motif's background frequency within its type
+            motif: the motif ID to score
+            centre: the index of the anchor within the window
+
+        Returns:
+            the highest LLR of an eligible window for this motif,
+            or 0.0 when no window is eligible
+    """
+    kind = utils.get_motif_type(motif)
+    # per gene: hits of this motif, and hits of every motif of its type
+    hits = [int(gene.counts[gene.motif_ids == motif].sum()) for gene in window]
+    totals = [
+        sum(int(count) for identifier, count in zip(gene.motif_ids, gene.counts)
+            if utils.get_motif_type(int(identifier)) == kind)
+        for gene in window
+    ]
+
+    best = 0.0
+    # every window that contains the anchor, within the size limits
+    for first in range(max(0, centre - config.MAX_GENES_IN_BGC + 1), centre + 1):
+        last = min(len(window), first + config.MAX_GENES_IN_BGC)
+        for stop in range(max(centre + 1, first + config.MIN_GENES_WITH_MOTIF), last + 1):
+            window_hits = hits[first:stop]
+            observed = sum(window_hits)
+            expected = sum(totals[first:stop]) * background_frequency
+            genes_with_hits = sum(1 for hit in window_hits if hit > 0)
+            if genes_with_hits < config.MIN_GENES_WITH_MOTIF or observed <= expected:
+                continue
+            best = max(best, observed * np.log(observed / expected) - (observed - expected))
+    return best
+
+
 def brute_force_llr(genes: dict[str, fundaries.GeneWithMotifs],
                     background: dict[int, float], anchor: int) -> float:
     """ Returns the best eligible LLR across all motif types for one anchor
 
         Every window total is summed from scratch, so this agrees with
-        find_the_most_enriched_motifs_within_window only if that function's
+        find_enriched_motifs only if that function's
         cumulative sums are right.
 
         Arguments:
@@ -133,36 +172,10 @@ def brute_force_llr(genes: dict[str, fundaries.GeneWithMotifs],
                        anchor + config.MAX_GENES_IN_BGC + 1]
     centre = anchor - max(0, anchor - config.MAX_GENES_IN_BGC)
     motif_ids = {int(identifier) for gene in window for identifier in gene.motif_ids}
-
-    best = 0.0
-    for motif in motif_ids:
-        kind = utils.get_motif_type(motif)
-
-        # per gene: hits of this motif, and hits of every motif of its type
-        hits = []
-        totals = []
-        for gene in window:
-            hits.append(int(gene.counts[gene.motif_ids == motif].sum()))
-            total = 0
-            for identifier, count in zip(gene.motif_ids, gene.counts):
-                if utils.get_motif_type(int(identifier)) == kind:
-                    total += int(count)
-            totals.append(total)
-
-        # every window that contains the anchor, within the size limits
-        for first in range(max(0, centre - config.MAX_GENES_IN_BGC + 1), centre + 1):
-            last = min(len(window), first + config.MAX_GENES_IN_BGC)
-            for stop in range(max(centre + 1, first + config.MIN_GENES_WITH_MOTIF), last + 1):
-                window_hits = hits[first:stop]
-                observed = sum(window_hits)
-                expected = sum(totals[first:stop]) * background.get(motif, 0.0)
-                genes_with_hits = sum(1 for hit in window_hits if hit > 0)
-                if genes_with_hits < config.MIN_GENES_WITH_MOTIF or observed <= expected:
-                    continue
-                llr = (observed * np.log(observed / expected)
-                       - (observed - expected))
-                best = max(best, llr)
-    return best
+    return max(
+        (brute_force_motif_llr(window, background.get(motif, 0.0), motif, centre) for motif in motif_ids),
+        default=0.0,
+    )
 
 
 class TestFundaries(unittest.TestCase):
@@ -171,7 +184,8 @@ class TestFundaries(unittest.TestCase):
         the acting anchor and the reproducibility.
     """
 
-    def assert_cluster(self, record, motif_gene_indices, motif_type, pattern):
+    def assert_cluster(self, record: DummyRecord, motif_gene_indices: range,
+                       motif_type: str, pattern: str) -> None:
         """ Asserts that a record yields exactly one expected prediction
 
             Arguments:
@@ -191,7 +205,7 @@ class TestFundaries(unittest.TestCase):
         self.assertEqual(predictions[0]["end"],
                          gene_start(motif_gene_indices[-1]) + GENE_LENGTH_IN_BASES)
 
-    def test_inverted_repeat_cluster_is_detected(self):
+    def test_inverted_repeat_cluster_is_detected(self) -> None:
         """ An inverted repeat cluster is found with the right boundaries
 
             ACG-N5-CGT: inverted repeat motif to find.
@@ -200,7 +214,7 @@ class TestFundaries(unittest.TestCase):
         record = build_dummy_contig(1200, "ACGTTTTTCGT", motif_gene_indices, cores=[606])
         self.assert_cluster(record, motif_gene_indices, "inverted", "ACG-N5-CGT")
 
-    def test_direct_repeat_cluster_is_detected(self):
+    def test_direct_repeat_cluster_is_detected(self) -> None:
         """ A direct repeat cluster is found with the right boundaries
 
             ACG-N4-ACG: direct repeat motif to find.
@@ -209,7 +223,7 @@ class TestFundaries(unittest.TestCase):
         record = build_dummy_contig(1200, "ACGAAAAACG", motif_gene_indices, cores=[606])
         self.assert_cluster(record, motif_gene_indices, "direct", "ACG-N4-ACG")
 
-    def test_linear_motif_cluster_is_detected(self):
+    def test_linear_motif_cluster_is_detected(self) -> None:
         """ A linear motif cluster is found with the right boundaries
 
             ACGGTA: linear motif to find.
@@ -232,17 +246,18 @@ class TestFundaries(unittest.TestCase):
                                    anchor_indices=(2,))
                 background = {motif: 0.01, motif + 1: 0.99}
 
-                result = fundaries.find_the_most_enriched_motifs_within_window(
+                result = fundaries.find_enriched_motifs(
                     genes, background)["gene_2"]
 
                 self.assertAlmostEqual(brute_force_llr(genes, background, 2), expected_llr)
                 self.assertIsNotNone(result)
+                assert result is not None
                 self.assertAlmostEqual(result.llr, expected_llr)
                 self.assertEqual(result.motif_id, motif)
                 self.assertEqual(result.first_gene_offset, -1)
                 self.assertEqual(result.gene_count, 3)
 
-    def test_llr_calculation_with_competing_motif_types(self) -> None:
+    def test_llr_with_competing_motif_types(self) -> None:
         """Rank repeat and linear motifs by score, preferring repeats on ties."""
         linear_motif = config.LINEAR_MOTIF_ID_START
         expected_llr = 9 * math.log(9 / 0.12) - (9 - 0.12)
@@ -267,17 +282,18 @@ class TestFundaries(unittest.TestCase):
                         linear_motif: linear_freq, linear_motif + 1: 1 - linear_freq,
                     }
 
-                    result = fundaries.find_the_most_enriched_motifs_within_window(
+                    result = fundaries.find_enriched_motifs(
                         genes, background)["gene_2"]
 
                     self.assertAlmostEqual(brute_force_llr(genes, background, 2), expected_llr)
                     self.assertIsNotNone(result)
+                    assert result is not None
                     self.assertAlmostEqual(result.llr, expected_llr)
                     self.assertEqual(result.motif_id, expected_motif)
                     self.assertEqual(result.first_gene_offset, -1)
                     self.assertEqual(result.gene_count, 3)
 
-    def test_window_length_matches_planted_length(self):
+    def test_window_length_matches_planted_length(self) -> None:
         """ Tests if the reported window of a run is the expected one.
             In this case, we expect the exac genes with the motif
             planted.
@@ -294,7 +310,7 @@ class TestFundaries(unittest.TestCase):
                 self.assertEqual(len(predictions), 1)
                 self.assertEqual(len(predictions[0]["gene_table"]), motif_gene_count)
 
-    def test_contig_supplies_enough_acting_anchors(self):
+    def test_contig_has_enough_acting_anchors(self) -> None:
         """ Tests if a contig supplies enough acting anchors to
             reach config.MIN_RANDOM_ANCHORS
         """
@@ -304,8 +320,8 @@ class TestFundaries(unittest.TestCase):
         for cds in record.get_cds_features():
             gene = fundaries.GeneWithMotifs.from_feature(record, cds)
             genes[gene.name] = gene
-        results = {f"g{anchor}": fundaries.EnrichedMotif(
-                       anchor_id=f"g{anchor}", motif_id=0, llr=1.0, mode=2,
+        results: dict[str, fundaries.EnrichedMotif | None] = {f"g{anchor}": fundaries.EnrichedMotif(
+                       anchor_id=f"g{anchor}", motif_id=0, llr=1.0, mode=fundaries.SelectionMode.ALL,
                        first_gene_offset=-15, gene_count=30)
                    for anchor in cores}
 
@@ -320,7 +336,7 @@ class TestFundaries(unittest.TestCase):
             f"only {selected} acting anchors; {config.MIN_RANDOM_ANCHORS}"
             "are needed")
 
-    def test_random_anchor_selection_is_reproducible(self):
+    def test_random_anchors_are_reproducible(self) -> None:
         """ Test if with the same seed, the same results are
             found.
         """
@@ -337,5 +353,3 @@ class TestFundaries(unittest.TestCase):
                            if gene.used_as_random_acting_anchor])
 
         self.assertEqual(chosen[0], chosen[1])
-
-
