@@ -157,10 +157,11 @@ class TFBSFinderResults(ModuleResults):
     schema_version = 1
 
     def __init__(self, record_id: str, pvalue: float, start_overlap: int,
-                 hits_by_region: Dict[int, List[TFBSHit]]) -> None:
+                 upstream_range: int, hits_by_region: Dict[int, List[TFBSHit]]) -> None:
         super().__init__(record_id)
         self.pvalue = pvalue  # the p-value used for threshold setting within MOODS
         self.start_overlap = start_overlap
+        self.upstream_range = upstream_range
         self.hits_by_region = hits_by_region
 
     def get_hits_by_region(self, region_number: int, confidence: Confidence = None,
@@ -195,6 +196,7 @@ class TFBSFinderResults(ModuleResults):
             "schema_version": self.schema_version,
             "pvalue": self.pvalue,
             "start_overlap": self.start_overlap,
+            "upstream_range": self.upstream_range,
             "record_id": self.record_id,
             "hits_by_region": hits_by_region,
         }
@@ -240,13 +242,17 @@ class TFBSFinderResults(ModuleResults):
         prev_range = json["start_overlap"]
         assert isinstance(prev_range, int)
 
+        prev_upstream = json["upstream_range"]
+        assert isinstance(prev_upstream, int)
+
         # fetch the cutoffs
         options = get_config()
+        upstream_range, start_overlap = parse_range(options.tfbs_range)
         if options.tfbs_pvalue != prev_pval:
             logging.debug("TFBSFinderResults p-value has changed, discarding previous results")
             return None
 
-        if options.tfbs_range != prev_range:
+        if start_overlap != prev_range or upstream_range != prev_upstream:
             logging.debug("TFBSFinderResults search range has changed, discarding previous results")
             return None
 
@@ -256,7 +262,23 @@ class TFBSFinderResults(ModuleResults):
             hits_by_region[int(name)] = [TFBSHit.from_json(hit) for hit in hits]
 
         return TFBSFinderResults(json["record_id"], options.tfbs_pvalue,
-                                 options.tfbs_range, hits_by_region)
+                                 start_overlap, upstream_range, hits_by_region)
+
+
+def parse_range(value: str) -> Tuple[int, int]:
+    """ Converts a range option into the distances it refers to, upstream and
+        downstream of a gene start position
+
+        Arguments:
+            value: the option value, in the form "upstream:downstream"
+
+        Returns:
+            a tuple of the upstream and downstream distances
+    """
+    upstream, separator, downstream = value.partition(":")
+    if not separator:
+        raise ValueError(f"expected an 'upstream:downstream' range, not: {value}")
+    return int(upstream), int(downstream)
 
 
 def get_sequence_gc_content(sequence: str) -> float:
@@ -344,7 +366,24 @@ def run_moods(sequence: Seq, background: Tuple[float, float, float, float],
     return results
 
 
-def get_valid_areas(start: int, end: int, locations: Iterator[Location], start_overlap: int) -> list[tuple[int, int]]:
+def are_co_transcribed(upstream: Location, downstream: Location) -> bool:
+    """ Identify likely co-transcribed genes based on their intergenic distances.
+
+        Arguments:
+            upstream: the location with the lower coordinates
+            downstream: the location with the higher coordinates
+
+        Returns:
+            True if the two locations are predicted to be part of the same transcript
+    """
+    if upstream.strand != downstream.strand:
+        return False
+    distance = downstream.start - upstream.end
+    return -90 <= distance <= 170
+
+
+def get_valid_areas(start: int, end: int, locations: Iterator[Location],
+                    start_overlap: int, upstream_range: int) -> list[tuple[int, int]]:
     """ Finds areas within the section where a binding site is considered valid.
         Generally these are intergenic areas, but some overlaps with genes are possible.
 
@@ -363,7 +402,7 @@ def get_valid_areas(start: int, end: int, locations: Iterator[Location], start_o
     areas: List[Tuple[int, int]] = []
 
     def add_area(start: int, end: int) -> None:
-        if start != end:
+        if start < end:
             # making sure to strip BeforePosition and other variants from locations
             areas.append((int(start), int(end)))
 
@@ -373,11 +412,8 @@ def get_valid_areas(start: int, end: int, locations: Iterator[Location], start_o
     except StopIteration:
         # no locations to excise, so return the whole block
         return [(start, end)]
-    end = initial.start
     if initial.strand == 1:
-        end += start_overlap
-    if start != end:
-        add_area(start, end)
+        add_area(max(start, initial.start - upstream_range), initial.start + start_overlap)
 
     previous = initial
     for current in locations:
@@ -385,9 +421,12 @@ def get_valid_areas(start: int, end: int, locations: Iterator[Location], start_o
             # overlaps and same strand or of two ends can be ignored
             # but overlaps of two CDS starts are interesting
             if current.strand == 1 and previous.strand == -1:
-                # adding the allowable overlap into each makes it slightly larger than 2 * overlap
-                add_area(current.start - start_overlap, previous.end + start_overlap)
-            previous = current
+                # with no gap between them, both regions are added in full
+                add_area(current.start - upstream_range, current.start + start_overlap)
+                add_area(previous.end - start_overlap, previous.end + upstream_range)
+
+            if current.end > previous.end:
+                previous = current
             continue
 
         # otherwise, skip gaps between the ends of two genes
@@ -395,23 +434,32 @@ def get_valid_areas(start: int, end: int, locations: Iterator[Location], start_o
             previous = current
             continue
 
-        start = previous.end
+        # also skip when genes are predicted to be co-transcribed
+        if are_co_transcribed(previous, current):
+            previous = current
+            continue
+
         if previous.strand == -1:
-            start -= start_overlap
+            add_area(previous.end - start_overlap, min(previous.end + upstream_range, current.start))
 
-        end = current.start
         if current.strand == 1:
-            end += start_overlap
+            add_area(max(current.start - upstream_range, previous.end), current.start + start_overlap)
 
-        add_area(start, end)
         previous = current
 
-    # add final range
-    start = previous.end
+    # add final range, but only if the last gene's start codon faces it
     if previous.strand == -1:
-        start -= start_overlap
-    add_area(start, original_end)
-    return areas
+        add_area(previous.end - start_overlap, min(original_end, previous.end + upstream_range))
+
+    # the regions of two genes can overlap, so merge any that do
+    areas.sort()
+    merged: List[Tuple[int, int]] = []
+    for area in areas:
+        if merged and area[0] <= merged[-1][1]:
+            merged[-1] = (merged[-1][0], max(merged[-1][1], area[1]))
+            continue
+        merged.append(area)
+    return merged
 
 
 def filter_hits(matrices: List[Matrix], areas: List[Tuple[int, int]],
@@ -451,20 +499,22 @@ def filter_hits(matrices: List[Matrix], areas: List[Tuple[int, int]],
 
             assert area[0] <= hit.pos < area[1], f"{hit.pos}, {area}"
             hit_index += 1
+            if matrix.get_score_confidence(hit.score) < Confidence.MEDIUM:  # exclude weak matches
+                continue
             results.append(TFBSHit.from_matrix_hit(hit, matrix))
     return results
 
 
-def get_cross_origin_areas(record: Record, region: Region, start_overlap: int) -> list[tuple[int, int]]:
+def get_cross_origin_areas(record: Record, region: Region, start_overlap: int,
+                           upstream_range: int) -> list[tuple[int, int]]:
     """ Finds areas within the section where a binding site is considered valid.
         Generally these are intergenic areas, but some overlaps with genes are possible.
 
         Arguments:
-            start: the start coordinate of the section to search in
-            end: the end coordinate of the section to search in
-            locations: the existing locations to excise
-            start_overlap: the allowable overlap when the start of two locations overlap
-                           and are on reverse strands
+            record: the record containing the region
+            region: the region to find areas in
+            start_overlap: the allowable overlap with a start codon
+            upstream_range: the distance before a start codon that a binding site can be found in
 
         Returns:
             a list of tuples, each being a start and end coordinate of an area,
@@ -474,61 +524,32 @@ def get_cross_origin_areas(record: Record, region: Region, start_overlap: int) -
     cross_origin = region.cds_children.cross_origin
     post_origin = region.cds_children.post_origin
 
-    areas = []
-    # to match the linear version, ensure all areas are created in order of lowest start coordinate
+    record_length = len(record)
+    locations: list[Location] = []
 
-    # find any areas between genes after crossing the origin
-    # with the lower limit bounded by the closest cross-origin gene, if any
-    if post_origin:
-        start = region.start
-        end = region.end
-        locs = (cds.location for cds in pre_origin)
-        cross: Iterator[Location] = iter([])
-        if cross_origin:
-            # fake a location up to the origin, for simplicity in child functions
-            # and to ensure consistency in start overlap handling
-            post_part = cross_origin[-1].location.parts[-1]
-            if post_part.strand == -1:
-                post_part = cross_origin[-1].location.parts[0]
-            end = post_part.end
-            cross = iter([FeatureLocation(len(record), post_part.end + len(record), post_part.strand)])
-        areas.extend(get_valid_areas(start, end, itertools.chain(locs, cross), start_overlap))
+    for cds in pre_origin:
+        locations.append(FeatureLocation(int(cds.start), int(cds.end), cds.location.strand))
 
-    # find any areas between genes before crossing the origin
-    # with the upper limit bounded by the closest cross-origin gene, if any
-    if pre_origin:
-        start = region.start
-        end = pre_origin[-1].end
-        locs = (cds.location for cds in pre_origin)
-        cross = iter([])
-        if cross_origin:
-            # fake a location leading up to the origin, for simplicity in child functions
-            # and to ensure consistency in start overlap handling
-            pre_part = cross_origin[0].location.parts[0]
-            if pre_part.strand == -1:
-                pre_part = cross_origin[0].location.parts[-1]
-            end = pre_part.start
-            cross = iter([FeatureLocation(pre_part.start, len(record), pre_part.strand)])
-        areas.extend(get_valid_areas(start, end, itertools.chain(locs, cross), start_overlap))
+    for cds in cross_origin:
+        parts = cds.location.parts
+        # the parts are ordered by transcription, so reverse strand genes start at the end
+        pre_part, post_part = (parts[-1], parts[0]) if cds.location.strand == -1 else (parts[0], parts[-1])
+        locations.append(FeatureLocation(int(pre_part.start), int(post_part.end) + record_length,
+                                         cds.location.strand))
 
-    # multiple genes crossing the origin will never have intergenic gaps, so no areas will exist there
-    # however, if there are no cross-origin genes, then the area between
-    # pre- and post-origin needs to be included
-    if not cross_origin:
-        start = region.start
-        end = region.end + len(record)
-        if pre_origin:
-            start = pre_origin[-1].end
-        if post_origin:
-            end = post_origin[0].start
-        # hit coordinates don't wrap since they just use an extracted sequence and simple offset
-        # so, while stripping ambiguous locations, bump the end coordinate for consistency
-        areas.append((int(start), int(end) + len(record)))
-    return areas
+    for cds in post_origin:
+        locations.append(FeatureLocation(int(cds.start) + record_length, int(cds.end) + record_length,
+                                         cds.location.strand))
+
+    # to match the linear version, ensure all locations are in order of lowest start coordinate
+    locations.sort(key=lambda location: (location.start, location.end))
+
+    return get_valid_areas(int(region.start), int(region.end) + record_length, iter(locations),
+                           start_overlap, upstream_range)
 
 
-def run_tfbs_finder(record: Record, pvalue: float, start_overlap: int, matrix_path: str = PWM_PATH,
-                    ) -> TFBSFinderResults:
+def run_tfbs_finder(record: Record, pvalue: float, start_overlap: int, upstream_range: int,
+                    matrix_path: str = PWM_PATH) -> TFBSFinderResults:
     """Run TFBS finder on a given record
 
         Arguments:
@@ -548,8 +569,9 @@ def run_tfbs_finder(record: Record, pvalue: float, start_overlap: int, matrix_pa
         moods_results = run_moods(sequence, background, matrices, pvalue, region.start)
         areas: list[tuple[int, int]] = []
         if region.crosses_origin():
-            areas = get_cross_origin_areas(record, region, start_overlap)
+            areas = get_cross_origin_areas(record, region, start_overlap, upstream_range)
         else:
-            areas = get_valid_areas(region.start, region.end, iter(region.cds_children), start_overlap)
+            locations = (cds.location for cds in region.cds_children)
+            areas = get_valid_areas(region.start, region.end, locations, start_overlap, upstream_range)
         hits_by_region[region.get_region_number()] = filter_hits(matrices, areas, moods_results)
-    return TFBSFinderResults(record.id, pvalue, start_overlap, hits_by_region)
+    return TFBSFinderResults(record.id, pvalue, start_overlap, upstream_range, hits_by_region)

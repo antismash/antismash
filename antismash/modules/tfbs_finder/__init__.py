@@ -13,7 +13,7 @@ from antismash.config.args import ModuleArgs
 from antismash.common import path
 
 from .html_output import generate_html, generate_javascript_data, will_handle
-from .tfbs_finder import PWM_PATH, run_tfbs_finder, TFBSFinderResults
+from .tfbs_finder import PWM_PATH, parse_range, run_tfbs_finder, TFBSFinderResults
 
 NAME = "tfbs_finder"
 SHORT_DESCRIPTION = "Detects transcription factor binding sites (TFBSs)"
@@ -42,10 +42,10 @@ def get_arguments() -> ModuleArgs:
 
     args.add_option('range',
                     dest='range',
-                    type=int,
-                    default=50,
-                    help=("The allowable overlap with gene start positions for "
-                          "TFBSs in coding regions (default: %(default)s)."))
+                    type=str,
+                    default="400:50",
+                    help=("The distances upstream and downstream of a gene start position in "
+                          "which TFBSs are searched for (default: %(default)s)."))
     return args
 
 
@@ -62,7 +62,12 @@ def check_options(options: ConfigType) -> List[str]:
     # MOODS doesn't output the p-value
     if options.tfbs_pvalue <= 0:
         issues.append(f"TFBS finder p-value is negative: {options.tfbs_pvalue}")
-    if options.tfbs_range <= 0:
+    try:
+        upstream_range, start_overlap = parse_range(options.tfbs_range)
+    except ValueError:
+        issues.append(f"TFBS finder range is not a pair of distances: {options.tfbs_range}")
+        return issues
+    if upstream_range <= 0 or start_overlap <= 0:
         issues.append(f"TFBS finder range is negative: {options.tfbs_range}")
     return issues
 
@@ -103,8 +108,6 @@ def regenerate_previous_results(previous: Dict[str, Any], record: Record,
         return None
     if options.tfbs_pvalue < results.pvalue:
         return None
-    if options.tfbs_range != results.start_overlap:
-        return None
     return TFBSFinderResults.from_json(previous, record)
 
 
@@ -122,4 +125,5 @@ def run_on_record(record: Record, results: TFBSFinderResults, options: ConfigTyp
     """
     if isinstance(results, TFBSFinderResults) and results.record_id == record.id:
         return results
-    return run_tfbs_finder(record, options.tfbs_pvalue, options.tfbs_range)
+    upstream_range, start_overlap = parse_range(options.tfbs_range)
+    return run_tfbs_finder(record, options.tfbs_pvalue, start_overlap, upstream_range)

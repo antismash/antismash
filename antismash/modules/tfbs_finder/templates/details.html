@@ -25,12 +25,12 @@
   <div class="tfbs-section-header">Binding sites found:</div>
    {{ hit_list(hits) }}
  {% else %}
-   <span class="tfbs-no-hits">No hits above weak threshold.</span>
+   <span class="tfbs-no-hits">No hits above medium threshold.</span>
  {% endif %}
-  {% if weak_hits %}
-   <div class="tfbs-weak-hits"><span class="tfbs-section-header">{{ "Additional w" if hits else "W" }}eak hits ({{ weak_hits | length }}):</span>
-    {{ collapser_start(target='weak', level='cds') }}
-     {{ hit_list(weak_hits) }}
+  {% if medium_hits %}
+   <div class="tfbs-secondary-hits"><span class="tfbs-section-header">{{ "Additional m" if hits else "M" }}edium confidence hits ({{ medium_hits | length }}):</span>
+    {{ collapser_start(target='medium', level='cds') }}
+     {{ hit_list(medium_hits) }}
     {{ collapser_end() }}
    </div>
   {% endif %}

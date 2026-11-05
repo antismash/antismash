@@ -25,8 +25,11 @@ from antismash.modules.tfbs_finder.tfbs_finder import (
     Matrix,
     TFBSHit,
     TFBSFinderResults,
+    are_co_transcribed,
+    get_cross_origin_areas,
     get_valid_areas,
     load_matrices,
+    parse_range,
     filter_hits,
     get_sequence_gc_content,
     get_bg_distribution,
@@ -51,23 +54,24 @@ class TestResults(unittest.TestCase):
         build_config([
             "--tfbs",
             "--tfbs-pvalue", "0.0001",
-            "--tfbs-range", "50",
+            "--tfbs-range", "400:50",
         ], isolated=True, modules=get_all_modules())
 
     def tearDown(self):
         destroy_config()
 
     def create_results(self, record_id="test_record", pval=0.0001, start_overlap=50,
-                       hits_by_region=None):
+                       upstream_range=400, hits_by_region=None):
         hits_by_region = hits_by_region or self.hits_by_region
 
-        return TFBSFinderResults(record_id, pval, start_overlap, hits_by_region)
+        return TFBSFinderResults(record_id, pval, start_overlap, upstream_range, hits_by_region)
 
     def test_init(self):
-        results = TFBSFinderResults("test_record", 0.0001, 50, self.hits_by_region)
+        results = TFBSFinderResults("test_record", 0.0001, 50, 400, self.hits_by_region)
         assert results.record_id == self.record.id
         assert results.pvalue == 0.0001
         assert results.start_overlap == 50
+        assert results.upstream_range == 400
         assert results.hits_by_region is self.hits_by_region
 
     def test_json_conversion(self):
@@ -78,6 +82,7 @@ class TestResults(unittest.TestCase):
         assert regenerated.hits_by_region == results.hits_by_region
         assert regenerated.pvalue == results.pvalue
         assert regenerated.start_overlap == results.start_overlap
+        assert regenerated.upstream_range == results.upstream_range
         assert regenerated.record_id == results.record_id
 
     def test_from_json_wrong_record(self):
@@ -98,8 +103,13 @@ class TestResults(unittest.TestCase):
 
     def test_different_range(self):
         data = self.create_results().to_json()
-        assert get_config().tfbs_range == 50
-        update_config({"tfbs_range": 60})
+        assert get_config().tfbs_range == "400:50"
+        update_config({"tfbs_range": "400:60"})
+        assert not TFBSFinderResults.from_json(data, self.record)
+
+    def test_different_upstream_range(self):
+        data = self.create_results().to_json()
+        update_config({"tfbs_range": "300:50"})
         assert not TFBSFinderResults.from_json(data, self.record)
 
     def test_add_to_incorrect_record(self):
@@ -175,7 +185,7 @@ def make_dummy_matrix(name="name"):
     consensus = 'AACGTT'
     species = 'coelicolor'
     link = 'test.link'
-    return Matrix(name, matrix, matrix_min_score, matrix_max_score, description, species, link, consensus)
+    return Matrix(name, matrix, matrix_max_score, matrix_min_score, description, species, link, consensus)
 
 
 class TestTFBSFinder(unittest.TestCase):
@@ -209,17 +219,24 @@ class TestTFBSFinder(unittest.TestCase):
         matrices = [make_dummy_matrix(name="A"), make_dummy_matrix(name="B")]
         hits = [
             [  # A
-                Hit(pos=160, score=0, strand=1),
-                Hit(pos=120, score=0, strand=1),
+                Hit(pos=160, score=5, strand=1),
+                Hit(pos=120, score=5, strand=1),
             ],
             [  # B
-                Hit(pos=400, score=0, strand=-1),
-                Hit(pos=300, score=0, strand=-1),
+                Hit(pos=400, score=5, strand=-1),
+                Hit(pos=300, score=5, strand=-1),
             ],
         ]
         filtered = filter_hits(matrices, [(100, 150), (300, 400)], hits)
         assert filtered[0].name == "A" and filtered[0].start == 120
         assert filtered[1].name == "B" and filtered[1].start == 300
+
+    def test_weak_hits_discarded(self):
+        matrix = make_dummy_matrix(name="A")
+        assert matrix.get_score_confidence(1) == Confidence.WEAK
+        hits = [[Hit(pos=120, score=1, strand=1), Hit(pos=130, score=5, strand=1)]]
+        filtered = filter_hits([matrix], [(100, 150)], hits)
+        assert [hit.start for hit in filtered] == [130]
 
     def test_load(self):
         matrices = load_matrices(PWM_PATH)
@@ -241,8 +258,8 @@ class TestFinder(unittest.TestCase):
                 TFBSHit('B', 2, 'TestSpecies', 'TestLink', 'TestHit', 'TT', Confidence.WEAK, 1, 19.0, 27.0),
             ],
         }
-        self.results = TFBSFinderResults(record_id="dummy", pvalue=0.001, start_overlap=1,
-                                         hits_by_region=self.region_hits)
+        self.results = TFBSFinderResults(record_id="dummy", pvalue=0.001, start_overlap=50,
+                                         upstream_range=400, hits_by_region=self.region_hits)
 
     def test_filter_results(self):
         assert self.results.get_hits_by_region(2) == []
@@ -387,56 +404,160 @@ class TestFindingNeighbours(unittest.TestCase):
 
 
 class TestAreaFinding(unittest.TestCase):
+    def find(self, start, end, locations, upstream=100, downstream=20):
+        return get_valid_areas(start, end, iter(locations), downstream, upstream)
+
     def test_leading(self):
-        assert get_valid_areas(0, 500, iter([FeatureLocation(250, 500, 1)]), 0) == [(0, 250)]
+        assert self.find(0, 500, [FeatureLocation(250, 500, 1)]) == [(150, 270)]
+        assert self.find(200, 500, [FeatureLocation(250, 500, 1)]) == [(200, 270)]
 
-    def test_trailing(self):
-        assert get_valid_areas(0, 500, iter([FeatureLocation(0, 250, 1)]), 0) == [(250, 500)]
+    def test_leading_terminator(self):
+        assert self.find(0, 500, [FeatureLocation(100, 250, -1)]) == [(230, 350)]
 
-    def test_gap(self):
-        locations = iter([
-            FeatureLocation(0, 200, 1),
-            FeatureLocation(300, 500, 1),
-        ])
-        assert get_valid_areas(0, 500, locations, 0) == [(200, 300)]
+    def test_trailing_terminator(self):
+        assert self.find(0, 500, [FeatureLocation(250, 400, 1)]) == [(150, 270)]
 
     def test_gaps_between_stops(self):
-        locations = iter([
+        locations = [
             FeatureLocation(0, 180, 1),
             FeatureLocation(210, 500, -1),
-        ])
-        assert get_valid_areas(0, 500, locations, 0) == []
+        ]
+        assert self.find(0, 500, locations) == [(0, 20), (480, 500)]
 
-    def test_overlapping_ends(self):
-        locations = iter([
+    def test_divergent_genes(self):
+        locations = [
+            FeatureLocation(0, 200, -1),
+            FeatureLocation(400, 500, 1),
+        ]
+        assert self.find(0, 500, locations) == [(180, 420)]
+
+    def test_co_transcribed(self):
+        for strand in [1, -1]:
+            locations = [
+                FeatureLocation(0, 200, strand),
+                FeatureLocation(300, 500, strand),
+            ]
+            areas = self.find(0, 500, locations)
+            if strand == 1:
+                assert areas == [(0, 20)]
+            else:
+                assert areas == [(480, 500)]
+
+    def test_not_co_transcribed(self):
+        locations = [
+            FeatureLocation(0, 200, 1),
+            FeatureLocation(400, 500, 1),
+        ]
+        assert self.find(0, 500, locations) == [(0, 20), (300, 420)]
+
+    def test_co_transcribed_small_overlap(self):
+        locations = [
             FeatureLocation(0, 210, 1),
-            FeatureLocation(200, 500, -1),
-        ])
-        assert get_valid_areas(0, 500, locations, 0) == []
+            FeatureLocation(200, 500, 1),
+        ]
+        assert self.find(0, 500, locations) == [(0, 20)]
 
     def test_overlapping_starts(self):
-        locations = iter([
+        locations = [
             FeatureLocation(0, 210, -1),
             FeatureLocation(200, 500, 1),
-        ])
-        assert get_valid_areas(0, 500, locations, 50) == [(150, 260)]
+        ]
+        assert self.find(0, 500, locations) == [(100, 310)]
 
-    def test_overlapping_same_strand(self):
-        for strand in [1, -1]:
-            locations = iter([
-                FeatureLocation(0, 210, strand),
-                FeatureLocation(200, 500, strand),
-            ])
-            assert get_valid_areas(0, 500, locations, 0) == []
+    def test_nested_genes(self):
+        long_gene = FeatureLocation(0, 500, 1)
+        short_gene = FeatureLocation(100, 200, 1)
+        last = FeatureLocation(550, 700, 1)
+        assert self.find(0, 700, [long_gene, short_gene, last]) == [(0, 20)]
+        assert self.find(0, 700, [short_gene, last]) == [(0, 120), (450, 570)]
 
-    def test_overlap_size(self):
-        for size in [0, 50, 100]:
-            locations = iter([
-                FeatureLocation(50, 200, 1),
-                FeatureLocation(200, 400, -1),
-            ])
-            assert get_valid_areas(0, 500, locations, size) == [(0, 50 + size), (400 - size, 500)]
+    def test_upstream_limited_by_neighbour(self):
+        locations = [
+            FeatureLocation(1000, 2000, 1),
+            FeatureLocation(2200, 3000, 1),
+        ]
+        areas = self.find(0, 4000, locations, upstream=400, downstream=100)
+        assert areas == [(600, 1100), (2000, 2300)]
+
+    def test_upstream_limited_by_neighbour_reverse(self):
+        locations = [
+            FeatureLocation(1000, 2000, -1),
+            FeatureLocation(2200, 3000, -1),
+        ]
+        areas = self.find(0, 4000, locations, upstream=400, downstream=100)
+        assert areas == [(1900, 2200), (2900, 3400)]
+
+    def test_divergent_genes_share_whole_gap(self):
+        locations = [
+            FeatureLocation(1000, 2000, -1),
+            FeatureLocation(2200, 3000, 1),
+        ]
+        areas = self.find(0, 4000, locations, upstream=400, downstream=100)
+        assert areas == [(1900, 2300)]
+
+    def test_overlapping_neighbour_does_not_limit(self):
+        locations = [
+            FeatureLocation(1000, 2300, -1),
+            FeatureLocation(2200, 3000, 1),
+        ]
+        areas = self.find(0, 4000, locations, upstream=400, downstream=100)
+        assert areas == [(1800, 2700)]
 
     def test_none(self):
-        # ensures StopIterations are never hit
-        assert get_valid_areas(0, 50, iter([]), 50) == [(0, 50)]
+        assert self.find(0, 50, []) == [(0, 50)]
+
+
+class TestCrossOriginAreaFinding(unittest.TestCase):
+    def build(self, genes, record_length=40):
+        location = CompoundLocation([FeatureLocation(13, record_length, 1), FeatureLocation(0, 12, 1)])
+        subregion = DummySubRegion(location=location)
+        region = DummyRegion(subregions=[subregion])
+        region.location = subregion.location
+        for gene in genes:
+            region.add_cds(gene)
+        return DummyRecord(length=record_length, circular=True), region
+
+    def test_post_origin_genes(self):
+        record, region = self.build([
+            DummyCDS(start=13, end=18, strand=-1),
+            DummyCDS(start=0, end=3),
+            DummyCDS(start=8, end=11),
+        ])
+        assert get_cross_origin_areas(record, region, 1, 5) == [(17, 23), (35, 41)]
+
+    def test_cross_origin_gene(self):
+        crossing = DummyCDS(location=CompoundLocation([FeatureLocation(36, 40, 1),
+                                                       FeatureLocation(0, 2, 1)]))
+        record, region = self.build([
+            DummyCDS(start=13, end=18, strand=-1),
+            crossing,
+            DummyCDS(start=8, end=11),
+        ])
+        assert get_cross_origin_areas(record, region, 1, 5) == [(17, 23), (31, 37)]
+
+
+class TestRangeParsing(unittest.TestCase):
+    def test_simple(self):
+        assert parse_range("400:100") == (400, 100)
+        assert parse_range("-5:0") == (-5, 0)
+
+    def test_bad_values(self):
+        for bad in ["400", "", "400:", "a:5", "400:100:20"]:
+            with self.assertRaises(ValueError):
+                parse_range(bad)
+
+
+class TestCoTranscription(unittest.TestCase):
+    def test_different_strands(self):
+        assert not are_co_transcribed(FeatureLocation(0, 100, 1), FeatureLocation(110, 200, -1))
+        assert not are_co_transcribed(FeatureLocation(0, 100, -1), FeatureLocation(110, 200, 1))
+
+    def test_distance_limits(self):
+        for strand in [1, -1]:
+            upstream = FeatureLocation(1000, 2000, strand)
+            for distance in [-90, 0, 170]:
+                downstream = FeatureLocation(2000 + distance, 3000, strand)
+                assert are_co_transcribed(upstream, downstream), distance
+            for distance in [-91, 171]:
+                downstream = FeatureLocation(2000 + distance, 3000, strand)
+                assert not are_co_transcribed(upstream, downstream), distance
