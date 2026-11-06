@@ -13,7 +13,10 @@ from antismash.common.hmmscan_refinement import HMMResult, QueryResult, gather_b
 from antismash.common.secmet import Protocluster, CDSFeature
 from antismash.common.subprocessing.hmmscan import run_hmmscan
 
-from .data_loader import CompoundGroup, Reaction, TerpeneHMM, load_hmm_lengths, load_hmm_properties
+from .data_loader import (
+    CompoundGroup, Reaction, Relationship, TerpeneHMM,
+    load_hmm_lengths, load_hmm_properties, load_relationships,
+    )
 from .results import ProtoclusterPrediction, DomainPrediction
 
 
@@ -117,6 +120,30 @@ def group_hmm_results(hmm_results: list[HMMResult],
     return groups
 
 
+def filter_subtypes(hmm_results: list[HMMResult],
+                    relationships: dict[str, Relationship],
+                    ) -> list[HMMResult]:
+    """ Removes hits if a more specific child hit is present
+
+        Arguments:
+            hmm_results: a list of HMMResult objects
+            relationships: a dictionary of hmm names to Relationship objects
+
+        Returns:
+            a list of HMMResult objects
+    """
+    remaining = []
+    results_by_name = {result.hit_id : result for result in hmm_results}
+
+    for result in hmm_results:
+        children = relationships[result.hit_id].children
+        if any(child in results_by_name for child in children):
+            continue
+        remaining.append(result)
+    assert remaining, "Subtype filtering removed all results."
+    return remaining
+
+
 def merge_reactions_by_substrate(profiles: list[TerpeneHMM]
                                  ) -> tuple[Reaction, ...]:
     """ Merges the reactions for a group of hmms.
@@ -163,26 +190,31 @@ def merge_reactions_by_substrate(profiles: list[TerpeneHMM]
 
 
 def get_domain_prediction(hmm_results: list[HMMResult],
-                          hmm_properties: dict[str, TerpeneHMM]) -> DomainPrediction:
+                          hmm_properties: dict[str, TerpeneHMM],
+                          relationships: dict[str, Relationship]) -> DomainPrediction:
     """ Converts a list of HMMResults to a DomainPrediction
 
         Arguments:
             hmm_results: a list of HMMResults
+            hmm_properties: a mapping of hmm name to TerpeneHMM
+            relationships: a mapping of hmm name to Relationship
 
         Returns:
             domain_prediction: a DomainPrediction
     """
     start = min(hmm_result.query_start for hmm_result in hmm_results)
     end = max(hmm_result.query_end for hmm_result in hmm_results)
+    hmm_results = filter_subtypes(hmm_results, relationships)
     profiles = [hmm_properties[hmm_result.hit_id] for hmm_result in hmm_results]
     main_types = set(profile.domain_type for profile in profiles)
     subtypes = set(profile.name for profile in profiles if profile.is_subtype())
     if len(main_types) > 1:
-        logging.debug("Overlapping hits for different main types.")
-        domain_type = "ambiguous"
-        subtypes = set()
-    else:
-        domain_type = main_types.pop()
+        logging.debug("Ambiguous hit detected, multiple main types: %s", main_types)
+        return DomainPrediction(domain_type="ambiguous", subtypes=tuple(),
+                                start=start, end=end,
+                                reactions=tuple())
+
+    domain_type = main_types.pop()
     final_reactions = merge_reactions_by_substrate(profiles)
     return DomainPrediction(domain_type=domain_type, subtypes=tuple(subtypes),
                             start=start, end=end,
@@ -190,11 +222,14 @@ def get_domain_prediction(hmm_results: list[HMMResult],
 
 
 def get_cds_predictions(hmm_results_per_cds: dict[str, list[HMMResult]],
-                        hmm_properties: dict[str, TerpeneHMM]) -> dict[str, list[DomainPrediction]]:
+                        hmm_properties: dict[str, TerpeneHMM],
+                        relationships: dict[str, Relationship]) -> dict[str, list[DomainPrediction]]:
     """ Convert list of HMMResults in CDS mapping to a list of DomainPredictions
 
         Arguments:
-            hmm_results: a mapping of CDS name to a list of HMMResults
+            hmm_results_per_cds: a mapping of CDS name to a list of HMMResults
+            hmm_properties: a mapping of hmm name to TerpeneHMM
+            relationships: a mapping of hmm name to Relationship
 
         Returns:
             cds_predictions: a mapping of CDS name to a list of DomainPredictions
@@ -205,7 +240,7 @@ def get_cds_predictions(hmm_results_per_cds: dict[str, list[HMMResult]],
         grouped_results = group_hmm_results(hmm_results)
         # Add a domain prediction for each group
         for group in grouped_results:
-            cds_predictions[cds_name].append(get_domain_prediction(group, hmm_properties))
+            cds_predictions[cds_name].append(get_domain_prediction(group, hmm_properties, relationships))
     return cds_predictions
 
 
@@ -256,9 +291,10 @@ def analyse_cluster(cluster: Protocluster) -> ProtoclusterPrediction:
     assert cluster.product_category == "terpene"
     hmm_properties = load_hmm_properties()
     hmm_lengths = load_hmm_lengths(hmm_properties)
+    relationships = load_relationships(hmm_properties)
 
     hmmscan_results = run_terpene_hmmscan(cluster.cds_children)
     refined_results = filter_incomplete(hmmscan_results, hmm_lengths)
     refined_results = filter_by_score(refined_results, hmm_properties)
-    cds_predictions = get_cds_predictions(refined_results, hmm_properties)
+    cds_predictions = get_cds_predictions(refined_results, hmm_properties, relationships)
     return get_cluster_prediction(cds_predictions)
