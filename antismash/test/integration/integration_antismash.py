@@ -27,7 +27,7 @@ class TestAntismash(unittest.TestCase):
         self.file_prefix = "nisin"
 
     def get_args(self):
-        return ["--minimal"]
+        return ["--minimal", "--no-enable-html"]
 
     def tearDown(self):
         destroy_config()
