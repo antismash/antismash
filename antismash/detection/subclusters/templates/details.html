@@ -1,0 +1,50 @@
+<div class="details subcluster-details">
+  <div class="heading">
+    <span>Subcluster Predictions</span> {{ help_tooltip(tooltip, "subcluster-body") }}
+  </div>
+  {% if predictions %}
+    {% for prediction in predictions %}
+    {% set i = loop.index %}
+    <div class="subcluster-prediction" id="{{ anchor }}-sc{{ i }}">
+      <div class="header">
+        <span class="rule-name">{{ prediction.rule_name }}</span>
+        <span class="compound-name">{{ prediction.compound.name }}</span>
+        <span class="compound-class">{% for classification in prediction.compound.classification %}<span class="compound-class-item">{{ classification }}</span>{% endfor %}</span>
+      </div>
+      {{ collapser_start(target="subcluster_prediction-%s" % i, level="none") }}
+        <div class="collapser-inner">
+          <div class="smiles-wrap">
+            <canvas id="smiles-canvas-{{ anchor }}-sc{{ i }}" class="smiles-canvas" data-smiles="{{ prediction.compound.smiles }}" width="150" height="150"></canvas>
+            <button class="smiles-copy-btn" onclick="navigator.clipboard.writeText(document.getElementById('smiles-canvas-{{ anchor }}-sc{{ i }}').dataset.smiles)">Copy SMILES</button>
+          </div>
+          <div id="smiles-canvas-{{ anchor }}-sc{{ i }}-modal" class="modal-container">
+            <div class="modal-content">
+              <canvas class="smiles-canvas-modal" data-smiles="{{prediction.compound.smiles}}"></canvas>
+            </div>
+          </div>
+          <div class="detection-details">
+            <a class="cluster-rules-header" id="{{ anchor }}-sc{{ i }}-rules-header" href="#">Show detection rule</a>
+            <div class="cluster-rules" id="{{ anchor }}-sc{{ i }}-rules">{{ prediction.conditions_str }}</div>
+            <table class="domain-table">
+              <thead><tr><th>Domain</th><th>Accession</th><th>Description</th><th>Detected in</th></tr></thead>
+              <tbody>
+                {% for domain_name, dhs in prediction.domain_hits_by_domain.items() %}
+                <tr>
+                  <td>{{ dhs[0].domain_name }}</td>
+                  <td>{{ dhs[0].domain_accession or "—" }}</td>
+                  <td>{{ dhs[0].domain_description or "—" }}</td>
+                  <td>{% for dh in dhs %}{{ cds_selector_span(dh.cds_name) }}{% if not loop.last %}, {% endif %}{% endfor %}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      {{ collapser_end() }}
+      <div id="subclusters-svg-{{ anchor }}-sc{{ i }}" class="subclusters-svg"></div>
+    </div>
+    {% endfor %}
+  {% else %}
+    <span class="subcluster-no-predictions">No subcluster predictions in this region.</span>
+  {% endif %}
+</div>

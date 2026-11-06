@@ -1,0 +1,44 @@
+# rule_name	compound_name	smiles	classification (semicolon-separated)
+SCG0002	L-streptose	CC1C(CO)(O)C(C(O1)O)O	sugar
+SCG0004	actinamine	CN[C@@H]1[C@H](C([C@H]([C@@H](C1O)NC)O)O)O	aminocyclitol
+SCG0005	actinospectose	CC1CC(=O)C(O)C(O)O1	sugar
+SCG0006	3-amino-4,7-dihydroxycoumarin	O=c1c(N)c(O)c2ccc(O)cc2o1	coumarin
+SCG0007	4-O-demethyl-beta-L-noviose	CC1(C)C(O)C(O)C(O)C(O1)O	sugar
+SCG0008	3-prenyl-4-hydroxybenzoic acid	O=C(c1cc(C/C=C(C)\C)c(O)cc1)O	aromatic carboxylic acid
+SCG0011	platensic acid		terpenoid
+SCG0012	3-amino-2,4-dihydroxybenzoic acid	C1=CC(=C(C(=C1C(=O)O)O)N)O	aromatic carboxylic acid
+SCG0015	benzoisochromanequinone polyketide		aromatic polycyclic ring
+SCG0016	D-angolosamine	C[C@H]1[C@H](O)[C@@H](N(C)C)C[C@H](O)O1	sugar
+SCG0017	dihydrokalafungin		aromatic polycyclic ring;benzoisochromanequinone
+SCG0018	L-rhodinose	C[C@H]1[C@@H](O)CC[C@@H](O)O1	sugar
+SCG0020	D-olivose	C[C@@H]1[C@H]([C@@H](CC(O1)O)O)O	sugar
+SCG0021	3-amino-4,7-dihydroxy-8-chlorocoumarin	NC1=C(C2=C(C(Cl)=C(C=C2)O)OC1=O)O	coumarin
+SCG0023	3-methyl-aspartate	CC(C(C(=O)O)N)C(=O)O	amino acid
+SCG0025	3,6-dimethylsalicylic acid	CC1=C(C(=C(C=C1)C)O)C(=O)O	aromatic carboxylic acid
+SCG0030	4-amino-4-deoxy-3-methyl-β-d-ribose	OC1C(O)C(C)(O)C(N)CO1	sugar
+SCG0031	3,5-Dihydroxyphenylglycine (Dhpg)	C1=C(C=C(C=C1O)O)C(C(=O)O)N	amino acid
+SCG0032	4-hydroxyphenylglycine (Hpg)	C1=CC(=CC=C1C(C(=O)O)N)O	amino acid
+SCG0033	beta-hydroxytyrosine	C1=CC(=CC=C1C(C(C(=O)O)N)O)O	amino acid
+SCG0034	dehydrovancosamine	C[C@@H]1O{1}[C@@H](O)C[C@](C)(N)C1=O	sugar
+SCG0035	L-enduracididine	C1[C@H](NC(=N1)N)C[C@@H](C(=O)O)N	amino acid
+SCG0036	4-methylproline	C[C@@H]1C[C@H]([NH2+]C1)C(=O)[O-]	amino acid
+SCG0037	p-aminophenylpyruvate	C1=CC(=CC=C1CC(=O)C(=O)O)N	amino acid
+SCG0038	4-methyl-3-hydroxyanthranilic acid		aromatic carboxylic acid
+SCG0039	salicylate		aromatic carboxylic acid
+SCG0040	4'-O-carbamoyl-2'-deoxyrhamnose	O[C@H]1C[C@@H](O)[C@H](OC(N)=O)[C@@H](C)O1	sugar;deoxysugar
+SCG0043	2,4-diaminobutyric acid	C(CN)C(C(=O)O)N	amino acid
+SCG0046	L-mycarose	C[C@H]1[C@@H]([C@](CC(O1)O)(C)O)O	sugar
+SCG0047	D-desosamine	C[C@@H]1C[C@H](N(C)C)[C@@H](O)[C@H](O)O1	sugar;aminodeoxysugar
+SCG0049	pyrrole-2-carboxylic acid	O=C(c1[nH]ccc1)O	pyrrole
+SCG0050	platencinic acid		terpenoid
+SCG0052	aminomalonyl-ACP		polyketide extender unit
+SCG0053	beta-ureidoalanine	NC(NC[C@H](N)C(O)=O)=O	amino acid
+SCG0054	enduracididine	C1[C@H](NC(=N1)N)C[C@@H](C(=O)O)N	amino acid
+SCG0055	2,3-diaminopropionate	C(C(C(=O)O)N)N	amino acid
+SCG0056	capreomycidine	C1CNC(=[NH+][C@H]1[C@@H](C(=O)[O-])[NH3+])N	amino acid
+SCG0057	(S)-3-chloro-5-hydroxy-β-tyrosine	OC(CC(C1=CC(O)=C(C(Cl)=C1)O)N)=O	amino acid
+SCG0058	isobutyrylmalonyl-CoA		polyketide extender unit
+SCG0059	allylmalonyl-CoA		polyketide extender unit
+SCG0060	4-keto-D-olivose	C[C@@H]1C([C@H](O)C[C@@H](O)O1)=O	sugar
+SCG0061	isoprene	CC(=C)C=C	terpenoid
+SCG0062	Minimal Enediyne PKS cassette (diiodotetrayne)	I/C(C#CC#C/C=C/C#CC#CC(I)=C)=C/C	enediyne
