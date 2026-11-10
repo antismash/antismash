@@ -44,7 +44,9 @@ class Base(unittest.TestCase):
         destroy_config()
 
     def get_args(self):
-        return ["--minimal", "--smcog-trees"]
+        args = helpers.build_module_limitation_arg([smcog_trees])
+        args.append("--smcog-trees")
+        return args
 
     def build_record(self, genbank):
         # construct a working record
@@ -90,8 +92,9 @@ class TestTreeGeneration(Base):
     def test_trees_complete(self):
         expected_tree_count = 7
         with TemporaryDirectory() as output_dir:
-            args = ["--minimal", "--enable-genefunctions", "--smcog-trees",
-                    "--output-dir", output_dir, helpers.get_path_to_nisin_genbank()]
+            args = helpers.build_module_limitation_arg([genefunctions, smcog_trees])
+            args.extend(["--enable-genefunctions", "--smcog-trees",
+                         "--output-dir", output_dir, helpers.get_path_to_nisin_genbank()])
             options = build_config(args, isolated=True, modules=antismash.get_all_modules())
             image_path = os.path.join(output_dir, "smcogs", "*.png")
 

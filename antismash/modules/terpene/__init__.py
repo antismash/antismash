@@ -29,7 +29,7 @@ def get_arguments() -> ModuleArgs:
 
 def is_enabled(options: ConfigType) -> bool:
     """ Whether the module is enabled """
-    return not options.minimal or options.terpene_enabled
+    return options.terpene_enabled and not options.is_module_excluded(NAME)
 
 
 def check_options(_options: ConfigType) -> list[str]:

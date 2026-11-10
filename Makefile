@@ -2,7 +2,7 @@ omit = --omit '*/external/*'
 coverage = coverage run $(omit) --source antismash -m pytest
 integration_flags = --override-ini=python_files=integration_*.py
 integration_coverage = .coverage_integration
-sanity_run = echo "sanity TTA run" && rm -rf nisin && antismash --minimal antismash/test/integration/data/nisin.gbk
+sanity_run = echo "sanity TTA run" && rm -rf nisin && antismash --restrict-modules-to=hmmdetection antismash/test/integration/data/nisin.gbk
 
 unit:
 	$(sanity_run)

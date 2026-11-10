@@ -80,7 +80,7 @@ def check_prereqs(_options: ConfigType) -> List[str]:
 def is_enabled(options: ConfigType) -> bool:
     """ Returns True if the module is enabled with the options provided
     """
-    return options.tfbs
+    return options.tfbs and not options.is_module_excluded(NAME)
 
 
 def regenerate_previous_results(previous: Dict[str, Any], record: Record,

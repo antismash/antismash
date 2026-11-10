@@ -28,6 +28,8 @@ class ConfigType:
 
     def __setattr__(self, attr: str, value: Any) -> None: ...
 
+    def is_module_excluded(self, module_name: str) -> bool: ...
+
 
 class AntismashModule(ModuleType):
     """ A type to prevent all the many "ModuleType has no attribute 'run_on_record'"
