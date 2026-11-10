@@ -13,9 +13,11 @@ import unittest
 import antismash
 from antismash.main import run_antismash, get_all_modules, prepare_module_data
 from antismash.common import path
+from antismash.common.test import helpers
 from antismash.common.test.helpers import get_path_to_nisin_genbank
 from antismash.common.secmet.test.helpers import rotate
 from antismash.config import build_config, destroy_config, get_config, update_config
+from antismash.outputs import html
 
 
 class TestAntismash(unittest.TestCase):
@@ -27,7 +29,7 @@ class TestAntismash(unittest.TestCase):
         self.file_prefix = "nisin"
 
     def get_args(self):
-        return ["--minimal"]
+        return helpers.build_module_limitation_arg([])
 
     def tearDown(self):
         destroy_config()
@@ -46,7 +48,7 @@ class TestAntismash(unittest.TestCase):
 
 class TestSkipZip(TestAntismash):
     def get_args(self):
-        return ["--minimal", "--no-zip-output"]
+        return super().get_args() + ["--no-zip-output"]
 
     def check_output_files(self, filenames=None):
         super().check_output_files(filenames)
@@ -55,7 +57,7 @@ class TestSkipZip(TestAntismash):
 
 class TestEnableHTML(TestAntismash):
     def get_args(self):
-        return ["--minimal", "--enable-html"]
+        return helpers.build_module_limitation_arg([html])
 
     def check_output_files(self, filenames=None):
         super().check_output_files(["index.html"])
@@ -63,17 +65,17 @@ class TestEnableHTML(TestAntismash):
 
 class TestProfiling(TestAntismash):
     def get_args(self):
-        return ["--minimal", "--profiling"]
+        return super().get_args() + ["--profiling"]
 
 
 class TestDebug(TestAntismash):
     def get_args(self):
-        return ["--minimal", "-d"]
+        return super().get_args() + ["--debug"]
 
 
 class TestVerbose(TestAntismash):
     def get_args(self):
-        return ["--minimal", "-v"]
+        return super().get_args() + ["--verbose"]
 
 
 class TestLogging(TestAntismash):
@@ -86,16 +88,13 @@ class TestLogging(TestAntismash):
         self.logfile.close()
 
     def get_args(self):
-        return ["--minimal", "-v", "--logfile", os.path.join(self.logfile.name)]
+        return super().get_args() + ["-v", "--logfile", os.path.join(self.logfile.name)]
 
     def check_output_files(self, filenames=None):
         super().check_output_files(filenames=[self.logfile.name])
 
 
-class TestResultsReuse(TestAntismash):
-    def get_args(self):
-        return ["--minimal", "--enable-html"]
-
+class TestResultsReuse(TestEnableHTML):
     def test_nisin_minimal(self):
         # make sure the output directory isn't filled
         out_dir = self.config.output_dir
