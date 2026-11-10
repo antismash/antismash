@@ -7,11 +7,9 @@
 from copy import deepcopy
 import os
 import unittest
-from unittest.mock import patch
 
 from helperlibs.wrappers.io import TemporaryDirectory
 
-from antismash import main
 from antismash.common import json, path, secmet
 from antismash.common.module_results import ModuleResults
 from antismash.common.test import helpers
@@ -25,7 +23,8 @@ from antismash.outputs import html
 
 class Base(unittest.TestCase):
     def setUp(self):
-        self.options = build_config(self.get_args(), isolated=True, modules=[clusterblast, html, hmm_detection])
+        self.options = build_config(self.get_args(), isolated=True,
+                modules=helpers.get_all_modules())
         _major, _minor, _patch = map(int, run_diamond_version().split("."))
         self.diamond_ver_major = _major
         self.diamond_ver_minor = _minor
@@ -37,11 +36,9 @@ class Base(unittest.TestCase):
         assert clusterblast.check_options(self.options) == []
         assert clusterblast.is_enabled(self.options)
 
-    def get_args(self):
-        """ override with the args you'll need to use in setUp(),
-            format is as on the commandline, e.g. ["--tta", "--minimal"]
-        """
-        raise NotImplementedError("get_args not overridden")
+    def get_args(self, extra_modules=None):
+        enabled_modules = [clusterblast] + (extra_modules or [])
+        return helpers.build_module_limitation_arg(enabled_modules)
 
     def tearDown(self):
         destroy_config()
@@ -62,10 +59,9 @@ class Base(unittest.TestCase):
 
         with TemporaryDirectory() as output_dir:
             update_config({"output_dir": output_dir})
-            with patch.object(main, "get_all_modules", return_value=[hmm_detection, clusterblast, html]):
-                with patch.object(main, "_get_all_enabled_modules", return_value=[hmm_detection, clusterblast, html]):
-                    run_and_regen = helpers.run_and_regenerate_results_for_module
-                    results = run_and_regen(filename, clusterblast, self.options, callback=callback)
+            results = helpers.run_and_regenerate_results_for_module(
+                filename, clusterblast, self.options, callback=callback,
+            )
             assert annotated_records
             update_config({"output_dir": ""})
             results, _ = self.get_results(results)
@@ -82,9 +78,13 @@ class Base(unittest.TestCase):
 
 
 class GeneralIntegrationTest(Base):
-    def get_args(self):
-        return ["--cb-general", "--minimal", "--enable-html",
-                "--data", path.get_full_path(__file__, "data")]
+    def get_args(self, _extra_modules=None):
+        base = super().get_args(extra_modules=[html])
+
+        return base + [
+            "--cb-general",
+            "--data", path.get_full_path(__file__, "data"),
+        ]
 
     def get_results(self, results):
         assert isinstance(results, ModuleResults)
@@ -147,9 +147,12 @@ class GeneralIntegrationTest(Base):
 
 
 class KnownIntegrationTest(Base):
-    def get_args(self):
-        return ["--cb-knowncluster", "--minimal", "--enable-html",
-                "--data", path.get_full_path(__file__, "data")]
+    def get_args(self, _extra_modules=None):
+        base = super().get_args(extra_modules=[html])
+        return base + [
+            "--cb-knowncluster",
+            "--data", path.get_full_path(__file__, "data"),
+        ]
 
     def get_results(self, results):
         assert isinstance(results, ModuleResults)
@@ -236,8 +239,8 @@ class SubIntegrationTest(Base):
         super().setUp()
         sub.prepare_sub_data()
 
-    def get_args(self):
-        return ["--cb-subcluster", "--minimal", "--enable-html"]
+    def get_args(self, _extra_modules=None):
+        return ["--cb-subcluster"] + super().get_args(extra_modules=[html])
 
     def get_results(self, results):
         assert isinstance(results, ModuleResults)

@@ -20,7 +20,10 @@ from antismash.modules import nrps_pks
 
 class IntegrationWithoutNRPSPKS(unittest.TestCase):
     def setUp(self):
-        self.options = build_config(["--minimal"], isolated=True, modules=antismash.get_all_modules())
+        self.module_arg = helpers.build_module_limitation_arg([nrps_pks_domains])
+        self.options = build_config(self.module_arg, isolated=True,
+                                    modules=antismash.get_all_modules())
+        assert self.options.is_module_excluded(nrps_pks.NAME)
         assert not nrps_pks.is_enabled(self.options)
 
     def tearDown(self):
@@ -28,7 +31,7 @@ class IntegrationWithoutNRPSPKS(unittest.TestCase):
 
     def test_minimal(self):
         with TemporaryDirectory(change=True) as tempdir:
-            self.options = build_config(["--minimal", "--output-dir", tempdir],
+            self.options = build_config(self.module_arg + ["--output-dir", tempdir],
                                         isolated=True, modules=antismash.get_all_modules())
             with patch.object(nrps_pks, "run_on_record", side_effect=RuntimeError("shouldn't run")):
                 antismash.main.run_antismash(helpers.get_path_to_balhymicin_genbank(),
@@ -51,8 +54,11 @@ def ensure_module_lids_shown(output_dir: str):
 
 class IntegrationNRPSPKS(unittest.TestCase):
     def setUp(self):
-        self.options = build_config(["--minimal", "--enable-nrps-pks", "--enable-html"],
+        module_arg = helpers.build_module_limitation_arg([nrps_pks_domains, nrps_pks,
+                                                          antismash.outputs.html])
+        self.options = build_config(module_arg,
                                     isolated=True, modules=antismash.get_all_modules())
+        assert nrps_pks.is_enabled(self.options)
 
     def tearDown(self):
         destroy_config()

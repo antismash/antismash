@@ -249,11 +249,10 @@ def check_options(options: ConfigType) -> List[str]:
     return issues
 
 
-def is_enabled(_options: ConfigType) -> bool:
+def is_enabled(options: ConfigType) -> bool:
     """  Uses the supplied options to determine if the module should be run
     """
-    # in this case, yes, always
-    return True
+    return not options.is_module_excluded(NAME)
 
 
 def regenerate_previous_results(results: Dict[str, Any], record: Record,

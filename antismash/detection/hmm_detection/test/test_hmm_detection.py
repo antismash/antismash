@@ -114,7 +114,7 @@ class HmmDetectionTest(unittest.TestCase):
         # should be no failing prerequisites
         assert core.check_prereqs(self.config) == []
         # always runs
-        assert core.is_enabled(None)
+        assert core.is_enabled(self.config)
 
     def test_apply_cluster_rules(self):
         detected_types, cluster_type_hits = hmm_detection.apply_cluster_rules(self.record, self.results_by_id,

@@ -16,7 +16,11 @@ from antismash.modules import tfbs_finder
 
 class TestTFBSFinder(unittest.TestCase):
     def setUp(self):
-        self.options = build_config(["--minimal", "--enable-html", "--tfbs"],
+        self.module_arg = helpers.build_module_limitation_arg([
+            tfbs_finder,
+            antismash.outputs.html,
+        ])
+        self.options = build_config(self.module_arg + ["--tfbs"],
                                     isolated=True, modules=antismash.get_all_modules())
 
     def tearDown(self):
@@ -27,9 +31,13 @@ class TestTFBSFinder(unittest.TestCase):
         assert not tfbs_finder.check_prereqs(self.options)
         assert tfbs_finder.is_enabled(self.options)
 
-        options = build_config(["--minimal", "--enable-html",
-                                "--tfbs", "--tfbs-pvalue", "-1", "--tfbs-range", "-10"],
-                               isolated=True, modules=antismash.get_all_modules())
+        options = build_config(self.module_arg + [
+                "--tfbs",
+                "--tfbs-pvalue", "-1",
+                "--tfbs-range", "-10"
+            ],
+            isolated=True, modules=antismash.get_all_modules()
+        )
         issues = tfbs_finder.check_options(options)
         assert len(issues) == 2
         assert "TFBS finder p-value is negative" in issues[0]

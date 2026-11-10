@@ -62,7 +62,7 @@ def check_prereqs(options: ConfigType) -> List[str]:
 
 
 def get_arguments() -> ModuleArgs:
-    """ Runs by default, but add minimal's --enable option """
+    """ Builds the module's command line arguments"""
     args = ModuleArgs('Advanced options', 'lasso', enabled_by_default=True)
     return args
 
@@ -74,7 +74,7 @@ def check_options(_options: ConfigType) -> List[str]:
 
 def is_enabled(options: ConfigType) -> bool:
     """ Will the module run with the given options """
-    return not options.minimal or options.lassopeptides_enabled
+    return options.lassopeptides_enabled and not options.is_module_excluded(NAME)
 
 
 def regenerate_previous_results(previous: Dict[str, Any], record: Record,

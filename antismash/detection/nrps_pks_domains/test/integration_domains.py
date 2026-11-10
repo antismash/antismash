@@ -16,7 +16,8 @@ from antismash.detection import nrps_pks_domains
 class TestAnalyses(unittest.TestCase):
     def setUp(self):
         # skipping clusterhmmer and the p450 potential hits for speed
-        self.options = build_config(["--minimal", "--enable-html"],
+        module_arg = helpers.build_module_limitation_arg([nrps_pks_domains])
+        self.options = build_config(module_arg,
                                     isolated=True,
                                     modules=antismash.get_all_modules())
 

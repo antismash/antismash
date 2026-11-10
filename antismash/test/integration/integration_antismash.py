@@ -17,7 +17,6 @@ from antismash.common.test import helpers
 from antismash.common.test.helpers import get_path_to_nisin_genbank
 from antismash.common.secmet.test.helpers import rotate
 from antismash.config import build_config, destroy_config, get_config, update_config
-from antismash.outputs import html
 
 
 class TestAntismash(unittest.TestCase):
@@ -57,7 +56,7 @@ class TestSkipZip(TestAntismash):
 
 class TestEnableHTML(TestAntismash):
     def get_args(self):
-        return helpers.build_module_limitation_arg([html])
+        return helpers.build_module_limitation_arg([])
 
     def check_output_files(self, filenames=None):
         super().check_output_files(["index.html"])
