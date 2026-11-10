@@ -42,7 +42,7 @@ def check_prereqs(_options: ConfigType) -> List[str]:
 
 def is_enabled(options: ConfigType) -> bool:
     """ Should the module be run with these options """
-    return options.tta_enabled or not options.minimal
+    return options.tta_enabled and not options.is_module_excluded(NAME)
 
 
 def regenerate_previous_results(previous: Dict[str, Any], record: Record,

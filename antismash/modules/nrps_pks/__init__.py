@@ -87,7 +87,7 @@ def regenerate_previous_results(json: Dict[str, Any], record: Record,
 
 def is_enabled(options: ConfigType) -> bool:
     """ Whether the module is enabled """
-    return not options.minimal or options.nrps_pks_enabled
+    return options.nrps_pks_enabled and not options.is_module_excluded(NAME)
 
 
 def run_on_record(record: Record, results: Optional[NRPS_PKS_Results], options: ConfigType) -> NRPS_PKS_Results:

@@ -19,7 +19,8 @@ from antismash.modules import tta
 
 class TtaIntegrationTest(unittest.TestCase):
     def setUp(self):
-        options = build_config(["--minimal", "--enable-tta", "--tta-threshold", "0"],
+        self.module_args = helpers.build_module_limitation_arg([tta])
+        options = build_config(self.module_args + ["--tta-threshold", "0"],
                                isolated=True, modules=antismash.get_all_modules())
         self.old_config = get_config().__dict__
         self.options = update_config(options)
@@ -50,7 +51,7 @@ class TtaIntegrationTest(unittest.TestCase):
 
     def test_nisin_complete(self):
         with TemporaryDirectory() as output_dir:
-            args = ["--minimal", "--enable-tta", "--tta-threshold", "0",
+            args = self.module_args + ["--tta-threshold", "0",
                     "--output-dir", output_dir, helpers.get_path_to_nisin_genbank()]
             options = build_config(args, isolated=True, modules=antismash.get_all_modules())
             antismash.run_antismash(helpers.get_path_to_nisin_genbank(), options)

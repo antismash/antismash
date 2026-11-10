@@ -17,7 +17,8 @@ from antismash.modules import lanthipeptides
 
 class IntegrationLanthipeptides(unittest.TestCase):
     def setUp(self):
-        self.options = build_config(["--minimal", "--enable-html", "--enable-lanthipeptides"],
+        module_arg = helpers.build_module_limitation_arg([lanthipeptides])
+        self.options = build_config(module_arg,
                                     isolated=True, modules=antismash.get_all_modules())
 
     def tearDown(self):

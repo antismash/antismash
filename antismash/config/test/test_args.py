@@ -113,6 +113,25 @@ class TestConfig(unittest.TestCase):
             assert config.verbose
         assert config.executables  # this namespace must always exist, but the contents may or may not
 
+    def test_module_exclusion(self):
+        config = get_config()
+        assert not config.included_modules
+        assert not config.excluded_modules
+        # by default, nothing is excluded
+        assert not config.is_module_excluded("A")
+        assert not config.is_module_excluded("B")
+
+        # explicit exclusions
+        update_config({"excluded_modules": ["A"]})
+        assert config.is_module_excluded("A")
+        assert not config.is_module_excluded("B")
+
+        # implicit exclusions
+        update_config({"included_modules": ["C"]})
+        assert config.is_module_excluded("A")
+        assert config.is_module_excluded("B")
+        assert not config.is_module_excluded("C")
+
 
 class TestExecutableArg(unittest.TestCase):
     def setUp(self):
@@ -214,13 +233,14 @@ class TestModuleArgs(unittest.TestCase):
 
 # pytest only here for simple output capturing
 def test_help(capsys):
+    sample_debug_arg = "--restrict-modules-to"
     args.build_parser(modules=get_all_modules()).print_help()
     out, err = capsys.readouterr()
-    assert "--minimal" not in out
+    assert sample_debug_arg not in out
 
     args.build_parser(modules=get_all_modules()).print_help(show_all=True)
     out_all, err_all = capsys.readouterr()
     assert err == err_all and not err
     # make sure show_all does something
     assert out != out_all
-    assert "--minimal" in out_all
+    assert sample_debug_arg in out_all

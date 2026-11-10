@@ -59,7 +59,7 @@ def check_prereqs(options: ConfigType) -> List[str]:
 
 
 def get_arguments() -> ModuleArgs:
-    """ Runs by default, but add minimal's --enable option """
+    """ Builds the module's command line arguments """
     args = ModuleArgs('Advanced options', 'sacti', enabled_by_default=True)
     return args
 
@@ -71,7 +71,7 @@ def check_options(_options: ConfigType) -> List[str]:
 
 def is_enabled(options: ConfigType) -> bool:
     """ Should the module run with the given options """
-    return not options.minimal or options.sactipeptides_enabled
+    return options.sactipeptides_enabled and not options.is_module_excluded(NAME)
 
 
 def regenerate_previous_results(previous: Dict[Any, str], record: Record,
