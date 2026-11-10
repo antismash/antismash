@@ -57,7 +57,7 @@ class TestSkipZip(TestAntismash):
 
 class TestEnableHTML(TestAntismash):
     def get_args(self):
-        return helpers.build_module_limitation_arg([html])
+        return helpers.build_module_limitation_arg([html], include_all_outputs=False)
 
     def check_output_files(self, filenames=None):
         super().check_output_files(["index.html"])

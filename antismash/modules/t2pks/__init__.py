@@ -80,7 +80,7 @@ def check_prereqs(options: ConfigType) -> List[str]:
 
 def is_enabled(options: ConfigType) -> bool:
     """ Returns True if the module is enabled by the given options """
-    return options.t2pks_enabled or not options.minimal
+    return options.t2pks_enabled and not options.is_module_excluded(NAME)
 
 
 def regenerate_previous_results(previous: Dict[str, Any], record: Record,

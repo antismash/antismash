@@ -13,6 +13,7 @@ from antismash.common import json, secmet
 from antismash.common.secmet.qualifiers import GeneFunction
 from antismash.common.test import helpers
 from antismash.config import build_config, destroy_config, get_config, update_config
+from antismash.detection import genefunctions
 from antismash.detection.genefunctions.tools import smcogs
 
 
@@ -32,7 +33,8 @@ class TestSMCOGs(unittest.TestCase):
         update_config(self.old_config)
 
     def get_args(self):
-        return ["--minimal", "--enable-genefunctions"]
+        modules_arg = helpers.build_module_limitation_arg([genefunctions])
+        return modules_arg
 
     def build_record(self, genbank):
         # construct a working record

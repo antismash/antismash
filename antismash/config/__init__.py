@@ -19,7 +19,12 @@ from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
 
 from antismash.custom_typing import AntismashModule, ConfigType
 
-from .args import build_parser, AntismashParser
+from .args import (
+    DEST_EXCLUDED as _DEST_EXCLUDED,
+    DEST_RESTRICTED_TO as _DEST_RESTRICTED_TO,
+    AntismashParser,
+    build_parser,
+)
 from .executables import get_default_paths
 from .loader import load_config_from_file
 
@@ -80,6 +85,26 @@ class Config:  # since it's a glorified namespace, pylint: disable=too-few-publi
             """ Returns a value for a key if the key exists, otherwise returns
                 the default value provided or None """
             return self.__dict__.get(key, default)
+
+        def is_module_excluded(self, module_name: str) -> bool:
+            """ Determines whether the given module name is in the set of modules
+                to be excluded.
+
+                Arguments:
+                    module_name: the name of the module to check
+
+                Returns:
+                    True if the module is excluded
+            """
+            excluded: list[str] = self.excluded_modules
+            assert excluded is not None
+            if module_name in excluded:
+                return True
+            included: list[str] = self.included_modules
+            assert included is not None
+            if not included:
+                return False
+            return module_name not in included
 
         def __getattr__(self, attr: str) -> Any:
             if attr in self.__dict__:
