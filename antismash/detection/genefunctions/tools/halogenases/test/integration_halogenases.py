@@ -10,6 +10,7 @@ import antismash
 from antismash.common import fasta, path, secmet
 from antismash.common.test import helpers
 from antismash.config import build_config, destroy_config, get_config, update_config
+from antismash.detection import genefunctions
 from antismash.detection.genefunctions.tools.halogenases import (
     classify as halo_analysis,
     prepare_data,
@@ -36,7 +37,9 @@ class TestHalongenases(unittest.TestCase):
         update_config(self.old_config)
 
     def get_args(self):
-        return ["--minimal", "--enable-genefunctions"]
+        args = helpers.build_module_limitation_arg([genefunctions])
+        args.append("--enable-genefunctions")
+        return args
 
     def generate_record(self, gene_name):
         features = [helpers.DummyCDS(locus_tag=gene_name, translation=TRANSLATIONS[gene_name])]

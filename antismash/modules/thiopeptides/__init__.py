@@ -28,8 +28,8 @@ def check_options(_options: ConfigType) -> List[str]:
 
 
 def is_enabled(options: ConfigType) -> bool:
-    """ Only disabled if minimal and not re-enabled """
-    return options.thiopeptides_enabled or not options.minimal
+    """  Uses the supplied options to determine if the module should be run """
+    return options.thiopeptides_enabled and not options.is_module_excluded(NAME)
 
 
 def get_arguments() -> ModuleArgs:

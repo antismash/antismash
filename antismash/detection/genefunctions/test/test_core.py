@@ -39,23 +39,14 @@ class TestOptions(unittest.TestCase):
 
     def test_default(self):
         options = self.setup_options([])
-        assert not options.minimal
         assert genefunctions.check_options(options) == []
         assert genefunctions.is_enabled(options)
 
     def test_disabled(self):
-        options = self.setup_options(["--minimal"])
-        assert options.minimal
+        options = self.setup_options(["--no-enable-genefunctions"])
         assert not options.genefunctions_enabled
         assert genefunctions.check_options(options) == []
         assert not genefunctions.is_enabled(options)
-
-    def test_minimal_but_enabled(self):
-        options = self.setup_options(["--minimal", "--enable-genefunctions"])
-        assert options.minimal
-        assert options.genefunctions_enabled
-        assert genefunctions.check_options(options) == []
-        assert genefunctions.is_enabled(options)
 
 
 class TestFunctionResults(unittest.TestCase):

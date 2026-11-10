@@ -263,7 +263,31 @@ def verify_options(options: ConfigType, modules: List[AntismashModule]) -> bool:
             True if no problems detected, otherwise False
     """
     errors_found: List[str] = []
+    excluded_modules = set(options.excluded_modules)
+    included_modules = set(options.included_modules)
+    module_names = {module.NAME for module in modules}
+
+    # modules mentioned in restrictions must exist
+    if excluded_modules - module_names:
+        errors_found.append("Excluded module(s) not found: "
+                            + ", ".join(excluded_modules - module_names))
+    if included_modules - module_names:
+        errors_found.append("Enabled module(s) not found: "
+                            + ", ".join(included_modules - module_names))
+    # ensure there's no conflicts with args limiting which modules run
+    if included_modules:  # if there's no whitelist, there can't be a conflict
+        overlap = set(included_modules).intersection(excluded_modules)
+        if overlap:
+            pretty = ", ".join(sorted(overlap))
+            errors_found.append(
+                f"Module(s) in both explicitly excluded and explicitly included arguments: {pretty}"
+            )
+        if all(options.is_module_excluded(module.NAME) for module in modules):
+            errors_found.append("Module restriction options blocked all modules")
+
     for module in modules:
+        if options.is_module_excluded(module.NAME):
+            continue
         try:
             logging.debug("Checking options for %s", module.__name__)
             errors_found.extend(module.check_options(options))
@@ -296,6 +320,8 @@ def run_detection(record: Record, options: ConfigType,
 
     # run full genome detections
     for module in _MODULES.detection[DetectionStage.FULL_GENOME]:
+        if options.is_module_excluded(module.NAME):
+            continue
         run_module(record, module, options, module_results, timings)
         results = module_results.get(module.__name__)
         if results:
@@ -308,6 +334,8 @@ def run_detection(record: Record, options: ConfigType,
     modules = list(_MODULES.detection[DetectionStage.AREA_FORMATION])
     modules.extend(_MODULES.detection[DetectionStage.AREA_REFINEMENT])
     for module in modules:
+        if options.is_module_excluded(module.NAME):
+            continue
         run_module(record, module, options, module_results, timings)
         results = module_results.get(module.__name__)
         if results:
@@ -332,6 +360,8 @@ def run_detection(record: Record, options: ConfigType,
 
     # finally, run any detection limited to genes in clusters
     for module in _MODULES.detection[DetectionStage.PER_AREA]:
+        if options.is_module_excluded(module.NAME):
+            continue
         run_module(record, module, options, module_results, timings)
         results = module_results.get(module.__name__)
         if results:
@@ -408,6 +438,8 @@ def analyse_record(record: Record, options: ConfigType, modules: List[AntismashM
     timings: Dict[str, float] = {}
     # try to run the given modules over the record
     for module in modules:
+        if options.is_module_excluded(module.NAME):
+            continue
         run_module(record, module, options, previous_result, timings)
     return timings
 
@@ -558,6 +590,8 @@ def write_outputs(results: serialiser.AntismashResults, options: ConfigType) -> 
         module_results_per_record.append(record_result)
 
     for module in get_output_modules():
+        if options.is_module_excluded(module.NAME):
+            continue
         if not module.is_enabled(options):
             continue
         logging.debug(" Writing relevant output files for %s ", module.__name__)
@@ -713,6 +747,8 @@ def check_prerequisites(modules: List[AntismashModule], options: ConfigType) -> 
     """
     errors_by_module = {}
     for module in modules:
+        if options.is_module_excluded(module.NAME):
+            continue
         logging.debug("Checking prerequisites for %s", module.__name__)
         try:
             res = module.check_prereqs(options)
@@ -808,7 +844,16 @@ def run_antismash(sequence_file: Optional[str], options: ConfigType) -> int:
 
 
 def _get_all_enabled_modules(modules: list[AntismashModule], options: ConfigType) -> list[AntismashModule]:
-    return [module for module in modules if module.is_enabled(options)]
+    available = [module for module in modules if not options.is_module_excluded(module.NAME)]
+    return [module for module in available if module.is_enabled(options)]
+
+
+def _is_region_detection_possible(options: ConfigType, modules: list[AntismashModule] = None) -> bool:
+    if modules is None:
+        modules = get_detection_modules()
+    enabled = set(m for m in modules if not options.is_module_excluded(m.NAME))
+    available = set(_MODULES.detection[DetectionStage.AREA_FORMATION])
+    return bool(enabled and enabled.intersection(available))
 
 
 def _run_antismash(sequence_file: Optional[str], options: ConfigType) -> int:
@@ -840,12 +885,14 @@ def _run_antismash(sequence_file: Optional[str], options: ConfigType) -> int:
         profiler.enable()
 
     # ensure the provided options are valid
-    if not verify_options(options, options.all_enabled_modules):
+    if not verify_options(options, get_all_modules()):
         return 1
 
-    # check that at least one module will run
-    if not options.all_enabled_modules:
-        raise ValueError("No detection or analysis modules enabled")
+    # check that at least one area formation module will run
+    if not _is_region_detection_possible(options):
+        logging.error("All detection modules disabled")
+        print("All detection modules disabled")
+        return 1
 
     start_time = datetime.now()
 
