@@ -45,6 +45,7 @@ def build_module_limitation_arg(modules, include_core_detection=True, include_al
             modules.append(detection.hmm_detection)
     if include_all_outputs:
         modules.append(outputs.html)
+        modules.append(outputs.gbk)
     return ["--restrict-modules-to", ",".join(mod.NAME for mod in modules)]
 
 

@@ -21,10 +21,7 @@ import pstats
 import shutil
 import time
 import tempfile
-from typing import cast, Any, Dict, Iterable, List, Optional, Tuple, Union
-
-from Bio.SeqRecord import SeqRecord
-from helperlibs.bio import seqio as hl_seqio
+from typing import cast, Any, Dict, Iterable, List, Optional, Union
 
 from antismash.config import (
     ConfigType,
@@ -525,46 +522,6 @@ def write_profiling_results(profiler: cProfile.Profile, target: str) -> None:
         print(stream.getvalue())
 
 
-def add_antismash_comments(records: List[Tuple[Record, SeqRecord]], options: ConfigType) -> None:
-    """ Add antismash meta-annotation to records for genbank output
-
-        Arguments:
-            records: a list of Record, SeqRecord pairs
-            options: antismash options
-
-        Returns:
-            None
-
-    """
-    if not records:
-        return
-    base_comment = {
-        "Version": str(options.version),
-        "Run date": str(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-    }
-    # include start/end details if relevant
-    if options.start != -1 or options.end != -1:
-        start = 1 if options.start == -1 else options.start
-        # start/end is only valid for single records, as per record_processing
-        assert len(records) == 1
-        end = len(records[0][0].seq) if options.end == -1 else options.end
-        base_comment.update({
-            "NOTE": "This is an extract from the original record!",
-            "Starting at": str(start),
-            "Ending at": str(end),
-        })
-
-    for record, bio_record in records:
-        comment = dict(base_comment)
-        if record.original_id:
-            comment["Original ID"] = record.original_id
-
-        if "structured_comment" not in bio_record.annotations:
-            bio_record.annotations["structured_comment"] = {}
-
-        bio_record.annotations["structured_comment"][f"{options.branding}-Data"] = comment
-
-
 def write_outputs(results: serialiser.AntismashResults, options: ConfigType) -> None:
     """ Write output files (webpage, genbank files, etc) to the output directory
 
@@ -602,28 +559,7 @@ def write_outputs(results: serialiser.AntismashResults, options: ConfigType) -> 
         for val in results.timings_by_record.values():
             val[module.__name__] = duration
 
-    # convert records to biopython
-    bio_records = [record.to_biopython() for record in results.records]
-
-    # add antismash meta-annotation to records
-    add_antismash_comments(list(zip(results.records, bio_records)), options)
-
-    if options.region_gbks:
-        logging.debug("Writing cluster-specific genbank files")
-        for record, bio_record in zip(results.records, bio_records):
-            for region in record.get_regions():
-                region.write_to_genbank(directory=options.output_dir, record=bio_record)
-
-    # write records to an aggregate output
-    base_filename = canonical_base_filename(results.input_file, options.output_dir, options)
-    if options.summary_gbk:
-        combined_filename = base_filename + ".gbk"
-        if options.compress_summary:
-            combined_filename += ".gz"
-        logging.debug("Writing final genbank file to '%s'", combined_filename)
-        hl_seqio.write(bio_records, combined_filename)
-
-    zipfile = base_filename + ".zip"
+    zipfile = os.path.join(options.output_dir, options.output_basename + ".zip")
     if os.path.exists(zipfile):
         os.remove(zipfile)
     if options.zip_output:

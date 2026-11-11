@@ -4,7 +4,6 @@
 # for test files, silence irrelevant and noisy pylint warnings
 # pylint: disable=use-implicit-booleaness-not-comparison,protected-access,missing-docstring
 
-from argparse import Namespace
 import logging
 import os
 from tempfile import NamedTemporaryFile
@@ -15,7 +14,6 @@ import pytest
 
 from antismash import __main__ as outer, config, main
 from antismash.common.errors import AntismashInputError
-from antismash.common.test.helpers import DummyRecord
 from antismash.config import build_config, destroy_config, get_config, update_config
 from antismash.config.args import DEST_EXCLUDED, DEST_RESTRICTED_TO, build_parser
 from antismash.detection import hmm_detection, cluster_hmmer, full_hmmer
@@ -59,54 +57,6 @@ class TestAntismash(unittest.TestCase):
         assert not dummy.prep_called
         main.prepare_module_data([dummy])
         assert dummy.prep_called
-
-    def test_antismash_comment(self):
-        rec = DummyRecord()
-        options = Namespace()
-        options.start = -1
-        options.end = -1
-        options.version = "5.dummy"
-        options.branding = "antiSMASH"
-        bio = rec.to_biopython()
-
-        main.add_antismash_comments([(rec, bio)], options)
-        comment = bio.annotations["structured_comment"]["antiSMASH-Data"]
-        assert comment["Version"] == options.version
-        assert "Original ID" not in comment
-        assert "Starting at" not in comment
-        assert "Ending at" not in comment
-
-        bio.annotations["structured_comment"].pop("antiSMASH-Data")
-        options.start = 7
-        main.add_antismash_comments([(rec, bio)], options)
-        comment = bio.annotations["structured_comment"]["antiSMASH-Data"]
-        assert "Original ID" not in comment
-        assert comment["Starting at"] == "7"
-
-        bio.annotations["structured_comment"].pop("antiSMASH-Data")
-        options.start = -1
-        options.end = 1000
-        main.add_antismash_comments([(rec, bio)], options)
-        comment = bio.annotations["structured_comment"]["antiSMASH-Data"]
-        assert "Original ID" not in comment
-        assert comment["Ending at"] == "1000"
-
-        bio.annotations["structured_comment"].pop("antiSMASH-Data")
-        options.end = -1
-        rec.original_id = "something else"
-        main.add_antismash_comments([(rec, bio)], options)
-        comment = bio.annotations["structured_comment"]["antiSMASH-Data"]
-        assert comment["Original ID"] == rec.original_id
-
-        # ensure that alternate branding uses the correct entry
-        rec = DummyRecord()
-        alt_bio = rec.to_biopython()
-        options.branding = "alternate_branding"
-        main.add_antismash_comments([(rec, alt_bio)], options)
-        alt_structured = alt_bio.annotations["structured_comment"]
-        assert len(alt_structured) == 1, list(alt_structured)
-        comment = alt_structured[f"{options.branding}-Data"]
-        assert {"Version", "Run date"}.issubset(set(comment))
 
     def test_canonical_base_filename(self):
         options = build_parser(modules=self.all_modules).parse_args([])
