@@ -27,7 +27,9 @@ class LassoBase(unittest.TestCase):
 
 class IntegrationLasso(LassoBase):
     def setUp(self):
-        self.options = build_config(["--minimal", "--enable-lassopeptides", "--enable-html"],
+        module_arg = helpers.build_module_limitation_arg([lassopeptides,
+                                                           antismash.outputs.html])
+        self.options = build_config(module_arg,
                                     isolated=True, modules=antismash.get_all_modules())
         check_prereqs(self.options)
 

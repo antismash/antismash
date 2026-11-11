@@ -66,7 +66,7 @@ def main(args: List[str], *, branding_override: str = "", version_override: str 
 
         Arguments:
             args: a list of args as would be given on the command line
-                    e.g. ["inputfile", "--minimal", "--enable-nrps_pks"]
+                    e.g. ["inputfile", "--output-dir", "some_dir"]
             branding_override: a name to use instead of antiSMASH, when used as a library
             version_override: a version to use instead of antiSMASH's version, when used as a library
 

@@ -203,7 +203,7 @@ def check_prereqs(options: ConfigType) -> List[str]:
 
 def is_enabled(options: ConfigType) -> bool:
     """ Should the module be run with these options """
-    return not options.minimal or options.genefunctions_enabled
+    return options.genefunctions_enabled and not options.is_module_excluded(NAME)
 
 
 def regenerate_previous_results(previous: Dict[str, Any], record: Record,

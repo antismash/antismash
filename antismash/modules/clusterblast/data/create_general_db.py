@@ -22,8 +22,10 @@ from antismash.common import secmet
 from antismash.detection import hmm_detection
 
 
-DEFAULT_AS_OPTIONS = antismash.config.build_config(["--minimal"], modules=antismash.main.get_all_modules())
-antismash.config.update_config({"all_enabled_modules": [hmm_detection]})
+DEFAULT_AS_OPTIONS = antismash.config.build_config(
+    ["--restrict-to-modules", hmm_detection.NAME],
+    modules=antismash.main.get_all_modules(),
+)
 
 
 @dataclass
