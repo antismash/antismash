@@ -4,7 +4,6 @@
 # for test files, silence irrelevant and noisy pylint warnings
 # pylint: disable=use-implicit-booleaness-not-comparison,protected-access,missing-docstring
 
-from argparse import Namespace
 import logging
 import os
 from tempfile import NamedTemporaryFile
@@ -15,16 +14,15 @@ import pytest
 
 from antismash import __main__ as outer, config, main
 from antismash.common.errors import AntismashInputError
-from antismash.common.test.helpers import DummyRecord
-from antismash.config import build_config, destroy_config, get_config
-from antismash.config.args import build_parser
-from antismash.detection import cluster_hmmer, full_hmmer
+from antismash.config import build_config, destroy_config, get_config, update_config
+from antismash.config.args import DEST_EXCLUDED, DEST_RESTRICTED_TO, build_parser
+from antismash.detection import hmm_detection, cluster_hmmer, full_hmmer
 
 
 class TestAntismash(unittest.TestCase):
     def setUp(self):
         self.all_modules = main.get_all_modules()
-        self.default_options = build_parser(modules=self.all_modules).parse_args([])
+        self.default_options = build_config([], modules=self.all_modules)
 
     def tearDown(self):
         destroy_config()
@@ -60,54 +58,6 @@ class TestAntismash(unittest.TestCase):
         main.prepare_module_data([dummy])
         assert dummy.prep_called
 
-    def test_antismash_comment(self):
-        rec = DummyRecord()
-        options = Namespace()
-        options.start = -1
-        options.end = -1
-        options.version = "5.dummy"
-        options.branding = "antiSMASH"
-        bio = rec.to_biopython()
-
-        main.add_antismash_comments([(rec, bio)], options)
-        comment = bio.annotations["structured_comment"]["antiSMASH-Data"]
-        assert comment["Version"] == options.version
-        assert "Original ID" not in comment
-        assert "Starting at" not in comment
-        assert "Ending at" not in comment
-
-        bio.annotations["structured_comment"].pop("antiSMASH-Data")
-        options.start = 7
-        main.add_antismash_comments([(rec, bio)], options)
-        comment = bio.annotations["structured_comment"]["antiSMASH-Data"]
-        assert "Original ID" not in comment
-        assert comment["Starting at"] == "7"
-
-        bio.annotations["structured_comment"].pop("antiSMASH-Data")
-        options.start = -1
-        options.end = 1000
-        main.add_antismash_comments([(rec, bio)], options)
-        comment = bio.annotations["structured_comment"]["antiSMASH-Data"]
-        assert "Original ID" not in comment
-        assert comment["Ending at"] == "1000"
-
-        bio.annotations["structured_comment"].pop("antiSMASH-Data")
-        options.end = -1
-        rec.original_id = "something else"
-        main.add_antismash_comments([(rec, bio)], options)
-        comment = bio.annotations["structured_comment"]["antiSMASH-Data"]
-        assert comment["Original ID"] == rec.original_id
-
-        # ensure that alternate branding uses the correct entry
-        rec = DummyRecord()
-        alt_bio = rec.to_biopython()
-        options.branding = "alternate_branding"
-        main.add_antismash_comments([(rec, alt_bio)], options)
-        alt_structured = alt_bio.annotations["structured_comment"]
-        assert len(alt_structured) == 1, list(alt_structured)
-        comment = alt_structured[f"{options.branding}-Data"]
-        assert {"Version", "Run date"}.issubset(set(comment))
-
     def test_canonical_base_filename(self):
         options = build_parser(modules=self.all_modules).parse_args([])
         expected = os.path.join("out", "foo.1_example")
@@ -124,7 +74,8 @@ class TestAntismash(unittest.TestCase):
         res = main.canonical_base_filename("foo.1_example.gbff.gz", "out", options)
         assert res == expected
 
-        options = build_parser(modules=self.all_modules).parse_args(["--output-basename", "foo.1"])
+        destroy_config()
+        options = build_config(["--output-basename", "foo.1"], modules=self.all_modules)
         expected = os.path.join("out", "foo.1")
         res = main.canonical_base_filename("foo.1_example.gbk", "out", options)
         assert res == expected
@@ -215,9 +166,15 @@ class TestErrorsInLogfile(unittest.TestCase):
 class TestModuleReplacement(unittest.TestCase):
     def setUp(self):
         self.original_modules = main._MODULES
+        self.original_detection = main._MODULES.detection
+        self.original_analysis = main._MODULES.analysis
+        self.original_output = main._MODULES.output
 
     def tearDown(self):
         main._MODULES = self.original_modules
+        main._MODULES._detection = self.original_detection
+        main._MODULES.analysis = self.original_analysis
+        main._MODULES.output = self.original_output
 
     def test_detection(self):
         new = [Mock(), Mock()]
@@ -239,6 +196,49 @@ class TestModuleReplacement(unittest.TestCase):
         main.replace_output_modules(list(new))
         fetched = main.get_output_modules()
         assert fetched == new
+
+
+class TestModuleLimits(unittest.TestCase):
+    def setUp(self):
+        self.real_modules = [cluster_hmmer, full_hmmer, hmm_detection]  # arbitrary choices
+        print(main.get_all_modules())
+        self.options = build_config([], isolated=True, modules=main.get_all_modules())
+        assert self.options.excluded_modules is not None
+        assert self.options.included_modules is not None
+
+    def tearDown(self):
+        destroy_config()
+
+    def test_all_modules_restricted(self):
+        for module in self.real_modules:
+            options = update_config({DEST_RESTRICTED_TO: [module.NAME]})
+            filtered = [mod for mod in self.real_modules if not options.is_module_excluded(mod.NAME)]
+            assert filtered == [module]
+
+    def test_module_limit_conflict(self):
+        update_config({
+            "included_modules": self.real_modules[0].NAME,
+            "excluded_modules": [m.NAME for m in self.real_modules],
+        })
+        assert not main.verify_options(self.options, self.real_modules)
+
+    def test_unknown_included(self):
+        update_config({DEST_RESTRICTED_TO: ["dummy"]})
+        assert not main.verify_options(self.options, self.real_modules)
+
+    def test_unknown_excluded(self):
+        update_config({DEST_EXCLUDED: ["dummy"]})
+        assert not main.verify_options(self.options, self.real_modules)
+
+    def test_all_detection_removed(self):
+        assert hmm_detection.is_enabled(self.options)
+        assert not self.options.is_module_excluded(hmm_detection)
+        assert main._is_region_detection_possible(self.options, modules=self.real_modules)
+
+        update_config({DEST_RESTRICTED_TO: [cluster_hmmer.NAME]})
+        assert not hmm_detection.is_enabled(self.options)
+        assert self.options.is_module_excluded(hmm_detection)
+        assert not main._is_region_detection_possible(self.options)
 
 
 @patch.object(logging, 'debug')

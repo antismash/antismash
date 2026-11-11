@@ -32,16 +32,28 @@ from antismash.common.secmet.test.helpers import (  # for import by others, pyli
     DummyRecord,
     DummyRegion,
 )
-from antismash.config import update_config
+from antismash.config import Config, update_config
 from antismash.config.args import build_parser
 from antismash.main import get_all_modules, canonical_base_filename
+from antismash import detection, outputs
+
+
+def build_module_limitation_arg(modules, include_core_detection=True, include_all_outputs=True):
+    assert modules or include_core_detection or include_all_outputs
+    if include_core_detection:
+        if detection.hmm_detection not in modules:
+            modules.append(detection.hmm_detection)
+    if include_all_outputs:
+        modules.append(outputs.html)
+        modules.append(outputs.gbk)
+    return ["--restrict-modules-to", ",".join(mod.NAME for mod in modules)]
 
 
 def get_simple_options(module, args):
     modules = get_all_modules()
     if module is not None:
         modules = [module]
-    return build_parser(from_config_file=False, modules=modules).parse_args(args)
+    return Config(build_parser(from_config_file=False, modules=modules).parse_args(args))
 
 
 class FakeHSP:

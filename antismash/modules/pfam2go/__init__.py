@@ -45,7 +45,7 @@ def check_prereqs(_options: ConfigType) -> List[str]:
 
 def is_enabled(options: ConfigType) -> bool:
     """ Should the module be run with these options """
-    return options.pfam2go
+    return options.pfam2go and not options.is_module_excluded(NAME)
 
 
 def regenerate_previous_results(previous: Dict[str, Any], record: Record,

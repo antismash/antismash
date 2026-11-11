@@ -28,6 +28,8 @@ from .executables import AlternateExecutablesAction, get_default_paths
 
 ANTISMASH_VERSION = ""  # needs to be set on module import, avoids cyclic imports
 DATABASE_DEFAULT = str(Path(__file__).parent.parent / "databases")
+DEST_EXCLUDED = "excluded_modules"
+DEST_RESTRICTED_TO = "included_modules"
 
 
 class AntismashParser(argparse.ArgumentParser):
@@ -429,8 +431,7 @@ class ModuleArgs(_SimpleArgs):
                     checks, only exists to help placeholders and will be removed
             enabled_by_default: whether the module's analysis will be on by
                     default or whether it has to be specifically enabled,
-                    if True, it will create a --enable-* arg to be used if
-                    --minimal is provided.
+                    if True, it will create a --enable-*/--no-enable arg pair
             basic_help: Whether help for module options (not analysis toggles)
                     should be shown in the basic --help output.
     """
@@ -700,21 +701,6 @@ def debug_options() -> ModuleArgs:
                      action=argparse.BooleanOptionalAction,
                      default=True,
                      help="Create a ZIP file of the output (default: %(default)s)")
-    group.add_option('--summary-gbk',
-                     dest='summary_gbk',
-                     action=argparse.BooleanOptionalAction,
-                     default=True,
-                     help="Create a GenBank summary file (default: %(default)s)")
-    group.add_option('--compress-summary',
-                     dest='compress_summary',
-                     action=argparse.BooleanOptionalAction,
-                     default=False,
-                     help="Use gzip to compress the GenBank summary file (default: %(default)s)")
-    group.add_option('--region-gbks',
-                     dest='region_gbks',
-                     action=argparse.BooleanOptionalAction,
-                     default=True,
-                     help="Create a GenBank file for each region (default: %(default)s)")
     group.add_option('--compress-json',
                      dest='compress_json',
                      action=argparse.BooleanOptionalAction,
@@ -724,15 +710,30 @@ def debug_options() -> ModuleArgs:
 
 
 def specific_debugging(modules: Optional[List[AntismashModule]]) -> Optional[ModuleArgs]:
-    """ Inserts a --minimal option, along with --enable-X for all modules which
-        specified enabled_by_default as True.
-
-        If no modules have specified enabled_by_default, --minimal will not be
-        created.
+    """ Inserts module limitation options, along with --enable-*/--no-enable-* pairs
+        for all modules with enabled_by_default set as True.
     """
+    group = ModuleArgs('Debugging options for cluster-specific analyses', '', override_safeties=True)
+    group.add_option("--restrict-modules-to",
+                     dest=DEST_RESTRICTED_TO,
+                     action=SplitCommaAction,
+                     default=[],
+                     metavar='MODULE1,MODULE2,...',
+                     help=(
+                        "If set, any modules not in this list will be excluded from the run,"
+                        "regardless of arguments or existing results."
+                     ))
+    group.add_option("--exclude-modules",
+                     dest=DEST_EXCLUDED,
+                     action=SplitCommaAction,
+                     default=[],
+                     metavar='MODULE1,MODULE2,...',
+                     help=(
+                         "Any modules modules in this list will not be used, "
+                         "regardless of specific arguments or existing results for the modules"
+                     ))
     if not modules:
-        return None
-    # only relevant for modules that are disabled by --minimal
+        return group
     relevant_modules = []
     for module in modules:
         args = module.get_arguments()
@@ -740,23 +741,16 @@ def specific_debugging(modules: Optional[List[AntismashModule]]) -> Optional[Mod
             continue
         relevant_modules.append(module)
     if not relevant_modules:
-        return None
+        return group
 
-    group = ModuleArgs('Debugging options for cluster-specific analyses', '', override_safeties=True)
-    group.add_option('--minimal',
-                     dest='minimal',
-                     action=argparse.BooleanOptionalAction,
-                     default=False,
-                     help="Only run core detection modules, no analysis modules unless explicitly enabled")
     errors = []
     for module in relevant_modules:
         try:
             group.add_option(f"--enable-{module.NAME.replace('_', '-')}",
                              dest=f"{module.NAME}_enabled",
                              action=argparse.BooleanOptionalAction,
-                             default=False,
-                             help=(f"Enable {module.SHORT_DESCRIPTION}"
-                                   " (default: enabled, unless --minimal is specified)"
+                             default=True,
+                             help=(f"Toggle {module.SHORT_DESCRIPTION} (default: %(default)s)"
                                    )
                              )
         except AttributeError as err:

@@ -21,10 +21,7 @@ import pstats
 import shutil
 import time
 import tempfile
-from typing import cast, Any, Dict, Iterable, List, Optional, Tuple, Union
-
-from Bio.SeqRecord import SeqRecord
-from helperlibs.bio import seqio as hl_seqio
+from typing import cast, Any, Dict, Iterable, List, Optional, Union
 
 from antismash.config import (
     ConfigType,
@@ -263,7 +260,31 @@ def verify_options(options: ConfigType, modules: List[AntismashModule]) -> bool:
             True if no problems detected, otherwise False
     """
     errors_found: List[str] = []
+    excluded_modules = set(options.excluded_modules)
+    included_modules = set(options.included_modules)
+    module_names = {module.NAME for module in modules}
+
+    # modules mentioned in restrictions must exist
+    if excluded_modules - module_names:
+        errors_found.append("Excluded module(s) not found: "
+                            + ", ".join(excluded_modules - module_names))
+    if included_modules - module_names:
+        errors_found.append("Enabled module(s) not found: "
+                            + ", ".join(included_modules - module_names))
+    # ensure there's no conflicts with args limiting which modules run
+    if included_modules:  # if there's no whitelist, there can't be a conflict
+        overlap = set(included_modules).intersection(excluded_modules)
+        if overlap:
+            pretty = ", ".join(sorted(overlap))
+            errors_found.append(
+                f"Module(s) in both explicitly excluded and explicitly included arguments: {pretty}"
+            )
+        if all(options.is_module_excluded(module.NAME) for module in modules):
+            errors_found.append("Module restriction options blocked all modules")
+
     for module in modules:
+        if options.is_module_excluded(module.NAME):
+            continue
         try:
             logging.debug("Checking options for %s", module.__name__)
             errors_found.extend(module.check_options(options))
@@ -296,6 +317,8 @@ def run_detection(record: Record, options: ConfigType,
 
     # run full genome detections
     for module in _MODULES.detection[DetectionStage.FULL_GENOME]:
+        if options.is_module_excluded(module.NAME):
+            continue
         run_module(record, module, options, module_results, timings)
         results = module_results.get(module.__name__)
         if results:
@@ -308,6 +331,8 @@ def run_detection(record: Record, options: ConfigType,
     modules = list(_MODULES.detection[DetectionStage.AREA_FORMATION])
     modules.extend(_MODULES.detection[DetectionStage.AREA_REFINEMENT])
     for module in modules:
+        if options.is_module_excluded(module.NAME):
+            continue
         run_module(record, module, options, module_results, timings)
         results = module_results.get(module.__name__)
         if results:
@@ -332,6 +357,8 @@ def run_detection(record: Record, options: ConfigType,
 
     # finally, run any detection limited to genes in clusters
     for module in _MODULES.detection[DetectionStage.PER_AREA]:
+        if options.is_module_excluded(module.NAME):
+            continue
         run_module(record, module, options, module_results, timings)
         results = module_results.get(module.__name__)
         if results:
@@ -408,6 +435,8 @@ def analyse_record(record: Record, options: ConfigType, modules: List[AntismashM
     timings: Dict[str, float] = {}
     # try to run the given modules over the record
     for module in modules:
+        if options.is_module_excluded(module.NAME):
+            continue
         run_module(record, module, options, previous_result, timings)
     return timings
 
@@ -493,46 +522,6 @@ def write_profiling_results(profiler: cProfile.Profile, target: str) -> None:
         print(stream.getvalue())
 
 
-def add_antismash_comments(records: List[Tuple[Record, SeqRecord]], options: ConfigType) -> None:
-    """ Add antismash meta-annotation to records for genbank output
-
-        Arguments:
-            records: a list of Record, SeqRecord pairs
-            options: antismash options
-
-        Returns:
-            None
-
-    """
-    if not records:
-        return
-    base_comment = {
-        "Version": str(options.version),
-        "Run date": str(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-    }
-    # include start/end details if relevant
-    if options.start != -1 or options.end != -1:
-        start = 1 if options.start == -1 else options.start
-        # start/end is only valid for single records, as per record_processing
-        assert len(records) == 1
-        end = len(records[0][0].seq) if options.end == -1 else options.end
-        base_comment.update({
-            "NOTE": "This is an extract from the original record!",
-            "Starting at": str(start),
-            "Ending at": str(end),
-        })
-
-    for record, bio_record in records:
-        comment = dict(base_comment)
-        if record.original_id:
-            comment["Original ID"] = record.original_id
-
-        if "structured_comment" not in bio_record.annotations:
-            bio_record.annotations["structured_comment"] = {}
-
-        bio_record.annotations["structured_comment"][f"{options.branding}-Data"] = comment
-
-
 def write_outputs(results: serialiser.AntismashResults, options: ConfigType) -> None:
     """ Write output files (webpage, genbank files, etc) to the output directory
 
@@ -558,6 +547,8 @@ def write_outputs(results: serialiser.AntismashResults, options: ConfigType) -> 
         module_results_per_record.append(record_result)
 
     for module in get_output_modules():
+        if options.is_module_excluded(module.NAME):
+            continue
         if not module.is_enabled(options):
             continue
         logging.debug(" Writing relevant output files for %s ", module.__name__)
@@ -568,28 +559,7 @@ def write_outputs(results: serialiser.AntismashResults, options: ConfigType) -> 
         for val in results.timings_by_record.values():
             val[module.__name__] = duration
 
-    # convert records to biopython
-    bio_records = [record.to_biopython() for record in results.records]
-
-    # add antismash meta-annotation to records
-    add_antismash_comments(list(zip(results.records, bio_records)), options)
-
-    if options.region_gbks:
-        logging.debug("Writing cluster-specific genbank files")
-        for record, bio_record in zip(results.records, bio_records):
-            for region in record.get_regions():
-                region.write_to_genbank(directory=options.output_dir, record=bio_record)
-
-    # write records to an aggregate output
-    base_filename = canonical_base_filename(results.input_file, options.output_dir, options)
-    if options.summary_gbk:
-        combined_filename = base_filename + ".gbk"
-        if options.compress_summary:
-            combined_filename += ".gz"
-        logging.debug("Writing final genbank file to '%s'", combined_filename)
-        hl_seqio.write(bio_records, combined_filename)
-
-    zipfile = base_filename + ".zip"
+    zipfile = os.path.join(options.output_dir, options.output_basename + ".zip")
     if os.path.exists(zipfile):
         os.remove(zipfile)
     if options.zip_output:
@@ -713,6 +683,8 @@ def check_prerequisites(modules: List[AntismashModule], options: ConfigType) -> 
     """
     errors_by_module = {}
     for module in modules:
+        if options.is_module_excluded(module.NAME):
+            continue
         logging.debug("Checking prerequisites for %s", module.__name__)
         try:
             res = module.check_prereqs(options)
@@ -808,7 +780,16 @@ def run_antismash(sequence_file: Optional[str], options: ConfigType) -> int:
 
 
 def _get_all_enabled_modules(modules: list[AntismashModule], options: ConfigType) -> list[AntismashModule]:
-    return [module for module in modules if module.is_enabled(options)]
+    available = [module for module in modules if not options.is_module_excluded(module.NAME)]
+    return [module for module in available if module.is_enabled(options)]
+
+
+def _is_region_detection_possible(options: ConfigType, modules: list[AntismashModule] = None) -> bool:
+    if modules is None:
+        modules = get_detection_modules()
+    enabled = set(m for m in modules if not options.is_module_excluded(m.NAME))
+    available = set(_MODULES.detection[DetectionStage.AREA_FORMATION])
+    return bool(enabled and enabled.intersection(available))
 
 
 def _run_antismash(sequence_file: Optional[str], options: ConfigType) -> int:
@@ -840,12 +821,14 @@ def _run_antismash(sequence_file: Optional[str], options: ConfigType) -> int:
         profiler.enable()
 
     # ensure the provided options are valid
-    if not verify_options(options, options.all_enabled_modules):
+    if not verify_options(options, get_all_modules()):
         return 1
 
-    # check that at least one module will run
-    if not options.all_enabled_modules:
-        raise ValueError("No detection or analysis modules enabled")
+    # check that at least one area formation module will run
+    if not _is_region_detection_possible(options):
+        logging.error("All detection modules disabled")
+        print("All detection modules disabled")
+        return 1
 
     start_time = datetime.now()
 

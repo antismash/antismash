@@ -18,8 +18,9 @@
         {% if options.zip_output %}
         <li><a href="{{options.output_basename}}.zip">Download all results</a></li>
         {% endif %}
-        {% if options.summary_gbk %}
-          <li><a href="{{options.output_basename}}.gbk">Download GenBank summary file</a></li>
+        {% set summary_gbk = gbk_output.get_summary_file_path(options) %}
+        {% if summary_gbk %}
+          <li><a href="{{ summary_gbk }}">Download GenBank summary file</a></li>
         {% endif %}
           <li><a href="{{options.output_basename}}.json">Download JSON results file</a></li>
         {% if options.logfile and options.download_logfile() != None %}

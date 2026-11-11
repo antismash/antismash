@@ -110,7 +110,7 @@ def check_options(options: ConfigType) -> List[str]:
 def is_enabled(options: ConfigType) -> bool:
     """  Uses the supplied options to determine if the module should be run
     """
-    return any([
+    return not options.is_module_excluded(NAME) and any([
         options.sideload,
         options.sideload_simple,
         options.sideload_cds_markers,

@@ -7,10 +7,11 @@
 import unittest
 from unittest.mock import Mock, patch
 
+from antismash.main import get_all_modules
 from antismash.common.layers import OptionsLayer, RecordLayer, RegionLayer
 from antismash.common.secmet.locations import CompoundLocation, FeatureLocation
 from antismash.common.secmet.test.helpers import DummyCDS, DummyRecord, DummyRegion
-from antismash.common.test.helpers import get_simple_options
+from antismash.config import build_config, destroy_config
 from antismash.modules import clusterblast
 
 
@@ -19,13 +20,17 @@ class TestHTMLReuse(unittest.TestCase):
         whether HTML sections should be generated
     """
     def setUp(self):
-        self.options = OptionsLayer(get_simple_options(clusterblast, []), modules=[clusterblast])
+        self.options = OptionsLayer(build_config([], isolated=True, modules=get_all_modules()),
+                                                 modules=[clusterblast])
         region = DummyRegion()
         self.record = RecordLayer(DummyRecord(features=[region]), results=None, options=self.options)
         self.region = RegionLayer(self.record, region)
 
         self.results = Mock(spec=["general", "knowncluster", "subcluster"],
                             general=None, knowncluster=None, subcluster=None)
+
+    def tearDown(self):
+        destroy_config()
 
     def build_result(self):
         result = clusterblast.results.GeneralResults(self.record.id, data_version=1)

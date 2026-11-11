@@ -35,7 +35,7 @@ def check_options(_options: ConfigType) -> List:
 
 def is_enabled(options: ConfigType) -> bool:
     """ Returns True if the lanthipeptide module is enabled """
-    return options.lanthipeptides_enabled or not options.minimal
+    return options.lanthipeptides_enabled and not options.is_module_excluded(NAME)
 
 
 def regenerate_previous_results(results: Dict[str, Any], record: Record,
