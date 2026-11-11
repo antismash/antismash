@@ -25,6 +25,7 @@ from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import Record
 from antismash.config import ConfigType
 from antismash.modules import tfbs_finder as tfbs, tta
+from antismash.outputs import gbk as gbk_output
 from antismash.outputs.html import js
 from antismash.custom_typing import AntismashModule, VisualisationModule
 
@@ -375,7 +376,7 @@ def generate_webpage(records: List[Record], results: List[Dict[str, ModuleResult
                               config=options, job_id=job_id, page_title=page_title,
                               records_without_regions=record_layers_without_regions,
                               svg_tooltip=svg_tooltip, get_region_css=js.get_region_css,
-                              as_js_url=as_js_url, legends=legends,
+                              as_js_url=as_js_url, legends=legends, gbk_output=gbk_output,
                               )
     return content
 
