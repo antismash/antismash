@@ -135,7 +135,7 @@ class StaticSymbolLegend(SymbolLegend, StaticLegend):
 
 
 LEGENDS = [
-    Legend(css_class="legend-type-biosynthetic", label="core_biosynthetic genes"),
+    Legend(css_class="legend-type-biosynthetic", label="core biosynthetic genes"),
     Legend(css_class="legend-type-biosynthetic-additional", label="additional biosynthetic genes"),
     Legend(css_class="legend-type-transport", label="transport related genes"),
     Legend(css_class="legend-type-regulatory", label="regulatory genes"),
