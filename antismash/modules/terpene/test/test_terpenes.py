@@ -225,7 +225,7 @@ class TestAnalysis(TestCase):
         )
         reaction2 = build_dummy_reaction(
             substrates=(DummyCompoundGroup(name="compound1"), DummyCompoundGroup(name="compound2"),),
-            products=(DummyCompoundGroup(name="compound3"),)
+            products=(DummyCompoundGroup(name="compound5"),)
         )
         profiles = [
             DummyTerpeneHMM(reactions=(reaction1,)),
@@ -238,7 +238,9 @@ class TestAnalysis(TestCase):
             return set(s.name for s in reaction.substrates)
 
         assert names(merged) == names(reaction1) == names(reaction2)
-        assert merged.products == reaction2.products
+        assert set(merged.products) == {DummyCompoundGroup(name="compound3"),
+                                        DummyCompoundGroup(name="compound4"),
+                                        DummyCompoundGroup(name="compound5")}
 
     def test_get_domain_prediction(self):
         hmm_results = [DummyHMMResult(label="T1TS", start=1, end=50),
