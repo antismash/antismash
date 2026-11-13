@@ -11,6 +11,7 @@ from antismash.common import all_orfs
 from antismash.common.all_orfs import (
     find_all_orfs,
     find_intergenic_areas,
+    get_all_trimmed_orfs,
     get_trimmed_orf,
     scan_orfs,
 )
@@ -280,6 +281,26 @@ class TestOrfTrimming(unittest.TestCase):
         assert get_trimmed_orf(self.cds, self.record, include=0, max_length=6) is None
 
 
+class TestAllTrimmed(unittest.TestCase):
+    def setUp(self):
+        self.record = DummyRecord(seq="nnnATGnnnATGnnnATGnnnTGAnnnnnn")
+        self.cds = DummyCDS(3, 24, strand=1)
+
+    def test_all(self):
+        orfs = get_all_trimmed_orfs(self.cds, self.record)
+        # including the original, from longest to shortest
+        assert [orf.location.start for orf in orfs] == [3, 9, 15]
+        assert all(orf.location.end == 24 for orf in orfs)
+        assert len({orf.get_name() for orf in orfs}) == 3
+
+    def test_limits(self):
+        orfs = get_all_trimmed_orfs(self.cds, self.record, min_length=6, max_length=15)
+        assert [orf.location.start for orf in orfs] == [9, 15]
+        assert get_all_trimmed_orfs(self.cds, self.record, max_length=6) == []
+        with self.assertRaisesRegex(ValueError, "minimum .* cannot be greater than maximum"):
+            get_all_trimmed_orfs(self.cds, self.record, min_length=100, max_length=99)
+
+
 class TestCircularTrimming(unittest.TestCase):
     def setUp(self):
         self.shortest = "ATGnnnTGA"
@@ -353,6 +374,19 @@ class TestCircularRotations(unittest.TestCase):
         record = DummyRecord(seq=seq, circular=True)
         assert location.extract(record.seq) == self.initial
         return record, DummyCDS(location=location)
+
+    def test_all_trimmed(self):
+        expected = [self.initial[offset:] for offset in [0, 6, 12]]
+        for strand in [1, -1]:
+            for rotation in range(len(self.seq)):
+                record, orf = self.build(rotation, strand)
+                orfs = get_all_trimmed_orfs(orf, record)
+                assert [new.location.extract(record.seq) for new in orfs] == expected, (strand, rotation)
+                for new in orfs:
+                    assert new.location.strand == strand
+                    # only versions that actually cross the origin are split
+                    assert len(new.location) == len(new.location.extract(record.seq))
+                    assert new.location.crosses_origin() == (len(new.location.parts) > 1)
 
     def test_shortest(self):
         for strand in [1, -1]:
