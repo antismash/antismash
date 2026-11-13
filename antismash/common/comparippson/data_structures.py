@@ -77,6 +77,24 @@ class Hit(JsonConvertible):
         """
         return self.match_count / max(self.query.full_length, self.reference.full_length)
 
+    def get_length_note(self, segment: Segment) -> str:
+        """ Builds a note of the full length of the given segment's sequence,
+            if it's the longer of the two sequences and only partly aligned,
+            since the similarity is relative to that length.
+
+            Arguments:
+                segment: the query or reference segment of the hit
+
+            Returns:
+                the note, e.g. "(of 26)", or an empty string if not relevant
+        """
+        longest = max(self.query.full_length, self.reference.full_length)
+        if segment.full_length != longest:
+            return ""
+        if segment.start == 1 and segment.end == segment.full_length:
+            return ""
+        return f"(of {segment.full_length})"
+
     def get_consensus(self, space: str = " ") -> str:
         """ Returns the consensus string for the hit, with the same character for
             matches, '+' for strongly conserved mismatches, and the given "space"

@@ -8,10 +8,11 @@
 {% macro description(hit) -%}
  <span class="comparippson-description">{{ db.build_description_for_hit(hit) }}</span>
 {%- endmacro %}
-{% macro segment_line(segment, colour_subset) -%}
+{% macro segment_line(hit, segment, colour_subset) -%}
        <div class="comparippson-coordinate">{{ segment.start }}</div>
        <div class="comparippson-sequence">{{ coloured_ripp_sequence(segment.sequence, colour_subset=colour_subset) }}</div>
-       <div class="comparippson-coordinate">{{ segment.end }}</div>
+       {%- set note = hit.get_length_note(segment) %}
+       <div class="comparippson-coordinate">{{ segment.end }}{% if note %} {{ note }}{% endif %}</div>
 {%- endmacro -%}
 
 {%- macro create_hit_block(hit, tail, tail_list, colour_subset) -%}
@@ -33,11 +34,11 @@
      </div>
      {{ description(hit) }}
      <div class="comparippson-alignment">
-       {{ segment_line(hit.query, colour_subset) }}
+       {{ segment_line(hit, hit.query, colour_subset) }}
        <div class="comparippson-coordinate"></div>
        <div class="comparippson-midline">{{ hit.get_consensus_html(colour_subset=colour_subset) }}</div>
        <div class="comparippson-coordinate"></div>
-       {{ segment_line(hit.reference, colour_subset) }}
+       {{ segment_line(hit, hit.reference, colour_subset) }}
      </div>
    </div>
 {%- endmacro -%}

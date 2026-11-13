@@ -158,6 +158,12 @@ class TestMultiDBResults(unittest.TestCase):
         for val in RIPP_CLASSES.values():
             assert f'class="{val}"' not in none
 
+    def test_length_note_rendered(self):
+        # the default dummy hit aligns a full query of 5 to part of a reference of 12
+        html = self.results.get_html_for_query("first")
+        assert "(of 12)" in html
+        assert "(of 5)" not in html
+
     def test_empty(self):
         results = analysis.MultiDBResults([], {})
         assert results.by_query == {}
@@ -165,6 +171,29 @@ class TestMultiDBResults(unittest.TestCase):
 
 
 class TestHits(unittest.TestCase):
+    def test_length_note(self):
+        # the lazA example: a full 14-residue query aligned to residues 1-14 of a 26-residue reference
+        query = create_dummy_segment("SWGSCSCQASSSCA", 1, 14, 14)
+        reference = create_dummy_segment("SWGSCSCQASSSCA", 1, 14, 26)
+        hit = create_dummy_hit(match_count=14, query=query, reference=reference)
+        assert hit.get_length_note(reference) == "(of 26)"
+        assert hit.get_length_note(query) == ""
+        # the longer sequence can be the query
+        hit = create_dummy_hit(match_count=14, query=reference, reference=query)
+        assert hit.get_length_note(reference) == "(of 26)"
+        assert hit.get_length_note(query) == ""
+
+    def test_length_note_full_alignment(self):
+        # equal lengths and fully aligned need no note
+        segment = create_dummy_segment("TIVSA", 1, 5, 5)
+        hit = create_dummy_hit(query=segment, reference=create_dummy_segment("TIVSA", 1, 5, 5))
+        assert hit.get_length_note(hit.query) == hit.get_length_note(hit.reference) == ""
+        # but equal lengths, partly aligned, note both
+        query = create_dummy_segment("IVS", 2, 4, 5)
+        reference = create_dummy_segment("IVS", 1, 3, 5)
+        hit = create_dummy_hit(match_count=3, query=query, reference=reference)
+        assert hit.get_length_note(query) == hit.get_length_note(reference) == "(of 5)"
+
     def test_parsing_single(self):
         # if this format changes, parsing will also change and the test has to update
         assert Hit.BLAST_FORMAT == "6 qacc sacc nident qseq qstart qend qlen sseq sstart send slen"
