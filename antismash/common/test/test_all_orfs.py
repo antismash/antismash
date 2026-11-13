@@ -328,6 +328,41 @@ class TestCircularTrimming(unittest.TestCase):
         self.check(location)
 
 
+class TestCircularRotations(unittest.TestCase):
+    # starts at 0, 6, and 12, with the stop at 18
+    initial = "ATGnnnATGnnnATGnnnTGA"
+    seq = initial + "N" * 30
+
+    def build(self, rotation, strand):
+        """ Rotates the sequence and builds a record and ORF with the ORF
+            in the rotated position, on the given strand
+        """
+        length = len(self.seq)
+        seq = self.seq[rotation:] + self.seq[:rotation]
+        start = -rotation % length
+        end = start + len(self.initial)
+        if strand == -1:
+            seq = str(Seq(seq).reverse_complement())
+            start, end = length - end, length - start
+        if start < 0:  # reverse strand, crossing the origin
+            location = CompoundLocation([FeatureLocation(0, end, -1), FeatureLocation(start + length, length, -1)])
+        elif end > length:  # forward strand, crossing the origin
+            location = CompoundLocation([FeatureLocation(start, length, 1), FeatureLocation(0, end - length, 1)])
+        else:
+            location = FeatureLocation(start, end, strand)
+        record = DummyRecord(seq=seq, circular=True)
+        assert location.extract(record.seq) == self.initial
+        return record, DummyCDS(location=location)
+
+    def test_shortest(self):
+        for strand in [1, -1]:
+            for rotation in range(len(self.seq)):
+                record, orf = self.build(rotation, strand)
+                new = get_trimmed_orf(orf, record)
+                assert new.location.extract(record.seq) == self.initial[12:], (strand, rotation)
+                assert new.location.strand == strand
+
+
 def test_minimum_passthrough():
     record = DummyRecord(seq=f"ATG{'N' * 30}TGA{'N' * 30}")
     for min_length in (5, 10, 60):

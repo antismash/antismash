@@ -77,6 +77,11 @@ def get_trimmed_orf(orf: CDSFeature, record: Record, include: int = None,
         start %= len(record)
     else:
         end -= starts[-1]
+        # trimming may move the start back across the origin, and an end
+        # exactly at the origin is the end of the record
+        end %= len(record)
+        if end == 0:
+            end = len(record)
 
     if start > end:
         location = CompoundLocation([
