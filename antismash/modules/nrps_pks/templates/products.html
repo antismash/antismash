@@ -11,7 +11,8 @@
             For candidate cluster {{candidate.number}}, location {{candidate.start}} - {{candidate.end}}:
           {{collapser_start("CC%s" % candidate.number, level="candidate")}}
           {% if candidate.smiles %}
-            <canvas id="smiles-canvas-{{region.anchor_id}}-{{candidate.number}}" class="smiles-canvas" data-smiles="{{candidate.smiles}}"></canvas>
+            {% set id = "nrps-product" ~ region.anchor_id ~ "-" ~ candidate.number %}
+            {{ show_compound(id, candidate.smiles, additional_classes="nrps-product") }}
             <div class="as-structure-warning">
               {{candidate.get_warning()}}
             </div>

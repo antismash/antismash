@@ -13,7 +13,8 @@ from markupsafe import Markup
 
 from antismash.config import get_config
 
-_ANTISMASH_JS_VERSION = "0.16"  # major and minor only, always use the latest patch
+_ANTISMASH_JS_VERSION = "0.17"  # major and minor only, always use the latest patch
+COMPOUND_DISPLAY_CLASS = "compound-display"
 # defaults for RiPP sequence classes and substitutions
 RIPP_CLASSES = {
     "S": "dha",
@@ -273,6 +274,43 @@ def selected_cds_marker(name: str) -> Markup:
     return Markup(f'<span class="cds-selected-marker cds-selected-marker-{name}" data-locus="{name}"></span>')
 
 
+def show_compound(element_id: str, smiles: str,
+                  *, additional_classes: str = "",
+                  ) -> Markup:
+    """ Creates HTML elements that will display a compound, complete with a
+        zoom/modal for expanding the display.
+
+        Arguments:
+            element_id: the id attribute to use for the outer element
+            smiles: the SMILES string to visualise
+            additional_classes: any additional classes to apply to the outer element
+                                for easier styling
+
+        Returns:
+            A Markup instance with the constructed HTML
+    """
+
+    if not smiles:
+        raise ValueError("SMILES must be provided")
+    return Markup(
+        f"<div"
+        f" class='{COMPOUND_DISPLAY_CLASS} {additional_classes}'"
+        f" data-smiles='{smiles}'"
+        ">"
+        f" <svg id='{element_id}' class='compound-always'></svg>"
+        "  <div class='smiles-copier'>"
+        "     <img src='images/copy.svg' alt='copy smiles'>"
+        "     <span class='smiles-copier-state'></span>"
+        "    </div>"
+        " <div class='modal-container'>"
+        "  <div class='modal-content'>"
+        f"   <svg id='{element_id}-modal' class='compound-modal'></svg>"
+        "  </div>"
+        " </div>"
+        "</div>"
+    )
+
+
 def docs_link(label: str, subtarget: str = "") -> Markup:
     """ Constructs a link to the documentation website specified in the antiSMASH
         config
@@ -341,6 +379,7 @@ class _Template:  # pylint: disable=too-few-public-methods
             "help_tooltip": help_tooltip,
             "replace_with": replace_with,
             "selected_cds_marker": selected_cds_marker,
+            "show_compound": show_compound,
             "spanned_sequence": spanned_sequence,
             "switch": switch,
         }
