@@ -10,14 +10,18 @@ import antismash
 from antismash.common import record_processing, pfamdb
 from antismash.common.test import helpers
 from antismash.config import build_config, destroy_config
-from antismash.detection import cluster_hmmer
+from antismash.detection import cluster_hmmer, hmm_detection
 
 
 class TestClusterHmmer(unittest.TestCase):
     def setUp(self):
         self.original_min_score = cluster_hmmer.MIN_SCORE
         self.original_max_evalue = cluster_hmmer.MAX_EVALUE
-        self.options = build_config(["--clusterhmmer", "--minimal"],
+        args = [
+            "--clusterhmmer",
+        ]
+        args.extend(helpers.build_module_limitation_arg([hmm_detection, cluster_hmmer]))
+        self.options = build_config(args,
                                     isolated=True,
                                     modules=antismash.get_all_modules())
         self.pfam_db = pfamdb.get_latest_db_path(self.options.database_dir)

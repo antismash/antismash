@@ -9,6 +9,7 @@ import unittest
 
 import antismash
 from antismash.common.secmet.test.helpers import DummyCDS, DummyRecord
+from antismash.common.test import helpers
 from antismash.common.test.helpers import run_and_regenerate_results_for_module
 from antismash.config import build_config, destroy_config, update_config
 from antismash.modules import terpene
@@ -83,7 +84,8 @@ class TestTerpene(unittest.TestCase):
         destroy_config()
 
     def get_args(self):
-        return ["--minimal", "--enable-terpene", "--enable-html"]
+        args = helpers.build_module_limitation_arg([terpene])
+        return args
 
     def test_full_pathway(self):
         features = []
