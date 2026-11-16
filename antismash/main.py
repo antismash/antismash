@@ -747,7 +747,7 @@ def list_plugins() -> None:
         print()
 
     print("Available plugins")
-    print("  Detection modules")
+    print("  Detection")
     for stage, modules in _MODULES.detection.items():
         simple_stage = stage.replace("_", " ").capitalize()
         print(f"    {simple_stage}")
