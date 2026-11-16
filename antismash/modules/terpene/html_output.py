@@ -80,6 +80,40 @@ def format_reactions(prediction: DomainPrediction) -> Markup:
     return Markup("".join(reactions))
 
 
+def format_motifs(prediction: DomainPrediction) -> Markup:
+    """ Creates an html table containing motif results for a domain
+
+        Arguments:
+            prediction: a DomainPrediction object
+
+        Returns:
+            a Markup object containing an html table
+    """
+    motifs_header = "<span>Active site motifs:</span><br>"
+    table_head = "<table class='motif-table'><tbody>"
+    table_tail = "</tbody></table>"
+    strings = [motifs_header, table_head]
+    for motif in prediction.motif_results:
+        if motif.start:
+            motif_activity = "active" if motif.active else "inactive"
+            motif_string = (
+                "<tr>"
+                f"<td>{motif.name}:&emsp;</td>"
+                f"<td>{motif.sequence} ({motif.start+1} - {motif.end}), {motif_activity}</td>"
+                "</tr>"
+            )
+        else:
+            motif_string = (
+                "<tr>"
+                f"<td>{motif.name}:&emsp;</td>"
+                f"<td>Not found</td>"
+                "</tr>"
+            )
+        strings.append(motif_string)
+    strings.append(table_tail)
+    return Markup("".join(strings))
+
+
 def format_domain_types(domain_preds: list[DomainPrediction]) -> str:
     """ Returns a summary of the main domain types in a cds
 
@@ -157,7 +191,7 @@ def generate_html(region_layer: RegionLayer, results: TerpeneResults,
         preds_by_cluster=preds_by_cluster, tooltip=details_tooltip,
         get_domain_description=get_domain_description,
         format_subtype=format_subtype, format_reactions=format_reactions,
-        format_domain_types=format_domain_types)
+        format_domain_types=format_domain_types, format_motifs=format_motifs)
     html.add_detail_section("Terpene", details, class_name="terpene")
 
     sidepanel_tooltip = "Glossary showing acronyms and their full names."
