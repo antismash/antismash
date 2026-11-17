@@ -11,7 +11,7 @@ from typing import Dict, Iterable, List, Optional
 
 import Bio.Data.IUPACData
 from Bio.SearchIO import QueryResult
-from Bio.SeqUtils.ProtParam import ProteinAnalysis
+from Bio.SeqUtils import molecular_weight as get_molecular_weight
 
 from .fasta import read_fasta
 from .secmet import Feature, Record
@@ -29,35 +29,61 @@ class Hit:
     bitscore: Optional[float] = None
 
 
-class RobustProteinAnalysis(ProteinAnalysis):
+class RobustProteinAnalysis:
     """ A simple subclass of ProteinAnalysis that can deal with
         a protein sequence containing invalid characters.
 
         If ignoring invalid characters, the molecular weight is increased by
         the average weight of an amino-acid (i.e. 110) for each invalid case.
     """
-    PROTEIN_LETTERS = set(Bio.Data.IUPACData.protein_letters)
+    PROTEIN_LETTERS = frozenset(Bio.Data.IUPACData.protein_letters)
 
-    def __init__(self, prot_sequence: str, monoisotopic: bool = False,
-                 ignore_invalid: bool = True) -> None:
-        if not isinstance(ignore_invalid, bool):
-            raise TypeError("ignore_invalid must be a boolean")
+    def __init__(self, prot_sequence: str, ignore_invalid: bool = True) -> None:
         self._ignore_invalid = ignore_invalid
+        self._amino_acid_count: dict[str, int] | None = None
 
         prot_sequence = prot_sequence.upper()
 
         self.original_sequence = prot_sequence
-        # remove all invalids
-        prot_sequence = "".join(filter(lambda x: x in RobustProteinAnalysis.PROTEIN_LETTERS,
-                                       self.original_sequence))
-        super().__init__(prot_sequence, monoisotopic)
+        self.sequence = prot_sequence
 
-    def molecular_weight(self, *, weighting_multiplier: float = 110) -> float:
-        weight = super().molecular_weight()
+    @property
+    def sequence(self) -> str:
+        """ Get the cleaned up sequence. """
+        return self._sequence
+
+    @sequence.setter
+    def sequence(self, value: str) -> None:
+        """ Make sure the sequence only contains valid protein letters. """
+        self._sequence = "".join(filter(lambda x: x in RobustProteinAnalysis.PROTEIN_LETTERS, value))
+        # reset the amino acid count cache
+        self._amino_acid_count = None
+
+    def molecular_weight(self, *, monoisotopic: bool = False, weighting_multiplier: float = 110) -> float:
+        """ Calculate the molecular weight of a protein sequence.
+
+        Arguments:
+            monoisotopic: whether to calculate the monoisotopic weight or the average weight
+            weighting_multiplier: the weight to add for each invalid amino acid if ignoring invalids
+
+        Returns:
+            the molecular weight of the protein sequence, adjusted for any invalid characters if ignoring them
+        """
+        weight = get_molecular_weight(self.sequence, seq_type="protein", monoisotopic=monoisotopic)
         if not self._ignore_invalid:
             aa_difference = len(self.original_sequence) - len(self.sequence)
             weight += weighting_multiplier * aa_difference
         return weight
+
+    @property
+    def amino_acid_count(self) -> dict[str, int]:
+        """ Count the individual amino acid letters in the protein sequence. """
+        if self._amino_acid_count is None:
+            self._amino_acid_count = dict.fromkeys(self.PROTEIN_LETTERS, 0)
+            for aa in self.sequence:
+                self._amino_acid_count[aa] += 1
+
+        return self._amino_acid_count
 
 
 def extract_by_reference_positions(query: str, reference: str, ref_positions: List[int]) -> Optional[str]:

@@ -179,14 +179,14 @@ def acquire_rodeo_heuristics(cluster: secmet.Protocluster, query: secmet.CDSFeat
     score = 0
     precursor = leader + core
     # Calcd. precursor peptide mass (Da)
-    precursor_analysis = utils.RobustProteinAnalysis(precursor, monoisotopic=True, ignore_invalid=False)
-    tabs.append(float(precursor_analysis.molecular_weight()))
+    precursor_analysis = utils.RobustProteinAnalysis(precursor, ignore_invalid=False)
+    tabs.append(float(precursor_analysis.molecular_weight(monoisotopic=True)))
     # Calcd. leader peptide mass (Da)
-    leader_analysis = utils.RobustProteinAnalysis(leader, monoisotopic=True, ignore_invalid=False)
-    tabs.append(float(leader_analysis.molecular_weight()))
+    leader_analysis = utils.RobustProteinAnalysis(leader, ignore_invalid=False)
+    tabs.append(float(leader_analysis.molecular_weight(monoisotopic=True)))
     # Calcd. core peptide mass (Da)
-    core_analysis = utils.RobustProteinAnalysis(core, monoisotopic=True, ignore_invalid=False)
-    tabs.append(float(core_analysis.molecular_weight()))
+    core_analysis = utils.RobustProteinAnalysis(core, ignore_invalid=False)
+    tabs.append(float(core_analysis.molecular_weight(monoisotopic=True)))
     # Distance to any biosynthetic protein (E, B, C)
     hmmer_profiles = ['PF04055']
     distance = utils.distance_to_pfam(cluster.parent_record, query, hmmer_profiles)

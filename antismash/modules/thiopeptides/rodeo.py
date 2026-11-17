@@ -80,8 +80,8 @@ def acquire_rodeo_heuristics(leader: str, core: str,  # pylint: disable=too-many
         else:
             tabs.append(0)
     # Mass of core peptide (unmodified) < 2100
-    core_analysis = utils.RobustProteinAnalysis(core, monoisotopic=True)
-    if core_analysis.molecular_weight() < 2100:
+    core_analysis = utils.RobustProteinAnalysis(core)
+    if core_analysis.molecular_weight(monoisotopic=True) < 2100:
         score += 1
         tabs.append(1)
     else:
@@ -163,11 +163,11 @@ def generate_rodeo_svm_csv(leader: str, core: str, previously_gathered_tabs: Lis
     # Average core heterocycle block length
     columns.append(stats.average_heteroblock_length)
     # Precursor peptide mass (unmodified)
-    columns.append(utils.RobustProteinAnalysis(leader+core, monoisotopic=True).molecular_weight())
+    columns.append(utils.RobustProteinAnalysis(leader+core).molecular_weight(monoisotopic=True))
     # Unmodified leader peptide mass
-    columns.append(utils.RobustProteinAnalysis(leader, monoisotopic=True).molecular_weight())
+    columns.append(utils.RobustProteinAnalysis(leader).molecular_weight(monoisotopic=True))
     # Unmodified core peptide mass
-    columns.append(utils.RobustProteinAnalysis(core, monoisotopic=True).molecular_weight())
+    columns.append(utils.RobustProteinAnalysis(core).molecular_weight(monoisotopic=True))
     # Length of Precursor
     columns.append(len(precursor))
     # Length of Leader

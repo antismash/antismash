@@ -159,11 +159,12 @@ class Lassopeptide:
             f"{self._macrolactam}, {self.c_cut})"
         )
 
-    def _calculate_weight(self, analysis: utils.RobustProteinAnalysis) -> float:
+    def _calculate_weight(self, seq: str, *, monoisotopic: bool = False) -> float:
         """ Calculate the molecular weight/monoisotopic mass from the given input
         """
+        analysis = utils.RobustProteinAnalysis(seq)
         cc_mass = 2 * self.number_bridges
-        mw = analysis.molecular_weight()
+        mw = analysis.molecular_weight(monoisotopic=monoisotopic)
         bond = 18.02
         return mw + cc_mass - bond
 
@@ -172,14 +173,14 @@ class Lassopeptide:
         """ Determines the weight of the core peptide """
         if not self.core:
             raise ValueError("Cannot calculate weights without a core")
-        return self._calculate_weight(utils.RobustProteinAnalysis(self.core, monoisotopic=True))
+        return self._calculate_weight(self.core, monoisotopic=True)
 
     @property
     def molecular_weight(self) -> float:
         """ Determines the weight of the core peptide """
         if not self.core:
             raise ValueError("Cannot calculate weights without a core")
-        return self._calculate_weight(utils.RobustProteinAnalysis(self.core, monoisotopic=False))
+        return self._calculate_weight(self.core, monoisotopic=False)
 
     @property
     def cut_mass(self) -> float:
@@ -188,7 +189,7 @@ class Lassopeptide:
             raise ValueError("Cannot calculate cut weights without a core")
         if not self.c_cut:
             return self.monoisotopic_mass
-        return self._calculate_weight(utils.RobustProteinAnalysis(self.core[:-len(self.c_cut)], monoisotopic=True))
+        return self._calculate_weight(self.core[:-len(self.c_cut)], monoisotopic=True)
 
     @property
     def cut_weight(self) -> float:
@@ -197,7 +198,7 @@ class Lassopeptide:
             raise ValueError("Cannot calculate cut weights without a core")
         if not self.c_cut:
             return self.molecular_weight
-        return self._calculate_weight(utils.RobustProteinAnalysis(self.core[:-len(self.c_cut)], monoisotopic=False))
+        return self._calculate_weight(self.core[:-len(self.c_cut)], monoisotopic=False)
 
     @property
     def macrolactam(self) -> str:
@@ -220,7 +221,7 @@ class Lassopeptide:
         Predict the lassopeptide number of disulfide bridges
         """
 
-        aas = utils.RobustProteinAnalysis(self.core, monoisotopic=True).count_amino_acids()
+        aas = utils.RobustProteinAnalysis(self.core).amino_acid_count
         if aas['C'] >= 4:
             return 2
         if aas['C'] >= 2:
@@ -314,8 +315,8 @@ def acquire_rodeo_heuristics(record: Record, cluster: Protocluster, query: CDSFe
     tabs: List[Union[float, int]] = []
     score = 0
     # Calcd. lasso peptide mass (Da) (with Xs average out)
-    core_analysis = utils.RobustProteinAnalysis(core, monoisotopic=True, ignore_invalid=False)
-    tabs.append(float(core_analysis.molecular_weight()))
+    core_analysis = utils.RobustProteinAnalysis(core, ignore_invalid=False)
+    tabs.append(float(core_analysis.molecular_weight(monoisotopic=True)))
 
     # Distance to any biosynthetic protein (E, B, C)
     hmmer_profiles = ['PF13471', 'PF00733', 'PF05402']
