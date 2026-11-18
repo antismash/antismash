@@ -201,7 +201,7 @@ class TestSubclusters(unittest.TestCase):
             patch.object(subclusters, "AGGREGATE_HMM_FILE", aggregate),
             patch.object(ruleset, "AGGREGATE_HMM_FILE", aggregate),
             patch.dict(signatures._SIGNATURE_CACHE, test_signatures, clear=True),
-            patch.object(ruleset, "_rule_files_for_strictness", return_value=[TEST_RULES]),
+            patch.object(ruleset, "RULES_FILE", TEST_RULES),
             patch.dict(ruleset._CACHE, clear=True),
             patch.dict(compounds._COMPOUND_CACHE, TEST_COMPOUNDS, clear=True),
         ]

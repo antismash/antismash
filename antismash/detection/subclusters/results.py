@@ -24,7 +24,6 @@ class SubclusterDetectionResults(DetectionResults):
             record_id: str,
             rule_results: RuleDetectionResults,
             rule_names: set[str],
-            strictness: str,
             predictions: list[SubclusterPrediction],
             subregions: list[SubRegion],
             subregion_mode: SubRegionMode,
@@ -32,7 +31,6 @@ class SubclusterDetectionResults(DetectionResults):
         super().__init__(record_id)
         self.rule_results = rule_results
         self.rule_names = rule_names
-        self.strictness = strictness
         self.subregion_mode = subregion_mode
         self.predictions = predictions
         self.subregions = subregions
@@ -65,7 +63,6 @@ class SubclusterDetectionResults(DetectionResults):
         return {
             "schema_version": self.schema_version,
             "record_id": self.record_id,
-            "strictness": self.strictness,
             "subregion_mode": self.subregion_mode,
             "rule_names": sorted(self.rule_names),
             "rule_results": self.rule_results.to_json(),
@@ -107,9 +104,8 @@ class SubclusterDetectionResults(DetectionResults):
             record_id=json["record_id"],
             rule_results=rule_results,
             rule_names=set(json["rule_names"]),
-            strictness=json["strictness"],
             subregion_mode=subregion_mode,
-            predictions=build_predictions(rule_results, json["strictness"]),
+            predictions=build_predictions(rule_results),
             subregions=build_subregions(record, rule_results.protoclusters,
                                         tool=rule_results.tool, mode=subregion_mode),
         )

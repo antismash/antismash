@@ -151,19 +151,16 @@ def _build_domain_hits(rule_name: str, cds_results: list[CDSResults]) -> list[CD
     return hits
 
 
-def build_predictions(rule_results: RuleDetectionResults, strictness: str,
-                      ) -> list[SubclusterPrediction]:
+def build_predictions(rule_results: RuleDetectionResults) -> list[SubclusterPrediction]:
     """ Builds the view objects for each detected subcluster
 
         Arguments:
             rule_results: the detection results to build the predictions from
-            strictness: the strictness level detection was run at, which determines
-                        the ruleset the matching rules are taken from
 
         Returns:
             a list of predictions, one per detected subcluster
     """
-    ruleset = get_ruleset(strictness)
+    ruleset = get_ruleset()
     predictions: list[SubclusterPrediction] = []
     for protocluster, cds_results in rule_results.cds_by_cluster.items():
         rule = ruleset.get_rule_by_name(protocluster.product)

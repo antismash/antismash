@@ -20,7 +20,6 @@ class TestFromJSON(unittest.TestCase):
         self.json = {
             "schema_version": SubclusterDetectionResults.schema_version,
             "record_id": self.record.id,
-            "strictness": "relaxed",
             "subregion_mode": "clip",
             "rule_names": ["b", "a"],
             "rule_results": {"dummy": True},

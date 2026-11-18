@@ -123,12 +123,12 @@ class TestBuildPredictions(unittest.TestCase):
         self.addCleanup(patcher.stop)
         return patcher.start()
 
-    def build(self, cds_by_cluster, strictness="relaxed"):
+    def build(self, cds_by_cluster):
         """ Builds predictions from rule detection results with the given
             CDS results for each protocluster
         """
         rule_results = SimpleNamespace(cds_by_cluster=cds_by_cluster)
-        return build_predictions(rule_results, strictness)
+        return build_predictions(rule_results)
 
     def test_prediction_details(self):
         protocluster = DummyProtocluster(start=10, end=500, product=THIS_RULE)
@@ -144,9 +144,9 @@ class TestBuildPredictions(unittest.TestCase):
         assert cds_and_domain_names(prediction.domain_hits) == [("cds1", "A")]
         self.get_compound.assert_called_once_with(THIS_RULE)
 
-    def test_strictness_used(self):
-        self.build({}, strictness="strict")
-        self.get_ruleset.assert_called_once_with("strict")
+    def test_ruleset_used(self):
+        self.build({})
+        self.get_ruleset.assert_called_once_with()
 
     def test_one_per_protocluster(self):
         first = DummyProtocluster(start=10, end=500, product=THIS_RULE)

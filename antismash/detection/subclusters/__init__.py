@@ -17,7 +17,7 @@ from antismash.detection import DetectionStage
 
 from .predictions import build_predictions
 from .results import SubclusterDetectionResults
-from .ruleset import STRICTNESS_LEVELS, get_ruleset
+from .ruleset import get_ruleset
 from .signatures import AGGREGATE_HMM_FILE, DETAILS_FILE, get_signatures
 from .subregions import SubRegionMode, build_subregions
 from .html_output import generate_html, will_handle, generate_javascript_data  # noqa: F401
@@ -40,15 +40,6 @@ def get_arguments() -> ModuleArgs:
                              default=False,
                              action='store_true',
                              help="Run Subcluster detection.")
-    args.add_option('strictness',
-                    dest='strictness',
-                    type=str,
-                    choices=list(STRICTNESS_LEVELS),
-                    default="relaxed",
-                    help=("Defines which level of strictness to use for "
-                          "subcluster detection. Levels are cumulative, so "
-                          "looser levels also include all stricter rules "
-                          "(default: %(default)s)."))
     args.add_option('region-mode',
                     dest='subregion_mode',
                     type=str,
@@ -70,9 +61,6 @@ def check_options(options: ConfigType) -> list[str]:
         running any analyses
     """
     errors = []
-    if options.subclusters_strictness not in STRICTNESS_LEVELS:
-        errors.append(f"Unknown subcluster strictness level: {options.subclusters_strictness}")
-
     try:
         SubRegionMode(options.subclusters_subregion_mode)
     except ValueError:
@@ -166,7 +154,7 @@ def regenerate_previous_results(results: dict[str, Any], record: Record,
         return None
 
     current_mode = SubRegionMode(options.subclusters_subregion_mode)
-    current_rule_names = get_ruleset(options.subclusters_strictness).get_rule_names()
+    current_rule_names = get_ruleset().get_rule_names()
 
     mode_changed = results.get("subregion_mode") != current_mode
     rules_changed = set(results.get("rule_names", [])) != current_rule_names
@@ -200,14 +188,13 @@ def run_on_record(record: Record, previous_results: Optional[SubclusterDetection
     if previous_results:
         return previous_results
 
-    current_strictness = options.subclusters_strictness
-    ruleset = get_ruleset(current_strictness)
+    ruleset = get_ruleset()
     rule_results = detect_protoclusters_and_signatures(record, ruleset)
     # the shared detection labels protoclusters as "rule-based-clusters", so use this module's name
     for protocluster in rule_results.protoclusters:
         protocluster.tool = rule_results.tool
 
-    predictions = build_predictions(rule_results, current_strictness)
+    predictions = build_predictions(rule_results)
 
     subregion_mode = SubRegionMode(options.subclusters_subregion_mode)
     subregions = build_subregions(record, rule_results.protoclusters,
@@ -217,7 +204,6 @@ def run_on_record(record: Record, previous_results: Optional[SubclusterDetection
         record_id=record.id,
         rule_results=rule_results,
         rule_names=ruleset.get_rule_names(),
-        strictness=current_strictness,
         subregion_mode=subregion_mode,
         predictions=predictions,
         subregions=subregions,
