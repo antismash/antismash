@@ -6,6 +6,8 @@
 from dataclasses import asdict, dataclass
 from typing import Any, Optional, Self
 
+from Bio.Data import IUPACData
+
 from antismash.common import json, path
 
 
@@ -28,6 +30,8 @@ class CompoundGroup:
     chain_length: int
     initial_cyclisations: tuple[str]
     functional_groups: tuple[str]
+    smiles: Optional[str]
+    marts: tuple[str]
     biosynthetic_subclass: str = ""
 
     def get_compound_name(self) -> str:
@@ -70,6 +74,7 @@ class CompoundGroup:
         """ Reconstructs an instance from a JSON representation """
         data["initial_cyclisations"] = tuple(data["initial_cyclisations"])
         data["functional_groups"] = tuple(data["functional_groups"])
+        data["marts"] = tuple(data["marts"])
         data["biosynthetic_subclass"] = data["biosynthetic_subclass"] or ""
         return cls(**data)
 
@@ -119,6 +124,36 @@ class Reaction:
                    tuple(compound_groups[name] for name in data["products"]))
 
 
+@dataclass(frozen=True, slots=True)
+class Motif:
+    """ A motif within an hmm profile
+    """
+    name: str
+    positions: list[int]
+    allowed_residues: list[str]
+
+    def __post_init__(self) -> None:
+        if len(self.positions) != len(self.allowed_residues):
+            raise ValueError(f"Motif {self.name}: "
+                             "Each position should have an associated string with allowed residues (and vice versa)")
+        if sorted(self.positions) != self.positions:
+            raise ValueError(f"Motif {self.name}: "
+                            "Positions should be in ascending order")
+        if any(not set(residue_string) <= set(IUPACData.protein_letters)
+               for residue_string in self.allowed_residues):
+            raise ValueError(f"Motif {self.name}: "
+                             "Contains invalid amino acid characters")
+
+    def to_json(self) -> dict[str, Any]:
+        """ Returns a JSON-friendly representation """
+        return asdict(self)
+
+    @classmethod
+    def from_json(cls, data: dict[str, Any]) -> Self:
+        """ Reconstructs an instance from a JSON representation """
+        return cls(**data)
+
+
 @dataclass
 class TerpeneHMM:
     """ Properties associated with a terpene hmm profile
@@ -130,6 +165,7 @@ class TerpeneHMM:
     cutoff: int
     subtypes: tuple["TerpeneHMM", ...]
     reactions: tuple[Reaction, ...]
+    motifs: tuple[Motif, ...]
     __is_subtype: bool = False
 
     def __post_init__(self) -> None:
@@ -157,15 +193,25 @@ class TerpeneHMM:
             subtypes = tuple(terpene_hmms[name] for name in hmm_json["subtypes"])
         except KeyError as key:
             raise MissingHmmError(f"'{hmm_json['name']}': Subtype {key} not defined yet")
+        reactions = tuple(Reaction.from_json(reaction, compound_groups) for reaction in hmm_json["reactions"])
+        motifs = tuple(Motif.from_json(motif) for motif in hmm_json["motifs"])
         return cls(str(hmm_json["name"]), str(hmm_json["description"]), str(hmm_json["type"]),
                    int(hmm_json["length"]), int(hmm_json["cutoff"]), subtypes,
-                   tuple(Reaction.from_json(reaction, compound_groups)
-                         for reaction in hmm_json["reactions"]))
+                   reactions, motifs)
+
+
+@dataclass
+class Relationship:
+    """ Stores the parents and children of a TerpeneHMM
+    """
+    parents: set[str]
+    children: set[str]
 
 
 _COMPOUND_CACHE: dict[str, CompoundGroup] = {}
 _HMM_PROPERTIES_CACHE: dict[str, TerpeneHMM] = {}
 _HMM_LENGTHS: dict[str, int] = {}
+_RELATIONSHIPS: dict[str, Relationship] = {}
 HMM_METADATA_FILE = path.get_full_path(__file__, "data", "hmm_properties.json")
 COMPOUND_FILE = path.get_full_path(__file__, "data", "compound_groups.json")
 
@@ -234,3 +280,36 @@ def load_hmm_lengths(hmm_properties: dict[str, TerpeneHMM]) -> dict[str, int]:
         hmm_lengths = {hmm_name: hmm_obj.length for hmm_name, hmm_obj in hmm_properties.items()}
         _HMM_LENGTHS.update(hmm_lengths)
     return _HMM_LENGTHS
+
+
+def load_relationships(hmm_properties: dict[str, TerpeneHMM]) -> dict[str, Relationship]:
+    """ Loads relationships from hmm properties.
+        Only does the processing once per python invocation, future runs access
+        existing properties
+
+        Arguments:
+            hmm_properties: a dictionary of hmm names to TerpeneHMM objects
+
+        Returns:
+            a dictionary of hmm names to relationships
+    """
+    if _RELATIONSHIPS:
+        return _RELATIONSHIPS
+    relationships: dict[str, Relationship] = {}
+    for hmm_name, hmm_obj in hmm_properties.items():
+        for child in hmm_obj.subtypes:
+            try:
+                relationships[child.name].parents.add(hmm_name)
+            except KeyError:
+                relationships[child.name] = Relationship(
+                    parents={hmm_name},
+                    children=set(grandchild.name for grandchild in child.subtypes)
+                )
+        if hmm_obj.is_subtype():
+            continue
+        relationships[hmm_name] = Relationship(
+            parents=set(),
+            children=set(child.name for child in hmm_obj.subtypes)
+        )
+    _RELATIONSHIPS.update(relationships)
+    return _RELATIONSHIPS
