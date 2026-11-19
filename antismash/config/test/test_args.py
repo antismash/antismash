@@ -6,12 +6,14 @@
 
 from argparse import ArgumentError, Namespace
 import os
+from tempfile import NamedTemporaryFile
 import unittest
 from unittest.mock import patch
 
 from helperlibs.wrappers.io import TemporaryDirectory
 
 from antismash import get_all_modules
+from antismash import config as config_module
 from antismash.config import get_config, update_config, destroy_config, executables
 from antismash.config import args
 
@@ -86,6 +88,41 @@ class TestConfig(unittest.TestCase):
             parser = args.build_parser(modules=get_all_modules(), from_config_file=True)
             from_file = parser.parse_args(["@default_options.cfg"])
             assert vars(default_options) == vars(from_file)
+
+    def test_env_value_used_without_file_or_cli(self):
+        with patch.dict(os.environ, {"ANTISMASH_CPUS": "7"}, clear=False):
+            with patch.object(config_module, "_USER_FILE_NAME", ""):
+                with patch.object(config_module, "_INSTANCE_FILE_NAME", ""):
+                    options = config_module.build_config([], modules=[])
+        assert options.cpus == 7
+
+    def test_config_module_file_overrides_env(self):
+        with NamedTemporaryFile("w", encoding="utf-8") as config_file:
+            config_file.write("cpus 9\n")
+            config_file.flush()
+            with patch.dict(os.environ, {"ANTISMASH_CPUS": "7"}, clear=False):
+                with patch.object(config_module, "_USER_FILE_NAME", ""):
+                    with patch.object(config_module, "_INSTANCE_FILE_NAME", config_file.name):
+                        options = config_module.build_config([], modules=[])
+        assert options.cpus == 9
+
+    def test_cli_overrides_env(self):
+        with patch.dict(os.environ, {"ANTISMASH_CPUS": "7"}, clear=False):
+            with patch.object(config_module, "_USER_FILE_NAME", ""):
+                with patch.object(config_module, "_INSTANCE_FILE_NAME", ""):
+                    options = config_module.build_config(["--cpus", "11"], modules=[])
+        assert options.cpus == 11
+
+    def test_boolean_env_parsing(self):
+        with patch.object(config_module, "_USER_FILE_NAME", ""):
+            with patch.object(config_module, "_INSTANCE_FILE_NAME", ""):
+                with patch.dict(os.environ, {"ANTISMASH_VERBOSE": "true"}, clear=False):
+                    options = config_module.build_config([], modules=[])
+                assert options.verbose is True
+
+                with patch.dict(os.environ, {"ANTISMASH_VERBOSE": "false"}, clear=False):
+                    options = config_module.build_config([], modules=[])
+                assert options.verbose is False
 
     def test_paths(self):
         with TemporaryDirectory(change=True) as temp_dir:
