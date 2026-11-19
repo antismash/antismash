@@ -1,0 +1,537 @@
+RULE BB0003
+    CATEGORY Subcluster
+    DESCRIPTION L-rhamnose
+    CUTOFF 5
+    NEIGHBOURHOOD 0
+    CONDITIONS rmlA_long
+               and dTDP_gluc_dehyt
+               and rmlD
+    EXTENDERS dTDP_sugar_isom
+
+RULE BB0005
+    CATEGORY Subcluster
+    DESCRIPTION actinamine
+    CUTOFF 10
+    NEIGHBOURHOOD 0
+    CONDITIONS Inositol_P
+               and GFO_IDH_MocA
+               and DegT_DnrJ_EryC1
+               and N6_N4_Mtase
+
+RULE BB0006
+    CATEGORY Subcluster
+    DESCRIPTION actinospectose
+    CUTOFF 10
+    NEIGHBOURHOOD 0
+    CONDITIONS rmlA
+               and dTDP_gluc_dehyt
+               and Aminotran_3
+               and cds(GFO_IDH_MocA and GFO_IDH_MocA_C3)
+
+RULE BB0007
+    CATEGORY Subcluster
+    DESCRIPTION 3-amino-4,7-dihydroxycoumarin
+    CUTOFF 5
+    NEIGHBOURHOOD 0
+    CONDITIONS p450
+               and cds(adh_short_C2 and not ketoacyl-synt and not Condensation)
+               and cds(AA-adenyl-dom and AMP-binding_C and PP-binding and not ketoacyl-synt)
+
+RULE BB0008
+    CATEGORY Subcluster
+    DESCRIPTION 4-O-demethyl-beta-L-noviose
+    CUTOFF 5
+    NEIGHBOURHOOD 0
+    CONDITIONS rmlA
+               and dTDP_gluc_dehyt
+               and dTDP_sugar_isom
+               and rmlD
+               and cds(Methyltransf_13 and Methyltransf_14)
+
+RULE BB0009
+    CATEGORY Subcluster
+    DESCRIPTION 3-prenyl-4-hydroxybenzoic acid
+    CUTOFF 25
+    NEIGHBOURHOOD 0
+    CONDITIONS PDH_N
+               and PTase_Orf2
+               and Aldolase_II
+
+RULE BB0010
+    CATEGORY Subcluster
+    DESCRIPTION pyrrole-2-carboxylic acid
+    CUTOFF 5
+    NEIGHBOURHOOD 0
+    CONDITIONS cds(PP-binding and not ketoacyl-synt and not Condensation)
+               and cds(Acyl-CoA_dh_1 and Acyl-CoA_dh_M and Acyl-CoA_dh_N)
+               and cds(AA-adenyl-dom and AMP-binding_C and not ketoacyl-synt and not Condensation)
+
+RULE BB0012
+    CATEGORY Subcluster
+    DESCRIPTION platensic acid
+    CUTOFF 5
+    NEIGHBOURHOOD 0
+    CONDITIONS SQHop_cyclase_C
+               and Terpene_syn_C_2
+               and polyprenyl_synt
+
+RULE BB0013
+    CATEGORY Subcluster
+    DESCRIPTION 3-amino-2,4-dihydroxybenzoic acid
+    CUTOFF 5
+    NEIGHBOURHOOD 0
+    CONDITIONS DeoC
+               and FAD_binding_3
+               and cds(DHQS and DHQS_2nd)
+
+RULE BB0015
+    CATEGORY Subcluster
+    DESCRIPTION o-succinylbenzoate
+    CUTOFF 10
+    NEIGHBOURHOOD 0
+    CONDITIONS isochor_syn
+               and cds(Enolase_like_N and MR_MLE_C)
+
+RULE BB0016
+    CATEGORY Subcluster
+    DESCRIPTION tricyclic diterpenoid alpha-keto acid
+    CUTOFF 15
+    NEIGHBOURHOOD 0
+    CONDITIONS FAD_binding_3
+               and SQHop_cyclase_C
+               and polyprenyl_synt
+               and UbiA
+
+RULE BB0017
+    CATEGORY Subcluster
+    DESCRIPTION L-amicetose
+    CUTOFF 30
+    NEIGHBOURHOOD 0
+    CONDITIONS DegT_DnrJ_EryC1 and Hexose_dehydrat and dTDP_gluc_dehyt and rmlA and cds(Epimerase and not dTDP_gluc_dehyt and not ketoacyl-synt and not Condensation) and dTDP_sugar_isom and cds(GFO_IDH_MocA and GFO_IDH_MocA_C3)
+
+RULE BB0018
+    CATEGORY Subcluster
+    DESCRIPTION 3-amino-5-hydroxybenzoic acid
+    CUTOFF 55
+    NEIGHBOURHOOD 0
+    CONDITIONS DegT_DnrJ_EryC1
+               and AHBA_synth_RP
+               and DHquinase_II
+               and ROK
+               and cds(DHQS_C and DHQ_synthase)
+               and cds(GFO_IDH_MocA and GFO_IDH_MocA_C3)
+    EXTENDERS cds(DAHP_synth_2 or Shikimate_dh_N)
+
+RULE BB0020
+    CATEGORY Subcluster
+    DESCRIPTION methoxymalonic acid
+    CUTOFF 15
+    NEIGHBOURHOOD 0
+    CONDITIONS FkbH
+               and cds(SMCOG1147 and not ketoacyl-synt and not Condensation)
+               and Methyltransf_3
+               and cds(Acyl-CoA_dh_1 and Acyl-CoA_dh_M and Acyl-CoA_dh_N)
+               and cds(3HCDH and 3HCDH_N)
+
+RULE BB0022
+    CATEGORY Subcluster
+    DESCRIPTION D-angolosamine
+    CUTOFF 5
+    NEIGHBOURHOOD 0
+    CONDITIONS DegT_DnrJ_EryC1 and rmlA_long and dTDP_gluc_dehyt and Hexose_dehydrat and Methyltransf_25 and cds(Epimerase and not dTDP_gluc_dehyt and not ketoacyl-synt and not Condensation)
+
+RULE BB0023
+    CATEGORY Subcluster
+    DESCRIPTION L-rhodinose
+    CUTOFF 15
+    NEIGHBOURHOOD 0
+    CONDITIONS rmlA_long and dTDP_gluc_dehyt and Hexose_dehydrat and DegT_DnrJ_EryC1 and cds(Epimerase and not dTDP_gluc_dehyt and not ketoacyl-synt and not Condensation) and dTDP_sugar_isom and cds(GFO_IDH_MocA and GFO_IDH_MocA_C3)
+
+RULE BB0025
+    CATEGORY Subcluster
+    DESCRIPTION D-olivose
+    CUTOFF 10
+    NEIGHBOURHOOD 0
+    CONDITIONS rmlA_long and dTDP_gluc_dehyt and cds(Epimerase and not dTDP_gluc_dehyt and not ketoacyl-synt and not Condensation) and Hexose_dehydrat and cds(GFO_IDH_MocA and GFO_IDH_MocA_C3)
+
+RULE BB0026
+    CATEGORY Subcluster
+    DESCRIPTION D-rubranitrose
+    CUTOFF 55
+    NEIGHBOURHOOD 0
+    CONDITIONS rmlA_long and dTDP_gluc_dehyt and Hexose_dehydrat and cds(DegT_DnrJ_EryC1 and not Aminotran_1_2) and cds(Epimerase and not dTDP_gluc_dehyt and not ketoacyl-synt and not Condensation and not adh_short_C2) and methyltran_NanM and cds(Methyltransf_13 and Methyltransf_14) and cds(Acyl-CoA_dh_1 and Acyl-CoA_dh_M and Acyl-CoA_dh_N)
+
+RULE BB0028
+    CATEGORY Subcluster
+    DESCRIPTION 3-methylaspartate
+    CUTOFF 5
+    NEIGHBOURHOOD 0
+    CONDITIONS B12-binding
+               and Met_asp_mut_E
+
+RULE BB0030
+    CATEGORY Subcluster
+    DESCRIPTION 3,6-dimethylsalicylic acid
+    CUTOFF 5
+    NEIGHBOURHOOD 0
+    CONDITIONS cds(AMP-binding and AMP-binding_C and not ketoacyl-synt and not Condensation)
+               and cds(Acyl_transf_1 and KR and PKS_DH_N and PP-binding and ketoacyl-synt)
+               and cds(Dimerisation and Methyltransf_2)
+
+RULE BB0032
+    CATEGORY Subcluster
+    DESCRIPTION 2-methoxy-5-chloro-6-methylsalicylic acid
+    CUTOFF 5
+    NEIGHBOURHOOD 0
+    CONDITIONS SMCOG1119 and cds(PP-binding and not ketoacyl-synt and not Condensation) and cds(ACP_syn_III_C and not ketoacyl-synt and not Condensation) and Methyltransf_24 and cds(Acyl_transf_1 and KR and PKS_DH_N and PP-binding and ketoacyl-synt)
+
+RULE BB0037
+    CATEGORY Subcluster
+    DESCRIPTION 5-iodo-2,3-di-O-methylorsellinic acid
+    CUTOFF 15
+    NEIGHBOURHOOD 0
+    CONDITIONS p450 and SMCOG1119 and cds(ACP_syn_III_C and not ketoacyl-synt and not Condensation) and repeatable(2, [Methyltransf_2]) and cds(Dimerisation and Methyltransf_2) and cds(Acyl_transf_1 and PKS_DH_N and PP-binding and ketoacyl-synt)
+
+RULE BB0041
+    CATEGORY Subcluster
+    DESCRIPTION methoxybenzoxazolinate
+    CUTOFF 25
+    NEIGHBOURHOOD 0
+    CONDITIONS Chorismate_bind
+               and FMN_red
+               and cds(AMP-binding and not ketoacyl-synt and not Condensation)
+               and p450
+               and cds(Dimerisation and Methyltransf_2)
+
+RULE BB0050
+    CATEGORY Subcluster
+    DESCRIPTION 3,5-dihydroxyphenylglycine
+    CUTOFF 15
+    NEIGHBOURHOOD 0
+    CONDITIONS DHPHCoAsyn_DpgA
+               and EnCoAhydt_DpgB
+               and DHPACoAdixog_DpgC
+               and EnCoAhydt_DpgD
+               and cds(Aminotran_1_2 and not ketoacyl-synt and not Condensation)
+
+RULE BB0051
+    CATEGORY Subcluster
+    DESCRIPTION 4-hydroxyphenylglycine
+    CUTOFF 45
+    NEIGHBOURHOOD 0
+    CONDITIONS 4HPPD
+               and FMN_dh
+               and cds(Aminotran_1_2 and not ketoacyl-synt and not Condensation)
+               and cds(PDH_C and PDH_N)
+
+RULE BB0052
+    CATEGORY Subcluster
+    DESCRIPTION beta-hydroxytyrosine
+    CUTOFF 5
+    NEIGHBOURHOOD 0
+    CONDITIONS p450
+               and Abhydrolase_6
+               and cds(AA-adenyl-dom and AMP-binding_C and PP-binding and not ketoacyl-synt and not Condensation)
+
+RULE BB0121
+    CATEGORY Subcluster
+    DESCRIPTION S-beta-hydroxyenduracididine
+    CUTOFF 5
+    NEIGHBOURHOOD 0
+    CONDITIONS endura_MppP
+               and endura_MppQ
+               and endura_MppR
+               and GntD_guanitoxin
+
+RULE BB0055
+    CATEGORY Subcluster
+    DESCRIPTION enduracididine
+    SUPERIORS BB0121
+    CUTOFF 5
+    NEIGHBOURHOOD 0
+    CONDITIONS endura_MppP
+               and endura_MppQ
+               and endura_MppR
+
+RULE BB0057
+    CATEGORY Subcluster
+    DESCRIPTION 4-methylproline
+    CUTOFF 5
+    NEIGHBOURHOOD 0
+    CONDITIONS proC
+               and cds(ADH_N and ADH_zinc_N)
+
+RULE BB0058
+    CATEGORY Subcluster
+    DESCRIPTION p-aminophenyl pyruvatic acid
+    CUTOFF 5
+    NEIGHBOURHOOD 0
+    CONDITIONS PDH_C
+               and CM-like
+               and cds(pabB and trpG_papA)
+
+RULE BB0059
+    CATEGORY Subcluster
+    DESCRIPTION 4-methyl-3-hydroxyanthranilic acid
+    CUTOFF 5
+    NEIGHBOURHOOD 0
+    CONDITIONS Trp_dioxygenase
+               and KYNU_C
+               and BD-FAE
+               and cds(Dimerisation and Methyltransf_2)
+    EXTENDERS FAD_binding_3
+
+RULE BB0062
+    CATEGORY Subcluster
+    DESCRIPTION salicylic acid
+    CUTOFF 5
+    NEIGHBOURHOOD 0
+    CONDITIONS salicyl_syn or (isochor_syn and CM-like)
+
+RULE BB0067
+    CATEGORY Subcluster
+    DESCRIPTION 3-hydroxy-5-methyl-O-methyltyrosine
+    CUTOFF 15
+    NEIGHBOURHOOD 0
+    CONDITIONS SfmD_perox and repeatable(2, [Methyltransf_2]) and cds(Dimerisation and Methyltransf_2)
+
+RULE BB0069
+    CATEGORY Subcluster
+    DESCRIPTION chloroethylmalonic acid
+    CUTOFF 20
+    NEIGHBOURHOOD 0
+    CONDITIONS MTAP
+               and MaoC_dehydratas
+               and YmdB
+               and cds(adh_short_C2 and not ketoacyl-synt and not Condensation)
+               and crot-CoA-red
+               and cds(DUF6537 and IOR_2 and POR and TPP_enzyme_C)
+               and cds(SAM_HAT_C and SAM_HAT_N)
+               and cds(ILVD_EDD_N and ILV_EDD_C)
+
+RULE BB0071
+    CATEGORY Subcluster
+    DESCRIPTION 2,3-diaminobutyric acid
+    CUTOFF 5
+    NEIGHBOURHOOD 0
+    CONDITIONS Lyase_1
+               and GHMP_kinases_N
+               and GntG_guanitoxin
+               and cds(ATP-grasp_4 and ATPgrasp_N and LAL_C2 and PALP)
+
+RULE BB0073
+    CATEGORY Subcluster
+    DESCRIPTION 2-amino-3-hydroxycyclopent-2-enone
+    CUTOFF 5
+    NEIGHBOURHOOD 0
+    CONDITIONS 5aminolev_synth
+               and cds(AMP-binding and AMP-binding_C and not ketoacyl-synt and not Condensation)
+
+RULE BB0075
+    CATEGORY Subcluster
+    DESCRIPTION quinoxaline-2-carboxylic acid
+    CUTOFF 25
+    NEIGHBOURHOOD 0
+    CONDITIONS p450
+               and Trp_dioxygenase
+               and Erythro_esteras
+               and FAD_binding_3
+               and Iso_dh
+               and cds(Thioesterase and not ketoacyl-synt and not Condensation)
+               and cds(AA-adenyl-dom and AMP-binding_C and PP-binding and not ketoacyl-synt and not Condensation)
+
+RULE BB0083
+    CATEGORY Subcluster
+    DESCRIPTION 2-undecylpyrrole
+    CUTOFF 10
+    NEIGHBOURHOOD 0
+    CONDITIONS fabH and cds(PP-binding and not ketoacyl-synt and not Condensation) and cds(ketoacyl-synt and not AMP-binding and not Acyl_transf_1) and cds(Epimerase and not ketoacyl-synt and not Condensation) and cds(AMP-binding and Acyl_transf_1 and Aminotran_1_2 and PP-binding and ketoacyl-synt)
+
+RULE BB0098
+    CATEGORY Subcluster
+    DESCRIPTION isobutyrylmalonic acid
+    CUTOFF 5
+    NEIGHBOURHOOD 0
+    CONDITIONS crot-CoA-red
+               and fabH
+               and cds(3HCDH and 3HCDH_N)
+
+RULE BB0084
+    CATEGORY Subcluster
+    DESCRIPTION ethylmalonic acid
+    SUPERIORS BB0098
+    CUTOFF 5
+    NEIGHBOURHOOD 0
+    CONDITIONS crot-CoA-red
+               and cds(3HCDH and 3HCDH_N)
+
+RULE BB0088
+    CATEGORY Subcluster
+    DESCRIPTION 2-deoxystreptamine
+    CUTOFF 10
+    NEIGHBOURHOOD 0
+    CONDITIONS DegT_DnrJ_EryC1
+               and ADH_zinc_N
+               and cds(DHQS_C and DHQ_synthase)
+
+RULE BB0089
+    CATEGORY Subcluster
+    DESCRIPTION platencinic acid
+    CUTOFF 10
+    NEIGHBOURHOOD 0
+    CONDITIONS UbiA
+               and SQHop_cyclase_C
+               and polyprenyl_synt
+
+RULE BB0090
+    CATEGORY Subcluster
+    DESCRIPTION 3-aminosalicylic acid
+    CUTOFF 5
+    NEIGHBOURHOOD 0
+    CONDITIONS cds(PP-binding and not ketoacyl-synt and not Condensation)
+               and PA_CoA_Oxy1
+               and PA_CoA_Oxy2
+               and PA_CoA_Oxy3
+               and PA_CoA_Oxy4
+               and cds(AMP-binding and AMP-binding_C and not ketoacyl-synt and not Condensation)
+               and cds(FAD_binding_6 and Fer2 and NAD_binding_1)
+
+RULE BB0091
+    CATEGORY Subcluster
+    DESCRIPTION hydroxymalonic acid
+    SUPERIORS BB0020
+    CUTOFF 15
+    NEIGHBOURHOOD 0
+    CONDITIONS cds(SMCOG1147 and not ketoacyl-synt and not Condensation)
+               and FkbH
+               and cds(Acyl-CoA_dh_1 and Acyl-CoA_dh_M and Acyl-CoA_dh_N)
+               and cds(3HCDH and 3HCDH_N)
+
+RULE BB0092
+    CATEGORY Subcluster
+    DESCRIPTION aminomalonic acid
+    CUTOFF 5
+    NEIGHBOURHOOD 0
+    CONDITIONS cds(SMCOG1147 and not ketoacyl-synt and not Condensation)
+               and cds(3HCDH and 3HCDH_N)
+               and cds(Acyl-CoA_dh_1 and Acyl-CoA_dh_M and Acyl-CoA_dh_N)
+               and cds(AA-adenyl-dom and AMP-binding_C and not ketoacyl-synt and not Condensation)
+
+RULE BB0093
+    CATEGORY Subcluster
+    DESCRIPTION beta-ureidoalanine
+    CUTOFF 5
+    NEIGHBOURHOOD 0
+    CONDITIONS PLP_SbnA_fam
+               and dehyd_SbnB_fam
+               and cds(OTCace and OTCace_N)
+
+RULE BB0094
+    CATEGORY Subcluster
+    DESCRIPTION 2,3-diaminopropionic acid
+    CUTOFF 15
+    NEIGHBOURHOOD 0
+    CONDITIONS PALP
+               and OCD_Mu_crystall
+
+RULE BB0095
+    CATEGORY Subcluster
+    DESCRIPTION capreomycidine
+    CUTOFF 5
+    NEIGHBOURHOOD 0
+    CONDITIONS viomycin_VioC
+               and viomycin_VioD
+
+RULE BB0097
+    CATEGORY Subcluster
+    DESCRIPTION (S)-3-chloro-4,5-dihydroxy-β-phenylalanine
+    CUTOFF 20
+    NEIGHBOURHOOD 0
+    CONDITIONS SMCOG1119
+               and cds(PP-binding and not ketoacyl-synt and not Condensation)
+               and Tyr_2_3_mutase
+               and cds(HpaB and HpaB_N)
+               and cds(AMP-binding and AMP-binding_C and not ketoacyl-synt and not Condensation)
+
+RULE BB0099
+    CATEGORY Subcluster
+    DESCRIPTION allylmalonic acid
+    CUTOFF 5
+    NEIGHBOURHOOD 0
+    CONDITIONS Ketoacyl-synt_C
+               and crot-CoA-red
+               and cds(Acyl_transf_1 and PP-binding)
+               and cds(Acyl-CoA_dh_1 and Acyl-CoA_dh_M and Acyl-CoA_dh_N)
+
+RULE BB0104
+    CATEGORY Subcluster
+    DESCRIPTION 2,3-dihydroxybenzoic acid
+    CUTOFF 5
+    NEIGHBOURHOOD 0
+    CONDITIONS dhbA_paeA
+               and isochor_syn
+               and Isochorismatase
+
+RULE BB0105
+    CATEGORY Subcluster
+    DESCRIPTION 3,5-dihydroxy-4-methylanthranilic acid
+    CUTOFF 10
+    NEIGHBOURHOOD 0
+    CONDITIONS Trp_dioxygenase and BD-FAE and repeatable(2, [FAD_binding_3]) and SMCOG1217 and KYNU_C and cds(Dimerisation and Methyltransf_2) and cds(AA-adenyl-dom and PP-binding and not ketoacyl-synt and not Condensation)
+
+RULE BB0111
+    CATEGORY Subcluster
+    DESCRIPTION 3-hydroxytyrosine
+    CUTOFF 5
+    NEIGHBOURHOOD 0
+    CONDITIONS repeatable(2, [SfmD_perox])
+
+RULE BB0112
+    CATEGORY Subcluster
+    DESCRIPTION glyceric acid
+    CUTOFF 5
+    NEIGHBOURHOOD 0
+    CONDITIONS FkbH and cds(PP-binding and not SMCOG1147 and not ketoacyl-synt and not Condensation)
+
+RULE BB0113
+    CATEGORY Subcluster
+    DESCRIPTION graminine
+    CUTOFF 5
+    NEIGHBOURHOOD 0
+    CONDITIONS Cupin_2
+               and YqcI_YcgG
+
+RULE BB0124
+    CATEGORY Subcluster
+    DESCRIPTION S-beta-tyrosine
+    SUPERIORS BB0097
+    CUTOFF 5
+    NEIGHBOURHOOD 0
+    CONDITIONS Tyr_2_3_mutase
+
+RULE BB0127
+    CATEGORY Subcluster
+    DESCRIPTION N5-formyl-N5-hydroxyornithine
+    CUTOFF 15
+    NEIGHBOURHOOD 0
+    CONDITIONS Lys_Orn_oxgnase
+               and Formyl_trans_N
+
+RULE BB0128
+    CATEGORY Subcluster
+    DESCRIPTION benzoxazolinate
+    SUPERIORS BB0041
+    CUTOFF 5
+    NEIGHBOURHOOD 0
+    CONDITIONS Chorismate_bind
+               and FMN_red
+               and cds(AMP-binding and not ketoacyl-synt and not Condensation)
+
+RULE BB0129
+    CATEGORY Subcluster
+    DESCRIPTION 2-methyl-3-n-amyl-pyrrole
+    CUTOFF 5
+    NEIGHBOURHOOD 0
+    CONDITIONS prodigi_MAP_PigD
+               and prodigi_MAP_PigE
+               and prodigi_MAP_PigB

@@ -1,0 +1,60 @@
+# rule_name	compound_name	smiles	classification (semicolon-separated)
+BB0003	L-rhamnose	C[C@H]1[C@@H]([C@H]([C@H](C(O1)O)O)O)O	sugar
+BB0005	actinamine	CN[C@@H]1[C@H](C([C@H]([C@@H](C1O)NC)O)O)O	aminocyclitol
+BB0006	actinospectose	CC1CC(=O)C(O)C(O)O1	sugar
+BB0007	3-amino-4,7-dihydroxycoumarin	O=c1c(N)c(O)c2ccc(O)cc2o1	heterocycle
+BB0008	4-O-demethyl-beta-L-noviose	CC1(C)C(O)C(O)C(O)C(O1)O	sugar
+BB0009	3-prenyl-4-hydroxybenzoic acid	O=C(c1cc(C/C=C(C)\C)c(O)cc1)O	aryl_acid
+BB0010	pyrrole-2-carboxylic acid	O=C(c1[nH]ccc1)O	heterocycle
+BB0012	platensic acid	C[C@]12C[C@]34C[C@H]1C[C@@H]([C@H]3[C@](C(=O)C=C4)(C)CCC(=O)O)O2	terpenoid
+BB0013	3-amino-2,4-dihydroxybenzoic acid	C1=CC(=C(C(=C1C(=O)O)O)N)O	aryl_acid
+BB0015	o-succinylbenzoate	OC(=O)CCC(=O)c1ccccc1C(=O)O	aryl_acid
+BB0016	tricyclic diterpenoid alpha-keto acid	C[C@@]12C(C(C)([C@@H](CC2)O)C)CC[C@@]3(C1CC=C(C)C3CCC(C(O)=O)=O)C	terpenoid
+BB0017	L-amicetose	C[C@@H]1O[C@@H](O)CC[C@@H]1O	sugar
+BB0018	3-amino-5-hydroxybenzoic acid	C1=C(C=C(C=C1N)O)C(=O)O	aryl_acid
+BB0020	methoxymalonic acid	COC(C(=O)O)C(=O)O	polyketide
+BB0022	D-angolosamine	O[C@H]1O[C@@H]([C@@H](O)[C@@H](C1)N(C)C)C	sugar
+BB0023	L-rhodinose	C[C@H]1[C@@H](O)CC[C@@H](O)O1	sugar
+BB0025	D-olivose	C[C@@H]1[C@H]([C@@H](CC(O1)O)O)O	sugar
+BB0026	D-rubranitrose	C[C@H]1[C@H]([C@](CC(O1)O)(C)[N+](=O)[O-])OC	sugar
+BB0028	3-methylaspartate	CC(C(C(=O)O)N)C(=O)O	amino_acid
+BB0030	3,6-dimethylsalicylic acid	CC1=C(C(=C(C=C1)C)O)C(=O)O	aryl_acid
+BB0032	2-methoxy-5-chloro-6-methylsalicylic acid	COc1ccc(Cl)c(C)c1C(=O)O	aryl_acid
+BB0037	5-iodo-2,3-di-O-methylorsellinic acid	OC(C1=C(C)C(I)=C(O)C(OC)=C1OC)=O	aryl_acid
+BB0041	methoxybenzoxazolinate	COC1=CC(=C2C(=C1)OC(=C)C(=O)N2)C(=O)O	heterocycle
+BB0050	3,5-dihydroxyphenylglycine	C1=C(C=C(C=C1O)O)C(C(=O)O)N	amino_acid
+BB0051	4-hydroxyphenylglycine	C1=CC(=CC=C1C(C(=O)O)N)O	amino_acid
+BB0052	beta-hydroxytyrosine	C1=CC(=CC=C1C(C(C(=O)O)N)O)O	amino_acid
+BB0121	S-beta-hydroxyenduracididine	N[C@@H]([C@H](O)[C@@H]1CN=C(N)N1)C(=O)O	amino_acid
+BB0055	enduracididine	C1[C@H](NC(=N1)N)C[C@@H](C(=O)O)N	amino_acid
+BB0057	4-methylproline	CC1CC(NC1)C(=O)O	amino_acid
+BB0058	p-aminophenyl pyruvatic acid	C1=CC(=CC=C1CC(=O)C(=O)O)N	amino_acid
+BB0059	4-methyl-3-hydroxyanthranilic acid	Cc1ccc(C(=O)O)c(N)c1O	aryl_acid
+BB0062	salicylic acid	OC(=O)c1ccccc1O	aryl_acid
+BB0067	3-hydroxy-5-methyl-O-methyltyrosine	COc1c(C)cc(C[C@@H](C(O)=O)N)cc1O	amino_acid
+BB0069	chloroethylmalonic acid	ClCCC(C(=O)O)C(=O)O	polyketide
+BB0071	2,3-diaminobutyric acid	C[C@@H](N)[C@H](N)C(=O)O	amino_acid
+BB0073	2-amino-3-hydroxycyclopent-2-enone	C1CC(=O)C(=C1O)N	other
+BB0075	quinoxaline-2-carboxylic acid	OC(=O)c1cnc2ccccc2n1	heterocycle
+BB0083	2-undecylpyrrole	CCCCCCCCCCCc1ccc[nH]1	heterocycle
+BB0098	isobutyrylmalonic acid	CC(C)CC(C(=O)O)C(=O)O	polyketide
+BB0084	ethylmalonic acid	CCC(C(=O)O)C(=O)O	polyketide
+BB0088	2-deoxystreptamine	C1[C@H]([C@@H](C([C@@H]([C@H]1N)O)O)O)N	aminocyclitol
+BB0089	platencinic acid	C[C@@]1([C@@H]2C[C@@H]3CC[C@]2(CC3=C)C=CC1=O)CCC(=O)O	terpenoid
+BB0090	3-aminosalicylic acid	Nc1cccc(C(=O)O)c1O	aryl_acid
+BB0091	hydroxymalonic acid	OC(C(=O)O)C(=O)O	polyketide
+BB0092	aminomalonic acid	NC(C(=O)O)C(=O)O	polyketide
+BB0093	beta-ureidoalanine	NC(NC[C@H](N)C(O)=O)=O	amino_acid
+BB0094	2,3-diaminopropionic acid	C(C(C(=O)O)N)N	amino_acid
+BB0095	capreomycidine	C1CNC(=N[C@H]1[C@@H](C(=O)O)N)N	amino_acid
+BB0097	(S)-3-chloro-4,5-dihydroxy-β-phenylalanine	OC(CC(C1=CC(O)=C(C(Cl)=C1)O)N)=O	amino_acid
+BB0099	allylmalonic acid	C=CCC(C(=O)O)C(=O)O	polyketide
+BB0104	2,3-dihydroxybenzoic acid	OC(=O)c1cccc(O)c1O	aryl_acid
+BB0105	3,5-dihydroxy-4-methylanthranilic acid	Cc1c(O)cc(N)c(C(=O)O)c1O	aryl_acid
+BB0111	3-hydroxytyrosine	N[C@@H](Cc1ccc(O)c(O)c1)C(=O)O	amino_acid
+BB0112	glyceric acid	OC[C@@H](O)C(=O)O	polyketide
+BB0113	graminine	OC(C(CCCN(N=O)O)N)=O	amino_acid
+BB0124	S-beta-tyrosine	N[C@@H](CC(=O)O)c1ccc(O)cc1	amino_acid
+BB0127	N5-formyl-N5-hydroxyornithine	N[C@@H](CCCN(O)C=O)C(=O)O	amino_acid
+BB0128	benzoxazolinate	C=C1OC2=CC=CC(C(O)=O)=C2NC1=O	heterocycle
+BB0129	2-methyl-3-n-amyl-pyrrole	Cc1[nH]ccc1CCCCC	heterocycle
