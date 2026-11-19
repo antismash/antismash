@@ -1,0 +1,805 @@
+{
+  "data": [
+    {
+      "id": "hydrophobic_aliphatic",
+      "name": "Hydrophobic aliphatic",
+      "level": "gross_class",
+      "parent_id": null,
+      "smiles": null,
+      "consensus_smarts": null,
+      "consensus_status": "too_general"
+    },
+    {
+      "id": "apolar_aliphatic",
+      "name": "Apolar, aliphatic",
+      "level": "large_cluster",
+      "parent_id": "hydrophobic_aliphatic",
+      "smiles": "*C(=O)O",
+      "consensus_smarts": "[#6&!R](=&!@[#8&!R])-&!@[#8&!R]",
+      "consensus_status": "common_core"
+    },
+    {
+      "id": "branched_hydrophobic",
+      "name": "Branched hydrophobic amino acids",
+      "level": "small_cluster",
+      "parent_id": "apolar_aliphatic",
+      "smiles": "*C(*)C(*)C(*)(N)C(=O)O",
+      "consensus_smarts": "[#6&!R]-&!@[#6&!R]-&!@[#6&!R](-&!@[#7&!R])-&!@[#6&!R](=&!@[#8&!R])-&!@[#8&!R]",
+      "consensus_status": "common_core"
+    },
+    {
+      "id": "tiny_alpha_amino_acids",
+      "name": "Tiny alpha-amino acids",
+      "level": "small_cluster",
+      "parent_id": "apolar_aliphatic",
+      "smiles": "*NC(*)C(=O)O",
+      "consensus_smarts": "[#7&!R]-&!@[#6&!R]-&!@[#6&!R](=&!@[#8&!R])-&!@[#8&!R]",
+      "consensus_status": "common_core"
+    },
+    {
+      "id": "beta_alanine_specific",
+      "name": "Beta-alanine-specific",
+      "level": "small_cluster",
+      "parent_id": "apolar_aliphatic",
+      "smiles": "*C(N)CC(=O)O",
+      "consensus_smarts": "[#7&!R]-&!@[#6&!R]-&!@[#6&!R]-&!@[#6&!R](=&!@[#8&!R])-&!@[#8&!R]",
+      "consensus_status": "common_core"
+    },
+    {
+      "id": "modified_branched_aliphatic_amino_acids",
+      "name": "Modified branched aliphatic amino acids",
+      "level": "small_cluster",
+      "parent_id": "apolar_aliphatic",
+      "smiles": null,
+      "consensus_smarts": "[#6&!R](-&!@[#7&!R])-&!@[#6&!R](=&!@[#8&!R])-&!@[#8&!R]",
+      "consensus_status": "query_only"
+    },
+    {
+      "id": "aminobutyric_acids",
+      "name": "Aminobutyric acids",
+      "level": "small_cluster",
+      "parent_id": "apolar_aliphatic",
+      "smiles": null,
+      "consensus_smarts": "[#6&!R]-&!@[#6&!R](=&!@[#8&!R])-&!@[#8&!R]",
+      "consensus_status": "query_only"
+    },
+    {
+      "id": "other_aliphatic_amino_acids",
+      "name": "Other aliphatic amino acids",
+      "level": "small_cluster",
+      "parent_id": "apolar_aliphatic",
+      "smiles": "*C(C)=CC(*)C(N)C(=O)O",
+      "consensus_smarts": "[#6&!R]-&!@[#6&!R]=&!@[#6&!R]-&!@[#6&!R]-&!@[#6&!R](-&!@[#7&!R])-&!@[#6&!R](=&!@[#8&!R])-&!@[#8&!R]",
+      "consensus_status": "common_core"
+    },
+    {
+      "id": "long_chain_aliphatic_amino_acids",
+      "name": "Long-chain aliphatic amino acids",
+      "level": "small_cluster",
+      "parent_id": "apolar_aliphatic",
+      "smiles": null,
+      "consensus_smarts": "[#6&!R]-&!@[#6&!R]-&!@[#6&!R](-&!@[#7&!R])-&!@[#6&!R](=&!@[#8&!R])-&!@[#8&!R]",
+      "consensus_status": "query_only"
+    },
+    {
+      "id": "cyclopropyl_amino_acids",
+      "name": "Cyclopropyl amino acids",
+      "level": "small_cluster",
+      "parent_id": "apolar_aliphatic",
+      "smiles": "*C(=*)C1(*)CC1(*)*",
+      "consensus_smarts": "[#6]1(-&!@[#6&!R])-&@[#6]-&@[#6]-&@1",
+      "consensus_status": "common_core"
+    },
+    {
+      "id": "alcohol_containing_neutral",
+      "name": "Alcohol-containing neutral substrates",
+      "level": "large_cluster",
+      "parent_id": "hydrophobic_aliphatic",
+      "smiles": null,
+      "consensus_smarts": "[#6]-[#6]-[#8]",
+      "consensus_status": "query_only"
+    },
+    {
+      "id": "serine_specific",
+      "name": "Serine-specific",
+      "level": "small_cluster",
+      "parent_id": "alcohol_containing_neutral",
+      "smiles": "NC(CO)C(=O)O",
+      "consensus_smarts": "[#7]-[#6](-[#6]-[#8])-[#6](=[#8])-[#8]",
+      "consensus_status": "identical"
+    },
+    {
+      "id": "threonine_specific",
+      "name": "Threonine-specific",
+      "level": "small_cluster",
+      "parent_id": "alcohol_containing_neutral",
+      "smiles": "CC(O)C(N)C(=O)O",
+      "consensus_smarts": "[#6]-[#6](-[#8])-[#6](-[#7])-[#6](=[#8])-[#8]",
+      "consensus_status": "identical"
+    },
+    {
+      "id": "homoserine_specific",
+      "name": "Homoserine-specific",
+      "level": "small_cluster",
+      "parent_id": "alcohol_containing_neutral",
+      "smiles": "NC(CCO)C(=O)O",
+      "consensus_smarts": "[#7]-[#6](-[#6]-[#6]-[#8])-[#6](=[#8])-[#8]",
+      "consensus_status": "identical"
+    },
+    {
+      "id": "hydroxyphenylglycines",
+      "name": "Hydroxyphenylglycines",
+      "level": "small_cluster",
+      "parent_id": "alcohol_containing_neutral",
+      "smiles": "*c1cc(C(N)C(=O)O)c(*)c(*)c1*",
+      "consensus_smarts": "[#7&!R]-&!@[#6&!R](-&!@[#6&!R](=&!@[#8&!R])-&!@[#8&!R])-&!@[#6]1:&@[#6]:&@[#6]:&@[#6]:&@[#6]:&@[#6]:&@1",
+      "consensus_status": "common_core"
+    },
+    {
+      "id": "amino_alcohols",
+      "name": "Amino alcohols",
+      "level": "small_cluster",
+      "parent_id": "alcohol_containing_neutral",
+      "smiles": "*C(*)C(N)CO",
+      "consensus_smarts": "[#6&!R]-&!@[#6&!R](-&!@[#7&!R])-&!@[#6&!R]-&!@[#8&!R]",
+      "consensus_status": "common_core"
+    },
+    {
+      "id": "modified_serines",
+      "name": "Modified serines",
+      "level": "small_cluster",
+      "parent_id": "alcohol_containing_neutral",
+      "smiles": "CC(N)(CO)C(=O)O",
+      "consensus_smarts": "[#6]-[#6](-[#7])(-[#6]-[#8])-[#6](=[#8])-[#8]",
+      "consensus_status": "identical"
+    },
+    {
+      "id": "modified_threonines",
+      "name": "Modified threonines",
+      "level": "small_cluster",
+      "parent_id": "alcohol_containing_neutral",
+      "smiles": "*OC(C(*)*)C(N)C(=O)O",
+      "consensus_smarts": "[#6&!R]-&!@[#6&!R](-&!@[#8&!R])-&!@[#6&!R](-&!@[#7&!R])-&!@[#6&!R](=&!@[#8&!R])-&!@[#8&!R]",
+      "consensus_status": "common_core"
+    },
+    {
+      "id": "sulfur_containing_uncharged",
+      "name": "Polar, uncharged sulfur-containing",
+      "level": "large_cluster",
+      "parent_id": "hydrophobic_aliphatic",
+      "smiles": "*CC(N)C(=O)O",
+      "consensus_smarts": "[#7&!R]-&!@[#6&!R](-&!@[#6&!R])-&!@[#6&!R](=&!@[#8&!R])-&!@[#8&!R]",
+      "consensus_status": "common_core"
+    },
+    {
+      "id": "cysteine_specific",
+      "name": "Cysteine-specific",
+      "level": "small_cluster",
+      "parent_id": "sulfur_containing_uncharged",
+      "smiles": "NC(CS)C(=O)O",
+      "consensus_smarts": "[#7]-[#6](-[#6]-[#16])-[#6](=[#8])-[#8]",
+      "consensus_status": "identical"
+    },
+    {
+      "id": "sulfur_containing_amino_acids",
+      "name": "Other sulfur-containing amino acids",
+      "level": "small_cluster",
+      "parent_id": "sulfur_containing_uncharged",
+      "smiles": "CSCCC(N)C(=O)O",
+      "consensus_smarts": "[#6]-[#16]-[#6]-[#6]-[#6](-[#7])-[#6](=[#8])-[#8]",
+      "consensus_status": "identical"
+    },
+    {
+      "id": "cyclic_aliphatic_heterocyclic",
+      "name": "Cyclic aliphatic or heterocyclic amino acids",
+      "level": "large_cluster",
+      "parent_id": "hydrophobic_aliphatic",
+      "smiles": null,
+      "consensus_smarts": null,
+      "consensus_status": "too_general"
+    },
+    {
+      "id": "proline_specific",
+      "name": "Proline-specific",
+      "level": "small_cluster",
+      "parent_id": "cyclic_aliphatic_heterocyclic",
+      "smiles": "O=C(O)C1CCCN1",
+      "consensus_smarts": "[#8]=[#6](-[#8])-[#6]1-[#6]-[#6]-[#6]-[#7]-1",
+      "consensus_status": "identical"
+    },
+    {
+      "id": "six_membered_cyclic_amino_acids",
+      "name": "Six-membered cyclic amino acids",
+      "level": "small_cluster",
+      "parent_id": "cyclic_aliphatic_heterocyclic",
+      "smiles": "*C(*)C(=O)O",
+      "consensus_smarts": "[#8&!R]=&!@[#6&!R](-&!@[#8&!R])-&!@[#6&R]",
+      "consensus_status": "common_core"
+    },
+    {
+      "id": "modified_prolines",
+      "name": "Modified prolines",
+      "level": "small_cluster",
+      "parent_id": "cyclic_aliphatic_heterocyclic",
+      "smiles": "*C1NC(C(=O)O)C(*)(*)C1*",
+      "consensus_smarts": "[#6]1-&@[#6]-&@[#6]-&@[#6](-&@[#7]-&@1)-&!@[#6&!R](=&!@[#8&!R])-&!@[#8&!R]",
+      "consensus_status": "common_core"
+    },
+    {
+      "id": "modified_pipecolates",
+      "name": "Modified pipecolates",
+      "level": "small_cluster",
+      "parent_id": "cyclic_aliphatic_heterocyclic",
+      "smiles": "*C1CC(*)(*)C(*)NC1C(=O)O",
+      "consensus_smarts": "[#8&!R]=&!@[#6&!R](-&!@[#8&!R])-&!@[#6]1-&@[#6]-&@[#6]-&@[#6]-&@[#6]-&@[#7]-&@1",
+      "consensus_status": "common_core"
+    },
+    {
+      "id": "other_cyclic_aliphatic_amino_acids",
+      "name": "Other cyclic aliphatic amino acids",
+      "level": "small_cluster",
+      "parent_id": "cyclic_aliphatic_heterocyclic",
+      "smiles": null,
+      "consensus_smarts": null,
+      "consensus_status": "too_general"
+    },
+    {
+      "id": "aliphatic_oxo_acids",
+      "name": "Aliphatic oxo acids",
+      "level": "large_cluster",
+      "parent_id": "hydrophobic_aliphatic",
+      "smiles": null,
+      "consensus_smarts": "[#6&!R]-&!@[#6&!R]-&!@[#6&!R](=&!@[#8&!R])-&!@[#8&!R]",
+      "consensus_status": "query_only"
+    },
+    {
+      "id": "aliphatic_alpha_keto_acids",
+      "name": "Aliphatic alpha-keto acids",
+      "level": "small_cluster",
+      "parent_id": "aliphatic_oxo_acids",
+      "smiles": "*C(*)C(=O)C(=O)O",
+      "consensus_smarts": "[#6&!R]-&!@[#6&!R](=&!@[#8&!R])-&!@[#6&!R](=&!@[#8&!R])-&!@[#8&!R]",
+      "consensus_status": "common_core"
+    },
+    {
+      "id": "other_aliphatic_oxo_acids",
+      "name": "Other aliphatic oxo acids",
+      "level": "small_cluster",
+      "parent_id": "aliphatic_oxo_acids",
+      "smiles": "*C(=*)C(=*)C(*)(*)C(=O)O",
+      "consensus_smarts": "[#6&!R]-&!@[#6&!R]-&!@[#6&!R]-&!@[#6&!R](=&!@[#8&!R])-&!@[#8&!R]",
+      "consensus_status": "common_core"
+    },
+    {
+      "id": "fatty_acids",
+      "name": "Fatty acids",
+      "level": "large_cluster",
+      "parent_id": "hydrophobic_aliphatic",
+      "smiles": "*C(=O)O",
+      "consensus_smarts": "[#6&!R](=&!@[#8&!R])-&!@[#8&!R]",
+      "consensus_status": "common_core"
+    },
+    {
+      "id": "fatty_acid_substrate",
+      "name": "Fatty-acid substrate",
+      "level": "small_cluster",
+      "parent_id": "fatty_acids",
+      "smiles": "*C(=O)O",
+      "consensus_smarts": "[#6&!R](=&!@[#8&!R])-&!@[#8&!R]",
+      "consensus_status": "common_core"
+    },
+    {
+      "id": "simple_aliphatic_carboxylic_acids",
+      "name": "Simple aliphatic carboxylic acids",
+      "level": "small_cluster",
+      "parent_id": "fatty_acids",
+      "smiles": "*C(=*)C(=O)O",
+      "consensus_smarts": "[#6&!R]-&!@[#6&!R](=&!@[#8&!R])-&!@[#8&!R]",
+      "consensus_status": "common_core"
+    },
+    {
+      "id": "hydroxy_aliphatic_carboxylic_acids",
+      "name": "Hydroxy aliphatic carboxylic acids",
+      "level": "large_cluster",
+      "parent_id": "hydrophobic_aliphatic",
+      "smiles": "*C(=O)O",
+      "consensus_smarts": "[#6](=[#8])-[#8]",
+      "consensus_status": "common_core"
+    },
+    {
+      "id": "hydroxy_aliphatic_acids",
+      "name": "Hydroxy aliphatic acids",
+      "level": "small_cluster",
+      "parent_id": "hydroxy_aliphatic_carboxylic_acids",
+      "smiles": "*C(O)C(=O)O",
+      "consensus_smarts": "[#8&!R]=&!@[#6&!R](-&!@[#8&!R])-&!@[#6&!R]-&!@[#8&!R]",
+      "consensus_status": "common_core"
+    },
+    {
+      "id": "hydrophilic",
+      "name": "Hydrophilic",
+      "level": "gross_class",
+      "parent_id": null,
+      "smiles": null,
+      "consensus_smarts": null,
+      "consensus_status": "too_general"
+    },
+    {
+      "id": "acidic_and_carboxamide",
+      "name": "Acidic and carboxamide amino acids",
+      "level": "large_cluster",
+      "parent_id": "hydrophilic",
+      "smiles": null,
+      "consensus_smarts": "[#6&!R]-&!@[#6&!R]-&!@[#6&!R](-&!@[#7&!R])-&!@[#6&!R](=&!@[#8&!R])-&!@[#8&!R]",
+      "consensus_status": "query_only"
+    },
+    {
+      "id": "asp_asn",
+      "name": "Asp-Asn",
+      "level": "small_cluster",
+      "parent_id": "acidic_and_carboxamide",
+      "smiles": "*C(=O)CC(N)C(=O)O",
+      "consensus_smarts": "[#6&!R](=&!@[#8&!R])-&!@[#6&!R]-&!@[#6&!R](-&!@[#7&!R])-&!@[#6&!R](=&!@[#8&!R])-&!@[#8&!R]",
+      "consensus_status": "common_core"
+    },
+    {
+      "id": "glu_gln",
+      "name": "Glu-Gln",
+      "level": "small_cluster",
+      "parent_id": "acidic_and_carboxamide",
+      "smiles": "*C(=O)CCC(N)C(=O)O",
+      "consensus_smarts": "[#6&!R](=&!@[#8&!R])-&!@[#6&!R]-&!@[#6&!R]-&!@[#6&!R](-&!@[#7&!R])-&!@[#6&!R](=&!@[#8&!R])-&!@[#8&!R]",
+      "consensus_status": "common_core"
+    },
+    {
+      "id": "side_chain_activated_aspartate",
+      "name": "Side-chain-activated aspartate",
+      "level": "small_cluster",
+      "parent_id": "acidic_and_carboxamide",
+      "smiles": "NC(CC(=O)O)C(=O)O",
+      "consensus_smarts": "[#7]-[#6](-[#6]-[#6](=[#8])-[#8])-[#6](=[#8])-[#8]",
+      "consensus_status": "identical"
+    },
+    {
+      "id": "modified_aspartate_asparagine_family",
+      "name": "Modified aspartate and asparagine family",
+      "level": "small_cluster",
+      "parent_id": "acidic_and_carboxamide",
+      "smiles": "*C(=O)C(*)C(N)C(=O)O",
+      "consensus_smarts": "[#7&!R]-&!@[#6&!R](-&!@[#6&!R]-&!@[#6&!R]=&!@[#8&!R])-&!@[#6&!R](=&!@[#8&!R])-&!@[#8&!R]",
+      "consensus_status": "common_core"
+    },
+    {
+      "id": "modified_glutamate_glutamine_family",
+      "name": "Modified glutamate and glutamine family",
+      "level": "small_cluster",
+      "parent_id": "acidic_and_carboxamide",
+      "smiles": "*C(=O)C(*)C(*)C(N)C(=O)O",
+      "consensus_smarts": "[#7&!R]-&!@[#6&!R](-&!@[#6&!R]-&!@[#6&!R]-&!@[#6&!R]=&!@[#8&!R])-&!@[#6&!R](=&!@[#8&!R])-&!@[#8&!R]",
+      "consensus_status": "common_core"
+    },
+    {
+      "id": "aminoadipate_specific",
+      "name": "Aminoadipate-specific",
+      "level": "small_cluster",
+      "parent_id": "acidic_and_carboxamide",
+      "smiles": "NC(CCCC(=O)O)C(=O)O",
+      "consensus_smarts": "[#7]-[#6](-[#6]-[#6]-[#6]-[#6](=[#8])-[#8])-[#6](=[#8])-[#8]",
+      "consensus_status": "identical"
+    },
+    {
+      "id": "basic_and_diamino",
+      "name": "Basic and diamino amino acids",
+      "level": "large_cluster",
+      "parent_id": "hydrophilic",
+      "smiles": null,
+      "consensus_smarts": "[#6&!R]-&!@[#6&!R](=&!@[#8&!R])-&!@[#8&!R]",
+      "consensus_status": "query_only"
+    },
+    {
+      "id": "arginine_specific",
+      "name": "Arginine-specific",
+      "level": "small_cluster",
+      "parent_id": "basic_and_diamino",
+      "smiles": "N=C(N)NCCCC(N)C(=O)O",
+      "consensus_smarts": "[#7]=[#6](-[#7])-[#7]-[#6]-[#6]-[#6]-[#6](-[#7])-[#6](=[#8])-[#8]",
+      "consensus_status": "identical"
+    },
+    {
+      "id": "lysines",
+      "name": "Lysines",
+      "level": "small_cluster",
+      "parent_id": "basic_and_diamino",
+      "smiles": "*C(CCCN)C(*)C(=O)O",
+      "consensus_smarts": "[#7&!R]-&!@[#6&!R]-&!@[#6&!R]-&!@[#6&!R]-&!@[#6&!R]-&!@[#6&!R]-&!@[#6&!R](=&!@[#8&!R])-&!@[#8&!R]",
+      "consensus_status": "common_core"
+    },
+    {
+      "id": "ornithine_and_modified_ornithines",
+      "name": "Ornithine and modified ornithines",
+      "level": "small_cluster",
+      "parent_id": "basic_and_diamino",
+      "smiles": "*C(*)C(*)CC(N)C(=O)O",
+      "consensus_smarts": "[#6&!R]-&!@[#6&!R]-&!@[#6&!R]-&!@[#6&!R](-&!@[#7&!R])-&!@[#6&!R](=&!@[#8&!R])-&!@[#8&!R]",
+      "consensus_status": "common_core"
+    },
+    {
+      "id": "short_chain_diamino_and_derivatives",
+      "name": "Short-chain diamino acids and derivatives",
+      "level": "small_cluster",
+      "parent_id": "basic_and_diamino",
+      "smiles": "*C(*)C(N)C(=O)O",
+      "consensus_smarts": "[#6&!R]-&!@[#6&!R](-&!@[#7&!R])-&!@[#6&!R](=&!@[#8&!R])-&!@[#8&!R]",
+      "consensus_status": "common_core"
+    },
+    {
+      "id": "histidine_specific",
+      "name": "Histidine-specific",
+      "level": "small_cluster",
+      "parent_id": "basic_and_diamino",
+      "smiles": "NC(Cc1c[nH]cn1)C(=O)O",
+      "consensus_smarts": "[#7]-[#6](-[#6]-[#6]1:[#6]:[#7]:[#6]:[#7]:1)-[#6](=[#8])-[#8]",
+      "consensus_status": "identical"
+    },
+    {
+      "id": "modified_arginine_and_guanidino",
+      "name": "Modified arginine and guanidino substrates",
+      "level": "small_cluster",
+      "parent_id": "basic_and_diamino",
+      "smiles": null,
+      "consensus_smarts": "[#7&!R]-&!@[#6&!R]-&!@[#6&!R](=&!@[#8&!R])-&!@[#8&!R]",
+      "consensus_status": "query_only"
+    },
+    {
+      "id": "modified_lysines",
+      "name": "Modified lysines",
+      "level": "small_cluster",
+      "parent_id": "basic_and_diamino",
+      "smiles": "*C(=*)C(N)C(=O)O",
+      "consensus_smarts": "[#6&!R]-&!@[#6&!R](-&!@[#7&!R])-&!@[#6&!R](=&!@[#8&!R])-&!@[#8&!R]",
+      "consensus_status": "common_core"
+    },
+    {
+      "id": "modified_histidines",
+      "name": "Modified histidines",
+      "level": "small_cluster",
+      "parent_id": "basic_and_diamino",
+      "smiles": "NC(C(=O)O)C(O)c1c[nH]c(Cl)n1",
+      "consensus_smarts": "[#7]-[#6](-[#6](=[#8])-[#8])-[#6](-[#8])-[#6]1:[#6]:[#7]:[#6](-[#17]):[#7]:1",
+      "consensus_status": "identical"
+    },
+    {
+      "id": "other_polar_and_cofactor_substrates",
+      "name": "Other polar and cofactor-like substrates",
+      "level": "large_cluster",
+      "parent_id": "hydrophilic",
+      "smiles": null,
+      "consensus_smarts": null,
+      "consensus_status": "too_general"
+    },
+    {
+      "id": "other_polar_substrates",
+      "name": "Other polar substrates",
+      "level": "small_cluster",
+      "parent_id": "other_polar_and_cofactor_substrates",
+      "smiles": null,
+      "consensus_smarts": null,
+      "consensus_status": "too_general"
+    },
+    {
+      "id": "oxidized_and_charged_sulfur_substrates",
+      "name": "Oxidized and charged sulfur-containing substrates",
+      "level": "small_cluster",
+      "parent_id": "other_polar_and_cofactor_substrates",
+      "smiles": "*CC(*)C(*)=O",
+      "consensus_smarts": "[#6&!R]-&!@[#6&!R]-&!@[#6&!R]=&!@[#8&!R]",
+      "consensus_status": "common_core"
+    },
+    {
+      "id": "hydrophobic_aromatic",
+      "name": "Hydrophobic aromatic",
+      "level": "gross_class",
+      "parent_id": null,
+      "smiles": "*C(=O)O",
+      "consensus_smarts": "[#8&!R]=&!@[#6&!R]-&!@[#8&!R]",
+      "consensus_status": "common_core"
+    },
+    {
+      "id": "aromatic_side_chain",
+      "name": "Aromatic side-chain amino acids",
+      "level": "large_cluster",
+      "parent_id": "hydrophobic_aromatic",
+      "smiles": null,
+      "consensus_smarts": "[#6&!R]-&!@[#6&!R](=&!@[#8&!R])-&!@[#8&!R]",
+      "consensus_status": "query_only"
+    },
+    {
+      "id": "unpolar_aromatic_ring",
+      "name": "Unpolar aromatic ring",
+      "level": "small_cluster",
+      "parent_id": "aromatic_side_chain",
+      "smiles": null,
+      "consensus_smarts": "[#6]1:&@[#6]:&@[#6]:&@[#6]:&@[#6]:&@[#6]:&@1",
+      "consensus_status": "query_only"
+    },
+    {
+      "id": "hydroxyaromatic_side_chain",
+      "name": "Hydroxyaromatic side chain",
+      "level": "small_cluster",
+      "parent_id": "aromatic_side_chain",
+      "smiles": null,
+      "consensus_smarts": "[#6&!R]-&!@[#6]1:&@[#6]:&@[#6]:&@[#6]:&@[#6]:&@[#6]:&@1",
+      "consensus_status": "query_only"
+    },
+    {
+      "id": "other_aromatic_amino_acids",
+      "name": "Other aromatic amino acids",
+      "level": "small_cluster",
+      "parent_id": "aromatic_side_chain",
+      "smiles": "*NC(*)C(=O)O",
+      "consensus_smarts": "[#7&!R]-&!@[#6&!R]-&!@[#6&!R](=&!@[#8&!R])-&!@[#8&!R]",
+      "consensus_status": "common_core"
+    },
+    {
+      "id": "hydroxybenzoic_acid_derivatives",
+      "name": "Hydroxybenzoic-acid derivatives",
+      "level": "large_cluster",
+      "parent_id": "hydrophobic_aromatic",
+      "smiles": "*c1cc(*)c(C(=O)O)c(*)c1*",
+      "consensus_smarts": "[#8&!R]=&!@[#6&!R](-&!@[#8&!R])-&!@[#6]1:&@[#6]:&@[#6]:&@[#6]:&@[#6]:&@[#6]:&@1",
+      "consensus_status": "common_core"
+    },
+    {
+      "id": "dhb_sal",
+      "name": "Dhb-Sal",
+      "level": "small_cluster",
+      "parent_id": "hydroxybenzoic_acid_derivatives",
+      "smiles": "*c1cccc(C(=O)O)c1O",
+      "consensus_smarts": "[#8&!R]=&!@[#6&!R](-&!@[#8&!R])-&!@[#6]1:&@[#6]:&@[#6]:&@[#6]:&@[#6]:&@[#6]:&@1-&!@[#8&!R]",
+      "consensus_status": "common_core"
+    },
+    {
+      "id": "other_hydroxybenzoates",
+      "name": "Other hydroxybenzoates",
+      "level": "small_cluster",
+      "parent_id": "hydroxybenzoic_acid_derivatives",
+      "smiles": "*c1cc(*)c(C(=O)O)c(*)c1*",
+      "consensus_smarts": "[#8&!R]=&!@[#6&!R](-&!@[#8&!R])-&!@[#6]1:&@[#6]:&@[#6]:&@[#6]:&@[#6]:&@[#6]:&@1",
+      "consensus_status": "common_core"
+    },
+    {
+      "id": "aminobenzoic_acid_derivatives",
+      "name": "Aminobenzoic-acid derivatives",
+      "level": "large_cluster",
+      "parent_id": "hydrophobic_aromatic",
+      "smiles": "*c1c(*)c(*)c(C(=O)O)c(*)c1*",
+      "consensus_smarts": "[#6]1:&@[#6]:&@[#6]:&@[#6](:&@[#6]:&@[#6]:&@1)-&!@[#6&!R](=&!@[#8&!R])-&!@[#8&!R]",
+      "consensus_status": "common_core"
+    },
+    {
+      "id": "aminobenzoates",
+      "name": "Aminobenzoates",
+      "level": "small_cluster",
+      "parent_id": "aminobenzoic_acid_derivatives",
+      "smiles": "*c1c(*)c(*)c(C(=O)O)c(*)c1*",
+      "consensus_smarts": "[#6]1:&@[#6]:&@[#6]:&@[#6](:&@[#6]:&@[#6]:&@1)-&!@[#6&!R](=&!@[#8&!R])-&!@[#8&!R]",
+      "consensus_status": "common_core"
+    },
+    {
+      "id": "aromatic_alpha_keto_acids",
+      "name": "Aromatic alpha-keto acids",
+      "level": "large_cluster",
+      "parent_id": "hydrophobic_aromatic",
+      "smiles": "*C(=O)C(=*)c1cc(*)c(*)c(*)c1",
+      "consensus_smarts": "[#8&!R]=&!@[#6&!R]-&!@[#6&!R]-&!@[#6]1:&@[#6]:&@[#6]:&@[#6]:&@[#6]:&@[#6]:&@1",
+      "consensus_status": "common_core"
+    },
+    {
+      "id": "arylpyruvic_and_arylglyoxylic_acids",
+      "name": "Arylpyruvic and arylglyoxylic acids",
+      "level": "small_cluster",
+      "parent_id": "aromatic_alpha_keto_acids",
+      "smiles": "*C(=O)C(=*)c1cc(*)c(*)c(*)c1",
+      "consensus_smarts": "[#8&!R]=&!@[#6&!R]-&!@[#6&!R]-&!@[#6]1:&@[#6]:&@[#6]:&@[#6]:&@[#6]:&@[#6]:&@1",
+      "consensus_status": "common_core"
+    },
+    {
+      "id": "other_benzoic_acids",
+      "name": "Other benzoic-acid derivatives",
+      "level": "large_cluster",
+      "parent_id": "hydrophobic_aromatic",
+      "smiles": "*c1ccc(C(=O)O)c(*)c1",
+      "consensus_smarts": "[#8&!R]=&!@[#6&!R](-&!@[#8&!R])-&!@[#6]1:&@[#6]:&@[#6]:&@[#6]:&@[#6]:&@[#6]:&@1",
+      "consensus_status": "common_core"
+    },
+    {
+      "id": "substituted_benzoic_acids",
+      "name": "Benzoic and halobenzoic acids",
+      "level": "small_cluster",
+      "parent_id": "other_benzoic_acids",
+      "smiles": "*c1ccc(C(=O)O)c(*)c1",
+      "consensus_smarts": "[#8&!R]=&!@[#6&!R](-&!@[#8&!R])-&!@[#6]1:&@[#6]:&@[#6]:&@[#6]:&@[#6]:&@[#6]:&@1",
+      "consensus_status": "common_core"
+    },
+    {
+      "id": "aromatic_hydroxy_carboxylic_acids",
+      "name": "Aromatic hydroxy carboxylic acids",
+      "level": "large_cluster",
+      "parent_id": "hydrophobic_aromatic",
+      "smiles": null,
+      "consensus_smarts": "[#6&!R](-&!@[#8&!R])-&!@[#6&!R]-&!@[#6]1:&@[#6]:&@[#6]:&@[#6]:&@[#6]:&@[#6]:&@1",
+      "consensus_status": "query_only"
+    },
+    {
+      "id": "aromatic_hydroxy_acids",
+      "name": "Aromatic hydroxy acids",
+      "level": "small_cluster",
+      "parent_id": "aromatic_hydroxy_carboxylic_acids",
+      "smiles": null,
+      "consensus_smarts": "[#6&!R](-&!@[#8&!R])-&!@[#6&!R]-&!@[#6]1:&@[#6]:&@[#6]:&@[#6]:&@[#6]:&@[#6]:&@1",
+      "consensus_status": "query_only"
+    },
+    {
+      "id": "other_aromatic_acid_derivatives",
+      "name": "Other aromatic carboxylic-acid derivatives",
+      "level": "large_cluster",
+      "parent_id": "hydrophobic_aromatic",
+      "smiles": "*C(=*)c1ccc(*)cc1",
+      "consensus_smarts": "[#6&!R]-&!@[#6]1:&@[#6]:&@[#6]:&@[#6]:&@[#6]:&@[#6]:&@1",
+      "consensus_status": "common_core"
+    },
+    {
+      "id": "other_aromatic_carboxylic_acids",
+      "name": "Other aromatic carboxylic acids",
+      "level": "small_cluster",
+      "parent_id": "other_aromatic_acid_derivatives",
+      "smiles": "*C(=*)c1ccc(*)cc1",
+      "consensus_smarts": "[#6&!R]-&!@[#6]1:&@[#6]:&@[#6]:&@[#6]:&@[#6]:&@[#6]:&@1",
+      "consensus_status": "common_core"
+    },
+    {
+      "id": "heteroaromatic_carboxylic_acids",
+      "name": "Heteroaromatic carboxylic acids",
+      "level": "large_cluster",
+      "parent_id": "hydrophobic_aromatic",
+      "smiles": null,
+      "consensus_smarts": "[#8&!R]=&!@[#6&!R](-&!@[#8&!R])-&!@[#6&R]",
+      "consensus_status": "query_only"
+    },
+    {
+      "id": "heteroaromatic_acids",
+      "name": "Heteroaromatic acids",
+      "level": "small_cluster",
+      "parent_id": "heteroaromatic_carboxylic_acids",
+      "smiles": null,
+      "consensus_smarts": "[#8&!R]=&!@[#6&!R](-&!@[#8&!R])-&!@[#6&R]",
+      "consensus_status": "query_only"
+    },
+    {
+      "id": "complex_polycyclic_aromatic_substrates",
+      "name": "Complex polycyclic aromatic substrates",
+      "level": "large_cluster",
+      "parent_id": "hydrophobic_aromatic",
+      "smiles": null,
+      "consensus_smarts": "[#6]1:&@[#6]:&@[#6]:&@[#6]:&@[#6]:&@[#6]:&@1",
+      "consensus_status": "query_only"
+    },
+    {
+      "id": "complex_aromatic_substrates",
+      "name": "Complex aromatic substrates",
+      "level": "small_cluster",
+      "parent_id": "complex_polycyclic_aromatic_substrates",
+      "smiles": null,
+      "consensus_smarts": "[#6]1:&@[#6]:&@[#6]:&@[#6]:&@[#6]:&@[#6]:&@1",
+      "consensus_status": "query_only"
+    },
+    {
+      "id": "other_hydroxy_aliphatic_amino_acids",
+      "name": "Other hydroxy aliphatic amino acids",
+      "level": "small_cluster",
+      "parent_id": "alcohol_containing_neutral",
+      "smiles": null,
+      "consensus_smarts": null,
+      "consensus_status": "unavailable"
+    },
+    {
+      "id": "polyketide_building_blocks",
+      "name": "Polyketide building blocks",
+      "level": "large_cluster",
+      "parent_id": "hydrophobic_aliphatic",
+      "smiles": null,
+      "consensus_smarts": null,
+      "consensus_status": "unavailable"
+    },
+    {
+      "id": "carbonyl_polyketide_units",
+      "name": "Carbonyl polyketide units",
+      "level": "small_cluster",
+      "parent_id": "polyketide_building_blocks",
+      "smiles": null,
+      "consensus_smarts": null,
+      "consensus_status": "unavailable"
+    },
+    {
+      "id": "hydroxyl_polyketide_units",
+      "name": "Hydroxyl polyketide units",
+      "level": "small_cluster",
+      "parent_id": "polyketide_building_blocks",
+      "smiles": null,
+      "consensus_smarts": null,
+      "consensus_status": "unavailable"
+    },
+    {
+      "id": "unsaturated_polyketide_units",
+      "name": "Unsaturated polyketide units",
+      "level": "small_cluster",
+      "parent_id": "polyketide_building_blocks",
+      "smiles": null,
+      "consensus_smarts": null,
+      "consensus_status": "unavailable"
+    },
+    {
+      "id": "reduced_polyketide_units",
+      "name": "Reduced polyketide units",
+      "level": "small_cluster",
+      "parent_id": "polyketide_building_blocks",
+      "smiles": null,
+      "consensus_smarts": null,
+      "consensus_status": "unavailable"
+    },
+    {
+      "id": "polyketide_starter_and_terminator_fragments",
+      "name": "Polyketide starter and terminator fragments",
+      "level": "small_cluster",
+      "parent_id": "polyketide_building_blocks",
+      "smiles": null,
+      "consensus_smarts": null,
+      "consensus_status": "unavailable"
+    },
+    {
+      "id": "unclassified",
+      "name": "Unclassified",
+      "level": "gross_class",
+      "parent_id": null,
+      "smiles": null,
+      "consensus_smarts": null,
+      "consensus_status": "unavailable"
+    },
+    {
+      "id": "unresolved_substrates",
+      "name": "Unresolved substrates",
+      "level": "large_cluster",
+      "parent_id": "unclassified",
+      "smiles": null,
+      "consensus_smarts": null,
+      "consensus_status": "unavailable"
+    },
+    {
+      "id": "unknown_amino_acids",
+      "name": "Unknown amino acids",
+      "level": "small_cluster",
+      "parent_id": "unresolved_substrates",
+      "smiles": null,
+      "consensus_smarts": null,
+      "consensus_status": "unavailable"
+    },
+    {
+      "id": "unknown_ketides",
+      "name": "Unknown ketides",
+      "level": "small_cluster",
+      "parent_id": "unresolved_substrates",
+      "smiles": null,
+      "consensus_smarts": null,
+      "consensus_status": "unavailable"
+    },
+    {
+      "id": "cyclic_hydroxy_carboxylic_acids",
+      "name": "Cyclic hydroxy carboxylic acids",
+      "level": "small_cluster",
+      "parent_id": "hydroxy_aliphatic_carboxylic_acids",
+      "smiles": "C1C(O)C(O)C(O)C=C1C(=O)O",
+      "consensus_smarts": "[#6]1-[#6](-[#8])-[#6](-[#8])-[#6](-[#8])-[#6]=[#6]-1-[#6](=[#8])-[#8]",
+      "consensus_status": "identical"
+    }
+  ]
+}
