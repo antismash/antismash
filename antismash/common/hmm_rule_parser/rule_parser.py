@@ -1573,11 +1573,11 @@ def is_legal_identifier(identifier: str) -> bool:
 
 
 def find_condition_identifiers(tokens: List[Token]) -> Set[str]:
-    """ Finds and returns all identifiers within a condition section"""
+    """ Finds and returns all identifiers within a condition or extenders section"""
     identifiers = set()
     in_conditions = False
     for token in list(tokens):
-        if token.type == TokenTypes.CONDITIONS:
+        if token.type in (TokenTypes.CONDITIONS, TokenTypes.EXTENDERS):
             in_conditions = True
         elif token.type.is_a_rule_keyword():
             in_conditions = False
