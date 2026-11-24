@@ -782,7 +782,7 @@ def list_plugins() -> None:
             print(format_string % (module.NAME, module.SHORT_DESCRIPTION))
         print()
 
-    print("Available plugins")
+    print("Available modules")
     print("  Detection")
     for stage, modules in _MODULES.detection.items():
         simple_stage = stage.replace("_", " ").capitalize()
@@ -863,7 +863,7 @@ def _ensure_region_detection_valid(options: ConfigType, modules_with_results: li
         for module in modules[detection_type]:
             if options.is_module_excluded(module.NAME) and module.NAME in modules_with_results:
                 raise ValueError(
-                    "Detection results invalidated by exclusion of plugin with previous results"
+                    "Detection results invalidated by exclusion of module with previous results"
                     f" ({module.NAME}), results cannot be reused"
                 )
 
@@ -902,8 +902,8 @@ def _run_antismash(sequence_file: Optional[str], options: ConfigType) -> int:
 
     # check that at least one area formation module will run
     if not _is_region_detection_possible(options):
-        logging.error("All detection plugins disabled")
-        print("All detection plugins disabled")
+        logging.error("All detection modules disabled")
+        print("All detection modules disabled")
         return 1
 
     start_time = datetime.now()
