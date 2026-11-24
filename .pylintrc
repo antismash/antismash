@@ -10,6 +10,7 @@ fail-on=unused-import,unused-variable,comparison-with-itself,self-assigning-vari
 
 [TYPECHECK]
 ignored-classes=Config,TestCase,Namespace
+ignored-modules=collections.abc
 
 [FORMAT]
 max-line-length=120

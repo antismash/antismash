@@ -688,6 +688,7 @@ def predict_boundaries(record: Record) -> BoundaryDetectionResults:
     enriched_motifs = find_enriched_motifs(
         genes=annotated_genes,
         background_frequencies=motif_id_to_bg_freq,
+        max_genes_in_bgc=config.MAX_GENES_IN_BGC,
     )
 
     return build_report(record.id, annotated_genes, enriched_motifs)
