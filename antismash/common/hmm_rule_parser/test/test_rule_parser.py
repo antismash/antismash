@@ -303,6 +303,9 @@ class RuleParserTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "without signatures: badname"):
             self.parse(format_as_rule("A", 10, 20, "badname or a"))
 
+        with self.assertRaisesRegex(ValueError, "without signatures: badname"):
+            self.parse(format_as_rule("A", 10, 20, "a") + " EXTENDERS badname")
+
     def test_stringify(self):
         rule_lines = [format_as_rule(*args) for args in [["abc", 10, 20, "a and b or not (c and d)"],
                                                          ["def", 7, 30, "minimum(3, [a, b, other]) and more"],
@@ -686,8 +689,8 @@ class RuleParserTest(unittest.TestCase):
     def test_extenders(self):
         text = format_as_rule("A", 10, 10, "other")
 
-        rule = self.parse(f"{text} EXTENDERS single").rules[0]
-        assert str(rule.extenders) == "single"
+        rule = self.parse(f"{text} EXTENDERS a").rules[0]
+        assert str(rule.extenders) == "a"
         # a single identifier is a valid extender, but otherwise
         # extenders must be an explicit CDS condition
         # not is fine if within a cds condition, otherwise it's no good
