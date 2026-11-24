@@ -977,6 +977,100 @@ class TestRegionManipulation(unittest.TestCase):
         assert self.record.get_regions()
 
 
+class TestGetPotentialRegions(unittest.TestCase):
+    def setUp(self):
+        self.record = Record(Seq("A" * 100))
+
+    def build_candidate_cluster(self, core_start, core_end, neighbourhood=5):
+        """ Builds a candidate cluster around a single protocluster with the given
+            core and neighbourhood, with the core crossing the origin of the record
+            if the start is after the end
+        """
+        if core_start > core_end:
+            # crosses the origin, so the neighbourhood isn't extended around it
+            assert not neighbourhood
+            core = CompoundLocation([FeatureLocation(core_start, len(self.record), 1),
+                                     FeatureLocation(0, core_end, 1)])
+            surrounds = core
+        else:
+            core = FeatureLocation(core_start, core_end, 1)
+            surrounds = FeatureLocation(core_start - neighbourhood, core_end + neighbourhood, 1)
+        protocluster = Protocluster(core, surrounds, tool="test", cutoff=17,
+                                    neighbourhood_range=neighbourhood, product="a",
+                                    detection_rule="a")
+        return CandidateCluster(CandidateCluster.kinds.SINGLE, [protocluster],
+                                circular_wrap_point=len(self.record))
+
+    def test_empty(self):
+        assert self.record.get_potential_regions([]) == []
+
+    def test_independent(self):
+        late = self.build_candidate_cluster(60, 80)
+        early = self.build_candidate_cluster(10, 30)
+        areas = [late, early]
+        sections = self.record.get_potential_regions(areas)
+        # sorted by location, without altering the given areas
+        assert sections == [(early.location, [early]), (late.location, [late])]
+        assert areas == [late, early]
+
+    def test_overlapping(self):
+        first = self.build_candidate_cluster(10, 30)  # 5..35 with its neighbourhood
+        second = self.build_candidate_cluster(32, 50)  # 27..55
+        third = self.build_candidate_cluster(53, 60)  # 48..65, only overlapping the second
+        separate = self.build_candidate_cluster(80, 90)
+        sections = self.record.get_potential_regions([separate, third, first, second])
+        assert sections == [
+            (FeatureLocation(5, 65, 1), [first, second, third]),
+            (separate.location, [separate]),
+        ]
+
+    def test_neighbourhood_overlap(self):
+        first = self.build_candidate_cluster(10, 20)  # 5..25
+        # only the neighbourhoods overlap, at 23..25
+        second = self.build_candidate_cluster(35, 45, neighbourhood=12)  # 23..57
+        # touching isn't overlapping, as the end of a location is exclusive
+        touching = self.build_candidate_cluster(62, 70)  # 57..75
+        sections = self.record.get_potential_regions([touching, second, first])
+        assert sections == [
+            (FeatureLocation(5, 57, 1), [first, second]),
+            (touching.location, [touching]),
+        ]
+
+    def test_nothing_added(self):
+        self.record.get_potential_regions([self.build_candidate_cluster(10, 30)])
+        assert not self.record.get_regions()
+
+    def test_linear_no_cross_origin_merge(self):
+        start = self.build_candidate_cluster(5, 10)  # 0..15
+        end = self.build_candidate_cluster(90, 95)  # 85..100
+        sections = self.record.get_potential_regions([start, end])
+        assert [areas for _, areas in sections] == [[start], [end]]
+
+    def test_circular_cross_origin(self):
+        self.record.annotations["topology"] = "circular"
+        early = self.build_candidate_cluster(13, 26)  # 8..31
+        late = self.build_candidate_cluster(75, 90)  # 70..95
+        origin = self.build_candidate_cluster(92, 5, neighbourhood=0)  # 92..100 and 0..5
+        sections = self.record.get_potential_regions([early, late, origin])
+        assert len(sections) == 2
+        location, areas = [section for section in sections if late in section[1]][0]
+        assert location.crosses_origin()
+        assert location.parts == [FeatureLocation(70, 100, 1), FeatureLocation(0, 5, 1)]
+        assert set(areas) == {late, origin}
+        assert (early.location, [early]) in sections
+
+    def test_mixed_types(self):
+        # candidate clusters and subregions are grouped together when creating regions
+        candidate = self.build_candidate_cluster(10, 30)  # 5..35
+        subregion = SubRegion(FeatureLocation(30, 50, 1), tool="test")
+        separate = SubRegion(FeatureLocation(70, 80, 1), tool="test")
+        sections = self.record.get_potential_regions([separate, subregion, candidate])
+        assert sections == [
+            (FeatureLocation(5, 50, 1), [candidate, subregion]),
+            (separate.location, [separate]),
+        ]
+
+
 class TestModuleManipulation(unittest.TestCase):
     def setUp(self):
         self.record = Record(Seq("A" * 1000))

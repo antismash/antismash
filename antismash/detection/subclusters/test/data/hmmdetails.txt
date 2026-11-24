@@ -1,0 +1,8 @@
+# Fixed signatures for the integration tests, independent of the real HMM data
+Aminotran_1_2	Aminotransferase class I and II	19	rule_hmms/Aminotran_1_2.hmm	PF00155.28
+Chal_sti_synt_C	Chalcone and stilbene synthases, C-terminal domain	27	rule_hmms/Chal_sti_synt_C.hmm	PF02797.22
+ECH_1	Enoyl-CoA hydratase/isomerase	27	rule_hmms/ECH_1.hmm	PF00378.26
+FMN_dh	FMN-dependent dehydrogenase	24	rule_hmms/FMN_dh.hmm	PF01070.25
+Glyoxalase	Glyoxalase/Bleomycin resistance protein/Dioxygenase superfamily	20	rule_hmms/Glyoxalase.hmm	PF00903.32
+PDH_C	Prephenate dehydrogenase, dimerization domain	22	rule_hmms/PDH_C.hmm	PF20463.4
+PDH_N	Prephenate dehydrogenase, nucleotide-binding domain	26	rule_hmms/PDH_N.hmm	PF02153.24
