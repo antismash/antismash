@@ -6,16 +6,15 @@
 
 import logging
 import os
-from typing import List
 
 from helperlibs.wrappers.io import TemporaryDirectory
 
-from .base import execute, get_config, SearchIO
+from .base import execute, get_config, QueryResult, SearchIO
 
 
 def run_hmmsearch(query_hmmfile: str, target_sequence: str, use_tempfile: bool = False,
                   opts: list[str] | None = None,
-                  ) -> List[SearchIO._model.query.QueryResult]:  # pylint: disable=protected-access
+                  ) -> list[QueryResult]:  # pylint: disable=protected-access
     """ Run hmmsearch on a HMM file and a fasta input
 
         Arguments:

@@ -6,15 +6,15 @@
 
 from io import StringIO
 import logging
-from typing import List, Optional
 
-from .base import execute, get_config, SearchIO
+from .base import execute, get_config, QueryResult, SearchIO
 
 _THREADING_SUPPORT = True
 
 
-def run_hmmpfam2(query_hmmfile: str, target_sequence: str, extra_args: List[str] = None
-                 ) -> list[SearchIO.QueryResult]:
+
+def run_hmmpfam2(query_hmmfile: str, target_sequence: str, extra_args: list[str] | None = None
+                 ) -> list[QueryResult]:
     """ Run hmmpfam2 over the provided HMM file and fasta input
 
         Arguments:
@@ -52,7 +52,7 @@ def run_hmmpfam2(query_hmmfile: str, target_sequence: str, extra_args: List[str]
 
 
 def get_alignment_against_profile(sequence: str, db_path: str, profile_name: str, max_evalue: float = 0.1,
-                                  ) -> Optional[SearchIO.QueryResult]:
+                                  ) -> QueryResult | None:
     """ Aligns the given sequence against the given profile.
 
         Arguments:

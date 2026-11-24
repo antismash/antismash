@@ -7,7 +7,7 @@
 from io import StringIO
 from typing import List
 
-from .base import execute, get_config, SearchIO
+from .base import execute, get_config, QueryResult, SearchIO
 
 
 def _find_error(output: list[str]) -> str:
@@ -28,7 +28,7 @@ def _find_error(output: list[str]) -> str:
 
 
 def run_hmmscan(target_hmmfile: str, query_sequence: str, opts: List[str] = None,
-                results_file: str = None) -> list[SearchIO._model.query.QueryResult]:
+                results_file: str = None) -> list[QueryResult]:
     """ Runs hmmscan on the inputs and return a list of QueryResults
 
         Arguments:
