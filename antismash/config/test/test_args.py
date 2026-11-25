@@ -98,7 +98,7 @@ class TestConfig(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "permission denied"):
                 self.core_parser.parse_args(["--reuse-results", "local"])
 
-        with self.assertRaisesRegex(ValueError, "does not exist"):
+        with self.assertRaisesRegex(ValueError, "is not a file"):
             self.core_parser.parse_args(["--reuse-results", "non-existant"])
 
     def test_defaults_on_fetch(self):
