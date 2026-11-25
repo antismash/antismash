@@ -209,7 +209,11 @@ class Region(AbstractRegion, CDSCollection):
         if leftovers is None:
             leftovers = Feature.make_qualifiers_copy(bio_feature)
 
-        candidate_numbers = [int(num) for num in leftovers.pop("candidate_clusters", [])]
+        candidate_key = "candidate_clusters"
+        # allow older qualifier naming from 8.x results
+        if candidate_key not in leftovers:
+            candidate_key = "candidate_cluster_numbers"
+        candidate_numbers = [int(num) for num in leftovers.pop(candidate_key, [])]
         subregion_numbers = [int(num) for num in leftovers.pop("subregion_numbers", [])]
 
         if not record:
