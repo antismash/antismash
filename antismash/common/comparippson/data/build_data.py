@@ -12,6 +12,7 @@ import sys
 from typing import Any, Dict, List
 
 from antismash.common import json
+from antismash.config.args import ReadableFullPathAction
 
 
 @dataclass
@@ -22,6 +23,12 @@ class Metadata:
     id_format: str
     name: str
     url: str = ""
+
+    @classmethod
+    def from_file(cls, path: str) -> "Metadata":
+        """ Build an instance directly from a JSON file """
+        with open(path, encoding="utf-8") as handle:
+            return cls(**json.load(handle))
 
 
 MIBIG_METADATA = Metadata(
@@ -311,6 +318,12 @@ def main(output_dir: str, version: str, *, file_list: List[str] = None, data_dir
     write_data(entries, metadata, version, output_dir)
 
 
+def read_lines(path: str) -> list[str]:
+    """ Returns all lines from the given path """
+    with open(path, encoding="utf-8") as handle:
+        return handle.read().splitlines()
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--data", type=str, default="",
@@ -318,8 +331,14 @@ if __name__ == "__main__":
                             "Directory containing antiSMASH output directories"
                             " (or MIBiG JSON, if --mibig also given)"
                         ))
-    parser.add_argument("--lof", default=None, type=argparse.FileType("r"),
-                        help="A file containiner paths to JSON files, one per line")
+    parser.add_argument(
+        "--lof",
+        default="",
+        type=str,
+        action=ReadableFullPathAction,
+        metavar="PATH",
+        help="A file containiner paths to JSON files, one per line",
+    )
     parser.add_argument("--version", type=str, required=True,
                         help="Specify version of the database")
     parser.add_argument("--mibig", default=False, action="store_true",
@@ -328,7 +347,13 @@ if __name__ == "__main__":
                         help="Use default antiSMASH-DB compatible metadata")
     parser.add_argument("--output-base-dir", type=str, required=True,
                         help="Base directory to add files to, a subdirectory with --version will be used")
-    parser.add_argument("--metadata-core", default=None, type=argparse.FileType("r"))
+    parser.add_argument(
+        "--metadata-core",
+        default=None,
+        action=ReadableFullPathAction,
+        metavar="PATH",
+        help="Path to metadata configuration, if necessary",
+    )
 
     args = parser.parse_args()
 
@@ -358,8 +383,8 @@ if __name__ == "__main__":
 
     try:
         main(args.output_base_dir, args.version, data_dir=args.data, mibig=args.mibig, asdb=args.asdb,
-             file_list=args.lof.read().splitlines() if args.lof else None,
-             metadata=Metadata(**json.load(args.metadata_core)) if args.metadata_core else None)
+             file_list=read_lines(args.lof) if args.lof else None,
+             metadata=Metadata.from_file(args.metadata_core) if args.metadata_core else None)
     except (ValueError, OSError) as err:
         print(err, file=sys.stderr)
         sys.exit(1)
