@@ -293,7 +293,7 @@ class ReadableFullPathAction(FullPathAction):
         if os.path.isdir(path):
             raise argparse.ArgumentError(self, f"{values!r} is a directory")
         if not os.path.isfile(path):
-            raise argparse.ArgumentError(self, f"{values!r} does not exist")
+            raise argparse.ArgumentError(self, f"{values!r} is not a file")
         if not os.access(path, os.R_OK):
             raise argparse.ArgumentError(self, f"{values!r}: permission denied")
         super().__call__(parser, namespace, values, option_string)
