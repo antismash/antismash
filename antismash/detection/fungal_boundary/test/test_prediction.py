@@ -34,4 +34,4 @@ class TestBackgroundFrequencies(unittest.TestCase):
         # to test the different motif type (inverted, etc) motif_type_id_boundaries is defined. 
         result = prediction.get_motif_id_to_bg_freq(genes, motif_type_id_boundaries=(10, 20))
 
-        assert result == {0: 0.75, 1: 0.25, 10: 1.0, 20: 1.0}
+        assert result == {0: 2 / 3, 1: 1 / 3, 10: 1.0, 20: 1.0}
