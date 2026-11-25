@@ -257,9 +257,10 @@ class HmmDetectionTest(unittest.TestCase):
 
     def test_filter_near_equality(self):
         equivalence_groups = [{"first", "second", "third"}]
+        epsilon = hmm_detection.EQUIVALENCE_EPSILON
 
         first = FakeHSPHit("first", "A", 50, 90, 0.5, None)
-        second = FakeHSPHit("second", "A", 50, 90, 12.0 + 1e-10, None)
+        second = FakeHSPHit("second", "A", 50, 90, 12.0 + (epsilon / 10), None)
         third = FakeHSPHit("third", "A", 50, 90, 12.0, None)
 
         # when the highest is significantly higher, the result will be only that hit

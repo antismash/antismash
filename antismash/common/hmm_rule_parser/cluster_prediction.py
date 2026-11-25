@@ -32,6 +32,8 @@ from .structures import DynamicHit, DynamicProfile, HMMerHit, Multipliers, Profi
 
 GenericSets = Union[Iterable[set[str]], Iterable[FrozenSet[str]]]
 
+EQUIVALENCE_EPSILON = 1e-3
+
 
 class CDSResults:
     """ Tracks the detection results for a single CDS """
@@ -628,10 +630,10 @@ def filter_results(results: list[HSP], results_by_id: Dict[str, list[HSP]],
                     if hit.bitscore > best[0].bitscore:
                         new = [hit]
                         for existing in best:
-                            if hit.bitscore - 1e-8 <= existing.bitscore:
+                            if hit.bitscore - EQUIVALENCE_EPSILON <= existing.bitscore:
                                 new.append(existing)
                         best = new
-                    elif hit.bitscore + 1e-8 > best[0].bitscore:
+                    elif hit.bitscore + EQUIVALENCE_EPSILON > best[0].bitscore:
                         best.append(hit)
                 # remove the rest
                 for hit in group:
