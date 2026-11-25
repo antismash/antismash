@@ -13,7 +13,7 @@ import Bio.SeqIO as seqio
 from Bio.SeqFeature import FeatureLocation, SeqFeature
 from helperlibs.wrappers.io import TemporaryDirectory
 
-from antismash.common import json, serialiser
+from antismash.common import errors, json, serialiser
 from antismash.common.secmet import Record
 from antismash.common.secmet.test import helpers
 from antismash.common.test.helpers import DummyRecord, get_path_to_nisin_genbank
@@ -87,7 +87,7 @@ class TestResultsJSON(unittest.TestCase):
 
     def test_invalid_file_raises_error(self):
         filename = get_path_to_nisin_genbank()
-        self.assertRaisesRegex(ValueError, "Cannot load results to reuse",
+        self.assertRaisesRegex(errors.AntismashInputError, "Cannot load results to reuse",
                                serialiser.AntismashResults.from_file, filename)
 
     def test_schema_updated(self):

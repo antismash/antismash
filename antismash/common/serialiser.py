@@ -17,7 +17,7 @@ from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature, Reference
 from Bio.SeqRecord import SeqRecord
 
-from antismash.common import json
+from antismash.common import errors, json
 from antismash.common.module_results import ModuleResults
 from antismash.common.secmet import Record
 from antismash.common.secmet.locations import location_from_string
@@ -72,8 +72,10 @@ class AntismashResults:
         try:
             data = json.loads(handle.read())
         except json.JSONDecodeError:
-            raise ValueError(f"Cannot load results to reuse from {handle.name}, "
-                             "is it an antiSMASH result JSON file?")
+            raise errors.AntismashInputError(
+                f"Cannot load results to reuse from {handle.name}, "
+                "is it an antiSMASH result JSON file?"
+            )
         schema = data.get("schema", 1)
         current = AntismashResults.SCHEMA_VERSION
         if schema != current and schema not in AntismashResults.COMPATIBLE_SCHEMAS[current]:
