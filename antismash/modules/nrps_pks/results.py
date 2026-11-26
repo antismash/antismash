@@ -111,7 +111,7 @@ class CandidateClusterPrediction:
 
 class NRPS_PKS_Results(ModuleResults):
     """ The combined results of the nrps_pks module """
-    schema_version = 3
+    schema_version = 4
     __slots__ = ["consensus", "consensus_transat", "region_predictions", "domain_predictions"]
 
     def __init__(self, record_id: str) -> None:

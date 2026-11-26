@@ -1,0 +1,2944 @@
+{
+  "data": [
+    {
+      "long": "(2S,3R)-2-amino-3-hydroxy-4-(4-nitrophenyl)butanoic acid",
+      "short": "n-oh-nitropheBut",
+      "norine": "X",
+      "id": "2s_3r_2_amino_3_hydroxy_4_4_nitrophenyl_butanoic_acid",
+      "parent_id": "other_aromatic_amino_acids",
+      "smiles": "NC(C(Cc1ccc([N+](=O)[O-])cc1)O)C(=O)O",
+      "stereochemical_smiles": "N[C@@H]([C@@H](Cc1ccc([N+](=O)[O-])cc1)O)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "(2S,6R)-diamino-(5R,7)-dihydroxy-heptanoic acid",
+      "short": "dn-dohHep",
+      "norine": "X",
+      "id": "2s_6r_diamino_5r_7_dihydroxy_heptanoic_acid",
+      "parent_id": "modified_lysines",
+      "smiles": "NC(CCC(C(CO)N)O)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](CC[C@H]([C@@H](CO)N)O)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "(4S)-5,5,5-trichloroleucine",
+      "short": "3clLeu",
+      "norine": "X",
+      "id": "4s_5_5_5_trichloroleucine",
+      "parent_id": "modified_branched_aliphatic_amino_acids",
+      "smiles": "NC(CC(C)C(Cl)(Cl)(Cl))C(=O)O",
+      "stereochemical_smiles": "N[C@@H](C[C@H](C)C(Cl)(Cl)Cl)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "(E)-4-methylhex-2-enoic acid",
+      "short": "meHex",
+      "norine": "X",
+      "id": "e_4_methylhex_2_enoic_acid",
+      "parent_id": "simple_aliphatic_carboxylic_acids",
+      "smiles": "CCC(C)C=CC(=O)O",
+      "stereochemical_smiles": "CCC(C)/C=C/C(=O)O",
+      "substrate_type": "aliphatic_carboxylic_acid"
+    },
+    {
+      "long": "(S,E)-2-amino-4-decenoic acid",
+      "short": "nDece",
+      "norine": "X",
+      "id": "s_e_2_amino_4_decenoic_acid",
+      "parent_id": "long_chain_aliphatic_amino_acids",
+      "smiles": "NC(CC=CCCCCC)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](C/C=C/CCCCC)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "1-(1,1-dimethylallyl)-tryptophan",
+      "short": "dmeaTrp",
+      "norine": "X",
+      "id": "1_1_1_dimethylallyl_tryptophan",
+      "parent_id": "unpolar_aromatic_ring",
+      "smiles": "NC(CC1=CN(C(C)(C)C=C)c2c1cccc2)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](Cc1cn(C(C)(C)C=C)c2c1cccc2)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "1-aminocyclopropane-1-carboxylic acid",
+      "short": "Acc",
+      "norine": "X",
+      "id": "1_aminocyclopropane_1_carboxylic_acid",
+      "parent_id": "cyclopropyl_amino_acids",
+      "smiles": "NC1(CC1)C(=O)O",
+      "stereochemical_smiles": "NC1(CC1)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "1-pyrroline-5-carboxylic acid",
+      "short": "Pyr",
+      "norine": "X",
+      "id": "1_pyrroline_5_carboxylic_acid",
+      "parent_id": "other_cyclic_aliphatic_amino_acids",
+      "smiles": "N1=CCCC1C(=O)O",
+      "stereochemical_smiles": "N1=CCC[C@H]1C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "2,3-diamino-3-methylpropanoic acid",
+      "short": "dnmeProp",
+      "norine": "X",
+      "id": "23dab",
+      "parent_id": "short_chain_diamino_and_derivatives",
+      "smiles": "NC(C(C)N)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](C(C)N)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "2,3-diaminopropionic acid",
+      "short": "Dpr",
+      "norine": "Dpr",
+      "id": "dap",
+      "parent_id": "short_chain_diamino_and_derivatives",
+      "smiles": "NC(CN)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](CN)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "2,3-dihydroxy-para-aminobenzoic acid",
+      "short": "2,3-doh-4-nBza",
+      "norine": "X",
+      "id": "2_3_dihydroxy_para_aminobenzoic_acid",
+      "parent_id": "aminobenzoates",
+      "smiles": "Nc1ccc(c(O)c1O)C(=O)O",
+      "stereochemical_smiles": "Nc1ccc(c(O)c1O)C(=O)O",
+      "substrate_type": "aromatic_carboxylic_acid"
+    },
+    {
+      "long": "2,3-dihydroxybenzoic acid",
+      "short": "2,3-dohBza",
+      "norine": "diOH-Bz",
+      "id": "dhba",
+      "parent_id": "dhb_sal",
+      "smiles": "Oc1c(O)cccc1C(=O)O",
+      "stereochemical_smiles": "Oc1c(O)cccc1C(=O)O",
+      "substrate_type": "aromatic_carboxylic_acid"
+    },
+    {
+      "long": "2,3-dihydroxyhexadecanoic acid",
+      "short": "2,3-dohHda",
+      "norine": "X",
+      "id": "2_3_dihydroxyhexadecanoic_acid",
+      "parent_id": "fatty_acid_substrate",
+      "smiles": "OC(C(CCCCCCCCCCCCC)O)C(=O)O",
+      "stereochemical_smiles": null,
+      "substrate_type": "fatty_acid"
+    },
+    {
+      "long": "2,4-diaminobutyric acid",
+      "short": "Dab",
+      "norine": "Dab",
+      "id": "24dab",
+      "parent_id": "short_chain_diamino_and_derivatives",
+      "smiles": "NC(CCN)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](CCN)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "2,4-dihydroxypentanoic acid",
+      "short": "dohPen",
+      "norine": "X",
+      "id": "2_4_dihydroxypentanoic_acid",
+      "parent_id": "hydroxy_aliphatic_acids",
+      "smiles": "OC(CC(C)O)C(=O)O",
+      "stereochemical_smiles": null,
+      "substrate_type": "hydroxy_carboxylic_acid"
+    },
+    {
+      "long": "2-(1-methylcyclopropyl)-D-glycine",
+      "short": "Cyc-D-Gly",
+      "norine": "X",
+      "id": "2_1_methylcyclopropyl_d_glycine",
+      "parent_id": "cyclopropyl_amino_acids",
+      "smiles": "NC(C1(C)CC1)C(=O)O",
+      "stereochemical_smiles": "N[C@H](C1(C)CC1)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "2-amino-3,5-dimethyl-4-hexenoic Acid",
+      "short": "ndmHex",
+      "norine": "X",
+      "id": "2_amino_3_5_dimethyl_4_hexenoic_acid",
+      "parent_id": "other_aliphatic_amino_acids",
+      "smiles": "NC(C(C)C=C(C)C)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](C(C)C=C(C)C)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "2-amino-3-hydroxycyclopent-2-enone",
+      "short": "nHcp",
+      "norine": "X",
+      "id": "2_amino_3_hydroxycyclopent_2_enone",
+      "parent_id": "other_cyclic_aliphatic_amino_acids",
+      "smiles": "NC1=C(O)CCC1=O",
+      "stereochemical_smiles": "NC1=C(O)CCC1=O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "2-amino-6-hydroxy-4-methyl-8-oxodecanoic acid",
+      "short": "nohme-oxoDec",
+      "norine": "X",
+      "id": "2_amino_6_hydroxy_4_methyl_8_oxodecanoic_acid",
+      "parent_id": "long_chain_aliphatic_amino_acids",
+      "smiles": "NC(CC(C)CC(O)CC(=O)CC)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](CC(C)CC(O)CC(=O)CC)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "2-aminoadipic acid",
+      "short": "Aad",
+      "norine": "Aad",
+      "id": "2_aminoadipic_acid",
+      "parent_id": "aminoadipate_specific",
+      "smiles": "NC(CCCC(=O)O)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](CCCC(=O)O)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "2-aminobutyric acid",
+      "short": "Abu",
+      "norine": "Abu",
+      "id": "2_aminobutyric_acid",
+      "parent_id": "branched_hydrophobic",
+      "smiles": "NC(CC)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](CC)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "2-aminoisobutyric acid",
+      "short": "Aib",
+      "norine": "Aib",
+      "id": "2_aminoisobutyric_acid",
+      "parent_id": "aminobutyric_acids",
+      "smiles": "NC(C)(C)C(=O)O",
+      "stereochemical_smiles": "NC(C)(C)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "2-carboxy-6-hydroxyoctahydroindole",
+      "short": "cohOhi",
+      "norine": "X",
+      "id": "2_carboxy_6_hydroxyoctahydroindole",
+      "parent_id": "other_cyclic_aliphatic_amino_acids",
+      "smiles": "N1C(CC2CCC(O)CC12)C(=O)O",
+      "stereochemical_smiles": "N1C2CC(O)CCC2C[C@H]1C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "2-chloro-3,5-dihydroxy-4-methylphenylglycine",
+      "short": "cl-me-dHpg",
+      "norine": "X",
+      "id": "2_chloro_3_5_dihydroxy_4_methylphenylglycine",
+      "parent_id": "hydroxyphenylglycines",
+      "smiles": "NC(c1c(Cl)c(O)c(C)c(O)c1)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](c1c(Cl)c(O)c(C)c(O)c1)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "2-chlorobenzoic acid",
+      "short": "2clBza",
+      "norine": "X",
+      "id": "2_chlorobenzoic_acid",
+      "parent_id": "substituted_benzoic_acids",
+      "smiles": "c1cc(Cl)c(cc1)C(=O)O",
+      "stereochemical_smiles": "c1cc(Cl)c(cc1)C(=O)O",
+      "substrate_type": "aromatic_carboxylic_acid"
+    },
+    {
+      "long": "3-hydroxy-4-methylanthranilic acid",
+      "short": "4-mha",
+      "norine": "X",
+      "id": "3_hydroxy_4_methylanthranilic_acid",
+      "parent_id": "aminobenzoates",
+      "smiles": "Nc1c(O)c(C)ccc1C(=O)O",
+      "stereochemical_smiles": "Nc1c(O)c(C)ccc1C(=O)O",
+      "substrate_type": "aromatic_carboxylic_acid"
+    },
+    {
+      "long": "2-hydroxy-4-methylpentanoic acid",
+      "short": "2-oh-4-mePen",
+      "norine": "4Me-Hva",
+      "id": "2_hydroxy_4_methylpentanoic_acid",
+      "parent_id": "hydroxy_aliphatic_acids",
+      "smiles": "OC(CC(C)C)C(=O)O",
+      "stereochemical_smiles": null,
+      "substrate_type": "hydroxy_carboxylic_acid"
+    },
+    {
+      "long": "2-hydroxypent-4-enoic acid",
+      "short": "Hpea",
+      "norine": "X",
+      "id": "2_hydroxypent_4_enoic_acid",
+      "parent_id": "hydroxy_aliphatic_acids",
+      "smiles": "OC(CC=C)C(=O)O",
+      "stereochemical_smiles": null,
+      "substrate_type": "hydroxy_carboxylic_acid"
+    },
+    {
+      "long": "2-ketoglutaric acid",
+      "short": "Kga",
+      "norine": "X",
+      "id": "2_ketoglutaric_acid",
+      "parent_id": "aliphatic_alpha_keto_acids",
+      "smiles": "O=C(C(=O)O)CCC(=O)O",
+      "stereochemical_smiles": "O=C(C(=O)O)CCC(=O)O",
+      "substrate_type": "alpha_keto_acid"
+    },
+    {
+      "long": "2-ketoisocaproic acid",
+      "short": "Kic",
+      "norine": "X",
+      "id": "2_ketoisocaproic_acid",
+      "parent_id": "aliphatic_alpha_keto_acids",
+      "smiles": "O=C(CC(C)C)C(=O)O",
+      "stereochemical_smiles": "O=C(CC(C)C)C(=O)O",
+      "substrate_type": "alpha_keto_acid"
+    },
+    {
+      "long": "2-ketoisovaleric acid",
+      "short": "Kiv",
+      "norine": "X",
+      "id": "ketoval",
+      "parent_id": "aliphatic_alpha_keto_acids",
+      "smiles": "O=C(C(C)C)C(=O)O",
+      "stereochemical_smiles": "O=C(C(C)C)C(=O)O",
+      "substrate_type": "alpha_keto_acid"
+    },
+    {
+      "long": "2-methylserine",
+      "short": "meSer",
+      "norine": "X",
+      "id": "2_methylserine",
+      "parent_id": "modified_serines",
+      "smiles": "NC(C)(CO)C(=O)O",
+      "stereochemical_smiles": "N[C@@](C)(CO)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "2-sulfamoylacetic acid",
+      "short": "Sma",
+      "norine": "X",
+      "id": "2_sulfamoylacetic_acid",
+      "parent_id": "other_polar_substrates",
+      "smiles": "NS(=O)(=O)CC(=O)O",
+      "stereochemical_smiles": "NS(=O)(=O)CC(=O)O",
+      "substrate_type": "other_polar_substrate"
+    },
+    {
+      "long": "2R-hydroxy-3-methylpentanoic acid",
+      "short": "2R-oh-3-mePen",
+      "norine": "Hmp",
+      "id": "2r_hydroxy_3_methylpentanoic_acid",
+      "parent_id": "hydroxy_aliphatic_acids",
+      "smiles": "CCC(C)C(O)C(=O)O",
+      "stereochemical_smiles": "CCC(C)[C@@H](O)C(=O)O",
+      "substrate_type": "hydroxy_carboxylic_acid"
+    },
+    {
+      "long": "2R-hydroxyisovaleric acid",
+      "short": "2R-Hiv",
+      "norine": "D-Hiv",
+      "id": "2r_hydroxyisovaleric_acid",
+      "parent_id": "hydroxy_aliphatic_acids",
+      "smiles": "OC(C(C)C)C(=O)O",
+      "stereochemical_smiles": "O[C@H](C(C)C)C(=O)O",
+      "substrate_type": "hydroxy_carboxylic_acid"
+    },
+    {
+      "long": "2S,3S-diaminobutyric acid",
+      "short": "3Dab",
+      "norine": "L-Dbu",
+      "id": "2s_3s_diaminobutyric_acid",
+      "parent_id": "short_chain_diamino_and_derivatives",
+      "smiles": "NC(C(N)C)C(=O)O",
+      "stereochemical_smiles": "N[C@@H]([C@@H](N)C)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "2S-4-amino-2-hydroxybutyrate",
+      "short": "2-oh-4-Abu",
+      "norine": "X",
+      "id": "2_oh_4_abu",
+      "parent_id": "other_hydroxy_aliphatic_amino_acids",
+      "smiles": "NCCC(O)C(=O)O",
+      "stereochemical_smiles": "NCC[C@H](O)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "2S-amino-8-oxodecanoic acid",
+      "short": "n-oxoDec",
+      "norine": "X",
+      "id": "2s_amino_8_oxodecanoic_acid",
+      "parent_id": "long_chain_aliphatic_amino_acids",
+      "smiles": "NC(CCCCCC(=O)CC)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](CCCCCC(=O)CC)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "2S-amino-9,10-epoxy-8-oxodecanoic acid",
+      "short": "n-epox-oxoDec",
+      "norine": "C10:0-NH2(2)-Ep(9)-oxo(8)",
+      "id": "2s_amino_9_10_epoxy_8_oxodecanoic_acid",
+      "parent_id": "long_chain_aliphatic_amino_acids",
+      "smiles": "NC(CCCCCC(=O)C1OC1)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](CCCCCC(=O)C1OC1)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "2S-aminodecanoic acid",
+      "short": "nDec",
+      "norine": "X",
+      "id": "2s_aminodecanoic_acid",
+      "parent_id": "long_chain_aliphatic_amino_acids",
+      "smiles": "NC(CCCCCCCC)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](CCCCCCCC)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "2S-aminododecanoic acid",
+      "short": "nDodec",
+      "norine": "X",
+      "id": "2s_aminododecanoic_acid",
+      "parent_id": "long_chain_aliphatic_amino_acids",
+      "smiles": "NC(CCCCCCCCCC)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](CCCCCCCCCC)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "2S-aminooctanoic acid",
+      "short": "nOct",
+      "norine": "X",
+      "id": "2s_aminooctanoic_acid",
+      "parent_id": "long_chain_aliphatic_amino_acids",
+      "smiles": "NC(CCCCCC)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](CCCCCC)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "2S-hydroxyisocaproic acid",
+      "short": "2S-Hic",
+      "norine": "X",
+      "id": "2s_hydroxyisocaproic_acid",
+      "parent_id": "hydroxy_aliphatic_acids",
+      "smiles": "OC(CC(C)C)C(=O)O",
+      "stereochemical_smiles": "O[C@@H](CC(C)C)C(=O)O",
+      "substrate_type": "hydroxy_carboxylic_acid"
+    },
+    {
+      "long": "2S-hydroxyisovaleric acid",
+      "short": "2S-Hiv",
+      "norine": "Hiv",
+      "id": "2s_hydroxyisovaleric_acid",
+      "parent_id": "hydroxy_aliphatic_acids",
+      "smiles": "OC(C(C)C)C(=O)O",
+      "stereochemical_smiles": "O[C@@H](C(C)C)C(=O)O",
+      "substrate_type": "hydroxy_carboxylic_acid"
+    },
+    {
+      "long": "2S-methyl-3-oxobutyrine",
+      "short": "me-oxoBut",
+      "norine": "X",
+      "id": "2s_methyl_3_oxobutyrine",
+      "parent_id": "other_aliphatic_oxo_acids",
+      "smiles": "NC(C(=O)C)(C)C(=O)O",
+      "stereochemical_smiles": "N[C@](C(=O)C)(C)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "3,4-dehydrolysine",
+      "short": "dhLys",
+      "norine": "X",
+      "id": "3_4_dehydrolysine",
+      "parent_id": "modified_lysines",
+      "smiles": "NC(C=CCCN)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](C=CCCN)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "3,4-dihydroxybenzoic acid",
+      "short": "3,4-dohBza",
+      "norine": "X",
+      "id": "3_4_dihydroxybenzoic_acid",
+      "parent_id": "other_hydroxybenzoates",
+      "smiles": "Oc1cc(ccc1O)C(=O)O",
+      "stereochemical_smiles": "Oc1cc(ccc1O)C(=O)O",
+      "substrate_type": "aromatic_carboxylic_acid"
+    },
+    {
+      "long": "3,5-dichloro-4-hydroxybenzoylformic acid",
+      "short": "dclohBfa",
+      "norine": "X",
+      "id": "3_5_dichloro_4_hydroxybenzoylformic_acid",
+      "parent_id": "arylpyruvic_and_arylglyoxylic_acids",
+      "smiles": "Oc1c(Cl)cc(cc1Cl)C(=O)C(=O)O",
+      "stereochemical_smiles": "Oc1c(Cl)cc(cc1Cl)C(=O)C(=O)O",
+      "substrate_type": "alpha_keto_acid"
+    },
+    {
+      "long": "3,5-dichloro-4-hydroxyphenylglycine",
+      "short": "dclHpg",
+      "norine": "Cl2-Hpg",
+      "id": "3_5_dichloro_4_hydroxyphenylglycine",
+      "parent_id": "hydroxyphenylglycines",
+      "smiles": "NC(c1cc(Cl)c(O)c(Cl)c1)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](c1cc(Cl)c(O)c(Cl)c1)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "3,5-dihydroxyphenylglycine",
+      "short": "dHpg",
+      "norine": "Dhpg",
+      "id": "dpg",
+      "parent_id": "hydroxyphenylglycines",
+      "smiles": "NC(c1cc(O)cc(O)c1)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](c1cc(O)cc(O)c1)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "3-(2-nitrocyclopropyl)alanine",
+      "short": "niCpa",
+      "norine": "X",
+      "id": "3_2_nitrocyclopropyl_alanine",
+      "parent_id": "other_cyclic_aliphatic_amino_acids",
+      "smiles": "NC(CC1CC1[N+](=O)[O-])C(=O)O",
+      "stereochemical_smiles": "N[C@@H](CC1CC1[N+](=O)[O-])C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "3-(3-pyridyl)-alanine",
+      "short": "pyrAla",
+      "norine": "X",
+      "id": "3_3_pyridyl_alanine",
+      "parent_id": "other_aromatic_amino_acids",
+      "smiles": "NC(Cc1cccnc1)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](Cc1cccnc1)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "3-amino-2,4-dihydroxybenzoic acid",
+      "short": "2,4-doh-3-nBza",
+      "norine": "X",
+      "id": "3_amino_2_4_dihydroxybenzoic_acid",
+      "parent_id": "aminobenzoates",
+      "smiles": "Nc1c(O)c(ccc1O)C(=O)O",
+      "stereochemical_smiles": "Nc1c(O)c(ccc1O)C(=O)O",
+      "substrate_type": "aromatic_carboxylic_acid"
+    },
+    {
+      "long": "3-amino-4-hydroxybenzoic acid",
+      "short": "nohBza",
+      "norine": "X",
+      "id": "3_amino_4_hydroxybenzoic_acid",
+      "parent_id": "aminobenzoates",
+      "smiles": "Nc1cc(ccc1O)C(=O)O",
+      "stereochemical_smiles": "Nc1cc(ccc1O)C(=O)O",
+      "substrate_type": "aromatic_carboxylic_acid"
+    },
+    {
+      "long": "hydroxy-3-amino-5-hydroxybenzoyl",
+      "short": "ohAHBA",
+      "norine": "X",
+      "id": "ohahba",
+      "parent_id": "hydroxyl_polyketide_units",
+      "smiles": "Nc1cc(O)cc(c1)C(O)O",
+      "stereochemical_smiles": null,
+      "substrate_type": "polyketide_fragment"
+    },
+    {
+      "long": "3-amino-5-hydroxybenzoic acid",
+      "short": "AHBA",
+      "norine": "X",
+      "id": "ahba",
+      "parent_id": "aminobenzoates",
+      "smiles": "Nc1cc(O)cc(c1)C(=O)O",
+      "stereochemical_smiles": "Nc1cc(O)cc(c1)C(=O)O",
+      "substrate_type": "aromatic_carboxylic_acid"
+    },
+    {
+      "long": "3-amino-6-hydroxy-2-piperidone",
+      "short": "Ahp",
+      "norine": "Ahp",
+      "id": "3_amino_6_hydroxy_2_piperidone",
+      "parent_id": "other_cyclic_aliphatic_amino_acids",
+      "smiles": "NC1CCC(O)NC1=O",
+      "stereochemical_smiles": null,
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "3-aminoisobutyric acid",
+      "short": "Ibu",
+      "norine": "X",
+      "id": "3_aminoisobutyric_acid",
+      "parent_id": "aminobutyric_acids",
+      "smiles": "NCC(C)C(=O)O",
+      "stereochemical_smiles": null,
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "3-chloro-N-methylalanine",
+      "short": "3-cl-meAla",
+      "norine": "X",
+      "id": "3_chloro_n_methylalanine",
+      "parent_id": "tiny_alpha_amino_acids",
+      "smiles": "N(C)C(CCl)C(=O)O",
+      "stereochemical_smiles": "N(C)[C@@H](CCl)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "3-chlorotyrosine",
+      "short": "clTyr",
+      "norine": "Cl-Tyr",
+      "id": "3_chlorotyrosine",
+      "parent_id": "hydroxyaromatic_side_chain",
+      "smiles": "NC(Cc1cc(Cl)c(O)cc1)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](Cc1cc(Cl)c(O)cc1)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "3-hydroxy-4-methylproline",
+      "short": "3-oh-4-mePro",
+      "norine": "X",
+      "id": "3_hydroxy_4_methylproline",
+      "parent_id": "modified_prolines",
+      "smiles": "N1CC(C)C(O)C1C(=O)O",
+      "stereochemical_smiles": "N1CC(C)C(O)[C@H]1C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "3-hydroxy-O-methyl-5-methyltyrosine",
+      "short": "ohdmTyr",
+      "norine": "X",
+      "id": "3_hydroxy_o_methyl_5_methyltyrosine",
+      "parent_id": "hydroxyaromatic_side_chain",
+      "smiles": "NC(Cc1cc(O)c(OC)c(C)c1)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](Cc1cc(O)c(OC)c(C)c1)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "3-hydroxy-O-methyltyrosine",
+      "short": "ohmeTyr",
+      "norine": "X",
+      "id": "3_hydroxy_o_methyltyrosine",
+      "parent_id": "hydroxyaromatic_side_chain",
+      "smiles": "NC(Cc1cc(O)c(OC)cc1)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](Cc1cc(O)c(OC)cc1)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "3-hydroxy-para-aminobenzoic acid",
+      "short": "ohnBza",
+      "norine": "X",
+      "id": "3_hydroxy_para_aminobenzoic_acid",
+      "parent_id": "aminobenzoates",
+      "smiles": "Nc1ccc(cc1O)C(=O)O",
+      "stereochemical_smiles": "Nc1ccc(cc1O)C(=O)O",
+      "substrate_type": "aromatic_carboxylic_acid"
+    },
+    {
+      "long": "3-hydroxyanthranilic acid",
+      "short": "3-haa",
+      "norine": "X",
+      "id": "3_hydroxyanthranilic_acid",
+      "parent_id": "aminobenzoates",
+      "smiles": "Nc1c(O)cccc1C(=O)O",
+      "stereochemical_smiles": "Nc1c(O)cccc1C(=O)O",
+      "substrate_type": "aromatic_carboxylic_acid"
+    },
+    {
+      "long": "3-hydroxyasparagine",
+      "short": "ohAsn",
+      "norine": "OH-Asn",
+      "id": "3_hydroxyasparagine",
+      "parent_id": "modified_aspartate_asparagine_family",
+      "smiles": "NC(C(O)C(=O)N)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](C(O)C(=O)N)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "3-hydroxyaspartic acid",
+      "short": "ohAsp",
+      "norine": "OH-Asp",
+      "id": "3_hydroxyaspartic_acid",
+      "parent_id": "modified_aspartate_asparagine_family",
+      "smiles": "NC(C(O)C(=O)O)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](C(O)C(=O)O)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "3-hydroxyglutamine",
+      "short": "ohGln",
+      "norine": "bOH-Gln",
+      "id": "3_hydroxyglutamine",
+      "parent_id": "modified_glutamate_glutamine_family",
+      "smiles": "NC(C(CC(=O)N)O)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](C(CC(=O)N)O)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "3-hydroxykynurenine",
+      "short": "ohKyn",
+      "norine": "X",
+      "id": "3_hydroxykynurenine",
+      "parent_id": "other_aromatic_amino_acids",
+      "smiles": "NC(CC(=O)c1cccc(O)c1N)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](CC(=O)c1cccc(O)c1N)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "3-hydroxyleucine",
+      "short": "3-ohLeu",
+      "norine": "3OH-Leu",
+      "id": "3_hydroxyleucine",
+      "parent_id": "modified_branched_aliphatic_amino_acids",
+      "smiles": "NC(C(C(C)C)O)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](C(C(C)C)O)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "3-hydroxypicolinic acid",
+      "short": "Hpa",
+      "norine": "Hpa",
+      "id": "3_hydroxypicolinic_acid",
+      "parent_id": "heteroaromatic_acids",
+      "smiles": "n1cccc(O)c1C(=O)O",
+      "stereochemical_smiles": "n1cccc(O)c1C(=O)O",
+      "substrate_type": "heteroaromatic_carboxylic_acid"
+    },
+    {
+      "long": "3-hydroxyquinaldic acid",
+      "short": "Hqa",
+      "norine": "X",
+      "id": "3_hydroxyquinaldic_acid",
+      "parent_id": "heteroaromatic_acids",
+      "smiles": "n1c2ccccc2cc(O)c1C(=O)O",
+      "stereochemical_smiles": "n1c2ccccc2cc(O)c1C(=O)O",
+      "substrate_type": "heteroaromatic_carboxylic_acid"
+    },
+    {
+      "long": "3-hydroxytyrosine",
+      "short": "3-ohTyr",
+      "norine": "X",
+      "id": "3_hydroxytyrosine",
+      "parent_id": "hydroxyaromatic_side_chain",
+      "smiles": "NC(Cc1cc(O)c(O)cc1)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](Cc1cc(O)c(O)cc1)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "3-hydroxyvaline",
+      "short": "3-ohVal",
+      "norine": "bOH-Val",
+      "id": "3_hydroxyvaline",
+      "parent_id": "modified_branched_aliphatic_amino_acids",
+      "smiles": "NC(C(C)(C)O)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](C(C)(C)O)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "3-methoxyanthranilic acid",
+      "short": "mxAnt",
+      "norine": "X",
+      "id": "3_methoxyanthranilic_acid",
+      "parent_id": "aminobenzoates",
+      "smiles": "Nc1c(OC)cccc1C(=O)O",
+      "stereochemical_smiles": "Nc1c(OC)cccc1C(=O)O",
+      "substrate_type": "aromatic_carboxylic_acid"
+    },
+    {
+      "long": "3-methoxyaspartic acid",
+      "short": "mxAsp",
+      "norine": "OMe-Asp",
+      "id": "3_methoxyaspartic_acid",
+      "parent_id": "modified_aspartate_asparagine_family",
+      "smiles": "NC(C(OC)C(=O)O)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](C(OC)C(=O)O)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "3-methylasparagine",
+      "short": "meAsn",
+      "norine": "bMe-Asn",
+      "id": "3_methylasparagine",
+      "parent_id": "modified_aspartate_asparagine_family",
+      "smiles": "NC(C(C)C(=O)N)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](C(C)C(=O)N)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "3-methylaspartic acid",
+      "short": "meAsp",
+      "norine": "bMe-Asp",
+      "id": "3_methylaspartic_acid",
+      "parent_id": "modified_aspartate_asparagine_family",
+      "smiles": "NC(C(C)C(=O)O)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](C(C)C(=O)O)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "3-methylglutamic acid",
+      "short": "meGlu",
+      "norine": "3Me-Glu",
+      "id": "3_methylglutamic_acid",
+      "parent_id": "modified_glutamate_glutamine_family",
+      "smiles": "NC(C(C)CC(=O)O)C(=O)O",
+      "stereochemical_smiles": "N[C@@H]([C@H](C)CC(=O)O)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "3-nitrotyrosine",
+      "short": "nitroTyr",
+      "norine": "3NO2-Tyr",
+      "id": "3_nitrotyrosine",
+      "parent_id": "hydroxyaromatic_side_chain",
+      "smiles": "NC(Cc1cc([N+](=O)[O-])c(O)cc1)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](Cc1cc([N+](=O)[O-])c(O)cc1)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "3R-chloroproline",
+      "short": "clPro",
+      "norine": "X",
+      "id": "3r_chloroproline",
+      "parent_id": "modified_prolines",
+      "smiles": "N1CCC(Cl)C1C(=O)O",
+      "stereochemical_smiles": "N1CC[C@@H](Cl)[C@@H]1C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "3R-hydroxy-2,4-diaminobutyric acid",
+      "short": "ohDab",
+      "norine": "X",
+      "id": "3r_hydroxy_2_4_diaminobutyric_acid",
+      "parent_id": "short_chain_diamino_and_derivatives",
+      "smiles": "NC(C(CN)O)C(=O)O",
+      "stereochemical_smiles": "N[C@@H]([C@@H](CN)O)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "3R-hydroxyasparagine",
+      "short": "3R-ohAsn",
+      "norine": "OH-Asn",
+      "id": "3r_hydroxyasparagine",
+      "parent_id": "modified_aspartate_asparagine_family",
+      "smiles": "NC(C(C(=O)N)O)C(=O)O",
+      "stereochemical_smiles": "N[C@@H]([C@H](C(=O)N)O)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "3R-hydroxyaspartic acid",
+      "short": "3R-ohAsp",
+      "norine": "OH-Asp",
+      "id": "3r_hydroxyaspartic_acid",
+      "parent_id": "modified_aspartate_asparagine_family",
+      "smiles": "NC(C(O)C(=O)O)C(=O)O",
+      "stereochemical_smiles": "N[C@@H]([C@@H](O)C(=O)O)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "3R-hydroxyhomotyrosine",
+      "short": "ohHty",
+      "norine": "X",
+      "id": "3r_hydroxyhomotyrosine",
+      "parent_id": "hydroxyaromatic_side_chain",
+      "smiles": "NC(C(O)Cc1ccc(O)cc1)C(=O)O",
+      "stereochemical_smiles": "N[C@@H]([C@H](O)Cc1ccc(O)cc1)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "3R-hydroxyleucine",
+      "short": "3R-ohLeu",
+      "norine": "3OH-Leu",
+      "id": "3r_hydroxyleucine",
+      "parent_id": "modified_branched_aliphatic_amino_acids",
+      "smiles": "NC(C(C(C)C)O)C(=O)O",
+      "stereochemical_smiles": "N[C@@H]([C@@H](C(C)C)O)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "3R-methyl-D-aspartic acid branched",
+      "short": "branched-D-3R-meAsp",
+      "norine": "bMe-Asp",
+      "id": "3r_methyl_d_aspartic_acid_branched",
+      "parent_id": "modified_aspartate_asparagine_family",
+      "smiles": "NC(C(C)C(=O)O)C(=O)O",
+      "stereochemical_smiles": "N[C@H]([C@@H](C)C(=O)O)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "3R-methylbeta-alanine",
+      "short": "me-bAla",
+      "norine": "X",
+      "id": "3r_methylbeta_alanine",
+      "parent_id": "beta_alanine_specific",
+      "smiles": "NC(C)CC(=O)O",
+      "stereochemical_smiles": "N[C@H](C)CC(=O)O",
+      "substrate_type": "beta_amino_acid"
+    },
+    {
+      "long": "3R-methylglutamic acid",
+      "short": "3R-meGlu",
+      "norine": "3Me-Glu",
+      "id": "3r_methylglutamic_acid",
+      "parent_id": "modified_glutamate_glutamine_family",
+      "smiles": "NC(C(C)CC(=O)O)C(=O)O",
+      "stereochemical_smiles": "N[C@@H]([C@H](C)CC(=O)O)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "3S,4R-dichloroproline",
+      "short": "dclPro",
+      "norine": "Cl2-Pro",
+      "id": "3s_4r_dichloroproline",
+      "parent_id": "modified_prolines",
+      "smiles": "N1C(C(Cl)C(Cl)C1)C(=O)O",
+      "stereochemical_smiles": "N1[C@H]([C@H](Cl)[C@H](Cl)C1)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "3S,4S-dihydroxyhomotyrosine",
+      "short": "dohHty",
+      "norine": "X",
+      "id": "3s_4s_dihydroxyhomotyrosine",
+      "parent_id": "hydroxyaromatic_side_chain",
+      "smiles": "NC(C(O)C(O)c1ccc(O)cc1)C(=O)O",
+      "stereochemical_smiles": "N[C@@H]([C@H](O)[C@@H](O)c1ccc(O)cc1)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "3S-aminobutyric acid",
+      "short": "3S-Abu",
+      "norine": "X",
+      "id": "3s_aminobutyric_acid",
+      "parent_id": "aminobutyric_acids",
+      "smiles": "NC(C)CC(=O)O",
+      "stereochemical_smiles": "N[C@@H](C)CC(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "3S-cyclohex-2-enylalanine",
+      "short": "cycHexAla",
+      "norine": "X",
+      "id": "3s_cyclohex_2_enylalanine",
+      "parent_id": "other_cyclic_aliphatic_amino_acids",
+      "smiles": "NC(CC1C=CCCC1)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](CC1C=CCCC1)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "3S-hydroxy-4S-methylproline",
+      "short": "3S-oh-4S-mePro",
+      "norine": "X",
+      "id": "3s_hydroxy_4s_methylproline",
+      "parent_id": "modified_prolines",
+      "smiles": "N1CC(C)C(O)C1C(=O)O",
+      "stereochemical_smiles": "N1C[C@H](C)[C@H](O)[C@H]1C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "3S-hydroxy-6-chlorohistidine",
+      "short": "hclHis",
+      "norine": "X",
+      "id": "3s_hydroxy_6_chlorohistidine",
+      "parent_id": "modified_histidines",
+      "smiles": "NC(C(O)c1c[nH]c(Cl)n1)C(=O)O",
+      "stereochemical_smiles": "N[C@@H]([C@H](O)c1c[nH]c(Cl)n1)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "3S-hydroxyasparagine",
+      "short": "3S-ohAsn",
+      "norine": "OH-Asn",
+      "id": "3s_hydroxyasparagine",
+      "parent_id": "modified_aspartate_asparagine_family",
+      "smiles": "NC(C(C(=O)N)O)C(=O)O",
+      "stereochemical_smiles": "N[C@@H]([C@@H](C(=O)N)O)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "3S-hydroxyleucine",
+      "short": "3S-ohLeu",
+      "norine": "3OH-Leu",
+      "id": "3s_hydroxyleucine",
+      "parent_id": "modified_branched_aliphatic_amino_acids",
+      "smiles": "NC(C(C(C)C)O)C(=O)O",
+      "stereochemical_smiles": "N[C@@H]([C@H](C(C)C)O)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "3S-hydroxypipecolic acid",
+      "short": "ohPip",
+      "norine": "X",
+      "id": "3s_hydroxypipecolic_acid",
+      "parent_id": "modified_pipecolates",
+      "smiles": "N1CCCC(O)C1C(=O)O",
+      "stereochemical_smiles": "N1CCC[C@H](O)[C@H]1C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "3S-hydroxyproline",
+      "short": "3S-ohPro",
+      "norine": "3OH-Pro",
+      "id": "3s_hydroxyproline",
+      "parent_id": "modified_prolines",
+      "smiles": "N1CCC(O)C1C(=O)O",
+      "stereochemical_smiles": "N1CC[C@H](O)[C@H]1C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "3S-methyl-D-aspartic acid branched",
+      "short": "branched-D-3S-meAsp",
+      "norine": "D-bMe-Asp",
+      "id": "3s_methyl_d_aspartic_acid_branched",
+      "parent_id": "modified_aspartate_asparagine_family",
+      "smiles": "NC(C(C)C(=O)O)C(=O)O",
+      "stereochemical_smiles": "N[C@H]([C@H](C)C(=O)O)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "3S-methylaspartic acid",
+      "short": "3S-meAsp",
+      "norine": "bMe-Asp",
+      "id": "3s_methylaspartic_acid",
+      "parent_id": "modified_aspartate_asparagine_family",
+      "smiles": "NC(C(C)C(=O)O)C(=O)O",
+      "stereochemical_smiles": "N[C@@H]([C@H](C)C(=O)O)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "3S-methylleucine",
+      "short": "meLeu",
+      "norine": "X",
+      "id": "3s_methylleucine",
+      "parent_id": "modified_branched_aliphatic_amino_acids",
+      "smiles": "NC(C(C(C)C)C)C(=O)O",
+      "stereochemical_smiles": "N[C@@H]([C@H](C(C)C)C)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "3S-methylproline",
+      "short": "3S-mePro",
+      "norine": "3Me-Pro",
+      "id": "3s_methylproline",
+      "parent_id": "modified_prolines",
+      "smiles": "N1CCC(C)C1C(=O)O",
+      "stereochemical_smiles": "N1CC[C@H](C)[C@H]1C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "4,5-dehydroarginine",
+      "short": "4,5-dhArg",
+      "norine": "X",
+      "id": "4_5_dehydroarginine",
+      "parent_id": "modified_arginine_and_guanidino",
+      "smiles": "NC(CC=CN=C(N)N)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](CC=CN=C(N)N)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "4,5-dihydroxyornithine",
+      "short": "dhOrn",
+      "norine": "X",
+      "id": "4_5_dihydroxyornithine",
+      "parent_id": "ornithine_and_modified_ornithines",
+      "smiles": "NC(CC(C(N)O)O)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](CC(C(N)O)O)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "4-acetamidopyrrole-2-carboxylic acid",
+      "short": "nacPca",
+      "norine": "X",
+      "id": "4_acetamidopyrrole_2_carboxylic_acid",
+      "parent_id": "heteroaromatic_acids",
+      "smiles": "CC(=O)Nc1cc([nH]c1)C(=O)O",
+      "stereochemical_smiles": "CC(=O)Nc1cc([nH]c1)C(=O)O",
+      "substrate_type": "heteroaromatic_carboxylic_acid"
+    },
+    {
+      "long": "4-amino-2-hydroxy-3-isopropoxybenzoic acid",
+      "short": "noh-isopox-Bza",
+      "norine": "X",
+      "id": "4_amino_2_hydroxy_3_isopropoxybenzoic_acid",
+      "parent_id": "aminobenzoates",
+      "smiles": "Nc1ccc(c(O)c1OC(C)C)C(=O)O",
+      "stereochemical_smiles": "Nc1ccc(c(O)c1OC(C)C)C(=O)O",
+      "substrate_type": "aromatic_carboxylic_acid"
+    },
+    {
+      "long": "4-aminobutyric acid",
+      "short": "4-Abu",
+      "norine": "X",
+      "id": "4_aminobutyric_acid",
+      "parent_id": "aminobutyric_acids",
+      "smiles": "NCCCC(=O)O",
+      "stereochemical_smiles": "NCCCC(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "4-aminophenylalanine",
+      "short": "nPhe",
+      "norine": "X",
+      "id": "4_aminophenylalanine",
+      "parent_id": "unpolar_aromatic_ring",
+      "smiles": "NC(Cc1ccc(N)cc1)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](Cc1ccc(N)cc1)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "4-chlorobenzoic acid",
+      "short": "4clBza",
+      "norine": "X",
+      "id": "4_chlorobenzoic_acid",
+      "parent_id": "substituted_benzoic_acids",
+      "smiles": "Clc1ccc(cc1)C(=O)O",
+      "stereochemical_smiles": "Clc1ccc(cc1)C(=O)O",
+      "substrate_type": "aromatic_carboxylic_acid"
+    },
+    {
+      "long": "4-hydroxy-5-methoxyanthranilic acid",
+      "short": "4-oh-5-mxAnt",
+      "norine": "X",
+      "id": "4_hydroxy_5_methoxyanthranilic_acid",
+      "parent_id": "aminobenzoates",
+      "smiles": "Nc1cc(O)c(OC)cc1C(=O)O",
+      "stereochemical_smiles": "Nc1cc(O)c(OC)cc1C(=O)O",
+      "substrate_type": "aromatic_carboxylic_acid"
+    },
+    {
+      "long": "4-hydroxy-3-nitrobenzoic acid",
+      "short": "oh-nitroBza",
+      "norine": "X",
+      "id": "4_hydroxy_3_nitrobenzoic_acid",
+      "parent_id": "other_hydroxybenzoates",
+      "smiles": "[N+](=O)([O-])c1cc(ccc1O)C(=O)O",
+      "stereochemical_smiles": "[N+](=O)([O-])c1cc(ccc1O)C(=O)O",
+      "substrate_type": "aromatic_carboxylic_acid"
+    },
+    {
+      "long": "4-hydroxy-D-kynurenine",
+      "short": "oh-D-Kyn",
+      "norine": "X",
+      "id": "4_hydroxy_d_kynurenine",
+      "parent_id": "other_aromatic_amino_acids",
+      "smiles": "NC(CC(=O)c1c(N)cc(O)cc1)C(=O)O",
+      "stereochemical_smiles": "N[C@H](CC(=O)c1c(N)cc(O)cc1)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "4-hydroxybenzoic acid",
+      "short": "4-ohBza",
+      "norine": "pOH-Bz",
+      "id": "4_hydroxybenzoic_acid",
+      "parent_id": "other_hydroxybenzoates",
+      "smiles": "Oc1ccc(cc1)C(=O)O",
+      "stereochemical_smiles": "Oc1ccc(cc1)C(=O)O",
+      "substrate_type": "aromatic_carboxylic_acid"
+    },
+    {
+      "long": "4-hydroxyglutamine",
+      "short": "4-ohGln",
+      "norine": "X",
+      "id": "4_hydroxyglutamine",
+      "parent_id": "modified_glutamate_glutamine_family",
+      "smiles": "NC(CC(C(=O)N)O)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](CC(C(=O)N)O)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "4-hydroxyphenylglycine",
+      "short": "Hpg",
+      "norine": "Hpg",
+      "id": "hpg",
+      "parent_id": "hydroxyphenylglycines",
+      "smiles": "NC(c1ccc(O)cc1)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](c1ccc(O)cc1)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "4-hydroxyphenylpyruvic acid",
+      "short": "4-ohPpa",
+      "norine": "X",
+      "id": "4_hydroxyphenylpyruvic_acid",
+      "parent_id": "arylpyruvic_and_arylglyoxylic_acids",
+      "smiles": "Oc1ccc(cc1)CC(=O)C(=O)O",
+      "stereochemical_smiles": "Oc1ccc(cc1)CC(=O)C(=O)O",
+      "substrate_type": "alpha_keto_acid"
+    },
+    {
+      "long": "4-methoxytryptophan",
+      "short": "4-mxTrp",
+      "norine": "X",
+      "id": "4_methoxytryptophan",
+      "parent_id": "unpolar_aromatic_ring",
+      "smiles": "NC(Cc1c2c(OC)cccc2[nH]c1)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](Cc1c2c(OC)cccc2[nH]c1)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "4-methylproline",
+      "short": "4mePro",
+      "norine": "4Me-Pro",
+      "id": "4_methylproline",
+      "parent_id": "modified_prolines",
+      "smiles": "N1CC(C)CC1C(=O)O",
+      "stereochemical_smiles": "N1CC(C)C[C@H]1C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "4-nitrotryptophan",
+      "short": "nitroTrp",
+      "norine": "X",
+      "id": "4_nitrotryptophan",
+      "parent_id": "unpolar_aromatic_ring",
+      "smiles": "NC(Cc1c2c([N+](=O)[O-])cccc2[nH]c1)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](Cc1c2c([N+](=O)[O-])cccc2[nH]c1)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "4R-E-butenyl-4R-methylthreonine",
+      "short": "Bmt",
+      "norine": "Bmt",
+      "id": "4r_e_butenyl_4r_methylthreonine",
+      "parent_id": "modified_threonines",
+      "smiles": "NC(C(O)C(C)CC=CC)C(=O)O",
+      "stereochemical_smiles": "N[C@@H]([C@H](O)[C@H](C)C/C=C/C)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "4R-hydroxyproline",
+      "short": "4R-ohPro",
+      "norine": "4OH-Pro",
+      "id": "4r_hydroxyproline",
+      "parent_id": "modified_prolines",
+      "smiles": "N1CC(O)CC1C(=O)O",
+      "stereochemical_smiles": "N1C[C@H](O)C[C@H]1C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "4R-methylproline",
+      "short": "4R-mePro",
+      "norine": "4Me-Pro",
+      "id": "4r_methylproline",
+      "parent_id": "modified_prolines",
+      "smiles": "N1CC(C)CC1C(=O)O",
+      "stereochemical_smiles": "N1C[C@H](C)C[C@H]1C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "4R-propylproline",
+      "short": "proPro",
+      "norine": "X",
+      "id": "4r_propylproline",
+      "parent_id": "modified_prolines",
+      "smiles": "N1CC(CCC)CC1C(=O)O",
+      "stereochemical_smiles": "N1C[C@H](CCC)C[C@H]1C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "4S-acetyl-5S-methylproline",
+      "short": "ac-mePro",
+      "norine": "X",
+      "id": "4s_acetyl_5s_methylproline",
+      "parent_id": "modified_prolines",
+      "smiles": "N1C(C)C(C(=O)C)CC1C(=O)O",
+      "stereochemical_smiles": "N1[C@@H](C)[C@@H](C(=O)C)C[C@H]1C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "4S-hydroxylysine",
+      "short": "4S-ohLys",
+      "norine": "X",
+      "id": "4s_hydroxylysine",
+      "parent_id": "modified_lysines",
+      "smiles": "NC(CC(CCN)O)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](C[C@H](CCN)O)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "4S-methylazetidine-2S-carboxylic acid",
+      "short": "meAze",
+      "norine": "X",
+      "id": "4s_methylazetidine_2s_carboxylic_acid",
+      "parent_id": "other_cyclic_aliphatic_amino_acids",
+      "smiles": "N1C(C)CC1C(=O)O",
+      "stereochemical_smiles": "N1[C@@H](C)C[C@H]1C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "4S-methylproline",
+      "short": "4S-mePro",
+      "norine": "4Me-Pro",
+      "id": "4s_methylproline",
+      "parent_id": "modified_prolines",
+      "smiles": "N1CC(C)CC1C(=O)O",
+      "stereochemical_smiles": "N1C[C@@H](C)C[C@H]1C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "4S-propenylproline",
+      "short": "pPro",
+      "norine": "X",
+      "id": "4s_propenylproline",
+      "parent_id": "modified_prolines",
+      "smiles": "N1CC(C=CC)CC1C(=O)O",
+      "stereochemical_smiles": "N1C[C@H](C=CC)C[C@H]1C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "4S,5-dihydroxy-2S-aminopentanoic acid",
+      "short": "4S,5-doh-2S-nPen",
+      "norine": "X",
+      "id": "4s_5_dihydroxy_2s_aminopentanoic_acid",
+      "parent_id": "ornithine_and_modified_ornithines",
+      "smiles": "NC(CC(O)CO)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](C[C@H](O)CO)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "5,5-dimethylpipecolic acid",
+      "short": "dmePip",
+      "norine": "X",
+      "id": "5_5_dimethylpipecolic_acid",
+      "parent_id": "modified_pipecolates",
+      "smiles": "N1CC(C)(C)CCC1C(=O)O",
+      "stereochemical_smiles": "N1CC(C)(C)CC[C@H]1C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "5-aminolevulinic acid",
+      "short": "nLev",
+      "norine": "X",
+      "id": "5_aminolevulinic_acid",
+      "parent_id": "other_aliphatic_oxo_acids",
+      "smiles": "NCC(=O)CCC(=O)O",
+      "stereochemical_smiles": "NCC(=O)CCC(=O)O",
+      "substrate_type": "aliphatic_oxo_acid"
+    },
+    {
+      "long": "5-chloroanthranilic acid",
+      "short": "clAnt",
+      "norine": "X",
+      "id": "5_chloroanthranilic_acid",
+      "parent_id": "aminobenzoates",
+      "smiles": "Nc1ccc(Cl)cc1C(=O)O",
+      "stereochemical_smiles": "Nc1ccc(Cl)cc1C(=O)O",
+      "substrate_type": "aromatic_carboxylic_acid"
+    },
+    {
+      "long": "5-chlorotryptophan",
+      "short": "5-clTrp",
+      "norine": "X",
+      "id": "5_chlorotryptophan",
+      "parent_id": "unpolar_aromatic_ring",
+      "smiles": "NC(Cc1c2cc(Cl)ccc2[nH]c1)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](Cc1c2cc(Cl)ccc2[nH]c1)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "5-hydroxy-2-aminopentanoic acid",
+      "short": "ohPen",
+      "norine": "X",
+      "id": "ohpen",
+      "parent_id": "other_hydroxy_aliphatic_amino_acids",
+      "smiles": "NC(CCCO)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](CCCO)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "5-methoxytyrosine",
+      "short": "5-mxTyr",
+      "norine": "X",
+      "id": "5_methoxytyrosine",
+      "parent_id": "hydroxyaromatic_side_chain",
+      "smiles": "NC(Cc1cc(OC)c(O)cc1)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](Cc1cc(OC)c(O)cc1)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "5-methylorsellinic acid",
+      "short": "meOrs",
+      "norine": "X",
+      "id": "5_methylorsellinic_acid",
+      "parent_id": "other_hydroxybenzoates",
+      "smiles": "Oc1cc(O)c(c(C)c1C)C(=O)O",
+      "stereochemical_smiles": "Oc1cc(O)c(c(C)c1C)C(=O)O",
+      "substrate_type": "aromatic_carboxylic_acid"
+    },
+    {
+      "long": "5S-methylproline",
+      "short": "5S-mePro",
+      "norine": "5Me-Pro",
+      "id": "5s_methylproline",
+      "parent_id": "modified_prolines",
+      "smiles": "N1C(C)CCC1C(=O)O",
+      "stereochemical_smiles": "N1[C@@H](C)CC[C@H]1C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "6,7-dichlorotryptophan",
+      "short": "dclTrp",
+      "norine": "X",
+      "id": "6_7_dichlorotryptophan",
+      "parent_id": "unpolar_aromatic_ring",
+      "smiles": "NC(Cc1c[nH]c2c1ccc(Cl)c2Cl)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](Cc1c[nH]c2c1ccc(Cl)c2Cl)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "6-chloro-4-hydroxy-1-methyl-indole-3-carboxylic acid",
+      "short": "me-clHic",
+      "norine": "X",
+      "id": "6_chloro_4_hydroxy_1_methyl_indole_3_carboxylic_acid",
+      "parent_id": "heteroaromatic_acids",
+      "smiles": "Cn1cc(c2c(O)cc(Cl)cc21)C(=O)O",
+      "stereochemical_smiles": "Cn1cc(c2c(O)cc(Cl)cc21)C(=O)O",
+      "substrate_type": "heteroaromatic_carboxylic_acid"
+    },
+    {
+      "long": "6-chloro-4-hydroxyindole-3-carboxylic acid",
+      "short": "clHic",
+      "norine": "X",
+      "id": "6_chloro_4_hydroxyindole_3_carboxylic_acid",
+      "parent_id": "heteroaromatic_acids",
+      "smiles": "[nH]1cc(c2c(O)cc(Cl)cc21)C(=O)O",
+      "stereochemical_smiles": "[nH]1cc(c2c(O)cc(Cl)cc21)C(=O)O",
+      "substrate_type": "heteroaromatic_carboxylic_acid"
+    },
+    {
+      "long": "6-chlorotryptophan",
+      "short": "6-clTrp",
+      "norine": "X",
+      "id": "6_chlorotryptophan",
+      "parent_id": "unpolar_aromatic_ring",
+      "smiles": "NC(Cc1c2ccc(Cl)cc2[nH]c1)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](Cc1c2ccc(Cl)cc2[nH]c1)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "6-hydroxy-tetrahydro-isoquinoline-3-carboxylic acid",
+      "short": "Htia",
+      "norine": "X",
+      "id": "6_hydroxy_tetrahydro_isoquinoline_3_carboxylic_acid",
+      "parent_id": "complex_aromatic_substrates",
+      "smiles": "N1C(Cc2cc(O)ccc2C1)C(=O)O",
+      "stereochemical_smiles": null,
+      "substrate_type": "complex_aromatic_carboxylic_acid"
+    },
+    {
+      "long": "6-methylsalicylic acid",
+      "short": "meSal",
+      "norine": "X",
+      "id": "6_methylsalicylic_acid",
+      "parent_id": "other_hydroxybenzoates",
+      "smiles": "Oc1cccc(C)c1C(=O)O",
+      "stereochemical_smiles": "Oc1cccc(C)c1C(=O)O",
+      "substrate_type": "aromatic_carboxylic_acid"
+    },
+    {
+      "long": "6S-methyl-pipecolic acid",
+      "short": "mePip",
+      "norine": "X",
+      "id": "6s_methyl_pipecolic_acid",
+      "parent_id": "modified_pipecolates",
+      "smiles": "N1C(C)CCCC1C(=O)O",
+      "stereochemical_smiles": "N1[C@@H](C)CCC[C@H]1C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "7-chlorotryptophan",
+      "short": "7-clTrp",
+      "norine": "X",
+      "id": "7_chlorotryptophan",
+      "parent_id": "unpolar_aromatic_ring",
+      "smiles": "NC(Cc1c2cccc(Cl)c2[nH]c1)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](Cc1c2cccc(Cl)c2[nH]c1)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "An acid hydrazine polyene (intermediate 14)",
+      "short": "HyzPoly",
+      "norine": "X",
+      "id": "an_acid_hydrazine_polyene_intermediate_14",
+      "parent_id": "other_polar_substrates",
+      "smiles": "NN([*])[*]C(=O)O",
+      "stereochemical_smiles": "NN([*])[*]C(=O)O",
+      "substrate_type": "other_polar_substrate"
+    },
+    {
+      "long": "Compound 4 (formed by the decarboxylative condensation of L-Phe and succinyl-CoA)",
+      "short": "PheSuc",
+      "norine": "X",
+      "id": "compound_4_formed_by_the_decarboxylative_condensation_of_l_phe_and_succinyl_coa",
+      "parent_id": "other_aromatic_carboxylic_acids",
+      "smiles": "NC(Cc1ccccc1)C(=O)CCC(=O)O",
+      "stereochemical_smiles": null,
+      "substrate_type": "aromatic_carboxylic_acid"
+    },
+    {
+      "long": "D-2-chloro-3,5-dihydroxy-4-methylphenylglycine",
+      "short": "D-cl-me-dHpg",
+      "norine": "X",
+      "id": "d_2_chloro_3_5_dihydroxy_4_methylphenylglycine",
+      "parent_id": "hydroxyphenylglycines",
+      "smiles": "NC(c1c(Cl)c(O)c(C)c(O)c1)C(=O)O",
+      "stereochemical_smiles": "N[C@H](c1c(Cl)c(O)c(C)c(O)c1)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "D-alanine",
+      "short": "D-Ala",
+      "norine": "D-Ala",
+      "id": "d_alanine",
+      "parent_id": "tiny_alpha_amino_acids",
+      "smiles": "NC(C)C(=O)O",
+      "stereochemical_smiles": "N[C@H](C)C(=O)O",
+      "substrate_type": "alpha_amino_acid"
+    },
+    {
+      "long": "D-aspartic acid branched",
+      "short": "branched-D-Asp",
+      "norine": "D-Asp",
+      "id": "d_aspartic_acid_branched",
+      "parent_id": "modified_aspartate_asparagine_family",
+      "smiles": "NC(CC(=O)O)C(=O)O",
+      "stereochemical_smiles": "N[C@H](CC(=O)O)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "D-glutamic acid branched",
+      "short": "branched-D-Glu",
+      "norine": "D-Glu",
+      "id": "d_glutamic_acid_branched",
+      "parent_id": "modified_glutamate_glutamine_family",
+      "smiles": "NC(CCC(=O)O)C(=O)O",
+      "stereochemical_smiles": "N[C@H](CCC(=O)O)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "D-leucine",
+      "short": "D-Leu",
+      "norine": "D-Leu",
+      "id": "d_leucine",
+      "parent_id": "modified_branched_aliphatic_amino_acids",
+      "smiles": "NC(CC(C)C)C(=O)O",
+      "stereochemical_smiles": "N[C@H](CC(C)C)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "D-lysergic acid",
+      "short": "D-Lya",
+      "norine": "X",
+      "id": "d_lysergic_acid",
+      "parent_id": "complex_aromatic_substrates",
+      "smiles": "N1(C)CC(C=C2C1Cc1c3c2cccc3[nH]c1)C(=O)O",
+      "stereochemical_smiles": "N1(C)C[C@@H](C=C2[C@H]1Cc1c3c2cccc3[nH]c1)C(=O)O",
+      "substrate_type": "complex_aromatic_carboxylic_acid"
+    },
+    {
+      "long": "D-phenylalanine",
+      "short": "D-Phe",
+      "norine": "D-Phe",
+      "id": "d_phenylalanine",
+      "parent_id": "unpolar_aromatic_ring",
+      "smiles": "NC(Cc1ccccc1)C(=O)O",
+      "stereochemical_smiles": "N[C@H](Cc1ccccc1)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "D-phenyllactic acid",
+      "short": "D-pheLac",
+      "norine": "D-Ph-Lac",
+      "id": "d_phenyllactic_acid",
+      "parent_id": "aromatic_hydroxy_acids",
+      "smiles": "OC(Cc1ccccc1)C(=O)O",
+      "stereochemical_smiles": "O[C@@H](Cc1ccccc1)C(=O)O",
+      "substrate_type": "aromatic_hydroxy_acid"
+    },
+    {
+      "long": "D-pipecolic acid",
+      "short": "D-Pip",
+      "norine": "D-Hpr",
+      "id": "d_pipecolic_acid",
+      "parent_id": "modified_pipecolates",
+      "smiles": "N1CCCCC1C(=O)O",
+      "stereochemical_smiles": "N1CCCC[C@@H]1C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "N-(1-methyl)-tryptophan",
+      "short": "1-meTrp",
+      "norine": "1Me-Trp",
+      "id": "n_1_methyl_tryptophan",
+      "parent_id": "unpolar_aromatic_ring",
+      "smiles": "NC(CC1=CN(C)c2c1cccc2)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](Cc1cn(C)c2c1cccc2)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "N-(1-propargyl)-tryptophan",
+      "short": "parTrp",
+      "norine": "X",
+      "id": "n_1_propargyl_tryptophan",
+      "parent_id": "unpolar_aromatic_ring",
+      "smiles": "NC(CC1=CN(CC#C)c2c1cccc2)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](Cc1cn(CC#C)c2c1cccc2)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "N-formylglycine",
+      "short": "foGly",
+      "norine": "X",
+      "id": "n_formylglycine",
+      "parent_id": "tiny_alpha_amino_acids",
+      "smiles": "N(C=O)CC(=O)O",
+      "stereochemical_smiles": "N(C=O)CC(=O)O",
+      "substrate_type": "alpha_amino_acid"
+    },
+    {
+      "long": "N-formylkynurenine",
+      "short": "nfk",
+      "norine": "X",
+      "id": "n_formylkynurenine",
+      "parent_id": "other_aromatic_amino_acids",
+      "smiles": "NC(CC(=O)c1ccccc1NC=O)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](CC(=O)c1ccccc1NC=O)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "N-hydroxyvaline",
+      "short": "N-ohVal",
+      "norine": "X",
+      "id": "n_hydroxyvaline",
+      "parent_id": "modified_branched_aliphatic_amino_acids",
+      "smiles": "N(O)C(C(C)C)C(=O)O",
+      "stereochemical_smiles": "N(O)[C@@H](C(C)C)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "N1-methoxytryptophan",
+      "short": "1-mxTrp",
+      "norine": "OMe-Trp",
+      "id": "n1_methoxytryptophan",
+      "parent_id": "unpolar_aromatic_ring",
+      "smiles": "NC(CC1=CN(OC)c2c1cccc2)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](Cc1cn(OC)c2c1cccc2)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "N5-acetyl-N5-hydroxyornithine",
+      "short": "acohOrn",
+      "norine": "Ac-OH-Orn",
+      "id": "n5_acetyl_n5_hydroxyornithine",
+      "parent_id": "ornithine_and_modified_ornithines",
+      "smiles": "NC(CCCN(O)C(=O)C)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](CCCN(O)C(=O)C)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "N5-cis-anhydromevalonyl-N5-hydroxyornithine",
+      "short": "Z-ahmohOrn",
+      "norine": "X",
+      "id": "n5_cis_anhydromevalonyl_n5_hydroxyornithine",
+      "parent_id": "ornithine_and_modified_ornithines",
+      "smiles": "NC(CCCN(O)C(=O)C=C(C)CCO)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](CCCN(O)C(=O)/C=C(\\C)CCO)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "N5-formyl-N5-hydroxyornithine",
+      "short": "fohOrn",
+      "norine": "Fo-OH-Orn",
+      "id": "n5_formyl_n5_hydroxyornithine",
+      "parent_id": "ornithine_and_modified_ornithines",
+      "smiles": "NC(CCCN(O)C=O)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](CCCN(O)C=O)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "N5-hydroxyornithine",
+      "short": "ohOrn",
+      "norine": "OH-Orn",
+      "id": "horn",
+      "parent_id": "ornithine_and_modified_ornithines",
+      "smiles": "NC(CCCNO)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](CCCNO)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "N5-hydroxy-N5-acylornithine",
+      "short": "acyl-ohOrn",
+      "norine": "X",
+      "id": "hxorn",
+      "parent_id": "ornithine_and_modified_ornithines",
+      "smiles": "NC(CCCN(O)C(=O)[*])C(=O)O",
+      "stereochemical_smiles": "N[C@@H](CCCN(O)C(=O)*)C(=O)O",
+      "substrate_type": "modified_amino_acid_family"
+    },
+    {
+      "long": "N5-trans-anhydromevalonyl-N5-hydroxyornithine",
+      "short": "E-ahmohOrn",
+      "norine": "X",
+      "id": "n5_trans_anhydromevalonyl_n5_hydroxyornithine",
+      "parent_id": "ornithine_and_modified_ornithines",
+      "smiles": "NC(CCCN(O)C(=O)C=C(C)CCO)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](CCCN(O)C(=O)/C=C(/C)CCO)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "N6-hydroxylysine",
+      "short": "N6-ohLys",
+      "norine": "X",
+      "id": "n6_hydroxylysine",
+      "parent_id": "modified_lysines",
+      "smiles": "NC(CCCCNO)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](CCCCNO)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "NH2",
+      "short": "NH2",
+      "norine": "X",
+      "id": "nh2",
+      "parent_id": "other_polar_substrates",
+      "smiles": "N",
+      "stereochemical_smiles": "N",
+      "substrate_type": "other_polar_substrate"
+    },
+    {
+      "long": "O-methylthreonine",
+      "short": "omeThr",
+      "norine": "X",
+      "id": "o_methylthreonine",
+      "parent_id": "modified_threonines",
+      "smiles": "NC(C(C)OC)C(=O)O",
+      "stereochemical_smiles": "N[C@@H]([C@@H](C)OC)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "O-methyltyrosine",
+      "short": "omeTyr",
+      "norine": "X",
+      "id": "o_methyltyrosine",
+      "parent_id": "hydroxyaromatic_side_chain",
+      "smiles": "NC(Cc1ccc(OC)cc1)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](Cc1ccc(OC)cc1)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "R-3-hydroxy-3-methylproline",
+      "short": "3R-oh-3-mePro",
+      "norine": "X",
+      "id": "r_3_hydroxy_3_methylproline",
+      "parent_id": "modified_prolines",
+      "smiles": "N1CCC(C)(O)C1C(=O)O",
+      "stereochemical_smiles": "N1CC[C@@](C)(O)[C@H]1C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "R-aza-beta-tyrosine",
+      "short": "aza-bTyr",
+      "norine": "X",
+      "id": "r_aza_beta_tyrosine",
+      "parent_id": "other_aromatic_amino_acids",
+      "smiles": "NNC(Cc1ccc(O)cc1)C(=O)O",
+      "stereochemical_smiles": "NN[C@H](Cc1ccc(O)cc1)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "R-beta-hydroxyphenylalanine",
+      "short": "R-bohPhe",
+      "norine": "X",
+      "id": "r_beta_hydroxyphenylalanine",
+      "parent_id": "unpolar_aromatic_ring",
+      "smiles": "NC(C(O)c1ccccc1)C(=O)O",
+      "stereochemical_smiles": "N[C@@H]([C@H](O)c1ccccc1)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "R-beta-hydroxytyrosine",
+      "short": "R-ohTyr",
+      "norine": "bOH-Tyr",
+      "id": "r_beta_hydroxytyrosine",
+      "parent_id": "hydroxyaromatic_side_chain",
+      "smiles": "NC(C(O)c1ccc(O)cc1)C(=O)O",
+      "stereochemical_smiles": "N[C@@H]([C@H](O)c1ccc(O)cc1)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "R-beta-methylphenylalanine",
+      "short": "mePhe",
+      "norine": "bMe-Phe",
+      "id": "r_beta_methylphenylalanine",
+      "parent_id": "unpolar_aromatic_ring",
+      "smiles": "NC(C(C)c1ccccc1)C(=O)O",
+      "stereochemical_smiles": "N[C@@H]([C@H](C)c1ccccc1)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "R-beta-methyltryptophan",
+      "short": "R-bmeTrp",
+      "norine": "X",
+      "id": "r_beta_methyltryptophan",
+      "parent_id": "unpolar_aromatic_ring",
+      "smiles": "NC(C(C)c1c2ccccc2[nH]c1)C(=O)O",
+      "stereochemical_smiles": "N[C@@H]([C@H](C)c1c2ccccc2[nH]c1)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "R-beta-phenylalanine",
+      "short": "R-bPhe",
+      "norine": "bPhe",
+      "id": "r_beta_phenylalanine",
+      "parent_id": "unpolar_aromatic_ring",
+      "smiles": "NC(c1ccccc1)CC(=O)O",
+      "stereochemical_smiles": "N[C@@H](c1ccccc1)CC(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "R-beta-tyrosine",
+      "short": "R-bTyr",
+      "norine": "bTyr",
+      "id": "r_beta_tyrosine",
+      "parent_id": "hydroxyaromatic_side_chain",
+      "smiles": "NC(c1ccc(O)cc1)CC(=O)O",
+      "stereochemical_smiles": "N[C@@H](c1ccc(O)cc1)CC(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "S-adenosylmethionine",
+      "short": "Sam",
+      "norine": "X",
+      "id": "s_adenosylmethionine",
+      "parent_id": "other_polar_substrates",
+      "smiles": "NC(CC[S+](C)CC1OC(C(C1O)O)n1cnc2c1ncnc2N)C(=O)[O-]",
+      "stereochemical_smiles": "N[C@@H](CC[S@@+](C)C[C@H]1O[C@@H](n2cnc3c2ncnc3N)[C@H](O)[C@@H]1O)C(=O)[O-]",
+      "substrate_type": "other_polar_substrate"
+    },
+    {
+      "long": "S-beta-hydroxycyclohex-2S-enylalanine",
+      "short": "Hch",
+      "norine": "X",
+      "id": "s_beta_hydroxycyclohex_2s_enylalanine",
+      "parent_id": "other_cyclic_aliphatic_amino_acids",
+      "smiles": "NC(C(O)C1C=CCCC1)C(=O)O",
+      "stereochemical_smiles": "N[C@@H]([C@@H](O)C1C=CCCC1)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "S-beta-hydroxyenduracididine",
+      "short": "ohEnd",
+      "norine": "X",
+      "id": "s_beta_hydroxyenduracididine",
+      "parent_id": "modified_arginine_and_guanidino",
+      "smiles": "NC(C(O)C1CN=C(N)N1)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](C(O)C1CN=C(N)N1)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "S-beta-hydroxyphenylalanine",
+      "short": "S-bohPhe",
+      "norine": "X",
+      "id": "s_beta_hydroxyphenylalanine",
+      "parent_id": "unpolar_aromatic_ring",
+      "smiles": "NC(C(O)c1ccccc1)C(=O)O",
+      "stereochemical_smiles": "N[C@@H]([C@@H](O)c1ccccc1)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "S-beta-tyrosine",
+      "short": "S-bTyr",
+      "norine": "bTyr",
+      "id": "s_beta_tyrosine",
+      "parent_id": "hydroxyaromatic_side_chain",
+      "smiles": "NC(c1ccc(O)cc1)CC(=O)O",
+      "stereochemical_smiles": "N[C@H](c1ccc(O)cc1)CC(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "Z-dehydroaminobutyric acid",
+      "short": "dhAbu",
+      "norine": "dhAbu",
+      "id": "z_dehydroaminobutyric_acid",
+      "parent_id": "aminobutyric_acids",
+      "smiles": "NC(=CC)C(=O)O",
+      "stereochemical_smiles": "N/C(=C\\C)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "Z-dehydrotyrosine",
+      "short": "dhTyr",
+      "norine": "X",
+      "id": "z_dehydrotyrosine",
+      "parent_id": "hydroxyaromatic_side_chain",
+      "smiles": "NC(=Cc1ccc(O)cc1)C(=O)O",
+      "stereochemical_smiles": "N/C(=C\\c1ccc(O)cc1)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "acetic acid",
+      "short": "Ac",
+      "norine": "X",
+      "id": "acetic_acid",
+      "parent_id": "simple_aliphatic_carboxylic_acids",
+      "smiles": "CC(=O)O",
+      "stereochemical_smiles": "CC(=O)O",
+      "substrate_type": "aliphatic_carboxylic_acid"
+    },
+    {
+      "long": "acetyl-CoA",
+      "short": "AcCoA",
+      "norine": "X",
+      "id": "accoa",
+      "parent_id": "polyketide_starter_and_terminator_fragments",
+      "smiles": "CC(=O)O",
+      "stereochemical_smiles": "CC(=O)O",
+      "substrate_type": "polyketide_fragment"
+    },
+    {
+      "long": "alanine",
+      "short": "Ala",
+      "norine": "Ala",
+      "id": "ala",
+      "parent_id": "tiny_alpha_amino_acids",
+      "smiles": "NC(C)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](C)C(=O)O",
+      "substrate_type": "alpha_amino_acid"
+    },
+    {
+      "long": "alaninol",
+      "short": "Aol",
+      "norine": "X",
+      "id": "alaninol",
+      "parent_id": "amino_alcohols",
+      "smiles": "NC(C)CO",
+      "stereochemical_smiles": null,
+      "substrate_type": "amino_alcohol"
+    },
+    {
+      "long": "allo-isoleucine",
+      "short": "aIle",
+      "norine": "aIle",
+      "id": "allo_isoleucine",
+      "parent_id": "modified_branched_aliphatic_amino_acids",
+      "smiles": "NC(C(C)CC)C(=O)O",
+      "stereochemical_smiles": "N[C@@H]([C@H](C)CC)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "allo-threonine",
+      "short": "aThr",
+      "norine": "aThr",
+      "id": "allo_threonine",
+      "parent_id": "modified_threonines",
+      "smiles": "NC(C(O)C)C(=O)O",
+      "stereochemical_smiles": "N[C@@H]([C@@H](O)C)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "anthranilic acid",
+      "short": "Ant",
+      "norine": "X",
+      "id": "anthranilate",
+      "parent_id": "aminobenzoates",
+      "smiles": "Nc1ccccc1C(=O)O",
+      "stereochemical_smiles": "Nc1ccccc1C(=O)O",
+      "substrate_type": "aromatic_carboxylic_acid"
+    },
+    {
+      "long": "arginine",
+      "short": "Arg",
+      "norine": "Arg",
+      "id": "arg",
+      "parent_id": "arginine_specific",
+      "smiles": "NC(CCCNC(N)=N)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](CCCNC(N)=N)C(=O)O",
+      "substrate_type": "alpha_amino_acid"
+    },
+    {
+      "long": "asparagine",
+      "short": "Asn",
+      "norine": "Asn",
+      "id": "asn",
+      "parent_id": "asp_asn",
+      "smiles": "NC(CC(=O)N)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](CC(=O)N)C(=O)O",
+      "substrate_type": "alpha_amino_acid"
+    },
+    {
+      "long": "aspartic acid",
+      "short": "Asp",
+      "norine": "Asp",
+      "id": "asp",
+      "parent_id": "asp_asn",
+      "smiles": "NC(CC(=O)O)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](CC(=O)O)C(=O)O",
+      "substrate_type": "alpha_amino_acid"
+    },
+    {
+      "long": "aspartic acid branched",
+      "short": "branchedAsp",
+      "norine": "Asp",
+      "id": "asp-gamma",
+      "parent_id": "side_chain_activated_aspartate",
+      "smiles": "NC(CC(=O)O)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](CC(=O)O)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "azetidine-2-carboxylic acid",
+      "short": "Aze",
+      "norine": "X",
+      "id": "azetidine_2_carboxylic_acid",
+      "parent_id": "other_cyclic_aliphatic_amino_acids",
+      "smiles": "N1CCC1C(=O)O",
+      "stereochemical_smiles": "N1CC[C@H]1C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "benzoic acid",
+      "short": "Bza",
+      "norine": "Bz",
+      "id": "benzoic_acid",
+      "parent_id": "substituted_benzoic_acids",
+      "smiles": "c1ccc(cc1)C(=O)O",
+      "stereochemical_smiles": "c1ccc(cc1)C(=O)O",
+      "substrate_type": "aromatic_carboxylic_acid"
+    },
+    {
+      "long": "benzoxazolinate",
+      "short": "Boz",
+      "norine": "X",
+      "id": "benzoxazolinate",
+      "parent_id": "heteroaromatic_acids",
+      "smiles": "N1c2c(OC(=C)C1=O)cc(OC)cc2C(=O)O",
+      "stereochemical_smiles": "N1c2c(OC(=C)C1=O)cc(OC)cc2C(=O)O",
+      "substrate_type": "heteroaromatic_carboxylic_acid"
+    },
+    {
+      "long": "beta-alanine",
+      "short": "bAla",
+      "norine": "bAla",
+      "id": "beta-ala",
+      "parent_id": "beta_alanine_specific",
+      "smiles": "NCCC(=O)O",
+      "stereochemical_smiles": "NCCC(=O)O",
+      "substrate_type": "beta_amino_acid"
+    },
+    {
+      "long": "beta-hydroxy-3-hydroxy-O-methyl-5-methyltyrosine",
+      "short": "dohmTyr",
+      "norine": "X",
+      "id": "beta_hydroxy_3_hydroxy_o_methyl_5_methyltyrosine",
+      "parent_id": "hydroxyaromatic_side_chain",
+      "smiles": "NC(C(O)c1cc(O)c(OC)c(C)c1)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](C(O)c1cc(O)c(OC)c(C)c1)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "beta-hydroxyarginine",
+      "short": "ohArg",
+      "norine": "X",
+      "id": "beta_hydroxyarginine",
+      "parent_id": "modified_arginine_and_guanidino",
+      "smiles": "NC(C(CCN=C(N)N)O)C(=O)O",
+      "stereochemical_smiles": "N[C@@H]([C@H](CCN=C(N)N)O)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "beta-hydroxyphenylalanine",
+      "short": "bohPhe",
+      "norine": "Ph-Ser",
+      "id": "beta_hydroxyphenylalanine",
+      "parent_id": "unpolar_aromatic_ring",
+      "smiles": "NC(C(O)c1ccccc1)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](C(O)c1ccccc1)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "beta-hydroxytyrosine",
+      "short": "ohTyr",
+      "norine": "bOH-Tyr",
+      "id": "beta_hydroxytyrosine",
+      "parent_id": "hydroxyaromatic_side_chain",
+      "smiles": "NC(C(O)c1ccc(O)cc1)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](C(O)c1ccc(O)cc1)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "beta-lysine",
+      "short": "bLys",
+      "norine": "bLys",
+      "id": "beta-lys",
+      "parent_id": "lysines",
+      "smiles": "NCCCC(N)CC(=O)O",
+      "stereochemical_smiles": null,
+      "substrate_type": "beta_amino_acid"
+    },
+    {
+      "long": "betaine",
+      "short": "Bet",
+      "norine": "X",
+      "id": "betaine",
+      "parent_id": "other_polar_substrates",
+      "smiles": "[N+](C)(C)(C)CC(=O)[O-]",
+      "stereochemical_smiles": "[N+](C)(C)(C)CC(=O)[O-]",
+      "substrate_type": "other_polar_substrate"
+    },
+    {
+      "long": "butyric acid",
+      "short": "But",
+      "norine": "C4:0",
+      "id": "butyric_acid",
+      "parent_id": "simple_aliphatic_carboxylic_acids",
+      "smiles": "CCCC(=O)O",
+      "stereochemical_smiles": "CCCC(=O)O",
+      "substrate_type": "aliphatic_carboxylic_acid"
+    },
+    {
+      "long": "capreomycidine",
+      "short": "Cap",
+      "norine": "Cap",
+      "id": "capreomycidine",
+      "parent_id": "modified_arginine_and_guanidino",
+      "smiles": "NC(C1CCN=C(N1)N)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](C1CCN=C(N)N1)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "cinnamic acid",
+      "short": "Cin",
+      "norine": "X",
+      "id": "cinnamic_acid",
+      "parent_id": "other_aromatic_carboxylic_acids",
+      "smiles": "c1ccc(cc1)C=CC(=O)O",
+      "stereochemical_smiles": "c1ccc(cc1)/C=C/C(=O)O",
+      "substrate_type": "aromatic_carboxylic_acid"
+    },
+    {
+      "long": "citrulline",
+      "short": "Cit",
+      "norine": "Cit",
+      "id": "citrulline",
+      "parent_id": "modified_arginine_and_guanidino",
+      "smiles": "NC(CCCNC(=O)N)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](CCCNC(=O)N)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "coumaric acid",
+      "short": "Cou",
+      "norine": "X",
+      "id": "coumaric_acid",
+      "parent_id": "other_aromatic_carboxylic_acids",
+      "smiles": "Oc1ccc(cc1)C=CC(=O)O",
+      "stereochemical_smiles": "Oc1ccc(cc1)/C=C/C(=O)O",
+      "substrate_type": "aromatic_carboxylic_acid"
+    },
+    {
+      "long": "cysteic acid",
+      "short": "Cya",
+      "norine": "CysA",
+      "id": "cysteic_acid",
+      "parent_id": "oxidized_and_charged_sulfur_substrates",
+      "smiles": "NC(CS(=O)(=O)O)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](CS(=O)(=O)O)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "cysteine",
+      "short": "Cys",
+      "norine": "Cys",
+      "id": "cys",
+      "parent_id": "cysteine_specific",
+      "smiles": "NC(CS)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](CS)C(=O)O",
+      "substrate_type": "alpha_amino_acid"
+    },
+    {
+      "long": "cysteine branched",
+      "short": "branchedCys",
+      "norine": "Cys",
+      "id": "branchedcys",
+      "parent_id": "cysteine_specific",
+      "smiles": "NC(CS)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](CS)C(=O)O",
+      "substrate_type": "alpha_amino_acid"
+    },
+    {
+      "long": "dehydroarginine",
+      "short": "dhArg",
+      "norine": "X",
+      "id": "dehydroarginine",
+      "parent_id": "modified_arginine_and_guanidino",
+      "smiles": "NC(=CCCN=C(N)N)C(=O)O",
+      "stereochemical_smiles": null,
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "dehydrophenylalanine",
+      "short": "dhPhe",
+      "norine": "X",
+      "id": "dehydrophenylalanine",
+      "parent_id": "unpolar_aromatic_ring",
+      "smiles": "NC(=Cc1ccccc1)C(=O)O",
+      "stereochemical_smiles": null,
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "dehydrotryptophan",
+      "short": "dhTrp",
+      "norine": "dh-Trp",
+      "id": "dehydrotryptophan",
+      "parent_id": "unpolar_aromatic_ring",
+      "smiles": "NC(=Cc1c[nH]c2ccccc12)C(=O)O",
+      "stereochemical_smiles": null,
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "dehydrovaline",
+      "short": "dhVal",
+      "norine": "X",
+      "id": "dehydrovaline",
+      "parent_id": "modified_branched_aliphatic_amino_acids",
+      "smiles": "NC(=C(C)C)C(=O)O",
+      "stereochemical_smiles": "NC(=C(C)C)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "dimethylsulfoniopropionic acid",
+      "short": "dmesulf-Pra",
+      "norine": "X",
+      "id": "dimethylsulfoniopropionic_acid",
+      "parent_id": "oxidized_and_charged_sulfur_substrates",
+      "smiles": "[S+](C)(C)CCC(=O)[O-]",
+      "stereochemical_smiles": "[S+](C)(C)CCC(=O)[O-]",
+      "substrate_type": "organosulfur_carboxylic_acid"
+    },
+    {
+      "long": "double-bonded ethylmalonyl-CoA",
+      "short": "ccemal",
+      "norine": "ccemal",
+      "id": "ccemal",
+      "parent_id": "unsaturated_polyketide_units",
+      "smiles": "C(CC)=C",
+      "stereochemical_smiles": null,
+      "substrate_type": "polyketide_fragment"
+    },
+    {
+      "long": "double-bonded malonyl-CoA",
+      "short": "ccmal",
+      "norine": "ccmal",
+      "id": "ccmal",
+      "parent_id": "unsaturated_polyketide_units",
+      "smiles": "C=C",
+      "stereochemical_smiles": null,
+      "substrate_type": "polyketide_fragment"
+    },
+    {
+      "long": "double-bonded methoxymalonyl-CoA",
+      "short": "ccmxmal",
+      "norine": "ccmxmal",
+      "id": "ccmxmal",
+      "parent_id": "unsaturated_polyketide_units",
+      "smiles": "C(OC)=C",
+      "stereochemical_smiles": null,
+      "substrate_type": "polyketide_fragment"
+    },
+    {
+      "long": "double-bonded methylmalonyl-CoA",
+      "short": "me-ccmal",
+      "norine": "me-ccmal",
+      "id": "me-ccmal",
+      "parent_id": "unsaturated_polyketide_units",
+      "smiles": "C(C)=C",
+      "stereochemical_smiles": null,
+      "substrate_type": "polyketide_fragment"
+    },
+    {
+      "long": "enduracididine",
+      "short": "End",
+      "norine": "End",
+      "id": "enduracididine",
+      "parent_id": "modified_arginine_and_guanidino",
+      "smiles": "NC(CC1CN=C(N)N1)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](C[C@@H]1CN=C(N)N1)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "ethylmalonyl-CoA",
+      "short": "emal",
+      "norine": "emal",
+      "id": "emal",
+      "parent_id": "carbonyl_polyketide_units",
+      "smiles": "C(CC)C(=O)",
+      "stereochemical_smiles": null,
+      "substrate_type": "polyketide_fragment"
+    },
+    {
+      "long": "fatty acid",
+      "short": "fa",
+      "norine": "X",
+      "id": "fa",
+      "parent_id": "fatty_acid_substrate",
+      "smiles": "C[*]C(=O)O",
+      "stereochemical_smiles": "C[*]C(=O)O",
+      "substrate_type": "fatty_acid_family"
+    },
+    {
+      "long": "glutamic acid",
+      "short": "Glu",
+      "norine": "Glu",
+      "id": "glu",
+      "parent_id": "glu_gln",
+      "smiles": "NC(CCC(=O)O)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](CCC(=O)O)C(=O)O",
+      "substrate_type": "alpha_amino_acid"
+    },
+    {
+      "long": "glutamine",
+      "short": "Gln",
+      "norine": "Gln",
+      "id": "gln",
+      "parent_id": "glu_gln",
+      "smiles": "NC(CCC(=O)N)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](CCC(=O)N)C(=O)O",
+      "substrate_type": "alpha_amino_acid"
+    },
+    {
+      "long": "glycine",
+      "short": "Gly",
+      "norine": "Gly",
+      "id": "gly",
+      "parent_id": "tiny_alpha_amino_acids",
+      "smiles": "NCC(=O)O",
+      "stereochemical_smiles": "NCC(=O)O",
+      "substrate_type": "alpha_amino_acid"
+    },
+    {
+      "long": "glycolic acid",
+      "short": "Glyca",
+      "norine": "X",
+      "id": "glycolic_acid",
+      "parent_id": "hydroxy_aliphatic_acids",
+      "smiles": "OCC(=O)O",
+      "stereochemical_smiles": "OCC(=O)O",
+      "substrate_type": "hydroxy_carboxylic_acid"
+    },
+    {
+      "long": "graminine",
+      "short": "Gram",
+      "norine": "X",
+      "id": "gra",
+      "parent_id": "short_chain_diamino_and_derivatives",
+      "smiles": "NC(CCC[N+](=NO)[O-])C(=O)O",
+      "stereochemical_smiles": "N[C@@H](CCC[N+](=NO)[O-])C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "guanidinoacetic acid",
+      "short": "Gua",
+      "norine": "X",
+      "id": "guanidinoacetic_acid",
+      "parent_id": "modified_arginine_and_guanidino",
+      "smiles": "N(=C(N)N)CC(=O)O",
+      "stereochemical_smiles": "N(=C(N)N)CC(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "histidine",
+      "short": "His",
+      "norine": "His",
+      "id": "his",
+      "parent_id": "histidine_specific",
+      "smiles": "NC(CC1=CNC=N1)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](Cc1c[nH]cn1)C(=O)O",
+      "substrate_type": "alpha_amino_acid"
+    },
+    {
+      "long": "homophenylalanine",
+      "short": "Hph",
+      "norine": "Hph",
+      "id": "homophenylalanine",
+      "parent_id": "unpolar_aromatic_ring",
+      "smiles": "NC(CCc1ccccc1)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](CCc1ccccc1)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "homoserine",
+      "short": "Hse",
+      "norine": "Hse",
+      "id": "hse",
+      "parent_id": "homoserine_specific",
+      "smiles": "NC(CCO)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](CCO)C(=O)O",
+      "substrate_type": "alpha_amino_acid"
+    },
+    {
+      "long": "homotyrosine",
+      "short": "Hty",
+      "norine": "Hty",
+      "id": "hty",
+      "parent_id": "hydroxyaromatic_side_chain",
+      "smiles": "NC(CCc1ccc(O)cc1)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](CCc1ccc(O)cc1)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "hydroxy-ethylmalonyl-CoA",
+      "short": "ohemal",
+      "norine": "ohemal",
+      "id": "ohemal",
+      "parent_id": "hydroxyl_polyketide_units",
+      "smiles": "C(CC)C(O)O",
+      "stereochemical_smiles": null,
+      "substrate_type": "polyketide_fragment"
+    },
+    {
+      "long": "hydroxy-malonyl-CoA",
+      "short": "ohmal",
+      "norine": "ohmal",
+      "id": "ohmal",
+      "parent_id": "hydroxyl_polyketide_units",
+      "smiles": "CC(O)O",
+      "stereochemical_smiles": null,
+      "substrate_type": "polyketide_fragment"
+    },
+    {
+      "long": "hydroxy-methoxymalonyl-CoA",
+      "short": "ohmxmal",
+      "norine": "ohmxmal",
+      "id": "ohmxmal",
+      "parent_id": "hydroxyl_polyketide_units",
+      "smiles": "C(OC)C(O)O",
+      "stereochemical_smiles": null,
+      "substrate_type": "polyketide_fragment"
+    },
+    {
+      "long": "hydroxy-methylmalonyl-CoA",
+      "short": "me-ohmal",
+      "norine": "me-ohmal",
+      "id": "me-ohmal",
+      "parent_id": "hydroxyl_polyketide_units",
+      "smiles": "C(C)C(O)O",
+      "stereochemical_smiles": null,
+      "substrate_type": "polyketide_fragment"
+    },
+    {
+      "long": "hydroxyproline",
+      "short": "ohPro",
+      "norine": "X",
+      "id": "hydroxyproline",
+      "parent_id": "modified_prolines",
+      "smiles": "N1CC(O)CC1C(=O)O",
+      "stereochemical_smiles": "N1C[C@H](O)C[C@H]1C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "isoleucine",
+      "short": "Ile",
+      "norine": "Ile",
+      "id": "ile",
+      "parent_id": "branched_hydrophobic",
+      "smiles": "NC(C(C)CC)C(=O)O",
+      "stereochemical_smiles": "N[C@@H]([C@@H](C)CC)C(=O)O",
+      "substrate_type": "alpha_amino_acid"
+    },
+    {
+      "long": "isovaline",
+      "short": "Iva",
+      "norine": "Ival",
+      "id": "isovaline",
+      "parent_id": "branched_hydrophobic",
+      "smiles": "NC(CC)(C)C(=O)O",
+      "stereochemical_smiles": "N[C@](CC)(C)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "kynurenine",
+      "short": "Kyn",
+      "norine": "Kyn",
+      "id": "kynurenine",
+      "parent_id": "other_aromatic_amino_acids",
+      "smiles": "NC(CC(=O)c1ccccc1N)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](CC(=O)c1ccccc1N)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "lactic acid",
+      "short": "Lac",
+      "norine": "Lac",
+      "id": "lactic_acid",
+      "parent_id": "hydroxy_aliphatic_acids",
+      "smiles": "OC(C)C(=O)O",
+      "stereochemical_smiles": null,
+      "substrate_type": "hydroxy_carboxylic_acid"
+    },
+    {
+      "long": "leucine",
+      "short": "Leu",
+      "norine": "Leu",
+      "id": "leu",
+      "parent_id": "branched_hydrophobic",
+      "smiles": "NC(CC(C)C)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](CC(C)C)C(=O)O",
+      "substrate_type": "alpha_amino_acid"
+    },
+    {
+      "long": "linoleic acid",
+      "short": "Lin",
+      "norine": "X",
+      "id": "linoleic_acid",
+      "parent_id": "fatty_acid_substrate",
+      "smiles": "CCCCCC=CCC=CCCCCCCCC(=O)O",
+      "stereochemical_smiles": "CCCCC/C=C\\C/C=C\\CCCCCCCC(=O)O",
+      "substrate_type": "fatty_acid"
+    },
+    {
+      "long": "lysine",
+      "short": "Lys",
+      "norine": "Lys",
+      "id": "lys",
+      "parent_id": "lysines",
+      "smiles": "NC(CCCCN)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](CCCCN)C(=O)O",
+      "substrate_type": "alpha_amino_acid"
+    },
+    {
+      "long": "malic acid",
+      "short": "MalAc",
+      "norine": "X",
+      "id": "malic_acid",
+      "parent_id": "hydroxy_aliphatic_acids",
+      "smiles": "OC(C(=O)O)CC(=O)O",
+      "stereochemical_smiles": null,
+      "substrate_type": "hydroxy_carboxylic_acid"
+    },
+    {
+      "long": "malonyl-CoA",
+      "short": "mal",
+      "norine": "mal",
+      "id": "mal",
+      "parent_id": "carbonyl_polyketide_units",
+      "smiles": "CC(=O)O",
+      "stereochemical_smiles": "CC(=O)O",
+      "substrate_type": "polyketide_fragment"
+    },
+    {
+      "long": "meta-tyrosine",
+      "short": "mTyr",
+      "norine": "X",
+      "id": "meta_tyrosine",
+      "parent_id": "hydroxyaromatic_side_chain",
+      "smiles": "NC(Cc1cc(O)ccc1)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](Cc1cc(O)ccc1)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "methionine",
+      "short": "Met",
+      "norine": "Met",
+      "id": "methionine",
+      "parent_id": "sulfur_containing_amino_acids",
+      "smiles": "NC(CCSC)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](CCSC)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "methoxymalonyl-CoA",
+      "short": "mxmal",
+      "norine": "mxmal",
+      "id": "mxmal",
+      "parent_id": "carbonyl_polyketide_units",
+      "smiles": "C(OC)C(=O)O",
+      "stereochemical_smiles": null,
+      "substrate_type": "polyketide_fragment"
+    },
+    {
+      "long": "methylmalonyl-CoA",
+      "short": "me-mal",
+      "norine": "me-mal",
+      "id": "me-mal",
+      "parent_id": "carbonyl_polyketide_units",
+      "smiles": "C(C)C(=O)O",
+      "stereochemical_smiles": null,
+      "substrate_type": "polyketide_fragment"
+    },
+    {
+      "long": "nicotinic acid",
+      "short": "Nic",
+      "norine": "X",
+      "id": "nicotinic_acid",
+      "parent_id": "heteroaromatic_acids",
+      "smiles": "n1cc(ccc1)C(=O)O",
+      "stereochemical_smiles": "n1cc(ccc1)C(=O)O",
+      "substrate_type": "heteroaromatic_carboxylic_acid"
+    },
+    {
+      "long": "norcoronamic acid",
+      "short": "meAcc",
+      "norine": "norCMA",
+      "id": "norcoronamic_acid",
+      "parent_id": "cyclopropyl_amino_acids",
+      "smiles": "NC1(CC1C)C(=O)O",
+      "stereochemical_smiles": "N[C@]1(CC1C)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "ornithine",
+      "short": "Orn",
+      "norine": "Orn",
+      "id": "orn",
+      "parent_id": "ornithine_and_modified_ornithines",
+      "smiles": "NC(CCCN)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](CCCN)C(=O)O",
+      "substrate_type": "alpha_amino_acid"
+    },
+    {
+      "long": "p-hydroxymandelate",
+      "short": "ohMan",
+      "norine": "X",
+      "id": "p_hydroxymandelate",
+      "parent_id": "aromatic_hydroxy_acids",
+      "smiles": "OC(c1ccc(O)cc1)C(=O)O",
+      "stereochemical_smiles": null,
+      "substrate_type": "aromatic_hydroxy_acid"
+    },
+    {
+      "long": "para-aminobenzoic acid",
+      "short": "nBza",
+      "norine": "pNH2-Bz",
+      "id": "paba",
+      "parent_id": "aminobenzoates",
+      "smiles": "Nc1ccc(cc1)C(=O)O",
+      "stereochemical_smiles": "Nc1ccc(cc1)C(=O)O",
+      "substrate_type": "aromatic_carboxylic_acid"
+    },
+    {
+      "long": "pentanoic acid",
+      "short": "Pen",
+      "norine": "X",
+      "id": "pentanoic_acid",
+      "parent_id": "simple_aliphatic_carboxylic_acids",
+      "smiles": "CCCCC(=O)O",
+      "stereochemical_smiles": "CCCCC(=O)O",
+      "substrate_type": "aliphatic_carboxylic_acid"
+    },
+    {
+      "long": "phenazine-1,6-dicarboxylic acid",
+      "short": "dcPhz",
+      "norine": "X",
+      "id": "phenazine_1_6_dicarboxylic_acid",
+      "parent_id": "heteroaromatic_acids",
+      "smiles": "n1c2c(C(=O)O)cccc2nc2c1cccc2C(=O)O",
+      "stereochemical_smiles": "n1c2c(C(=O)O)cccc2nc2c1cccc2C(=O)O",
+      "substrate_type": "heteroaromatic_carboxylic_acid"
+    },
+    {
+      "long": "phenylalanine",
+      "short": "Phe",
+      "norine": "Phe",
+      "id": "phe",
+      "parent_id": "unpolar_aromatic_ring",
+      "smiles": "NC(Cc1ccccc1)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](Cc1ccccc1)C(=O)O",
+      "substrate_type": "alpha_amino_acid"
+    },
+    {
+      "long": "phenylglycine",
+      "short": "Pgl",
+      "norine": "Ph-Gly",
+      "id": "phenylglycine",
+      "parent_id": "other_aromatic_amino_acids",
+      "smiles": "NC(c1ccccc1)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](c1ccccc1)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "phenylglyoxylic acid",
+      "short": "Pgox",
+      "norine": "X",
+      "id": "ketophe",
+      "parent_id": "arylpyruvic_and_arylglyoxylic_acids",
+      "smiles": "O=C(c1ccccc1)C(=O)O",
+      "stereochemical_smiles": "O=C(c1ccccc1)C(=O)O",
+      "substrate_type": "alpha_keto_acid"
+    },
+    {
+      "long": "phenylpyruvic acid",
+      "short": "Ppa",
+      "norine": "X",
+      "id": "phenylpyruvic_acid",
+      "parent_id": "arylpyruvic_and_arylglyoxylic_acids",
+      "smiles": "O=C(Cc1ccccc1)C(=O)O",
+      "stereochemical_smiles": "O=C(Cc1ccccc1)C(=O)O",
+      "substrate_type": "alpha_keto_acid"
+    },
+    {
+      "long": "pipecolic acid",
+      "short": "Pip",
+      "norine": "Hpr",
+      "id": "pipecolate",
+      "parent_id": "six_membered_cyclic_amino_acids",
+      "smiles": "N1C(CCCC1)C(=O)O",
+      "stereochemical_smiles": "N1CCCC[C@H]1C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "piperazic acid",
+      "short": "Piz",
+      "norine": "X",
+      "id": "piz",
+      "parent_id": "six_membered_cyclic_amino_acids",
+      "smiles": "N1NCCCC1C(=O)O",
+      "stereochemical_smiles": "N1NCCC[C@H]1C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "polyketide end 1",
+      "short": "pks-end1",
+      "norine": "pks-end1",
+      "id": "pks-end1",
+      "parent_id": "polyketide_starter_and_terminator_fragments",
+      "smiles": "C(C)C(=O)O",
+      "stereochemical_smiles": null,
+      "substrate_type": "polyketide_fragment"
+    },
+    {
+      "long": "polyketide end 2",
+      "short": "pks-end2",
+      "norine": "pks-end2",
+      "id": "pks-end2",
+      "parent_id": "polyketide_starter_and_terminator_fragments",
+      "smiles": "C(=O)O",
+      "stereochemical_smiles": "C(=O)O",
+      "substrate_type": "polyketide_fragment"
+    },
+    {
+      "long": "polyketide starter 1",
+      "short": "pks-start1",
+      "norine": "pks-start1",
+      "id": "pks-start1",
+      "parent_id": "polyketide_starter_and_terminator_fragments",
+      "smiles": "C",
+      "stereochemical_smiles": "C",
+      "substrate_type": "polyketide_fragment"
+    },
+    {
+      "long": "proline",
+      "short": "Pro",
+      "norine": "Pro",
+      "id": "pro",
+      "parent_id": "proline_specific",
+      "smiles": "N1C(CCC1)C(=O)O",
+      "stereochemical_smiles": "N1CCC[C@H]1C(=O)O",
+      "substrate_type": "alpha_amino_acid"
+    },
+    {
+      "long": "pyrrole-2-carboxylic acid",
+      "short": "Pca",
+      "norine": "X",
+      "id": "pyrrole_2_carboxylic_acid",
+      "parent_id": "heteroaromatic_acids",
+      "smiles": "[nH]1cccc1C(=O)O",
+      "stereochemical_smiles": "[nH]1cccc1C(=O)O",
+      "substrate_type": "heteroaromatic_carboxylic_acid"
+    },
+    {
+      "long": "pyruvic acid",
+      "short": "Pyv",
+      "norine": "X",
+      "id": "pyruvate",
+      "parent_id": "aliphatic_alpha_keto_acids",
+      "smiles": "O=C(C)C(=O)O",
+      "stereochemical_smiles": "O=C(C)C(=O)O",
+      "substrate_type": "alpha_keto_acid"
+    },
+    {
+      "long": "reduced ethylmalonyl-CoA",
+      "short": "redemal",
+      "norine": "redemal",
+      "id": "redemal",
+      "parent_id": "reduced_polyketide_units",
+      "smiles": "C(CC)CO",
+      "stereochemical_smiles": null,
+      "substrate_type": "polyketide_fragment"
+    },
+    {
+      "long": "reduced malonyl-CoA",
+      "short": "redmal",
+      "norine": "redmal",
+      "id": "redmal",
+      "parent_id": "reduced_polyketide_units",
+      "smiles": "CC",
+      "stereochemical_smiles": "CC",
+      "substrate_type": "polyketide_fragment"
+    },
+    {
+      "long": "reduced methoxymalonyl-CoA",
+      "short": "redmxmal",
+      "norine": "redmxmal",
+      "id": "redmxmal",
+      "parent_id": "reduced_polyketide_units",
+      "smiles": "C(OC)CO",
+      "stereochemical_smiles": null,
+      "substrate_type": "polyketide_fragment"
+    },
+    {
+      "long": "reduced methylmalonyl-CoA",
+      "short": "me-redmal",
+      "norine": "me-redmal",
+      "id": "me-redmal",
+      "parent_id": "reduced_polyketide_units",
+      "smiles": "C(C)C",
+      "stereochemical_smiles": null,
+      "substrate_type": "polyketide_fragment"
+    },
+    {
+      "long": "quinoxaline-2-carboxylic acid",
+      "short": "Qui",
+      "norine": "COOH-Qui",
+      "id": "quinoxaline_2_carboxylic_acid",
+      "parent_id": "heteroaromatic_acids",
+      "smiles": "n1c2ccccc2ncc1C(=O)O",
+      "stereochemical_smiles": "n1c2ccccc2ncc1C(=O)O",
+      "substrate_type": "heteroaromatic_carboxylic_acid"
+    },
+    {
+      "long": "salicylic acid",
+      "short": "Sal",
+      "norine": "X",
+      "id": "salicylate",
+      "parent_id": "dhb_sal",
+      "smiles": "Oc1ccccc1C(=O)O",
+      "stereochemical_smiles": "Oc1ccccc1C(=O)O",
+      "substrate_type": "aromatic_carboxylic_acid"
+    },
+    {
+      "long": "serine",
+      "short": "Ser",
+      "norine": "Ser",
+      "id": "ser",
+      "parent_id": "serine_specific",
+      "smiles": "NC(CO)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](CO)C(=O)O",
+      "substrate_type": "alpha_amino_acid"
+    },
+    {
+      "long": "shikimic acid",
+      "short": "Shi",
+      "norine": "X",
+      "id": "shi",
+      "parent_id": "cyclic_hydroxy_carboxylic_acids",
+      "smiles": "C1C(O)C(O)C(O)C=C1C(=O)O",
+      "stereochemical_smiles": "C1[C@H]([C@@H]([C@@H](C=C1C(=O)O)O)O)O",
+      "substrate_type": "hydroxy_carboxylic_acid"
+    },
+    {
+      "long": "succinic semialdehyde",
+      "short": "Suc",
+      "norine": "X",
+      "id": "succinic_semialdehyde",
+      "parent_id": "other_aliphatic_oxo_acids",
+      "smiles": "O=CCCC(=O)O",
+      "stereochemical_smiles": "O=CCCC(=O)O",
+      "substrate_type": "aliphatic_oxo_acid"
+    },
+    {
+      "long": "succinyl-hydrazinoacetic acid",
+      "short": "SucHyzAc",
+      "norine": "X",
+      "id": "succinyl_hydrazinoacetic_acid",
+      "parent_id": "other_polar_substrates",
+      "smiles": "NN(CC(=O)O)C(=O)CCC(=O)O",
+      "stereochemical_smiles": "NN(CC(=O)O)C(=O)CCC(=O)O",
+      "substrate_type": "other_polar_substrate"
+    },
+    {
+      "long": "threonine",
+      "short": "Thr",
+      "norine": "Thr",
+      "id": "thr",
+      "parent_id": "threonine_specific",
+      "smiles": "NC(C(O)C)C(=O)O",
+      "stereochemical_smiles": "N[C@@H]([C@H](O)C)C(=O)O",
+      "substrate_type": "alpha_amino_acid"
+    },
+    {
+      "long": "trans-2-crotylglycine",
+      "short": "croGly",
+      "norine": "X",
+      "id": "trans_2_crotylglycine",
+      "parent_id": "other_aliphatic_amino_acids",
+      "smiles": "NC(CC=CC)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](C/C=C/C)C(=O)O",
+      "substrate_type": "modified_amino_acid"
+    },
+    {
+      "long": "tryptophan",
+      "short": "Trp",
+      "norine": "Trp",
+      "id": "trp",
+      "parent_id": "unpolar_aromatic_ring",
+      "smiles": "NC(CC1=CNc2c1cccc2)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](Cc1c[nH]c2c1cccc2)C(=O)O",
+      "substrate_type": "alpha_amino_acid"
+    },
+    {
+      "long": "tyrosine",
+      "short": "Tyr",
+      "norine": "Tyr",
+      "id": "tyr",
+      "parent_id": "hydroxyaromatic_side_chain",
+      "smiles": "NC(Cc1ccc(O)cc1)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](Cc1ccc(O)cc1)C(=O)O",
+      "substrate_type": "alpha_amino_acid"
+    },
+    {
+      "long": "unknown amino acid",
+      "short": "Nrp",
+      "norine": "X",
+      "id": "nrp",
+      "parent_id": "unknown_amino_acids",
+      "smiles": "NC([*])C(=O)O",
+      "stereochemical_smiles": null,
+      "substrate_type": "unknown_amino_acid"
+    },
+    {
+      "long": "unknown ketide",
+      "short": "Pk",
+      "norine": "pk",
+      "id": "pk",
+      "parent_id": "unknown_ketides",
+      "smiles": "C([*])C(=O)O",
+      "stereochemical_smiles": null,
+      "substrate_type": "unknown_polyketide"
+    },
+    {
+      "long": "valine",
+      "short": "Val",
+      "norine": "Val",
+      "id": "val",
+      "parent_id": "branched_hydrophobic",
+      "smiles": "NC(C(C)C)C(=O)O",
+      "stereochemical_smiles": "N[C@@H](C(C)C)C(=O)O",
+      "substrate_type": "alpha_amino_acid"
+    },
+    {
+      "long": "valinol",
+      "short": "Valol",
+      "norine": "Valol",
+      "id": "valinol",
+      "parent_id": "amino_alcohols",
+      "smiles": "NC(C(C)C)CO",
+      "stereochemical_smiles": null,
+      "substrate_type": "amino_alcohol"
+    }
+  ]
+}

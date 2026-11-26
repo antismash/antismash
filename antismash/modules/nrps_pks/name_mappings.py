@@ -1,341 +1,212 @@
 # License: GNU Affero General Public License v3 or later
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 # pylint: disable=line-too-long
-""" A mapping of A-domain substrate names in multiple naming conventions """
+"""A-domain substrate names, structures, and taxonomy parent relationships.
+"""
 
-from dataclasses import dataclass
+from __future__ import annotations
+
+from dataclasses import dataclass, field, fields
 from typing import Any
+
+from antismash.common import json, path
+
+CATEGORY_FILE = path.get_full_path(__file__, "data", "substrate_categories.json")
+SUBSTRATE_FILE = path.get_full_path(__file__, "data", "substrates.json")
+
+
+def _ancestors(parent: Category | None) -> tuple[Category, ...]:
+    result = []
+    while parent is not None:
+        result.append(parent)
+        parent = parent.parent
+    return tuple(result)
+
+
+@dataclass(frozen=True)
+class Category:
+    """A taxonomy category linked to its parent, ending at a gross-class root.
+
+    smiles is an illustrative common scaffold with wildcard attachment sites;
+    these sites can be hydrogen in some members. Use consensus_smarts to query
+    the conserved core, and parent links to determine taxonomy membership.
+    """
+
+    id: str
+    name: str
+    level: str
+    parent: Category | None = field(default=None, repr=False)
+    smiles: str | None = None
+    consensus_smarts: str | None = None
+    consensus_status: str = "unavailable"
+
+    @property
+    def ancestors(self) -> tuple[Category, ...]:
+        """Ancestors from the immediate parent to the gross-class root."""
+        return _ancestors(self.parent)
+
+    @property
+    def children(self) -> tuple[Category | Substrate, ...]:
+        """Immediate child categories or substrates, in data-file order."""
+        return _CHILDREN_BY_PARENT.get(self.id, ())
+
+    @property
+    def substrates(self) -> tuple[Substrate, ...]:
+        """All descendant substrates, traversing children in data-file order."""
+        return tuple(
+            leaf for child in self.children
+            for leaf in (child.substrates if isinstance(child, Category) else (child,))
+        )
+
+    @classmethod
+    def from_json(cls, existing: dict[str, Category], parent_id: str | None = None, **kwargs: Any) -> Category:
+        """ Load from JSON data, linking to an existing parent if provided. """
+        parent = None
+        if parent_id is not None:
+            parent = existing[parent_id]
+        return cls(parent=parent, **kwargs)
+
+    def to_json(self) -> dict[str, Any]:
+        """Serialize parent links as parent_id, without recursively duplicating parents."""
+        return {
+            ("parent_id" if item.name == "parent" else item.name): (self.parent.id if self.parent else None)
+            if item.name == "parent" else getattr(self, item.name)
+            for item in fields(self)
+        }
+
+    def __str__(self) -> str:
+        return self.name
+
+
+def load_categories() -> dict[str, Category]:
+    """ Load substrate categories from the JSON file and build the parent-child relationships. """
+    categories_by_id: dict[str, Category] = {}
+
+    with open(CATEGORY_FILE, "r", encoding="utf-8") as handle:
+        category_data: list[dict[str, str | None]] = json.load(handle)["data"]
+
+    for cat in category_data:
+        category = Category.from_json(categories_by_id, **cat)
+        categories_by_id[category.id] = category
+
+    return categories_by_id
+
+
+CATEGORIES_BY_ID: dict[str, Category] = load_categories()
 
 
 @dataclass(frozen=True, order=True)
-class SubstrateName:
-    """ A mapping of substrate names using multiple naming conventions """
+class Substrate:  # pylint: disable=too-many-instance-attributes
+    """Names and taxonomy-sourced structures for a terminal substrate.
+
+    Structurally unresolved entries can contain wildcard atoms.
+    A None stereochemical_smiles means no resolved stereochemical structure was
+    recorded; it is never replaced by the connectivity-only SMILES.
+    """
+
     long: str
     short: str
     norine: str
+    substrate_type: str
+    smiles: str | None = field(default=None, compare=False)
+    stereochemical_smiles: str | None = field(default=None, compare=False)
+    id: str | None = field(default=None, compare=False)
+    parent: Category | None = field(default=None, repr=False, compare=False)
+
+    @property
+    def ancestors(self) -> tuple[Category, ...]:
+        """Ancestors from the small cluster through to the gross class."""
+        return _ancestors(self.parent)
 
     def to_json(self) -> dict[str, Any]:
-        """ Creates a JSON representation of a SubstrateName """
-        return dict(vars(self))
+        """Serialize all fields, representing the parent by category ID."""
+        return {
+            item.name: (self.parent.id if self.parent else None)
+            if item.name == "parent" else getattr(self, item.name)
+            for item in fields(self)
+        }
 
     @classmethod
-    def from_json(cls, data: dict[str, Any]) -> "SubstrateName":
-        """ Creates a SubstrateName from a JSON representation """
-        return cls(data["long"], data["short"], data["norine"])
+    def from_json(cls, data: dict[str, Any]) -> Substrate:
+        """Load names and metadata, accepting file parent_id and serialized parent links."""
+        values = {item.name: data[item.name] for item in fields(cls) if item.name in data}
+        parent_id = values.pop("parent", data.get("parent_id"))
+        if parent_id is not None:
+            values["parent"] = CATEGORIES_BY_ID[parent_id]
+        return cls(**values)
 
     def __str__(self) -> str:
-        """ Use the short name as the canonical string representation """
+        """Use the antiSMASH short name as the canonical string representation."""
         return self.short
 
 
-KNOWN_SUBSTRATES: list[SubstrateName] = [
-    SubstrateName("(2S,3R)-2-amino-3-hydroxy-4-(4-nitrophenyl)butanoic acid", "n-oh-nitropheBut", "X"),  # noqa: E501
-    SubstrateName("(2S,6R)-diamino-(5R,7)-dihydroxy-heptanoic acid", "dn-dohHep", "X"),
-    SubstrateName("(4S)-5,5,5-trichloroleucine", "3clLeu", "X"),
-    SubstrateName("(E)-4-methylhex-2-enoic acid", "meHex", "X"),
-    SubstrateName("(S,E)-2-amino-4-decenoic acid", "nDece", "X"),
-    SubstrateName("1-(1,1-dimethylallyl)-tryptophan", "dmeaTrp", "X"),
-    SubstrateName("1-aminocyclopropane-1-carboxylic acid", "Acc", "X"),
-    SubstrateName("1-pyrroline-5-carboxylic acid", "Pyr", "X"),
-    SubstrateName("2,3-diamino-3-methylpropanoic acid", "dnmeProp", "X"),
-    SubstrateName("2,3-diaminopropionic acid", "Dpr", "Dpr"),
-    SubstrateName("2,3-dihydroxy-para-aminobenzoic acid", "2,3-doh-4-nBza", "X"),
-    SubstrateName("2,3-dihydroxybenzoic acid", "2,3-dohBza", "diOH-Bz"),
-    SubstrateName("2,3-dihydroxyhexadecanoic acid", "2,3-dohHda", "X"),
-    SubstrateName("2,4-diaminobutyric acid", "Dab", "Dab"),
-    SubstrateName("2,4-dihydroxypentanoic acid", "dohPen", "X"),
-    SubstrateName("2-(1-methylcyclopropyl)-D-glycine", "Cyc-D-Gly", "X"),
-    SubstrateName("2-amino-3,5-dimethyl-4-hexenoic Acid", "ndmHex", "X"),
-    SubstrateName("2-amino-3-hydroxycyclopent-2-enone", "nHcp", "X"),
-    SubstrateName("2-amino-6-hydroxy-4-methyl-8-oxodecanoic acid", "nohme-oxoDec", "X"),
-    SubstrateName("2-aminoadipic acid", "Aad", "Aad"),
-    SubstrateName("2-aminobutyric acid", "Abu", "Abu"),
-    SubstrateName("2-aminoisobutyric acid", "Aib", "Aib"),
-    SubstrateName("2-carboxy-6-hydroxyoctahydroindole", "cohOhi", "X"),
-    SubstrateName("2-chloro-3,5-dihydroxy-4-methylphenylglycine", "cl-me-dHpg", "X"),
-    SubstrateName("2-chlorobenzoic acid", "2clBza", "X"),
-    SubstrateName("2-hydroxy-4-methylpentanoic acid", "2-oh-4-mePen", "4Me-Hva"),
-    SubstrateName("2-hydroxypent-4-enoic acid", "Hpea", "X"),
-    SubstrateName("2-ketoglutaric acid", "Kga", "X"),
-    SubstrateName("2-ketoisocaproic acid", "Kic", "X"),
-    SubstrateName("2-ketoisovaleric acid", "Kiv", "X"),
-    SubstrateName("2-methylserine", "meSer", "X"),
-    SubstrateName("2-sulfamoylacetic acid", "Sma", "X"),
-    SubstrateName("2R-hydroxy-3-methylpentanoic acid", "2R-oh-3-mePen", "Hmp"),
-    SubstrateName("2R-hydroxyisovaleric acid", "2R-Hiv", "D-Hiv"),
-    SubstrateName("2S,3S-diaminobutyric acid", "3Dab", "L-Dbu"),
-    SubstrateName("2S-4-amino-2-hydroxybutyrate", "AHBA", "X"),
-    SubstrateName("2S-amino-8-oxodecanoic acid", "n-oxoDec", "X"),
-    SubstrateName("2S-amino-9,10-epoxy-8-oxodecanoic acid", "n-epox-oxoDec", "C10:0-NH2(2)-Ep(9)-oxo(8)"),  # noqa: E501
-    SubstrateName("2S-aminodecanoic acid", "nDec", "X"),
-    SubstrateName("2S-aminododecanoic acid", "nDodec", "X"),
-    SubstrateName("2S-aminooctanoic acid", "nOct", "X"),
-    SubstrateName("2S-hydroxyisocaproic acid", "2S-Hic", "X"),
-    SubstrateName("2S-hydroxyisovaleric acid", "2S-Hiv", "Hiv"),
-    SubstrateName("2S-methyl-3-oxobutyrine", "me-oxoBut", "X"),
-    SubstrateName("3,4-dehydrolysine", "dhLys", "X"),
-    SubstrateName("3,4-dihydroxybenzoic acid", "3,4-dohBza", "X"),
-    SubstrateName("3,5-dichloro-4-hydroxybenzoylformic acid", "dclohBfa", "X"),
-    SubstrateName("3,5-dichloro-4-hydroxyphenylglycine", "dclHpg", "Cl2-Hpg"),
-    SubstrateName("3,5-dihydroxyphenylglycine", "dHpg", "Dhpg"),
-    SubstrateName("3-(2-nitrocyclopropyl)alanine", "niCpa", "X"),
-    SubstrateName("3-(3-pyridyl)-alanine", "pyrAla", "X"),
-    SubstrateName("3-amino-2,4-dihydroxybenzoic acid", "2,4-doh-3-nBza", "X"),
-    SubstrateName("3-amino-4-hydroxybenzoic acid", "nohBza", "X"),
-    SubstrateName("3-amino-6-hydroxy-2-piperidone", "Ahp", "Ahp"),
-    SubstrateName("3-aminoisobutyric acid", "Ibu", "X"),
-    SubstrateName("3-chlorotyrosine", "clTyr", "Cl-Tyr"),
-    SubstrateName("3-hydroxy-4-methylproline", "3-oh-4-mePro", "X"),
-    SubstrateName("3-hydroxy-O-methyl-5-methyltyrosine", "ohdmTyr", "X"),
-    SubstrateName("3-hydroxy-O-methyltyrosine", "ohmeTyr", "X"),
-    SubstrateName("3-hydroxy-para-aminobenzoic acid", "ohnBza", "X"),
-    SubstrateName("3-hydroxyasparagine", "ohAsn", "OH-Asn"),
-    SubstrateName("3-hydroxyaspartic acid", "ohAsp", "OH-Asp"),
-    SubstrateName("3-hydroxyglutamine", "ohGln", "bOH-Gln"),
-    SubstrateName("3-hydroxykynurenine", "ohKyn", "X"),
-    SubstrateName("3-hydroxyleucine", "3-ohLeu", "3OH-Leu"),
-    SubstrateName("3-hydroxypicolinic acid", "Hpa", "Hpa"),
-    SubstrateName("3-hydroxyquinaldic acid", "Hqa", "X"),
-    SubstrateName("3-hydroxytyrosine", "3-ohTyr", "X"),
-    SubstrateName("3-hydroxyvaline", "3-ohVal", "bOH-Val"),
-    SubstrateName("3-methoxyanthranilic acid", "mxAnt", "X"),
-    SubstrateName("3-methoxyaspartic acid", "mxAsp", "OMe-Asp"),
-    SubstrateName("3-methylasparagine", "meAsn", "bMe-Asn"),
-    SubstrateName("3-methylaspartic acid", "meAsp", "bMe-Asp"),
-    SubstrateName("3-methylglutamic acid", "meGlu", "3Me-Glu"),
-    SubstrateName("3-nitrotyrosine", "nitroTyr", "3NO2-Tyr"),
-    SubstrateName("3R-chloroproline", "clPro", "X"),
-    SubstrateName("3R-hydroxy-2,4-diaminobutyric acid", "ohDab", "X"),
-    SubstrateName("3R-hydroxyasparagine", "3R-ohAsn", "OH-Asn"),
-    SubstrateName("3R-hydroxyaspartic acid", "3R-ohAsp", "OH-Asp"),
-    SubstrateName("3R-hydroxyhomotyrosine", "ohHty", "X"),
-    SubstrateName("3R-hydroxyleucine", "3R-ohLeu", "3OH-Leu"),
-    SubstrateName("3R-methyl-D-aspartic acid branched", "branched-D-3R-meAsp", "bMe-Asp"),
-    SubstrateName("3R-methylbeta-alanine", "me-bAla", "X"),
-    SubstrateName("3R-methylglutamic acid", "3R-meGlu", "3Me-Glu"),
-    SubstrateName("3S,4R-dichloroproline", "dclPro", "Cl2-Pro"),
-    SubstrateName("3S,4S-dihydroxyhomotyrosine", "dohHty", "X"),
-    SubstrateName("3S-aminobutyric acid", "3S-Abu", "X"),
-    SubstrateName("3S-cyclohex-2-enylalanine", "cycHexAla", "X"),
-    SubstrateName("3S-hydroxy-4S-methylproline", "3S-oh-4S-mePro", "X"),
-    SubstrateName("3S-hydroxy-6-chlorohistidine", "hclHis", "X"),
-    SubstrateName("3S-hydroxyasparagine", "3S-ohAsn", "OH-Asn"),
-    SubstrateName("3S-hydroxyleucine", "3S-ohLeu", "3OH-Leu"),
-    SubstrateName("3S-hydroxypipecolic acid", "ohPip", "X"),
-    SubstrateName("3S-hydroxyproline", "3S-ohPro", "3OH-Pro"),
-    SubstrateName("3S-methyl-D-aspartic acid branched", "branched-D-3S-meAsp", "D-bMe-Asp"),
-    SubstrateName("3S-methylaspartic acid", "3S-meAsp", "bMe-Asp"),
-    SubstrateName("3S-methylleucine", "meLeu", "X"),
-    SubstrateName("3S-methylproline", "3S-mePro", "3Me-Pro"),
-    SubstrateName("4,5-dehydroarginine", "4,5-dhArg", "X"),
-    SubstrateName("4,5-dihydroxyornithine", "dhOrn", "X"),
-    SubstrateName("4-acetamidopyrrole-2-carboxylic acid", "nacPca", "X"),
-    SubstrateName("4-amino-2-hydroxy-3-isopropoxybenzoic acid", "noh-isopox-Bza", "X"),
-    SubstrateName("4-aminobutyric acid", "4-Abu", "X"),
-    SubstrateName("4-aminophenylalanine", "nPhe", "X"),
-    SubstrateName("4-chlorobenzoic acid", "4clBza", "X"),
-    SubstrateName("4-hydroxy-3-nitrobenzoic acid", "oh-nitroBza", "X"),
-    SubstrateName("4-hydroxy-D-kynurenine", "oh-D-Kyn", "X"),
-    SubstrateName("4-hydroxybenzoic acid", "4-ohBza", "pOH-Bz"),
-    SubstrateName("4-hydroxyglutamine", "4-ohGln", "X"),
-    SubstrateName("4-hydroxyphenylglycine", "Hpg", "Hpg"),
-    SubstrateName("4-hydroxyphenylpyruvic acid", "4-ohPpa", "X"),
-    SubstrateName("4-methoxytryptophan", "4-mxTrp", "X"),
-    SubstrateName("4-methylproline", "4mePro", "4Me-Pro"),
-    SubstrateName("4-nitrotryptophan", "nitroTrp", "X"),
-    SubstrateName("4R-E-butenyl-4R-methylthreonine", "Bmt", "Bmt"),
-    SubstrateName("4R-hydroxyproline", "4R-ohPro", "4OH-Pro"),
-    SubstrateName("4R-methylproline", "4R-mePro", "4Me-Pro"),
-    SubstrateName("4R-propylproline", "proPro", "X"),
-    SubstrateName("4S-acetyl-5S-methylproline", "ac-mePro", "X"),
-    SubstrateName("4S-hydroxylysine", "4S-ohLys", "X"),
-    SubstrateName("4S-methylazetidine-2S-carboxylic acid", "meAze", "X"),
-    SubstrateName("4S-methylproline", "4S-mePro", "4Me-Pro"),
-    SubstrateName("4S-propenylproline", "pPro", "X"),
-    SubstrateName("5,5-dimethylpipecolic acid", "dmePip", "X"),
-    SubstrateName("5-aminolevulinic acid", "nLev", "X"),
-    SubstrateName("5-chloroanthranilic acid", "clAnt", "X"),
-    SubstrateName("5-chlorotryptophan", "5-clTrp", "X"),
-    SubstrateName("5-hydroxy-2-aminopentanoic acid", "ohPen", "X"),
-    SubstrateName("5-methoxytyrosine", "5-mxTyr", "X"),
-    SubstrateName("5-methylorsellinic acid", "meOrs", "X"),
-    SubstrateName("5S-methylproline", "5S-mePro", "5Me-Pro"),
-    SubstrateName("6,7-dichlorotryptophan", "dclTrp", "X"),
-    SubstrateName("6-chloro-4-hydroxy-1-methyl-indole-3-carboxylic acid", "me-clHic", "X"),
-    SubstrateName("6-chloro-4-hydroxyindole-3-carboxylic acid", "clHic", "X"),
-    SubstrateName("6-chlorotryptophan", "6-clTrp", "X"),
-    SubstrateName("6-hydroxy-tetrahydro-isoquinoline-3-carboxylic acid", "Htia", "X"),
-    SubstrateName("6-methylsalicylic acid", "meSal", "X"),
-    SubstrateName("6S-methyl-pipecolic acid", "mePip", "X"),
-    SubstrateName("An acid hydrazine polyene (intermediate 14)", "HyzPoly", "X"),
-    SubstrateName("Compound 4 (formed by the decarboxylative condensation of L-Phe and succinyl-CoA)", "PheSuc", "X"),  # noqa: E501
-    SubstrateName("D-alanine", "D-Ala", "D-Ala"),
-    SubstrateName("D-aspartic acid branched", "branched-D-Asp", "D-Asp"),
-    SubstrateName("D-glutamic acid branched", "branched-D-Glu", "D-Glu"),
-    SubstrateName("D-leucine", "D-Leu", "D-Leu"),
-    SubstrateName("D-lysergic acid", "D-Lya", "X"),
-    SubstrateName("D-phenylalanine", "D-Phe", "D-Phe"),
-    SubstrateName("D-phenyllactic acid", "D-pheLac", "D-Ph-Lac"),
-    SubstrateName("D-pipecolic acid", "D-Pip", "D-Hpr"),
-    SubstrateName("N-(1-methyl)-tryptophan", "1-meTrp", "1Me-Trp"),
-    SubstrateName("N-(1-propargyl)-tryptophan", "parTrp", "X"),
-    SubstrateName("N-formylglycine", "foGly", "X"),
-    SubstrateName("N-hydroxyvaline", "N-ohVal", "X"),
-    SubstrateName("N1-methoxytryptophan", "1-mxTrp", "OMe-Trp"),
-    SubstrateName("N5-acetyl-N5-hydroxyornithine", "acohOrn", "Ac-OH-Orn"),
-    SubstrateName("N5-cis-anhydromevalonyl-N5-hydroxyornithine", "Z-ahmohOrn", "X"),
-    SubstrateName("N5-formyl-N5-hydroxyornithine", "fohOrn", "Fo-OH-Orn"),
-    SubstrateName("N5-hydroxyornithine", "ohOrn", "OH-Orn"),
-    SubstrateName("N5-trans-anhydromevalonyl-N5-hydroxyornithine", "E-ahmohOrn", "X"),
-    SubstrateName("N6-hydroxylysine", "N6-ohLys", "X"),
-    SubstrateName("NH2", "NH2", "X"),
-    SubstrateName("O-methylthreonine", "omeThr", "X"),
-    SubstrateName("O-methyltyrosine", "omeTyr", "X"),
-    SubstrateName("R-3-hydroxy-3-methylproline", "3R-oh-3-mePro", "X"),
-    SubstrateName("R-aza-beta-tyrosine", "aza-bTyr", "X"),
-    SubstrateName("R-beta-hydroxyphenylalanine", "R-bohPhe", "X"),
-    SubstrateName("R-beta-hydroxytyrosine", "R-ohTyr", "bOH-Tyr"),
-    SubstrateName("R-beta-methylphenylalanine", "mePhe", "bMe-Phe"),
-    SubstrateName("R-beta-methyltryptophan", "R-bmeTrp", "X"),
-    SubstrateName("R-beta-phenylalanine", "R-bPhe", "bPhe"),
-    SubstrateName("R-beta-tyrosine", "R-bTyr", "bTyr"),
-    SubstrateName("S-adenosylmethionine", "Sam", "X"),
-    SubstrateName("S-beta-hydroxycyclohex-2S-enylalanine", "Hch", "X"),
-    SubstrateName("S-beta-hydroxyenduracididine", "ohEnd", "X"),
-    SubstrateName("S-beta-hydroxyphenylalanine", "S-bohPhe", "X"),
-    SubstrateName("S-beta-tyrosine", "S-bTyr", "bTyr"),
-    SubstrateName("Z-dehydroaminobutyric acid", "dhAbu", "dhAbu"),
-    SubstrateName("Z-dehydrotyrosine", "dhTyr", "X"),
-    SubstrateName("acetic acid", "Ac", "X"),
-    SubstrateName("acetyl-CoA", "AcCoA", "X"),
-    SubstrateName("alanine", "Ala", "Ala"),
-    SubstrateName("alaninol", "Aol", "X"),
-    SubstrateName("allo-isoleucine", "aIle", "aIle"),
-    SubstrateName("allo-threonine", "aThr", "aThr"),
-    SubstrateName("anthranilic acid", "Ant", "X"),
-    SubstrateName("arginine", "Arg", "Arg"),
-    SubstrateName("asparagine", "Asn", "Asn"),
-    SubstrateName("aspartic acid", "Asp", "Asp"),
-    SubstrateName("aspartic acid branched", "branchedAsp", "Asp"),
-    SubstrateName("azetidine-2-carboxylic acid", "Aze", "X"),
-    SubstrateName("benzoic acid", "Bza", "Bz"),
-    SubstrateName("benzoxazolinate", "Boz", "X"),
-    SubstrateName("beta-alanine", "bAla", "bAla"),
-    SubstrateName("beta-hydroxy-3-hydroxy-O-methyl-5-methyltyrosine", "dohmTyr", "X"),
-    SubstrateName("beta-hydroxyarginine", "ohArg", "X"),
-    SubstrateName("beta-hydroxyphenylalanine", "bohPhe", "Ph-Ser"),
-    SubstrateName("beta-hydroxytyrosine", "ohTyr", "bOH-Tyr"),
-    SubstrateName("beta-lysine", "bLys", "bLys"),
-    SubstrateName("betaine", "Bet", "X"),
-    SubstrateName("butyric acid", "But", "C4:0"),
-    SubstrateName("capreomycidine", "Cap", "Cap"),
-    SubstrateName("cinnamic acid", "Cin", "X"),
-    SubstrateName("citrulline", "Cit", "Cit"),
-    SubstrateName("coumaric acid", "Cou", "X"),
-    SubstrateName("cysteic acid", "Cya", "CysA"),
-    SubstrateName("cysteine", "Cys", "Cys"),
-    SubstrateName("cysteine branched", "branchedCys", "Cys"),
-    SubstrateName("dehydroarginine", "dhArg", "X"),
-    SubstrateName("dehydrophenylalanine", "dhPhe", "X"),
-    SubstrateName("dehydrotryptophan", "dhTrp", "dh-Trp"),
-    SubstrateName("dehydrovaline", "dhVal", "X"),
-    SubstrateName("dimethylsulfoniopropionic acid", "dmesulf-Pra", "X"),
-    SubstrateName("double-bonded ethylmalonyl-CoA", "ccemal", "ccemal"),
-    SubstrateName("double-bonded malonyl-CoA", "ccmal", "ccmal"),
-    SubstrateName("double-bonded methoxymalonyl-CoA", "ccmxmal", "ccmxmal"),
-    SubstrateName("double-bonded methylmalonyl-CoA", "me-ccmal", "me-ccmal"),
-    SubstrateName("enduracididine", "End", "End"),
-    SubstrateName("ethylmalonyl-CoA", "emal", "emal"),
-    SubstrateName("fatty acid", "fa", "X"),
-    SubstrateName("glutamic acid", "Glu", "Glu"),
-    SubstrateName("glutamine", "Gln", "Gln"),
-    SubstrateName("glycine", "Gly", "Gly"),
-    SubstrateName("glycolic acid", "Glyca", "X"),
-    SubstrateName("graminine", "Gram", "X"),
-    SubstrateName("guanidinoacetic acid", "Gua", "X"),
-    SubstrateName("histidine", "His", "His"),
-    SubstrateName("homophenylalanine", "Hph", "Hph"),
-    SubstrateName("homoserine", "Hse", "Hse"),
-    SubstrateName("homotyrosine", "Hty", "Hty"),
-    SubstrateName("hydroxy-ethylmalonyl-CoA", "ohemal", "ohemal"),
-    SubstrateName("hydroxy-malonyl-CoA", "ohmal", "ohmal"),
-    SubstrateName("hydroxy-methoxymalonyl-CoA", "ohmxmal", "ohmxmal"),
-    SubstrateName("hydroxy-methylmalonyl-CoA", "me-ohmal", "me-ohmal"),
-    SubstrateName("hydroxyproline", "ohPro", "X"),
-    SubstrateName("isoleucine", "Ile", "Ile"),
-    SubstrateName("isovaline", "Iva", "Ival"),
-    SubstrateName("kynurenine", "Kyn", "Kyn"),
-    SubstrateName("lactic acid", "Lac", "Lac"),
-    SubstrateName("leucine", "Leu", "Leu"),
-    SubstrateName("linoleic acid", "Lin", "X"),
-    SubstrateName("lysine", "Lys", "Lys"),
-    SubstrateName("malic acid", "MalAc", "X"),
-    SubstrateName("malonyl-CoA", "mal", "mal"),
-    SubstrateName("meta-tyrosine", "mTyr", "X"),
-    SubstrateName("methionine", "Met", "Met"),
-    SubstrateName("methoxymalonyl-CoA", "mxmal", "mxmal"),
-    SubstrateName("methylmalonyl-CoA", "me-mal", "me-mal"),
-    SubstrateName("nicotinic acid", "Nic", "X"),
-    SubstrateName("norcoronamic acid", "meAcc", "norCMA"),
-    SubstrateName("ornithine", "Orn", "Orn"),
-    SubstrateName("p-hydroxymandelate", "ohMan", "X"),
-    SubstrateName("para-aminobenzoic acid", "nBza", "pNH2-Bz"),
-    SubstrateName("pentanoic acid", "Pen", "X"),
-    SubstrateName("phenazine-1,6-dicarboxylic acid", "dcPhz", "X"),
-    SubstrateName("phenylalanine", "Phe", "Phe"),
-    SubstrateName("phenylglycine", "Pgl", "Ph-Gly"),
-    SubstrateName("phenylpyruvic acid", "Ppa", "X"),
-    SubstrateName("pipecolic acid", "Pip", "Hpr"),
-    SubstrateName("piperazic acid", "Piz", "X"),
-    SubstrateName("polyketide end 1", "pks-end1", "pks-end1"),
-    SubstrateName("polyketide end 2", "pks-end2", "pks-end2"),
-    SubstrateName("polyketide starter 1", "pks-start1", "pks-start1"),
-    SubstrateName("proline", "Pro", "Pro"),
-    SubstrateName("pyrrole-2-carboxylic acid", "Pca", "X"),
-    SubstrateName("pyruvic acid", "Pyv", "X"),
-    SubstrateName("reduced ethylmalonyl-CoA", "redemal", "redemal"),
-    SubstrateName("reduced malonyl-CoA", "redmal", "redmal"),
-    SubstrateName("reduced methoxymalonyl-CoA", "redmxmal", "redmxmal"),
-    SubstrateName("reduced methylmalonyl-CoA", "me-redmal", "me-redmal"),
-    SubstrateName("quinoxaline-2-carboxylic acid", "Qui", "COOH-Qui"),
-    SubstrateName("salicylic acid", "Sal", "X"),
-    SubstrateName("serine", "Ser", "Ser"),
-    SubstrateName("shikimic acid", "Shi", "X"),
-    SubstrateName("succinic semialdehyde", "Suc", "X"),
-    SubstrateName("succinyl-hydrazinoacetic acid", "SucHyzAc", "X"),
-    SubstrateName("threonine", "Thr", "Thr"),
-    SubstrateName("trans-2-crotylglycine", "croGly", "X"),
-    SubstrateName("tryptophan", "Trp", "Trp"),
-    SubstrateName("tyrosine", "Tyr", "Tyr"),
-    SubstrateName("unknown amino acid", "Nrp", "X"),
-    SubstrateName("unknown ketide", "Pk", "pk"),
-    SubstrateName("valine", "Val", "Val"),
-    SubstrateName("valinol", "Valol", "Valol"),
-]
+KNOWN_CATEGORIES: tuple[Category, ...] = tuple(CATEGORIES_BY_ID.values())
 
-_LONG_TO_SUBSTRATE: dict[str, SubstrateName] = {
+
+def load_substrates() -> list[Substrate]:
+    """Load substrate names, structures, and category links from the JSON file."""
+    with open(SUBSTRATE_FILE, "r", encoding="utf-8") as handle:
+        substrate_data = json.load(handle)["data"]
+
+    return [Substrate.from_json(record) for record in substrate_data]
+
+
+KNOWN_SUBSTRATES: list[Substrate] = load_substrates()
+
+SUBSTRATES_BY_ID: dict[str, Substrate] = {
+    substrate.id: substrate for substrate in KNOWN_SUBSTRATES if substrate.id is not None
+}
+_children: dict[str, list[Category | Substrate]] = {}
+for _category in KNOWN_CATEGORIES:
+    if _category.parent is not None:
+        _children.setdefault(_category.parent.id, []).append(_category)
+for _substrate in KNOWN_SUBSTRATES:
+    if _substrate.parent is not None:
+        _children.setdefault(_substrate.parent.id, []).append(_substrate)
+_CHILDREN_BY_PARENT = {key: tuple(value) for key, value in _children.items()}
+
+_LONG_TO_SUBSTRATE: dict[str, Substrate] = {
     sub.long.lower(): sub for sub in KNOWN_SUBSTRATES
 }
-
-_SHORT_TO_SUBSTRATE: dict[str, SubstrateName] = {
+_SHORT_TO_SUBSTRATE: dict[str, Substrate] = {
     sub.short.lower(): sub for sub in KNOWN_SUBSTRATES
 }
-
-_NORINE_TO_SUBSTRATE: dict[str, SubstrateName] = {
+_NORINE_TO_SUBSTRATE: dict[str, Substrate] = {
     sub.norine.lower(): sub for sub in KNOWN_SUBSTRATES
 }
 
 
-def get_substrate_by_name(name: str) -> SubstrateName:
-    """ Look up a substrate by long or short name """
+def get_substrate_by_name(name: str) -> Substrate:
+    """Look up a substrate by taxonomy ID, long, short, or Norine name.
+    """
+    if name in SUBSTRATES_BY_ID:
+        return SUBSTRATES_BY_ID[name]
     lc_name = name.lower()
-    if lc_name in _LONG_TO_SUBSTRATE:
-        return _LONG_TO_SUBSTRATE[lc_name]
-    if lc_name in _SHORT_TO_SUBSTRATE:
-        return _SHORT_TO_SUBSTRATE[lc_name]
-    if lc_name in _NORINE_TO_SUBSTRATE:
-        return _NORINE_TO_SUBSTRATE[lc_name]
+    for index in (_LONG_TO_SUBSTRATE, _SHORT_TO_SUBSTRATE, _NORINE_TO_SUBSTRATE):
+        if lc_name in index:
+            return index[lc_name]
     raise ValueError(f"Substrate {name!r} not found")
+
+
+def get_category_by_name(name: str) -> Category:
+    """Look up an exact model/taxonomy ID or a case-insensitive display name.
+    """
+    if name in CATEGORIES_BY_ID:
+        return CATEGORIES_BY_ID[name]
+    matches = [category for category in KNOWN_CATEGORIES if category.name.lower() == name.lower()]
+    if len(matches) == 1:
+        return matches[0]
+    if matches:
+        raise ValueError(f"Ambiguous category {name!r}; use a taxonomy ID")
+    raise ValueError(f"Category {name!r} not found")
+
+
+def lookup(name: str) -> Substrate | Category:
+    """Look up a substrate or category by name or ID."""
+    try:
+        return get_substrate_by_name(name)
+    except ValueError:
+        return get_category_by_name(name)
 
 
 def is_valid_norine_name(name: str) -> bool:
