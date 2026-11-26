@@ -15,6 +15,7 @@ $feature-resistance: #bbb;
 $feature-tta-codon: #444;
 $table-background: #f1f1f1;
 $kind-protoclusters: white;
+$text-color: #555;
 
 @mixin unselectable(){
     -webkit-user-select: none;
@@ -29,7 +30,7 @@ $kind-protoclusters: white;
 
 body {
     font-family: Helvetica, Verdana, Tahoma, Sans-Serif;
-    color: #555;
+    color: $text-color;
     background-color: $body-background;
     text-align: left;
     margin: 0;
@@ -240,12 +241,60 @@ nav {
     padding-top: 0.2em;
     padding-bottom: 0.2em;
     margin: 0;
+    margin-bottom: 0.2em;
     overflow: hidden;
+    align-items: center;
+    margin-bottom: 0.2em;
+
+    #buttons-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.2em;
+
+        #region-type {
+            @include left-padding;
+        }
+
+        #filters {
+            align-items: center;
+            display:flex;
+            gap: 2em;
+            margin-left: 2em;
+
+            .filter-section {
+                display: flex;
+
+                .filter-label {
+                    align-content: center;
+                }
+
+                .filter-alert {
+                    border: 3px solid #ff5050;
+                    margin-left: 0.5em;
+                    border-radius: 1em;
+                    background: #ffe6ea;
+                    color: #333;
+                    padding-left: 1em;
+                    height: 1.5em;
+                    display: flex;
+                    align-items: center;
+                }
+
+
+                /* build a pure CSS X marker for removing a filter
+                   using a combo of before and after divs, rotated to be
+                   perpendicular */
+                .clear-marker {
+                    width: 1em;
+                    padding-left: 0.5em;
+                    padding-right: 0.2em;
+                    cursor: pointer;
+                }
+            }
+        }
+    }
 }
 
-#region-type {
-    @include left-padding;
-}
 
 .page {
     overflow: hidden;
@@ -294,30 +343,43 @@ nav {
     height: auto;
 }
 
+.compound-display {
+    width: 100%;
+    height: 100%;
+    margin-left: unset;
+
+    .compound-always {
+        cursor: zoom-in;
+    }
+}
+
 .modal-container {
     display: none;
-    position: absolute;
+    position: fixed;
     z-index: 2; /* keep on top of any open help tooltips */
-    padding-top: 5%;
-    padding-left: 10%;
-    padding-bottom: 100%;
     left: 0;
     top: 0;
-    width: 90%;
+    width: 100%;
     height: 100%;
     background-color: rgba(0,0,0,0.4);
 
     .modal-content {
-        position: relative;
-    }
-
-    .smiles-canvas-modal {
+        @include unselectable();
         background-color: #fefefe;
         margin: auto;
-        padding: 20px;
         border: 1px solid #888;
-        height: 80%;
-        width: 80%;
+        max-height: 80vh;
+        max-width: 80vw;
+        overflow: scroll;
+        position: relative;
+        top: 10vh;
+        display: flex;
+        justify-content: center;
+
+        .compound-modal {
+            max-height: 75vh;
+            max-width: 75vw;
+        }
     }
 }
 
@@ -624,9 +686,10 @@ table.region-table {
     margin-left: 1em;
     padding: 0.5em;
     padding-top: 0.3em;
-    box-shadow: inset 0 -2px 2px grey;
+    box-shadow: inset 0 -1px 1px grey;
     cursor: default;
     font-size: 80%;
+    transition: 80ms linear;
 
     @include unselectable();
 
@@ -648,6 +711,7 @@ table.region-table {
         padding-right: 0.5em;
     }
 }
+
 
 .legend-selected {
     background-color: #eee;
@@ -1151,6 +1215,18 @@ ul.dropdown-options {
 .nrps-monomer-details {
     * dl {
         margin: 0;
+    }
+}
+
+.nrps-product {  // the product drawing
+    width: 80%;
+    .smiles-copier {
+        font-size: revert;
+        width: unset;
+
+        img {
+            width: revert;
+        }
     }
 }
 
@@ -1858,4 +1934,117 @@ ul.dropdown-options {
             }
         }
     }
+}
+
+.smiles-copier {
+    @extend .button-like;
+
+    background: white;
+    box-shadow: unset;
+    display: flex;
+    margin: 0;
+    padding: 0.1em 0.1em 0.1em 0.1em;
+    position: absolute;
+    top: 0;
+    left: 0;
+
+    img {
+        display: block;
+        padding: 0;
+    }
+
+    &:hover {
+        box-shadow: unset;
+    }
+}
+
+#type-filter {
+    @include unselectable;
+
+    display: none;
+    position: absolute;
+    left: 70vw;
+    top: 20vh;
+    width: fit-content;
+    max-height: 80%;
+    overflow-y: scroll;
+    border: 2px solid black;
+    background: white;
+    padding: 0.5em 1em 1em 0.5em;
+    border-radius: 0.5em;
+    z-index: 1;
+
+    .clear-marker {
+        position: absolute;
+        top: 0.5em;
+        right: 0.5em;
+        width: 1em;
+        height: 1em;
+    }
+
+    #filter-type-clear-button {
+        justify-content: center;
+    }
+}
+
+#filter-alert {
+    border: 4px solid #ff6767;
+    margin-left: 30em;
+    border-radius: 1em;
+    width: 15em;
+    background: #ffc0cb5e;
+
+    span.type {
+        font-weight: bold;
+    }
+    span.clear-marker {
+        margin-left: 4em;
+        cursor: pointer;
+    }
+}
+
+.filter-base {
+    display: block;
+    position: relative;
+    padding-left: 1em;
+    margin-bottom: 0.2em;
+    cursor: pointer;
+
+    @include unselectable();
+
+    input {
+        accent-color: $antismash-main;
+    }
+
+    .filter-checkbox:after {
+      left: 0.3em;
+      top: 0.1em;
+      width: 0.2em;
+      height: 0.4em;
+      border: solid white;
+      border-width: 0 0.2em 0.2em 0;
+      transform: rotate(45deg);
+    }
+}
+
+.filter-base:hover input ~ .filter-checkbox {
+  background-color: #ccc;
+}
+
+.filter-base input:checked ~ .filter-checkbox {
+  background-color: $antismash-main;
+}
+
+.filter-checkbox:after {
+  content: "";
+  position: absolute;
+  display: none;
+}
+
+.filter-base input:checked ~ .filter-checkbox:after {
+  display: block;
+}
+
+.filter-block {
+  margin-left: 1em;
 }
