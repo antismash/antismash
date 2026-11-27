@@ -10,6 +10,8 @@ fail-on=unused-import,unused-variable,comparison-with-itself,self-assigning-vari
 
 [TYPECHECK]
 ignored-classes=Config,TestCase,Namespace
+# 3.15 aliases collections.abc, pylint 3.0.2 can't cope with that
+ignored-modules=collections.abc
 
 [FORMAT]
 max-line-length=120

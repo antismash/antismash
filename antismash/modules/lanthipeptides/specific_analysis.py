@@ -148,10 +148,9 @@ class PrepeptideBase:
         self._core = ''
         self._tail: Optional[str] = None
         self._lan_bridges = -1
-        self._weight = -1
-        self._monoisotopic_weight = -1
+        self._weight = -1.0
+        self._monoisotopic_weight = -1.0
         self._alt_weights: List[float] = []
-        self.core_analysis_monoisotopic: Optional[utils.RobustProteinAnalysis] = None
         self.core_analysis: Optional[utils.RobustProteinAnalysis] = None
 
     @property
@@ -161,8 +160,7 @@ class PrepeptideBase:
 
     @core.setter
     def core(self, seq: str) -> None:
-        self.core_analysis_monoisotopic = utils.RobustProteinAnalysis(seq, monoisotopic=True)
-        self.core_analysis = utils.RobustProteinAnalysis(seq, monoisotopic=False)
+        self.core_analysis = utils.RobustProteinAnalysis(seq)
         self._core = seq
         self._calculate_mw()
 
@@ -260,7 +258,7 @@ class Lanthipeptide(PrepeptideBase):
             raise ValueError("No core to calculate bridges from")
         assert self.core_analysis is not None
 
-        amino_counts = self.core_analysis.count_amino_acids()
+        amino_counts = self.core_analysis.amino_acid_count
         no_cys = amino_counts['C']
         no_thr_ser = amino_counts['T'] + amino_counts['S']
         self._lan_bridges = min(no_cys, no_thr_ser)
@@ -273,9 +271,8 @@ class Lanthipeptide(PrepeptideBase):
         """
         assert self._core, "calculating weight without a core"
         assert self.core_analysis is not None
-        assert self.core_analysis_monoisotopic is not None
 
-        amino_counts = self.core_analysis.count_amino_acids()
+        amino_counts = self.core_analysis.amino_acid_count
         no_thr_ser = amino_counts['T'] + amino_counts['S']
 
         mol_mass = self.core_analysis.molecular_weight()
@@ -295,7 +292,7 @@ class Lanthipeptide(PrepeptideBase):
         for i in range(1, no_thr_ser - amino_counts['C'] + 1):
             self._alt_weights.append(self._weight + 18.02 * i)
 
-        monoisotopic_mass = self.core_analysis_monoisotopic.molecular_weight()
+        monoisotopic_mass = self.core_analysis.molecular_weight(monoisotopic=True)
         mods = 18 * no_thr_ser
         if self._aminovinyl:
             mods += 46

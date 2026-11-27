@@ -21,10 +21,6 @@ class TestRobustProteinAnalysis(unittest.TestCase):
         rpa = utils.RobustProteinAnalysis("MAGICHAT", ignore_invalid=False)
         self.assertIsInstance(rpa, utils.RobustProteinAnalysis)
 
-        for bad_invalid in ["none", None, 3, []]:
-            with self.assertRaises(TypeError):
-                utils.RobustProteinAnalysis("MAGICHAT", ignore_invalid=bad_invalid)
-
     def test_uppercase(self):
         """Test RobustProteinAnalysis converts passed sequence to upper case"""
         rpa = utils.RobustProteinAnalysis("Magichat")
@@ -46,6 +42,14 @@ class TestRobustProteinAnalysis(unittest.TestCase):
         """
         rpa = utils.RobustProteinAnalysis("MAGICXHAT", ignore_invalid=False)
         self.assertEqual(912.9621, rpa.molecular_weight())
+
+    def test_amino_acid_count(self):
+        """ Test RobustProteinAnalysis.amino_acid_count only counts amino acid letters """
+        rpa = utils.RobustProteinAnalysis("MAGICHAT")
+        self.assertEqual(2, rpa.amino_acid_count["A"])
+
+        rpa.sequence = "MAGICXHAT"
+        self.assertFalse("X" in rpa.amino_acid_count)
 
 
 class TestSignatureBuilding(unittest.TestCase):

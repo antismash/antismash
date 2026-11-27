@@ -5,11 +5,11 @@
 """
 
 from tempfile import NamedTemporaryFile
-from typing import Any, IO, List
+from typing import Any, IO
 
 from Bio.SearchIO.BlastIO import BlastTabParser
 
-from .base import execute, get_config, RunResult, SearchIO
+from .base import execute, get_config, QueryResult, RunResult
 
 NCBI_OVERRIDES = {
     # NCBI tools have added usage reporting, which can add minutes to simple
@@ -19,8 +19,8 @@ NCBI_OVERRIDES = {
 
 
 def run_blastp(target_blastp_database: str, query_sequence: str,
-               opts: List[str] = None, results_file: str = None
-               ) -> List[SearchIO._model.query.QueryResult]:
+               opts: list[str] | None = None, results_file: str | None = None
+               ) -> list[QueryResult]:
     """ Runs blastp over a single sequence against a database and returns the
         results as parsed by Bio.SearchIO.
 

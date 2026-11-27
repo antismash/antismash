@@ -19,6 +19,79 @@ START_CODONS = ('ATG', 'GTG', 'TTG')
 STOP_CODONS = ('TAA', 'TAG', 'TGA')
 
 
+def _find_trimmed_starts(seq: str, include: int, min_length: int, max_length: int) -> list[int]:
+    """ Finds the offsets of all start codons in the given ORF sequence which
+        would result in a trimmed ORF satisfying the given options
+
+        Arguments:
+            seq: the nucleotide sequence of the ORF
+            include: a coordinate within the sequence to include
+            min_length: the minimum length to trim to
+            max_length: the maximum length to trim to
+
+        Returns:
+            a list of offsets, in increasing order
+    """
+    # check for bad values
+    if min_length > max_length:
+        raise ValueError("minimum length cannot be greater than maximum length")
+    if min_length > len(seq):  # min length and sequence length are incompatible
+        return []
+    if max_length < len(seq) - include:  # max length and include are incompatible
+        return []
+
+    # construct the search range, while ensuring that codons are in the same
+    # frame as the original
+    start = max(0, len(seq) - (max_length - (max_length % 3)))
+    end = min(len(seq) - min_length, include)
+
+    # gather possible alternative start coordinates
+    starts = []
+    for i in range(start, end, 3):
+        if seq[i:i + 3] not in START_CODONS:
+            continue
+        assert min_length <= len(seq) - i <= max_length
+        starts.append(i)
+    return starts
+
+
+def _build_trimmed_orf(orf: CDSFeature, record: Record, offset: int, label: str | None = None) -> CDSFeature:
+    """ Creates a trimmed ORF, starting at the given offset within the given ORF
+
+        Arguments:
+            orf: the CDS feature to create a trimmed ORF from
+            record: the parent Record of the CDS
+            offset: the offset of the new start within the ORF's DNA sequence
+            label: the locus tag for the newly created CDSFeature, if given
+
+        Returns:
+            a new CDSFeature
+    """
+    start = orf.start
+    end = orf.end
+    if orf.location.strand == 1:
+        start += offset
+        start %= len(record)
+    else:
+        end -= offset
+        # trimming may move the start back across the origin, and an end
+        # exactly at the origin is the end of the record
+        end %= len(record)
+        if end == 0:
+            end = len(record)
+
+    if start > end:
+        location = CompoundLocation([
+            FeatureLocation(start, orf.location.end, orf.location.strand),
+            FeatureLocation(orf.location.start, end, orf.location.strand),
+        ])
+        if location.strand == -1:
+            location.parts.reverse()
+    else:
+        location = FeatureLocation(start, end, orf.location.strand)
+    return create_feature_from_location(record, location, label=label)
+
+
 def get_trimmed_orf(orf: CDSFeature, record: Record, include: int = None,
                     min_length: int = 0, max_length: int = None,
                     label: Optional[str] = None) -> Optional[CDSFeature]:
@@ -45,49 +118,35 @@ def get_trimmed_orf(orf: CDSFeature, record: Record, include: int = None,
     if include is None:
         include = len(seq)
 
-    # check for bad values
-    if min_length > max_length:
-        raise ValueError("minimum length cannot be greater than maximum length")
-    if min_length > len(seq):  # min length and sequence length are incompatible
-        return None
-    if max_length < len(seq) - include:  # max length and include are incompatible
-        return None
-
-    # construct the search range, while ensuring that codons are in the same
-    # frame as the original
-    start = max(0, len(seq) - (max_length - (max_length % 3)))
-    end = min(len(seq) - min_length, include)
-
-    # gather possible alternative start coordinates
-    starts = []
-    for i in range(start, end, 3):
-        if seq[i:i + 3] not in START_CODONS:
-            continue
-        assert min_length <= len(seq) - i <= max_length
-        starts.append(i)
+    starts = _find_trimmed_starts(seq, include, min_length, max_length)
     # if no shorter version can be found, don't create a new feature
     if not starts:
         return None
 
     # otherwise, use the start which gives the smallest possible ORF
-    start = orf.start
-    end = orf.end
-    if orf.location.strand == 1:
-        start += starts[-1]
-        start %= len(record)
-    else:
-        end -= starts[-1]
+    return _build_trimmed_orf(orf, record, starts[-1], label=label)
 
-    if start > end:
-        location = CompoundLocation([
-            FeatureLocation(start, orf.location.end, orf.location.strand),
-            FeatureLocation(orf.location.start, end, orf.location.strand),
-        ])
-        if location.strand == -1:
-            location.parts.reverse()
-    else:
-        location = FeatureLocation(start, end, orf.location.strand)
-    return create_feature_from_location(record, location, label=label)
+
+def get_all_trimmed_orfs(orf: CDSFeature, record: Record, min_length: int = 0,
+                         max_length: int | None = None) -> list[CDSFeature]:
+    """ Creates trimmed ORFs for every start codon in the given ORF that
+        satisfies the given options
+
+        Arguments:
+            orf: the CDS feature to create trimmed ORFs from
+            record: the parent Record of the CDS
+            min_length: the minimum length to trim to, exclusive, as for get_trimmed_orf()
+            max_length: the maximum length to trim to,
+                        if not given, then it defaults to the length of the given ORF
+
+        Returns:
+            a list of new CDSFeatures, from longest to shortest
+    """
+    seq = orf.extract(record.seq)
+    if max_length is None:
+        max_length = len(seq)
+    starts = _find_trimmed_starts(seq, len(seq), min_length, max_length)
+    return [_build_trimmed_orf(orf, record, start) for start in starts]
 
 
 def scan_orfs(seq: str, direction: int, offset: int = 0, minimum_length: int = 60,

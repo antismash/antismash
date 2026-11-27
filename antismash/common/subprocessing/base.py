@@ -26,6 +26,8 @@ with warnings.catch_warnings():
 #     which doesn't necessarily run in parallel
 multiprocessing.set_start_method("fork")
 
+# for use with the different sequence search wrappers
+QueryResult = SearchIO.QueryResult
 
 class RunResult:
     """ A container for simplifying the results of running a command """

@@ -126,7 +126,6 @@ class Thiopeptide:
         self._mature_alt_weights: List[float] = []
         self._mature_features = ''
         self._c_cut = ''
-        self.core_analysis_monoisotopic: Optional[utils.RobustProteinAnalysis] = None
         self.core_analysis: Optional[utils.RobustProteinAnalysis] = None
 
     @property
@@ -141,8 +140,7 @@ class Thiopeptide:
         self._core = seq
         self._weight = -1.
         self._monoisotopic_weight = -1.
-        self.core_analysis_monoisotopic = utils.RobustProteinAnalysis(seq, monoisotopic=True)
-        self.core_analysis = utils.RobustProteinAnalysis(seq, monoisotopic=False)
+        self.core_analysis = utils.RobustProteinAnalysis(seq)
 
     @property
     def leader(self) -> str:
@@ -244,14 +242,14 @@ class Thiopeptide:
         (re)calculate the monoisotopic mass and molecular weight
         """
         assert self._core, "calculating weight without a core"
-        assert self.core_analysis and self.core_analysis_monoisotopic, "missing core analyses in weight calculation"
+        assert self.core_analysis, "missing core analyses in weight calculation"
 
-        amino_counts = self.core_analysis.count_amino_acids()
+        amino_counts = self.core_analysis.amino_acid_count
         no_thr_ser = amino_counts['T'] + amino_counts['S']
         no_cys = amino_counts['C']
 
         mol_mass = self.core_analysis.molecular_weight()
-        monoisotopic_mass = self.core_analysis_monoisotopic.molecular_weight()
+        monoisotopic_mass = self.core_analysis.molecular_weight(monoisotopic=True)
         self._weight = mol_mass
         self._monoisotopic_weight = monoisotopic_mass
 

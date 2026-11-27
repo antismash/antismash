@@ -176,17 +176,16 @@ def acquire_rodeo_heuristics(record: secmet.Record, query: secmet.CDSFeature,
         tabs.append(0)
     # Precursor peptide mass < 4000 Da
     precursor_analysis = utils.RobustProteinAnalysis(precursor,
-                                                     monoisotopic=True,
                                                      ignore_invalid=True)
-    if precursor_analysis.molecular_weight() < 4000:
+    if precursor_analysis.molecular_weight(monoisotopic=True) < 4000:
         score -= 3
         tabs.append(1)
     else:
         tabs.append(0)
     # Core peptide mass < 2000 Da
-    core_analysis = utils.RobustProteinAnalysis(core, monoisotopic=True,
+    core_analysis = utils.RobustProteinAnalysis(core,
                                                 ignore_invalid=True)
-    if core_analysis.molecular_weight() < 2000:
+    if core_analysis.molecular_weight(monoisotopic=True) < 2000:
         score -= 3
         tabs.append(1)
     else:
@@ -240,16 +239,16 @@ def acquire_rodeo_heuristics(record: secmet.Record, query: secmet.CDSFeature,
         score += 3
 
     # Precursor peptide mass (unmodified)
-    precursor_analysis = utils.RobustProteinAnalysis(precursor, monoisotopic=True, ignore_invalid=False)
-    tabs.append(float(precursor_analysis.molecular_weight()))
+    precursor_analysis = utils.RobustProteinAnalysis(precursor, ignore_invalid=False)
+    tabs.append(float(precursor_analysis.molecular_weight(monoisotopic=True)))
 
     # Unmodified leader peptide mass
-    leader_analysis = utils.RobustProteinAnalysis(leader, monoisotopic=True, ignore_invalid=False)
-    tabs.append(float(leader_analysis.molecular_weight()))
+    leader_analysis = utils.RobustProteinAnalysis(leader, ignore_invalid=False)
+    tabs.append(float(leader_analysis.molecular_weight(monoisotopic=True)))
 
     # Unmodified core peptide mass
-    core_analysis = utils.RobustProteinAnalysis(core, monoisotopic=True, ignore_invalid=False)
-    tabs.append(float(core_analysis.molecular_weight()))
+    core_analysis = utils.RobustProteinAnalysis(core, ignore_invalid=False)
+    tabs.append(float(core_analysis.molecular_weight(monoisotopic=True)))
 
     # Length of leader peptide
     tabs.append(len(leader))

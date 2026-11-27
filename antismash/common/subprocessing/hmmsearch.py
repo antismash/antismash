@@ -6,15 +6,15 @@
 
 import logging
 import os
-from typing import List
 
 from helperlibs.wrappers.io import TemporaryDirectory
 
-from .base import execute, get_config, SearchIO
+from .base import execute, get_config, QueryResult, SearchIO
 
 
-def run_hmmsearch(query_hmmfile: str, target_sequence: str, use_tempfile: bool = False
-                  ) -> List[SearchIO._model.query.QueryResult]:  # pylint: disable=protected-access
+def run_hmmsearch(query_hmmfile: str, target_sequence: str, use_tempfile: bool = False,
+                  opts: list[str] | None = None,
+                  ) -> list[QueryResult]:  # pylint: disable=protected-access
     """ Run hmmsearch on a HMM file and a fasta input
 
         Arguments:
@@ -22,6 +22,7 @@ def run_hmmsearch(query_hmmfile: str, target_sequence: str, use_tempfile: bool =
             target_sequence: the fasta input to search as a string
             use_tempfile: if True, a tempfile will be written for the fasta input
                           instead of piping
+            opts: any extra options to pass to hmmsearch, e.g. thresholds
 
         Returns:
             a list of hmmsearch results as parsed by SearchIO
@@ -30,6 +31,7 @@ def run_hmmsearch(query_hmmfile: str, target_sequence: str, use_tempfile: bool =
     command = [config.executables.hmmsearch, "--cpu", str(config.cpus),
                "-o", os.devnull,  # throw away the verbose output
                "--domtblout", "result.domtab",
+               *(opts or []),
                query_hmmfile]
 
     # Allow for disabling multithreading for HMMer3 calls in the command line

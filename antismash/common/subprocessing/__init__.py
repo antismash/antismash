@@ -8,6 +8,7 @@ from .base import (
     execute,
     parallel_execute,
     parallel_function,
+    QueryResult,
     RunResult,
 )
 
