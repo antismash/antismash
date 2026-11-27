@@ -14,6 +14,7 @@ import pytest
 
 from antismash import __main__ as outer, config, main
 from antismash.common.errors import AntismashInputError
+from antismash.common.secmet.test import helpers as secmet_helpers
 from antismash.config import build_config, destroy_config, get_config, update_config
 from antismash.config.args import DEST_EXCLUDED, DEST_RESTRICTED_TO, build_parser
 from antismash.detection import hmm_detection, cluster_hmmer, full_hmmer
@@ -198,10 +199,102 @@ class TestModuleReplacement(unittest.TestCase):
         assert fetched == new
 
 
+class TestModuleRunners(unittest.TestCase):
+    def setUp(self):
+        self.config = config.build_config([], isolated=True)
+        self.record = secmet_helpers.DummyRecord()
+        self.original_detection = main._MODULES.detection
+
+    def tearDown(self):
+        config.destroy_config()
+
+    def build_module(self, run_result=None, regen=None, enabled=True):
+        module = Mock(spec=main.AntismashModule)
+        module.NAME = "dummy"
+        module.__name__ = "some.package.path"
+        module.run_on_record = Mock(return_value=run_result)
+        regen = regen or NotImplementedError
+        module.regenerate_previous_results = Mock(side_effect=regen)
+        module.is_enabled = Mock(return_value=enabled)
+
+        config.update_config({"all_enabled_modules": [module]})
+        return module
+
+    def test_results_reused(self):
+        results = main.ModuleResults(self.record.id)
+        module = self.build_module(run_result=results, regen=lambda *_: results)
+        existing = {module.__name__: {"key": "value"}}
+        config.update_config({"all_enabled_modules": [module]})
+
+        main.run_module(self.record, module, self.config, existing, timings={})
+        module.regenerate_previous_results.assert_called_once_with({"key": "value"}, self.record, self.config)
+        module.run_on_record.assert_called_once_with(self.record, results, self.config)
+        assert existing[module.__name__] is results
+
+    def test_results_discarded(self):
+        results = main.ModuleResults(self.record.id)
+        for enabled in [True, False]:
+            module = self.build_module(run_result=results, regen=lambda *_: None, enabled=enabled)
+            existing = {module.__name__: {"key": "value"}}
+
+            main.run_module(self.record, module, self.config, existing, timings={})
+            module.regenerate_previous_results.assert_called_once_with({"key": "value"}, self.record, self.config)
+            if enabled:
+                module.run_on_record.assert_called_once_with(self.record, None, self.config)
+                assert existing[module.__name__] is results
+            else:
+                module.run_on_record.assert_not_called()
+                assert module.__name__ not in existing
+
+    def test_results_on_loss_ok(self):
+        module = self.build_module(run_result=main.ModuleResults(self.record.id),
+                                   regen=lambda *_: None)
+        # if there's no results to lose, it's ok if it can't regenerate
+        main.run_module(self.record, module, self.config, {}, timings={},
+                        on_results_loss=ValueError)
+
+    def test_results_on_loss_raises(self):
+        module = self.build_module(regen=lambda *_: None)
+        existing = {module.__name__: {"key": "value"}}
+        with self.assertRaisesRegex(ValueError, "could not be regenerated"):
+            main.run_module(self.record, module, self.config, existing,
+                            timings={}, on_results_loss=ValueError)
+
+    def test_region_corruption(self):
+        # any module that contributes to region locations cannot have their
+        # results dropped
+        module = self.build_module(regen=lambda *_: None)
+        existing = {module.__name__: {"key": "value"}}
+        detection_modules = {stage: [] for stage in main.DetectionStage}
+        detection_modules[main.DetectionStage.AREA_FORMATION] = [module]
+        modules = main._Modules(detection=detection_modules)
+        error_type = main.errors.RegionRegenerationError
+        with patch.object(main, "_MODULES", modules):
+            with patch.object(main, "run_module", return_value=None) as patched_run:
+                # excluded with previous results (valid or invalid) is bad
+                config.update_config({"excluded_modules": [module.NAME]})
+                with self.assertRaisesRegex(error_type, "excluded"):
+                    main.run_detection(self.record, self.config, dict(existing))
+                # and checked even before the run attempt
+                patched_run.assert_not_called()
+
+            # and if the module is run, it needs to require that results loss is bad
+            result = main.DetectionResults("")
+            def check_and_stop(*_, on_results_loss=None):
+                assert on_results_loss is error_type
+                raise NotImplementedError("stop")
+
+            with patch.object(main, "run_module", side_effect=check_and_stop) as patched_run:
+                config.update_config({"excluded_modules": []})
+                module.regenerate_previous_results = Mock(return_value=result)
+                with self.assertRaisesRegex(NotImplementedError, "stop"):
+                    main.run_detection(self.record, self.config, dict(existing))
+                patched_run.assert_called_once()
+
+
 class TestModuleLimits(unittest.TestCase):
     def setUp(self):
         self.real_modules = [cluster_hmmer, full_hmmer, hmm_detection]  # arbitrary choices
-        print(main.get_all_modules())
         self.options = build_config([], isolated=True, modules=main.get_all_modules())
         assert self.options.excluded_modules is not None
         assert self.options.included_modules is not None
