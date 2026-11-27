@@ -110,6 +110,27 @@ class DetectionTest(unittest.TestCase):
         results = self.run_test("A", 10, 20, "cds(a and (b or c))")
         self.expect(results, ["GENE_1", "GENE_2"])
 
+    def test_cds_neighbour_reported(self):
+        # GENE_1's cds(a and b) pair is found via neighbour search from GENE_3
+        results = self.run_test("A", 45, 20, "cds(a and b) and c and f")
+        self.expect(results, ["GENE_1", "GENE_3", "GENE_4"])
+
+    def test_cds_neighbour_attribution(self):
+        # a/b credited to GENE_1 (carries them), not GENE_3 (the anchor)
+        rules = rule_parser.Parser(
+            format_as_rule("A", 45, 20, "cds(a and b) and c and f"),
+            self.signature_names, {"C"}).rules
+        rule = rules[0]
+
+        # GENE_1 can't anchor (f out of range), so the match comes via neighbour search
+        assert not rule.detect("GENE_1", self.feature_by_id, self.results_by_id).met
+
+        anchored = rule.detect("GENE_3", self.feature_by_id, self.results_by_id)
+        assert anchored.met
+        assert anchored.matches == {"c"}  # GENE_3's own local hit only
+        assert anchored.ancillary_hits["GENE_1"] == {"a", "b"}
+        assert anchored.ancillary_hits["GENE_4"] == {"f"}
+
     def test_chained_and_a(self):
         # remove the c hit from GENE_2
         self.results_by_id["GENE_2"] = [FakeHSPHit("a", "GENE_1", 0, 10, 50, 0)]
