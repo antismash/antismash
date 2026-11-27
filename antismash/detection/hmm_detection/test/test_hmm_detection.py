@@ -14,7 +14,7 @@ from unittest.mock import patch
 
 from Bio.Seq import Seq
 
-from antismash.common import json, path
+from antismash.common import errors, json, path
 from antismash.common.hmm_rule_parser import rule_parser, cluster_prediction as hmm_detection  # TODO: redo tests
 from antismash.common.hmm_rule_parser.test.helpers import check_hmm_signatures, create_ruleset
 from antismash.common.secmet import Record
@@ -802,12 +802,14 @@ class TestMultipliers(unittest.TestCase):
             "--taxon", "fungi",
             "--hmmdetection-fungal-cutoff-multiplier", "2.0",
         ], modules=[core])
-        with self.assertRaisesRegex(RuntimeError, "cutoff multiplier .* incompatible"):
+        with self.assertRaisesRegex(errors.ResultsUnusableError,
+                                    "cutoff multiplier changed"):
             core.regenerate_previous_results(as_json, self.record, options)
 
         options = build_config([
             "--taxon", "fungi",
             "--hmmdetection-fungal-neighbourhood-multiplier", "0.5",
         ], modules=[core])
-        with self.assertRaisesRegex(RuntimeError, "neighbourhood multiplier .* incompatible"):
+        with self.assertRaisesRegex(errors.ResultsUnusableError,
+                                    "neighbourhood multiplier changed"):
             core.regenerate_previous_results(as_json, self.record, options)

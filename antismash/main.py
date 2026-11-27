@@ -332,8 +332,16 @@ def run_detection(record: Record, options: ConfigType,
     modules.extend(_MODULES.detection[DetectionStage.AREA_REFINEMENT])
     for module in modules:
         if options.is_module_excluded(module.NAME):
+            # if existing results would be dropped, that would potentially
+            # invalidate all later module's results
+            if module.__name__ in module_results:
+                raise errors.RegionRegenerationError(
+                    f"{module.NAME} has been excluded and has existing results"
+                )
             continue
-        run_module(record, module, options, module_results, timings)
+        run_module(record, module, options, module_results, timings,
+                   # similar to exclusion, failure to regenerate cannot be ignored
+                   on_results_loss=errors.RegionRegenerationError)
         results = module_results.get(module.__name__)
         if results:
             assert isinstance(results, DetectionResults), f"{module.__name__}, {type(results)}"
@@ -371,7 +379,9 @@ def run_detection(record: Record, options: ConfigType,
 
 def run_module(record: Record, module: AntismashModule, options: ConfigType,
                module_results: Dict[str, Union[ModuleResults, Dict[str, Any]]],
-               timings: Dict[str, float]
+               timings: Dict[str, float],
+               *,
+               on_results_loss: type[Exception] | None = None,
                ) -> None:
     """ Run a module on a record
 
@@ -384,6 +394,7 @@ def run_module(record: Record, module: AntismashModule, options: ConfigType,
                             updated if the module runs
             timings: a dictionary mapping module name to time taken for that
                      module, will be updated with the module timing
+            on_results_loss: an exception type to raise if results cannot be regenerated
 
         Returns:
             None
@@ -393,9 +404,13 @@ def run_module(record: Record, module: AntismashModule, options: ConfigType,
     if previous_results is not None:
         assert isinstance(previous_results, dict)
         logging.debug("Regenerating results for %s", module.__name__)
-        results = module.regenerate_previous_results(previous_results, record, options)
+        if not options.is_module_excluded(module.NAME):
+            results = module.regenerate_previous_results(previous_results, record, options)
         if results:
             module_results[module.__name__] = results
+        elif on_results_loss is not None:
+            raise on_results_loss(f"{module.NAME} results could not be regenerated")
+
     if module not in options.all_enabled_modules:
         return
     assert results is None or isinstance(results, ModuleResults)
@@ -798,9 +813,9 @@ def _ensure_region_detection_valid(options: ConfigType, modules_with_results: li
     for detection_type in [DetectionStage.AREA_FORMATION, DetectionStage.AREA_REFINEMENT]:
         for module in modules[detection_type]:
             if options.is_module_excluded(module.NAME) and module.NAME in modules_with_results:
-                raise ValueError(
+                raise errors.RegionRegenerationError(
                     "Detection results invalidated by exclusion of module with previous results"
-                    f" ({module.NAME}), results cannot be reused"
+                    f" ({module.NAME})"
                 )
 
 

@@ -8,6 +8,7 @@ import argparse
 import os
 from typing import Any, AnyStr, Dict, List, Optional
 
+from antismash.common.errors import RegionRegenerationError
 from antismash.common.module_results import DetectionResults
 from antismash.common.secmet import Record
 from antismash.config import ConfigType
@@ -123,7 +124,10 @@ def regenerate_previous_results(results: Dict[str, Any], record: Record,
     if not results:
         return None
 
-    return SideloadedResults.from_json(results, record)
+    regenerated = SideloadedResults.from_json(results, record)
+    if regenerated is None:
+        raise RegionRegenerationError("Sideloaded results invalid")
+    return regenerated
 
 
 def run_on_record(record: Record, previous_results: Optional[SideloadedResults],
