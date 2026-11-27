@@ -11,7 +11,7 @@ import os
 import pkgutil
 from typing import Any, Dict, List, Iterable, Optional
 
-from antismash.common import hmmer, path
+from antismash.common import errors, hmmer, path
 from antismash.common.hmm_rule_parser import rule_parser
 from antismash.common.hmm_rule_parser.cluster_prediction import (
     detect_protoclusters_and_signatures,
@@ -265,12 +265,18 @@ def regenerate_previous_results(results: Dict[str, Any], record: Record,
         logging.warning("Ignoring hmmdetection strictness option %r, reusing %r from results",
                         options.hmmdetection_strictness, regenerated.strictness)
     if set(regenerated.enabled_types) != get_ruleset(options).get_rule_names():
-        raise RuntimeError("Protocluster types supported by HMM detection have changed, all results invalid")
+        raise errors.RegionRegenerationError(
+            "Protocluster types supported by HMM detection have changed"
+        )
     if options.taxon == "fungi":
         if regenerated.rule_results.multipliers.cutoff != options.hmmdetection_fungal_cutoff_multiplier:
-            raise RuntimeError("Protocluster cutoff multiplier changed, previous results are incompatible")
+            raise errors.RegionRegenerationError(
+                "Protocluster cutoff multiplier changed"
+            )
         if regenerated.rule_results.multipliers.neighbourhood != options.hmmdetection_fungal_neighbourhood_multiplier:
-            raise RuntimeError("Protocluster neighbourhood multiplier changed, previous results are incompatible")
+            raise errors.RegionRegenerationError(
+                "Protocluster neighbourhood multiplier changed"
+            )
     regenerated.rule_results.annotate_cds_features()
     return regenerated
 
