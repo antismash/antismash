@@ -96,6 +96,16 @@ class Reaction:
             tuple(set(self.products) & set(other.products)),
         )
 
+    def merge(self, other: "Reaction") -> "Reaction":
+        """ Creates a new Reaction instance that contains the
+            union of the substrates and products of this instance
+            and the provided instance.
+        """
+        return Reaction(
+            tuple(set(self.substrates) | set(other.substrates)),
+            tuple(set(self.products) | set(other.products)),
+        )
+
     def __str__(self) -> str:
         return (f"substrates={[compound.name for compound in self.substrates]}, "
                 f"products={[compound.name for compound in self.products]}")
