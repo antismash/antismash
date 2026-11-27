@@ -6,7 +6,7 @@
 
 from abc import ABC as AbstractBaseClass, abstractmethod
 import dataclasses
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Optional, Union
 
 from antismash.common.secmet import Protocluster, Record, SubRegion
 from antismash.common.secmet.features.protocluster import SideloadedProtocluster
@@ -290,9 +290,9 @@ class SideloadedResults(DetectionResults):
         }
 
     @staticmethod
-    def from_json(json: Dict[str, Any], record: Record) -> "SideloadedResults":
+    def from_json(json: Dict[str, Any], record: Record) -> Optional["SideloadedResults"]:
         if json["schema_version"] != SideloadedResults.schema_version:
-            raise ValueError("Detection results have changed. No results can be reused.")
+            return None
 
         assert json["record_id"] == record.id
         origin = len(record) if record.is_circular() else None

@@ -6,10 +6,11 @@
 
 import unittest
 
-from antismash.common import json
+from antismash.common import errors, json
 from antismash.common.secmet.features.protocluster import SideloadedProtocluster
 from antismash.common.secmet.features.subregion import SideloadedSubRegion
 from antismash.common.test.helpers import DummyRecord
+from antismash.detection import sideloader
 from antismash.detection.sideloader import data_structures as structures
 
 
@@ -265,8 +266,9 @@ class TestResults(unittest.TestCase):
         assert regenerated.record_id == self.results.record_id
 
         as_json["schema_version"] = -1
-        with self.assertRaisesRegex(ValueError, "Detection results have changed"):
-            structures.SideloadedResults.from_json(as_json, record)
+        assert structures.SideloadedResults.from_json(as_json, record) is None
+        with self.assertRaises(errors.RegionRegenerationError):
+            sideloader.regenerate_previous_results(as_json, record, unittest.mock.Mock())
 
     def test_areas(self):
         assert self.results.get_areas() == [self.sub, self.cluster]
